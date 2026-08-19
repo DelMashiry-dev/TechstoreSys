@@ -1,0 +1,122 @@
+<div id="ict-distribution" class="form-container" aria-labelledby="ictDistTitle">
+                <div class="ict-dist-page">
+                <div class="form-header">
+                    <div>
+                        <h2 class="form-title" id="ictDistTitle">ICT Equipment Distribution Lists</h2>
+                        <p class="form-subtitle">Proposed · Final · Next to be issued — TechStores quick access for issue decisions</p>
+                    </div>
+                    <button class="close-btn" type="button" title="Close panel">&times;</button>
+                </div>
+
+                <p class="req-intro">
+                    Prepare <strong>Proposed</strong> and <strong>Final Distribution</strong> lists for laptops, desktops, printers, and tablets.
+                    Before recommending a new issue, check <strong>Initial Issue date</strong>, <strong>ZA No. / Serial</strong>, and <strong>condition (S / U/S)</strong>
+                    from the ZNA ICT Asset Register. Mark documents <strong>RESTRICTED</strong> when printed.
+                </p>
+
+                <div class="dashboard-panel ict-dist-lookup-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>Quick access — prior issue check</h3>
+                        <p>Look up a person or unit to see date of initial issue, ZA / serial, and serviceability before adding them to a list</p>
+                    </div>
+                    <div class="ict-dist-lookup-bar">
+                        <input type="search" class="form-control" id="ictDistLookupQuery"
+                            placeholder="Name, force no., unit, ZA number…" autocomplete="off" aria-label="Lookup prior issues">
+                        <select class="form-control" id="ictDistLookupEqType" title="Filter equipment type">
+                            <option value="">Any equipment</option>
+                            <option value="laptop">Laptops</option>
+                            <option value="desktop">Desktops</option>
+                            <option value="printer">Printers</option>
+                            <option value="tablet">Tablets</option>
+                        </select>
+                        <button type="button" class="btn btn-primary" id="ictDistLookupBtn">Look up</button>
+                        <button type="button" class="btn btn-ghost" id="ictDistLookupClear">Clear</button>
+                    </div>
+                    <div class="ict-dist-lookup-results" id="ictDistLookupResults" hidden></div>
+                </div>
+
+                <div class="dashboard-panel ict-dist-exercise-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>Distribution exercise</h3>
+                        <p>One exercise holds Proposed, Final, and Next-to-be-issued lists for the same allocation</p>
+                    </div>
+                    <div class="form-row ict-dist-exercise-row">
+                        <div class="form-col" style="flex:1.4;">
+                            <label class="form-label" for="ictDistExerciseSelect">Active exercise</label>
+                            <select class="form-control" id="ictDistExerciseSelect"></select>
+                        </div>
+                        <div class="form-col" style="flex:1.2;">
+                            <label class="form-label" for="ictDistTitleInput">Title</label>
+                            <input type="text" class="form-control" id="ictDistTitleInput"
+                                placeholder="e.g. Proposed distribution of laptops to IT Dir personnel">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="ictDistEqType">Equipment</label>
+                            <select class="form-control" id="ictDistEqType">
+                                <option value="laptops">Laptops</option>
+                                <option value="desktops">Desktops</option>
+                                <option value="printers">Printers</option>
+                                <option value="tablets">Tablets</option>
+                                <option value="mixed">Mixed ICT</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="ictDistStatus">Status</label>
+                            <select class="form-control" id="ictDistStatus">
+                                <option value="draft">Draft</option>
+                                <option value="submitted">Submitted</option>
+                                <option value="approved">Approved</option>
+                                <option value="issued">Issued</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="module-actions ict-dist-actions-bar">
+                        <button type="button" class="btn btn-success btn-sm" id="ictDistNewBtn">＋ New exercise</button>
+                        <button type="button" class="btn btn-primary btn-sm" id="ictDistSaveMetaBtn">Save details</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="ictDistAddBlankBtn">＋ Add blank row</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="ictDistPrintBtn">Print / Export</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="ictDistDeleteBtn">Delete exercise</button>
+                    </div>
+                </div>
+
+                <div class="ict-dist-tabs" role="tablist" aria-label="List type">
+                    <button type="button" class="ict-dist-tab active" data-ict-dist-tab="proposed" role="tab" aria-selected="true">
+                        Proposed list <span class="ict-dist-tab-count" id="ictDistCountProposed">0</span>
+                    </button>
+                    <button type="button" class="ict-dist-tab" data-ict-dist-tab="final" role="tab" aria-selected="false">
+                        Final distribution <span class="ict-dist-tab-count" id="ictDistCountFinal">0</span>
+                    </button>
+                    <button type="button" class="ict-dist-tab" data-ict-dist-tab="next" role="tab" aria-selected="false">
+                        Next to be issued <span class="ict-dist-tab-count" id="ictDistCountNext">0</span>
+                    </button>
+                </div>
+
+                <div class="module-toolbar ict-dist-toolbar">
+                    <input type="search" class="form-control" id="ictDistRowFilter" placeholder="Filter rows by name, rank, appointment, ZA…">
+                    <button type="button" class="btn btn-primary btn-sm" id="ictDistFilterBtn">Filter</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="ictDistFilterClear">Clear</button>
+                    <span class="ict-dist-col-hint" id="ictDistColHint"></span>
+                </div>
+
+                <div class="form-table-wrapper ict-dist-table-wrap">
+                    <table class="overview-table ict-dist-table" id="ictDistTable">
+                        <thead>
+                            <tr>
+                                <th>Ser (a)</th>
+                                <th>Rank (b)</th>
+                                <th>Name (c)</th>
+                                <th>Appointment (d)</th>
+                                <th>Initial Issue (e)</th>
+                                <th>ZA No. / Serial (f)</th>
+                                <th id="ictDistRemarksHead">Remarks (g)</th>
+                                <th>Need new issue?</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ictDistTableBody">
+                            <tr><td colspan="9" class="req-empty-row">Select or create a distribution exercise.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>

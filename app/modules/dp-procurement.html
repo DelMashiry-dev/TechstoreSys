@@ -1,0 +1,178 @@
+<div id="dp-procurement" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">ICT Procurement Cycle</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="dp-proc-intro">
+                    ITDIR procures and accounts for ZNA ICT equipment, software, licences, consumables, spares, and services
+                    via <strong>DP</strong> (procurement) and <strong>DAF</strong> (targets / votes / budgets). Track each case through the
+                    official 8-step cycle below.
+                </p>
+
+                <div id="dpProcCycleStrip" class="dp-cycle-strip" aria-label="Procurement cycle steps"></div>
+
+                <div class="dp-proc-aging-strip" aria-label="Procurement cycle summary">
+                    <div class="dp-proc-stat"><span class="dp-proc-stat-value" id="dpProcStatOpen">0</span><span class="dp-proc-stat-label">Open</span></div>
+                    <div class="dp-proc-stat"><span class="dp-proc-stat-value" id="dpProcStatWithDp">0</span><span class="dp-proc-stat-label">With DP</span></div>
+                    <div class="dp-proc-stat"><span class="dp-proc-stat-value" id="dpProcStatItdir">0</span><span class="dp-proc-stat-label">ITDIR action</span></div>
+                    <div class="dp-proc-stat"><span class="dp-proc-stat-value" id="dpProcStatAudit">0</span><span class="dp-proc-stat-label">AIAD</span></div>
+                    <div class="dp-proc-stat"><span class="dp-proc-stat-value" id="dpProcStatPo">0</span><span class="dp-proc-stat-label">P/O stage</span></div>
+                    <div class="dp-proc-stat"><span class="dp-proc-stat-value" id="dpProcStatPaid">0</span><span class="dp-proc-stat-label">Paid</span></div>
+                </div>
+
+                <div class="dashboard-panel dp-proc-capture-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3 id="dpProcFormTitle">Select a cycle record to update status</h3>
+                    </div>
+                    <input type="hidden" id="dpProcEditId" value="">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Cycle Ref No.</label>
+                            <input type="text" class="form-control" id="dpProcRefNo" readonly>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">F1 / Indent Date</label>
+                            <input type="text" class="form-control" id="dpProcSentDate" readonly>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Cycle Status</label>
+                            <select class="form-control" id="dpProcStatus"></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col" style="flex: 2;">
+                            <label class="form-label">Items Summary</label>
+                            <input type="text" class="form-control" id="dpProcItemSummary" readonly>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Estimated Cost</label>
+                            <input type="text" class="form-control" id="dpProcEstimatedCost" readonly>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">GL / Vote charged</label>
+                            <input type="text" class="form-control" id="dpProcGl" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">User requisition ref (step 1)</label>
+                            <input type="text" class="form-control" id="dpProcRequisitionRef" placeholder="Unit / formation requisition no.">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">On DAF target / budget / vote?</label>
+                            <select class="form-control" id="dpProcBudgeted">
+                                <option value="yes">Yes — Electronic P/O path</option>
+                                <option value="no">No — Manual P/O (needs DAF auth)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Suppliers invited by DP (call for quotes)</label>
+                            <textarea class="form-control" id="dpProcSuppliers" rows="2" placeholder="Suppliers invited by DP..."></textarea>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Quotations received</label>
+                            <textarea class="form-control" id="dpProcQuotations" rows="2" placeholder="Quotation refs / amounts returned to ITDIR..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">ITDIR tech / spec evaluation of quotes</label>
+                            <textarea class="form-control" id="dpProcItdirEval" rows="2" placeholder="Tech/spec evaluation outcome returned to DP with F1..."></textarea>
+                            <button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px;" data-target-nav="cost-comparative-schedule">
+                                Open Cost Comparative Schedule
+                            </button>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">AIAD ref</label>
+                            <input type="text" class="form-control" id="dpProcAuditRef" placeholder="Army Internal Audit Directorate reference">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">AIAD due diligence certificate</label>
+                            <input type="text" class="form-control" id="dpProcDdCert" placeholder="Certificate no. / date (attached to F1+spec+awarded quote)">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Awarded supplier</label>
+                            <input type="text" class="form-control" id="dpProcAwarded" placeholder="Supplier on AIAD-certified quotation">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Awarded quotation ref</label>
+                            <input type="text" class="form-control" id="dpProcAwardedQuote" placeholder="Winning quotation number">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">P/O number (electronic or manual)</label>
+                            <input type="text" class="form-control" id="dpProcPoNumber" placeholder="Purchase order number from DP">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">DAF authorisation (manual P/O only)</label>
+                            <input type="text" class="form-control" id="dpProcDafAuth" placeholder="Required before initiating unbudgeted Manual P/O">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Delivery note ref (step 6)</label>
+                            <input type="text" class="form-control" id="dpProcDeliveryNote" placeholder="Supplier delivery note">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Delivery verification (step 7)</label>
+                            <input type="text" class="form-control" id="dpProcVerification" placeholder="Verified by / date / remarks">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Payment ref (step 8)</label>
+                            <input type="text" class="form-control" id="dpProcPaymentRef" placeholder="Payment voucher / ref after delivery">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cycle notes</label>
+                        <textarea class="form-control" id="dpProcNotes" rows="2" placeholder="Status update notes..."></textarea>
+                    </div>
+                    <div class="module-actions">
+                        <button type="button" class="btn btn-success" id="dpProcSaveBtn">Save Status</button>
+                        <button type="button" class="btn btn-primary" id="dpProcAdvanceBtn">Advance to Next Stage</button>
+                        <button type="button" class="btn btn-secondary" id="dpProcPostStockBtn" title="Post verified delivery into Stores Inventory">Post to Stores Inventory</button>
+                        <button type="button" class="btn btn-secondary" id="dpProcClearBtn">Clear Selection</button>
+                    </div>
+                    <p id="dpProcStockStatus" class="dp-proc-stock-status">Not posted to Stores Inventory.</p>
+                    <p class="dp-proc-stock-hint">
+                        Inventory must reflect what ITDIR <strong>procures</strong>, <strong>receives &amp; stocks</strong>, then
+                        <strong>issues / distributes</strong>. After delivery verification, post receipts here so reports can account for stock.
+                    </p>
+                    <div class="dp-proc-history-wrap">
+                        <h4>Status history</h4>
+                        <div id="dpProcHistory"><p class="dp-proc-muted">No record selected.</p></div>
+                    </div>
+                    <div class="dp-proc-preview-wrap">
+                        <h4>Captured IT Dir F1 (as sent)</h4>
+                        <div id="dpProcPreview" class="dp-proc-preview"></div>
+                    </div>
+                </div>
+
+                <div class="module-toolbar" style="margin-top: 18px;">
+                    <input type="search" class="form-control table-search" id="dpProcTableSearch" data-search-history-key="dp-procurement" data-search-history="1" placeholder="Search cycle records...">
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Ref</th>
+                                <th>Date</th>
+                                <th>Items</th>
+                                <th>Est. Cost</th>
+                                <th>GL</th>
+                                <th>Budget path</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dpProcTableBody">
+                            <tr><td colspan="8" class="dp-proc-empty-row">No cycle records yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>

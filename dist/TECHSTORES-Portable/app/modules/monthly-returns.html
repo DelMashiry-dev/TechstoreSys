@@ -1,0 +1,190 @@
+<div id="monthly-returns" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Monthly Returns — Unit / Formation ICT Equipment</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="mr-intro">
+                    Each unit / formation must prepare a <strong>RESTRICTED</strong> monthly computer equipment return
+                    (cover letter + equipment tables by category with SVC / UNSVC / T/LOAN remarks, plus Misc Cont Stores).
+                    Load holdings from the ZNA ICT Asset Register, then print the official return for IT Dir action.
+                </p>
+
+                <div class="dashboard-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3 id="mrFormTitle">Prepare Monthly Return</h3>
+                    </div>
+                    <input type="hidden" id="mrEditId" value="">
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label" for="mrPeriod">Return month</label>
+                            <input type="month" class="form-control" id="mrPeriod">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="mrUnit">Unit / Formation</label>
+                            <div class="zna-unit-picker">
+                                <input type="search" class="form-control zna-unit-filter" id="mrUnitFilter"
+                                    placeholder="Type to filter units…" autocomplete="off">
+                                <select class="form-control zna-unit-select" id="mrUnit">
+                                    <option value="">— Select unit / formation —</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">File / unit ref</label>
+                            <input type="text" class="form-control" id="mrFileRef" placeholder="e.g. ABW/13 · 2/1">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Letter date</label>
+                            <input type="date" class="form-control" id="mrLetterDate">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Status</label>
+                            <select class="form-control" id="mrStatus">
+                                <option value="draft">Draft</option>
+                                <option value="submitted">Submitted to IT Dir</option>
+                                <option value="acknowledged">Acknowledged</option>
+                                <option value="filed">Filed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col" style="flex: 2;">
+                            <label class="form-label">Unit address (letterhead)</label>
+                            <input type="text" class="form-control" id="mrUnitAddress" placeholder="e.g. P O Box CY 1068, Causeway, Harare">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col" style="flex: 2;">
+                            <label class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="mrSubject" placeholder="Auto-filled from unit + month if left blank">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Covering text</label>
+                        <textarea class="form-control" id="mrCoverText" rows="2">Attached herewith is the above subject forwarded for your action.</textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Action</label>
+                            <input type="text" class="form-control" id="mrActionTo" value="IT Dir">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Info</label>
+                            <input type="text" class="form-control" id="mrInfoTo" value="File">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Signed by</label>
+                            <input type="text" class="form-control" id="mrSignedBy" placeholder="Name">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Rank</label>
+                            <input type="text" class="form-control" id="mrSignedRank" placeholder="Maj">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">for</label>
+                            <input type="text" class="form-control" id="mrSignedFor" value="CO / Comdt">
+                        </div>
+                    </div>
+
+                    <div class="module-actions" style="margin-bottom: 12px;">
+                        <button type="button" class="btn btn-primary" id="mrLoadRegisterBtn">Load from Asset Register</button>
+                        <button type="button" class="btn btn-ghost" id="mrAddLineBtn">Add blank line</button>
+                        <button type="button" class="btn btn-ghost" id="mrAddMiscBtn">Add misc stores line</button>
+                    </div>
+
+                    <h4 class="mr-section-title">Equipment return lines</h4>
+                    <div class="form-table-wrapper mr-lines-wrap">
+                        <table class="overview-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Model</th>
+                                    <th>Description</th>
+                                    <th>Serial No.</th>
+                                    <th>ZA Serial</th>
+                                    <th>Qty</th>
+                                    <th>Remark</th>
+                                    <th>Notes</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="mrLinesBody"></tbody>
+                        </table>
+                    </div>
+
+                    <h4 class="mr-section-title">Misc Cont Stores</h4>
+                    <div class="form-table-wrapper">
+                        <table class="overview-table">
+                            <thead>
+                                <tr>
+                                    <th>Model / Item</th>
+                                    <th>Qty</th>
+                                    <th>Remark</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="mrMiscBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="form-row" style="margin-top: 14px;">
+                        <div class="form-col"><label class="form-label">Compiled by — No.</label><input class="form-control" id="mrCompiledNo"></div>
+                        <div class="form-col"><label class="form-label">Rank</label><input class="form-control" id="mrCompiledRank" placeholder="SSGT"></div>
+                        <div class="form-col"><label class="form-label">Name</label><input class="form-control" id="mrCompiledName"></div>
+                        <div class="form-col"><label class="form-label">Date</label><input type="date" class="form-control" id="mrCompiledDate"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Checked by — No.</label><input class="form-control" id="mrCheckedNo"></div>
+                        <div class="form-col"><label class="form-label">Rank</label><input class="form-control" id="mrCheckedRank" placeholder="CAPT"></div>
+                        <div class="form-col"><label class="form-label">Name</label><input class="form-control" id="mrCheckedName"></div>
+                        <div class="form-col"><label class="form-label">Date</label><input type="date" class="form-control" id="mrCheckedDate"></div>
+                    </div>
+
+                    <h4 class="mr-section-title">IT Dir routing / sign-off</h4>
+                    <div class="form-table-wrapper" style="max-width: 520px;">
+                        <table class="overview-table">
+                            <thead><tr><th>APPT</th><th>Signed</th><th>Date</th><th>Initials</th></tr></thead>
+                            <tbody id="mrApprovalsBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 12px;">
+                        <label class="form-label">Internal notes</label>
+                        <textarea class="form-control" id="mrNotes" rows="2"></textarea>
+                    </div>
+
+                    <div class="module-actions" style="margin-top: 12px;">
+                        <button type="button" class="btn btn-success" id="mrSaveBtn">Save Monthly Return</button>
+                        <button type="button" class="btn btn-secondary" id="mrPrintBtn">Print RESTRICTED Return</button>
+                        <button type="button" class="btn btn-secondary btn-generate-report" data-report-module="monthly-returns">Generate Report</button>
+                        <button type="button" class="btn btn-ghost" id="mrClearBtn">New / Clear</button>
+                    </div>
+                </div>
+
+                <div class="dashboard-panel" style="margin-top: 16px;">
+                    <div class="section-heading section-heading-compact">
+                        <h3>Saved unit monthly returns</h3>
+                    </div>
+                    <div class="module-toolbar">
+                        <input type="search" class="form-control" id="mrListSearch" placeholder="Search unit / month / ref…">
+                    </div>
+                    <div class="form-table-wrapper">
+                        <table class="overview-table">
+                            <thead>
+                                <tr>
+                                    <th>Period</th>
+                                    <th>Unit / Formation</th>
+                                    <th>Ref</th>
+                                    <th>Lines</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mrSavedBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>

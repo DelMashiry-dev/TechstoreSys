@@ -1,0 +1,308 @@
+<div id="orderly-room" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Orderly Room — IT Dir</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="req-intro">
+                    <span class="aso-ref">IT Dir Orderly Room · Unit Administration</span>
+                    Daily File / First Sight for incoming letters &amp; requisitions, plus the
+                    <strong>Correspondence Files Register</strong> kept and filed in the Orderly Room.
+                </p>
+
+                <div class="or-chain" aria-label="IT Dir command / admin chain">
+                    <span class="or-chip">Dir (Col)</span>
+                    <span class="or-arrow">←</span>
+                    <span class="or-chip">DD (Lt Col)</span>
+                    <span class="or-arrow">←</span>
+                    <span class="or-chip">AQSO2 (Maj)</span>
+                    <span class="or-arrow">←</span>
+                    <span class="or-chip">AO (Capt/Lt)</span>
+                    <span class="or-arrow">←</span>
+                    <span class="or-chip">Chief Clerk (WO1/WO2)</span>
+                    <span class="or-arrow">←</span>
+                    <span class="or-chip">NCM Dispatch (Cpl)</span>
+                </div>
+
+                <div class="duties-tabs or-tabs" role="tablist" aria-label="Orderly Room sections">
+                    <button type="button" class="duties-tab or-tab is-active" data-or-tab="df">Daily File / First Sight</button>
+                    <button type="button" class="duties-tab or-tab" data-or-tab="files">Correspondence Files Register</button>
+                </div>
+
+                <div data-or-panel="df">
+                    <div class="dashboard-panel" style="margin-bottom:14px;">
+                        <h3 style="margin-top:0;">File letter / requisition into DF</h3>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label" for="orDateIn">Date received</label>
+                                <input type="date" class="form-control" id="orDateIn" data-date-rule="not-future" data-date-label="Date received">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="orRefNo">Letter / Ref No.</label>
+                                <input type="text" class="form-control" id="orRefNo" placeholder="e.g. ITDIR/GS/…">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="orFrom">From (Unit / Branch)</label>
+                                <input type="text" class="form-control" id="orFrom" list="znaUnitDatalist" placeholder="Unit or GS Branch">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="orDocType">Document type</label>
+                                <select class="form-control" id="orDocType">
+                                    <option value="requisition">Unit Requisition letter</option>
+                                    <option value="routine">Routine correspondence</option>
+                                    <option value="pass">Pass / movement</option>
+                                    <option value="directive">Directive (AQSO2 / DD / Dir)</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col" style="flex:2;">
+                                <label class="form-label" for="orSubject">Subject</label>
+                                <input type="text" class="form-control" id="orSubject" placeholder="Short subject of letter">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="orFileAs">File as</label>
+                                <select class="form-control" id="orFileAs">
+                                    <option value="df">Daily File (DF)</option>
+                                    <option value="first_sight">First Sight</option>
+                                </select>
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="orGsAuth">GS Branch authorised?</label>
+                                <select class="form-control" id="orGsAuth">
+                                    <option value="pending">Pending / not stated</option>
+                                    <option value="yes">Yes — action authorised</option>
+                                    <option value="no">No / returned</option>
+                                </select>
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="orPriority">Priority</label>
+                                <select class="form-control" id="orPriority">
+                                    <option value="normal">Normal</option>
+                                    <option value="immediate">Immediate</option>
+                                    <option value="urgent">Urgent</option>
+                                    <option value="critical">Critical</option>
+                                    <option value="flash">⚡ Flash</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label" for="orReceivedBy">Received / booked by</label>
+                                <input type="text" class="form-control" id="orReceivedBy" placeholder="Chief Clerk / NCM">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="orStatus">Status</label>
+                                <select class="form-control" id="orStatus">
+                                    <option value="filed">Filed in DF / First Sight</option>
+                                    <option value="alerted_techstores">Referred — departments notified</option>
+                                    <option value="seen_hod">Seen by HoDs</option>
+                                    <option value="actioned">Actioned / closed</option>
+                                </select>
+                            </div>
+                            <div class="form-col" style="flex:2;">
+                                <label class="form-label" for="orRemarks">Remarks</label>
+                                <input type="text" class="form-control" id="orRemarks" placeholder="Dispatch / routing notes">
+                            </div>
+                        </div>
+
+                        <div class="or-notify-panel om-compose" id="orNotifyPanel">
+                            <div class="or-notify-head">
+                                <h4>Compose message to IT Dir departments</h4>
+                                <p>
+                                    Same format as <strong>Notifications → Messages / Compose</strong>.
+                                    Write to TechStores, Workshop, Sys Admin, DBA, Gate, ITTS, Admin, IT Security and other IT Dir offices.
+                                </p>
+                            </div>
+                            <div class="om-compose-grid or-compose-grid">
+                                <label class="ad-field">
+                                    <span>Priority</span>
+                                    <select class="form-control" id="orMsgPriority">
+                                        <option value="normal">Normal</option>
+                                        <option value="immediate" selected>Immediate</option>
+                                        <option value="urgent">Urgent</option>
+                                        <option value="critical">Critical</option>
+                                        <option value="flash">⚡ Flash</option>
+                                    </select>
+                                </label>
+                                <label class="ad-field">
+                                    <span>Action due (optional)</span>
+                                    <input type="date" class="form-control" id="orMsgDue" data-date-rule="not-past" data-date-label="Action due">
+                                </label>
+                                <label class="ad-field om-span-2">
+                                    <span>Subject</span>
+                                    <input type="text" class="form-control" id="orMsgSubject" maxlength="160" placeholder="Short subject for receiving departments">
+                                </label>
+                                <label class="ad-field om-span-2">
+                                    <span>Message</span>
+                                    <textarea class="form-control" id="orMsgBody" rows="3" maxlength="2000" placeholder="Message body — same card style as Notifications Messages…"></textarea>
+                                </label>
+                            </div>
+                            <div class="or-notify-quick">
+                                <button type="button" class="btn btn-ghost btn-sm" id="orNotifyTechstoresBtn">TechStores</button>
+                                <button type="button" class="btn btn-ghost btn-sm" id="orNotifyWorkshopBtn">Workshop</button>
+                                <button type="button" class="btn btn-ghost btn-sm" id="orNotifyAllItDirBtn">All IT Dir depts</button>
+                                <button type="button" class="btn btn-ghost btn-sm" id="orNotifyClearBtn">Clear To</button>
+                            </div>
+                            <div class="or-notify-grid" id="orNotifyGrid" role="group" aria-label="IT Dir notify list"></div>
+                            <div class="or-notify-send-row">
+                                <button type="button" class="btn btn-primary" id="orSendMsgBtn">Send</button>
+                                <span class="or-notify-send-hint">Sends the Subject / Message above to ticked offices (no Daily File letter required).</span>
+                            </div>
+                        </div>
+
+                        <div class="module-actions" style="margin-top:10px;">
+                            <button type="button" class="btn btn-success" id="orSaveBtn">Save to Daily File</button>
+                            <button type="button" class="btn btn-primary" id="orSaveAlertBtn">Save DF &amp; Send Messages</button>
+                            <button type="button" class="btn btn-ghost" id="orClearBtn">Clear form</button>
+                            <button type="button" class="btn btn-ghost btn-sm" data-target-nav="unit-requisitions">Open Unit Requisitions</button>
+                        </div>
+                    </div>
+
+                    <div class="or-stats" aria-live="polite">
+                        <span>Open for TechStores: <strong id="orStatOpen">0</strong></span>
+                        <span>Requisitions filed: <strong id="orStatReq">0</strong></span>
+                        <span>Urgent: <strong id="orStatUrgent">0</strong></span>
+                    </div>
+
+                    <div class="module-toolbar">
+                        <select class="form-control" id="orFilterStatus" style="max-width:220px;">
+                            <option value="">All statuses</option>
+                            <option value="filed">Filed</option>
+                            <option value="alerted_techstores">Alerted TechStores</option>
+                            <option value="seen_hod">Seen by HoDs</option>
+                            <option value="actioned">Actioned</option>
+                        </select>
+                        <select class="form-control" id="orFilterType" style="max-width:200px;">
+                            <option value="">All types</option>
+                            <option value="requisition">Requisitions</option>
+                            <option value="routine">Routine</option>
+                            <option value="directive">Directives</option>
+                            <option value="pass">Passes</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <input type="search" class="form-control" id="orSearch" placeholder="Search ref / subject / from…" style="max-width:260px;">
+                    </div>
+
+                    <div class="form-table-wrapper">
+                        <table class="overview-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Ref</th>
+                                    <th>From</th>
+                                    <th>Type</th>
+                                    <th>Subject</th>
+                                    <th>File</th>
+                                    <th>GS Auth</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                    <th class="qm-screen-only">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orderlyRoomBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div data-or-panel="files" hidden>
+                    <p class="req-intro" style="margin-top:0;">
+                        <strong>IT Dir Correspondence Files Register Book</strong> — Hand Over / Take Over index.
+                        Mark files <em>In</em>, <em>Out</em>, or <em>Not opened</em>; record handover signatures below.
+                    </p>
+
+                    <div class="or-stats cf-stats" aria-live="polite">
+                        <span>Total files: <strong id="cfStatTotal">0</strong></span>
+                        <span>In: <strong id="cfStatIn">0</strong></span>
+                        <span>Out: <strong id="cfStatOut">0</strong></span>
+                        <span>Not opened: <strong id="cfStatClosed">0</strong></span>
+                    </div>
+
+                    <div class="module-toolbar">
+                        <input type="search" class="form-control" id="cfSearch" placeholder="Search ser / ref / file…" style="max-width:240px;">
+                        <select class="form-control" id="cfFilterStatus" style="max-width:160px;">
+                            <option value="">All (In/Out)</option>
+                            <option value="in">In</option>
+                            <option value="out">Out</option>
+                            <option value="not_opened">Not opened</option>
+                        </select>
+                        <select class="form-control" id="cfFilterGroup" style="max-width:180px;">
+                            <option value="">All groups</option>
+                            <option value="ops">Ops / Security / Trg</option>
+                            <option value="admin">Personal admin (IT/9–10)</option>
+                            <option value="log">Log / Finance / Boards</option>
+                            <option value="ict">ICT / Computer (IT/34)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-table-wrapper cf-table-wrap">
+                        <table class="overview-table cf-table">
+                            <thead>
+                                <tr>
+                                    <th>Ser</th>
+                                    <th>Ref</th>
+                                    <th>File</th>
+                                    <th>In / Out</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody id="correspondenceFilesBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="dashboard-panel" style="margin-top:16px;">
+                        <h3 style="margin-top:0;">Hand Over / Take Over</h3>
+                        <p class="muted" style="margin-top:0;font-size:0.8rem;">
+                            Information Technology Directorate Orderly Room — Checked (outgoing), Received (incoming), Verified (CC), Authenticated (AO).
+                        </p>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label" for="cfHoDate">Date</label>
+                                <input type="date" class="form-control" id="cfHoDate">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="cfHoChecked">Checked by (outgoing)</label>
+                                <input type="text" class="form-control" id="cfHoChecked" placeholder="e.g. Sgt Maponda AM">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="cfHoReceived">Received by (incoming)</label>
+                                <input type="text" class="form-control" id="cfHoReceived" placeholder="e.g. Cpl Burs WF">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label" for="cfHoVerified">Verified by (CC)</label>
+                                <input type="text" class="form-control" id="cfHoVerified" placeholder="e.g. Cpl Chikanda T">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="cfHoAuth">Authenticated by (AO)</label>
+                                <input type="text" class="form-control" id="cfHoAuth" placeholder="Admin Officer">
+                            </div>
+                            <div class="form-col" style="flex:1.4;">
+                                <label class="form-label" for="cfHoNotes">Notes</label>
+                                <input type="text" class="form-control" id="cfHoNotes" placeholder="Total files In/Out remarks…">
+                            </div>
+                        </div>
+                        <div class="module-actions" style="margin-top:8px;">
+                            <button type="button" class="btn btn-success btn-sm" id="cfHoSaveBtn">Save handover</button>
+                        </div>
+                        <div class="form-table-wrapper" style="margin-top:12px;">
+                            <table class="overview-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Checked (Out)</th>
+                                        <th>Received (In)</th>
+                                        <th>Verified (CC)</th>
+                                        <th>Authenticated (AO)</th>
+                                        <th>Notes</th>
+                                        <th class="qm-screen-only">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cfHandoverBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>

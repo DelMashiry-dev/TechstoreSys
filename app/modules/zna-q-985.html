@@ -1,0 +1,40 @@
+<div id="zna-q-985" class="form-container">
+                <div class="form-header"><h2 class="form-title">ZNA Q 985 — Discrepancy Report</h2><button class="close-btn">&times;</button></div>
+                <p class="q982-intro"><span class="aso-ref">ASO Pt 1 Ch 7</span> Raise when quantity or description received differs from the voucher. Do not amend voucher copies.</p>
+                <div class="qm-batch-form">
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Unit / Establishment</label><input id="q985Unit" class="form-control" value="IT Dir Tech Stores"></div>
+                        <div class="form-col"><label class="form-label">Station</label><input id="q985Station" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Date</label><input type="date" id="q985Date" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Report No</label><input id="q985ReportNo" class="form-control"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Consignor</label><input id="q985Consignor" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Consignee</label><input id="q985Consignee" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Voucher type</label>
+                            <select id="q985VoucherType" class="form-control">
+                                <option value="ZNA Q 982">ZNA Q 982</option>
+                                <option value="ZNA Q 1033">ZNA Q 1033</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-col"><label class="form-label">Voucher No</label><input id="q985VoucherNo" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Voucher date</label><input type="date" id="q985VoucherDate" class="form-control"></div>
+                    </div>
+                    <div class="form-table-wrapper"><table class="qm-batch-table"><thead>
+                        <tr>
+                            <th>Description</th><th>Voucher qty</th><th>Received qty</th><th>Surplus</th><th>Deficit</th><th>Remarks</th><th class="qm-screen-only">Action</th>
+                        </tr>
+                    </thead><tbody id="zna-q-985-table-body"></tbody></table></div>
+                    <button type="button" class="btn btn-primary qm-screen-only" style="margin:10px 0" onclick="addZnaQ985Row()">Add Row</button>
+                    <div class="form-group"><label class="form-label">Particulars of discrepancy</label><textarea id="q985Narrative" class="form-control" rows="4"></textarea></div>
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Consignee signature</label><input id="q985ConsigneeSig" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Consignor acknowledgement</label><input id="q985ConsignorSig" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">CO / OC</label><input id="q985CoSig" class="form-control"></div>
+                    </div>
+                </div>
+                <button class="btn btn-success btn-save-module" style="margin-top:15px">Save Form</button>
+                <button class="btn btn-secondary btn-print-module" data-print-target="zna-q-985" style="margin-top:15px">Print Form</button>
+                <button class="btn btn-secondary btn-generate-report" data-report-module="zna-q-985" style="margin-top:15px">Generate Report</button>
+            </div>

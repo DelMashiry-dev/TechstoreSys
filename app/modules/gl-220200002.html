@@ -1,0 +1,98 @@
+<div id="gl-220200002" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">GL 220200002 - Technical Equipment Maintenance</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <!-- Form content for GL 220200002 -->
+                <div class="job-card">
+                    <div class="job-card-header">
+                        <div>
+                            <p><strong>Service Provider:</strong></p>
+                            <p>IT-DIR Technical Services</p>
+                            <p>Josiah Magama Tongogara Barracks</p>
+                            <p>P Bag 7720, Causeway</p>
+                            <p>Harare, Zimbabwe</p>
+                        </div>
+                        <div>
+                            <p><strong>Purchase Order Details:</strong></p>
+                            <p>Purchase Order Number: DP 1406/<input type="text" class="form-control" style="width: 80px; display: inline;" placeholder="Year"></p>
+                            <p>Purchase Order Date: <input type="date" class="form-control" style="width: 150px; display: inline;"></p>
+                            <p>Contact: Dir of Procurement</p>
+                            <p>Telephone: 790016</p>
+                            <p>Delivery Date: <input type="date" class="form-control" style="width: 150px; display: inline;"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Vendor Number:</label>
+                        <input type="text" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Please deliver goods to:</label>
+                        <select class="form-control">
+                            <option>IT Dir</option>
+                            <option>System Development Department</option>
+                            <option>Workshop</option>
+                            <option>ITTS</option>
+                            <option>Orderly Room</option>
+                            <option>DBA</option>
+                            <option>QM</option>
+                            <option>Programmers</option>
+                            <option>AQSO</option>
+                            <option>RP</option>
+                            <option>Server Room</option>
+                        </select>
+                    </div>
+                    
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" data-search-target="gl-220200002-table-body" placeholder="Search job card items...">
+
+                    <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Serial</th>
+                                <th>Item</th>
+                                <th>Description</th>
+                                <th>Qty</th>
+                                <th>Unit (EA)</th>
+                                <th>Price/Unit</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gl-220200002-table-body">
+                            <tr>
+                                <td>1</td>
+                                <td><input type="text" class="form-control"></td>
+                                <td><input type="text" class="form-control"></td>
+                                <td><input type="number" class="form-control job-card-qty" min="0" step="1"></td>
+                                <td>EA</td>
+                                <td><input type="number" class="form-control job-card-price" min="0" step="0.01"></td>
+                                <td><input type="number" class="form-control job-card-amount" readonly></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="job-card-total">Job Card Total: <span id="jobCardTotalAmount">$0</span></div>
+                    
+                    <button class="btn btn-primary" style="margin-top: 15px;" onclick="addRow('gl-220200002-table-body')">Add Item</button>
+                    
+                    <div class="form-row" style="margin-top: 20px;">
+                        <div class="form-col">
+                            <label class="form-label">Signature Block:</label>
+                            <input type="text" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Date:</label>
+                            <input type="date" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-success btn-save-module" style="margin-top: 15px;">Save Job Card</button>
+                <button class="btn btn-secondary btn-print-module" data-print-target="gl-220200002" style="margin-top: 15px;">Print Job Card</button>
+                <button class="btn btn-secondary btn-generate-report" data-report-module="gl-220200002" style="margin-top: 15px;">Generate Report</button>
+            </div>

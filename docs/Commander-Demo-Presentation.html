@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IT-DIR Tech Stores — Commander Demo Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+  <style>
+    :root,
+    [data-room="dark"] {
+      --bg: #0f1f18;
+      --bg-slide: #152920;
+      --panel: #1c3429;
+      --line: #2d4a3c;
+      --text: #e8f0eb;
+      --muted: #9bb5a6;
+      --accent: #3d9b6a;
+      --accent-soft: rgba(61, 155, 106, 0.18);
+      --warn: #c4a35a;
+      --danger: #c45c4a;
+      --white: #f4faf6;
+      --chrome-bg: rgba(15, 31, 24, 0.92);
+      --hint-bg: rgba(15, 31, 24, 0.9);
+      --cover-veil: radial-gradient(ellipse 70% 55% at 50% 18%, rgba(192, 32, 32, 0.18), transparent 58%),
+                    radial-gradient(ellipse 80% 50% at 100% 0%, rgba(61, 155, 106, 0.14), transparent 55%);
+      --code-bg: rgba(0, 0, 0, 0.28);
+      --code-fg: #b8e0c8;
+    }
+
+    /* Bright conference room / daylight windows */
+    [data-room="bright"] {
+      --bg: #eef3ef;
+      --bg-slide: #f7faf7;
+      --panel: #ffffff;
+      --line: #c5d4cb;
+      --text: #1a2e24;
+      --muted: #4d675a;
+      --accent: #1f7a4d;
+      --accent-soft: rgba(31, 122, 77, 0.12);
+      --warn: #9a7420;
+      --danger: #b33d2e;
+      --white: #0f1f18;
+      --chrome-bg: rgba(247, 250, 247, 0.96);
+      --hint-bg: rgba(238, 243, 239, 0.96);
+      --cover-veil: radial-gradient(ellipse 70% 55% at 50% 12%, rgba(192, 32, 32, 0.08), transparent 55%),
+                    linear-gradient(180deg, #f7faf7, #e6eee8);
+      --code-bg: rgba(15, 31, 24, 0.08);
+      --code-fg: #1f5c3a;
+    }
+
+    /* Projector / washed wall — mid contrast, less black crush */
+    [data-room="projector"] {
+      --bg: #1a2c24;
+      --bg-slide: #243830;
+      --panel: #2c453a;
+      --line: #3d5a4c;
+      --text: #f0f6f2;
+      --muted: #b0c7b8;
+      --accent: #5cb884;
+      --accent-soft: rgba(92, 184, 132, 0.2);
+      --warn: #d4b56a;
+      --danger: #d47a6a;
+      --white: #ffffff;
+      --chrome-bg: rgba(26, 44, 36, 0.94);
+      --hint-bg: rgba(26, 44, 36, 0.92);
+      --cover-veil: radial-gradient(ellipse 70% 55% at 50% 18%, rgba(192, 32, 32, 0.22), transparent 58%),
+                    radial-gradient(ellipse 80% 50% at 0% 100%, rgba(212, 175, 55, 0.12), transparent 50%);
+      --code-bg: rgba(0, 0, 0, 0.22);
+      --code-fg: #c8edd6;
+    }
+
+    /* Parade / command mess — deeper green + gold from emblems */
+    [data-room="parade"] {
+      --bg: #0a1610;
+      --bg-slide: #102018;
+      --panel: #163026;
+      --line: #2a4a38;
+      --text: #eaf3ec;
+      --muted: #a0b9aa;
+      --accent: #d4af37;
+      --accent-soft: rgba(212, 175, 55, 0.16);
+      --warn: #e2c988;
+      --danger: #c41e3a;
+      --white: #fff8e8;
+      --chrome-bg: rgba(10, 22, 16, 0.94);
+      --hint-bg: rgba(10, 22, 16, 0.92);
+      --cover-veil: radial-gradient(ellipse 65% 50% at 50% 10%, rgba(196, 30, 58, 0.28), transparent 55%),
+                    radial-gradient(ellipse 70% 45% at 85% 90%, rgba(212, 175, 55, 0.12), transparent 50%);
+      --code-bg: rgba(0, 0, 0, 0.35);
+      --code-fg: #e2c988;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "DM Sans", system-ui, sans-serif;
+      overflow: hidden;
+      transition: background 0.35s ease, color 0.25s ease;
+    }
+
+    .deck {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chrome {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 22px;
+      border-bottom: 1px solid var(--line);
+      background: var(--chrome-bg);
+    }
+
+    .room-switch {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .room-switch label {
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+      margin-right: 2px;
+    }
+
+    .room-switch button {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 5px 11px;
+      font: inherit;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .room-switch button:hover { color: var(--white); border-color: var(--accent); }
+    .room-switch button.active {
+      color: var(--white);
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .chrome-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .chrome-brand strong {
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .chrome-brand span {
+      font-size: 0.8rem;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chrome-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chrome-nav button {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .chrome-nav button:hover { border-color: var(--accent); color: var(--white); }
+    .chrome-nav button:disabled { opacity: 0.35; cursor: default; }
+
+    .progress {
+      width: 140px;
+      height: 4px;
+      background: var(--line);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress > i {
+      display: block;
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.25s ease;
+    }
+
+    .slide-count {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      min-width: 4.5rem;
+      text-align: right;
+    }
+
+    .viewport {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 36px 48px 48px;
+      display: none;
+      flex-direction: column;
+      gap: 18px;
+      background:
+        var(--cover-veil),
+        linear-gradient(160deg, var(--bg-slide), var(--bg));
+      overflow: auto;
+    }
+
+    .slide.cover {
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 14px;
+      padding: 28px 40px 56px;
+    }
+
+    .cover-crests {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(18px, 4vw, 42px);
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .cover-crests img {
+      object-fit: contain;
+      filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.35));
+    }
+
+    .cover-crests .crest-bird {
+      width: clamp(72px, 11vw, 110px);
+      height: auto;
+    }
+
+    .cover-crests .crest-seal {
+      width: clamp(140px, 22vw, 210px);
+      height: auto;
+    }
+
+    .cover-crests .crest-badge {
+      width: clamp(100px, 16vw, 150px);
+      height: auto;
+    }
+
+    .slide.cover .kicker {
+      margin-top: 4px;
+    }
+
+    .slide.cover h1 {
+      max-width: 16ch;
+      margin: 0 auto;
+    }
+
+    .slide.cover .lead {
+      margin: 0 auto;
+      max-width: 40rem;
+    }
+
+    .cover-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .cover-meta span {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .cover-footer {
+      margin-top: 18px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .cover-footer strong {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .slide.active { display: flex; animation: in 0.28s ease; }
+
+    @keyframes in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .kicker {
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    h1 {
+      font-family: Fraunces, Georgia, serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      line-height: 1.12;
+      color: var(--white);
+      max-width: 18ch;
+    }
+
+    h2 {
+      font-family: Fraunces, Georgia, serif;
+      font-size: clamp(1.55rem, 3vw, 2.15rem);
+      font-weight: 650;
+      color: var(--white);
+      line-height: 1.2;
+    }
+
+    h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+
+    .lead {
+      font-size: 1.12rem;
+      line-height: 1.55;
+      color: var(--muted);
+      max-width: 52rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .slide { padding: 24px 20px 80px; }
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+
+    .card.accent {
+      border-color: rgba(61, 155, 106, 0.45);
+      background: var(--accent-soft);
+    }
+
+    .stat {
+      text-align: left;
+    }
+
+    .stat b {
+      display: block;
+      font-family: Fraunces, Georgia, serif;
+      font-size: 1.55rem;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+
+    .stat span {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    ul.clean {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    ul.clean li {
+      padding-left: 14px;
+      border-left: 3px solid var(--accent);
+      color: var(--text);
+      line-height: 1.45;
+      font-size: 0.98rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    td code, .code {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.82em;
+      background: var(--code-bg);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: var(--code-fg);
+    }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .flow .node {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 16px;
+      min-width: 140px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .flow .node small {
+      display: block;
+      margin-top: 4px;
+      font-weight: 500;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .flow .arrow {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .diagram {
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 16px 10px;
+      overflow: hidden;
+    }
+
+    .diagram svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .diagram-caption {
+      margin-top: 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .diagram-row {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 900px) {
+      .diagram-row { grid-template-columns: 1fr; }
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: #8fd4ae;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .pill.warn { background: rgba(196, 163, 90, 0.18); color: #e2c988; }
+    .pill.danger { background: rgba(196, 92, 74, 0.18); color: #e8a094; }
+
+    .demo-beat {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .demo-num {
+      font-family: Fraunces, Georgia, serif;
+      font-size: 2.4rem;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .hint-bar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 8px 22px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      background: var(--hint-bg);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .toc {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .toc button {
+      text-align: left;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .toc button:hover { border-color: var(--accent); }
+    .toc button strong {
+      display: block;
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+    }
+    .toc button span {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    @media (max-width: 1100px) {
+      .chrome {
+        flex-wrap: wrap;
+        row-gap: 8px;
+      }
+      .room-switch { order: 3; width: 100%; justify-content: flex-start; }
+    }
+
+    @media print {
+      html, body { overflow: visible; height: auto; background: #fff; color: #111; }
+      .chrome, .hint-bar, .room-switch, .cover-footer { display: none !important; }
+      .viewport { overflow: visible; }
+      .slide {
+        display: block !important;
+        position: relative;
+        page-break-after: always;
+        background: #fff;
+        color: #111;
+        min-height: 100vh;
+      }
+      .slide h1, .slide h2, .slide h3 { color: #0f1f18; }
+      .lead, .stat span, th { color: #445; }
+      .card { border-color: #ccc; background: #f7f7f7; }
+      .cover-crests img { filter: none; }
+    }
+  </style>
+</head>
+<body data-room="dark">
+  <div class="deck">
+    <header class="chrome">
+      <div class="chrome-brand">
+        <strong>IT-DIR Tech Stores</strong>
+        <span>Commander demonstration · Cost centre Z04P2SP212</span>
+      </div>
+      <div class="room-switch" id="roomSwitch" role="group" aria-label="Room background">
+        <label>Room</label>
+        <button type="button" data-room="dark" class="active" title="Dark boardroom">Dark</button>
+        <button type="button" data-room="bright" title="Bright daylight room">Bright</button>
+        <button type="button" data-room="projector" title="Projector / washed wall">Projector</button>
+        <button type="button" data-room="parade" title="Parade / command mess gold">Parade</button>
+      </div>
+      <div class="chrome-nav">
+        <button type="button" id="btnPrev" title="Previous (←)">← Prev</button>
+        <div class="progress" aria-hidden="true"><i id="progressBar"></i></div>
+        <span class="slide-count" id="slideCount">1 / 1</span>
+        <button type="button" id="btnNext" title="Next (→)">Next →</button>
+      </div>
+    </header>
+
+    <main class="viewport" id="viewport">
+
+      <!-- 0 COVER -->
+      <section class="slide cover active" data-title="Cover">
+        <div class="cover-crests" aria-hidden="true">
+          <img class="crest-bird" src="assets/zimbabwe-bird.png" alt="">
+          <img class="crest-seal" src="assets/it-dir-seal.png" alt="Zimbabwe National Army Information Technology Directorate">
+          <img class="crest-badge" src="assets/techstores-badge.png" alt="Tech Stores">
+        </div>
+        <p class="kicker">Zimbabwe National Army · Information Technology Directorate</p>
+        <h1>Tech Stores General Ledger System</h1>
+        <p class="lead">
+          Commander briefing — live demonstration of custody, stock accountability,
+          GL buying power, and role-based access.
+        </p>
+        <div class="cover-meta">
+          <span>~35 min live demo</span>
+          <span>Cost centre Z04P2SP212</span>
+          <span>FY 2026 · IT Logistics</span>
+        </div>
+        <p class="cover-footer">
+          <strong>Room:</strong> use Dark / Bright / Projector / Parade in the top bar · press <strong>T</strong> to cycle
+        </p>
+      </section>
+
+      <!-- 1 AGENDA -->
+      <section class="slide" data-title="Agenda">
+        <p class="kicker">Agenda</p>
+        <h2>What we will cover</h2>
+        <div class="toc" id="toc"></div>
+      </section>
+
+      <!-- 2 OUTCOMES -->
+      <section class="slide" data-title="Outcomes">
+        <p class="kicker">Briefing outcomes</p>
+        <h2>What commanders should leave knowing</h2>
+        <ul class="clean">
+          <li>ICT equipment custody at the <strong>gate</strong> is recorded by RP without exposing ledgers.</li>
+          <li><strong>TechStores</strong> staff alone alter stock quantities; Q / SVCS forms sit in one catalogue.</li>
+          <li><strong>GL buying power</strong> is visible to command; oversight accounts are VIEW ONLY.</li>
+          <li>Data lives on disk in <span class="code">techstores.db</span> — not only in the browser.</li>
+          <li>Orderly Room and Communications are scoped — non-stores staff do not browse GL stocks.</li>
+        </ul>
+      </section>
+
+      <!-- 3 PROBLEM -->
+      <section class="slide" data-title="The problem">
+        <p class="kicker">Demo beat 1 · 2 min</p>
+        <h2>Why this system exists</h2>
+        <div class="diagram" aria-label="Before and after accountability diagram">
+          <svg viewBox="0 0 960 220" role="img">
+            <defs>
+              <marker id="arrMuted" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="#6f8a7a"/>
+              </marker>
+              <marker id="arrOk" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="#3d9b6a"/>
+              </marker>
+            </defs>
+            <text x="120" y="28" text-anchor="middle" fill="#9bb5a6" font-size="13" font-weight="700" letter-spacing="1">BEFORE</text>
+            <rect x="20" y="48" width="100" height="44" rx="8" fill="#243a30" stroke="#4a3a2a" stroke-width="1.5"/>
+            <text x="70" y="75" text-anchor="middle" fill="#e8f0eb" font-size="12" font-weight="600">Paper</text>
+            <rect x="140" y="48" width="100" height="44" rx="8" fill="#243a30" stroke="#4a3a2a" stroke-width="1.5"/>
+            <text x="190" y="75" text-anchor="middle" fill="#e8f0eb" font-size="12" font-weight="600">Excel</text>
+            <rect x="80" y="120" width="100" height="44" rx="8" fill="#243a30" stroke="#4a3a2a" stroke-width="1.5"/>
+            <text x="130" y="147" text-anchor="middle" fill="#e8f0eb" font-size="12" font-weight="600">Verbal</text>
+            <line x1="120" y1="92" x2="120" y2="118" stroke="#6f8a7a" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrMuted)"/>
+            <text x="120" y="198" text-anchor="middle" fill="#c45c4a" font-size="12" font-weight="700">Weak audit trail</text>
+
+            <line x1="280" y1="110" x2="340" y2="110" stroke="#3d9b6a" stroke-width="2.5" marker-end="url(#arrOk)"/>
+            <text x="310" y="98" text-anchor="middle" fill="#8fd4ae" font-size="11" font-weight="700">NOW</text>
+
+            <text x="620" y="28" text-anchor="middle" fill="#9bb5a6" font-size="13" font-weight="700" letter-spacing="1">AFTER — ONE SYSTEM</text>
+            <rect x="380" y="70" width="130" height="70" rx="10" fill="#1f3d30" stroke="#3d9b6a" stroke-width="2"/>
+            <text x="445" y="100" text-anchor="middle" fill="#f4faf6" font-size="13" font-weight="700">Gate custody</text>
+            <text x="445" y="120" text-anchor="middle" fill="#9bb5a6" font-size="11">RP register</text>
+            <rect x="540" y="70" width="130" height="70" rx="10" fill="#1f3d30" stroke="#3d9b6a" stroke-width="2"/>
+            <text x="605" y="100" text-anchor="middle" fill="#f4faf6" font-size="13" font-weight="700">TechStores</text>
+            <text x="605" y="120" text-anchor="middle" fill="#9bb5a6" font-size="11">Stock + Q forms</text>
+            <rect x="700" y="70" width="130" height="70" rx="10" fill="#1f3d30" stroke="#3d9b6a" stroke-width="2"/>
+            <text x="765" y="100" text-anchor="middle" fill="#f4faf6" font-size="13" font-weight="700">GL / Command</text>
+            <text x="765" y="120" text-anchor="middle" fill="#9bb5a6" font-size="11">Buying power</text>
+            <line x1="510" y1="105" x2="538" y2="105" stroke="#3d9b6a" stroke-width="2" marker-end="url(#arrOk)"/>
+            <line x1="670" y1="105" x2="698" y2="105" stroke="#3d9b6a" stroke-width="2" marker-end="url(#arrOk)"/>
+            <rect x="480" y="168" width="280" height="36" rx="8" fill="rgba(61,155,106,0.18)" stroke="#3d9b6a"/>
+            <text x="620" y="191" text-anchor="middle" fill="#8fd4ae" font-size="13" font-weight="700">techstores.db · role RBAC · audit_log</text>
+          </svg>
+          <p class="diagram-caption">From fragmented books to one auditable IT Dir Tech Stores chain</p>
+        </div>
+      </section>
+
+      <!-- 4 ARCHITECTURE -->
+      <section class="slide" data-title="Architecture">
+        <p class="kicker">System architecture</p>
+        <h2>How it runs on the station</h2>
+        <div class="diagram" aria-label="Runtime architecture diagram">
+          <svg viewBox="0 0 960 280" role="img">
+            <defs>
+              <marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="#3d9b6a"/>
+              </marker>
+            </defs>
+            <!-- boxes -->
+            <rect x="30" y="90" width="150" height="90" rx="12" fill="#1c3429" stroke="#3d9b6a" stroke-width="2"/>
+            <text x="105" y="128" text-anchor="middle" fill="#f4faf6" font-size="15" font-weight="700">Operator</text>
+            <text x="105" y="150" text-anchor="middle" fill="#9bb5a6" font-size="12">Role-based login</text>
+
+            <rect x="230" y="90" width="170" height="90" rx="12" fill="#1c3429" stroke="#2d4a3c" stroke-width="2"/>
+            <text x="315" y="122" text-anchor="middle" fill="#f4faf6" font-size="15" font-weight="700">Browser /app/</text>
+            <text x="315" y="144" text-anchor="middle" fill="#9bb5a6" font-size="12">Forms · nav · VIEW ONLY</text>
+            <text x="315" y="164" text-anchor="middle" fill="#9bb5a6" font-size="12">localStorage mirror</text>
+
+            <rect x="450" y="90" width="190" height="90" rx="12" fill="#1c3429" stroke="#2d4a3c" stroke-width="2"/>
+            <text x="545" y="122" text-anchor="middle" fill="#f4faf6" font-size="15" font-weight="700">server.py :8080</text>
+            <text x="545" y="144" text-anchor="middle" fill="#9bb5a6" font-size="12">API · auth · audit POST</text>
+            <text x="545" y="164" text-anchor="middle" fill="#9bb5a6" font-size="12">START-SYSTEM.bat / EXE</text>
+
+            <rect x="690" y="90" width="230" height="90" rx="12" fill="#243f32" stroke="#3d9b6a" stroke-width="2.5"/>
+            <text x="805" y="122" text-anchor="middle" fill="#f4faf6" font-size="15" font-weight="700">techstores.db</text>
+            <text x="805" y="144" text-anchor="middle" fill="#9bb5a6" font-size="12">Users · modules · budgets</text>
+            <text x="805" y="164" text-anchor="middle" fill="#8fd4ae" font-size="12" font-weight="600">audit_log · persists reboot</text>
+
+            <line x1="180" y1="135" x2="228" y2="135" stroke="#3d9b6a" stroke-width="2.5" marker-end="url(#arrA)"/>
+            <line x1="400" y1="135" x2="448" y2="135" stroke="#3d9b6a" stroke-width="2.5" marker-end="url(#arrA)"/>
+            <line x1="640" y1="135" x2="688" y2="135" stroke="#3d9b6a" stroke-width="2.5" marker-end="url(#arrA)"/>
+
+            <!-- start paths -->
+            <rect x="230" y="30" width="200" height="36" rx="8" fill="rgba(61,155,106,0.15)" stroke="#3d9b6a"/>
+            <text x="330" y="53" text-anchor="middle" fill="#8fd4ae" font-size="12" font-weight="700">START-SYSTEM.bat</text>
+            <line x1="330" y1="66" x2="545" y2="90" stroke="#3d9b6a" stroke-width="1.5" stroke-dasharray="5 4"/>
+
+            <rect x="690" y="30" width="230" height="36" rx="8" fill="rgba(196,163,90,0.12)" stroke="#c4a35a"/>
+            <text x="805" y="53" text-anchor="middle" fill="#e2c988" font-size="12" font-weight="700">Portable: TECHSTORES.exe</text>
+            <line x1="805" y1="66" x2="545" y2="90" stroke="#c4a35a" stroke-width="1.5" stroke-dasharray="5 4"/>
+
+            <text x="480" y="230" text-anchor="middle" fill="#9bb5a6" font-size="13">Cost centre Z04P2SP212 · FY 2026 · IT Logistics</text>
+            <text x="480" y="255" text-anchor="middle" fill="#6f8a7a" font-size="12">Demo with green “Database Connected” so the trail is on disk</text>
+          </svg>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Standard start</h3>
+            <ul class="clean">
+              <li>Run <span class="code">START-SYSTEM.bat</span></li>
+              <li>Keep console open · open <span class="code">/app/</span></li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Portable pack</h3>
+            <ul class="clean">
+              <li><span class="code">dist/TECHSTORES-Portable/</span> — no Python required</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- CUSTODY CHAIN DIAGRAM -->
+      <section class="slide" data-title="Custody chain">
+        <p class="kicker">Operational flow diagram</p>
+        <h2>Gate → TechStores → Workshop → Ledger</h2>
+        <div class="diagram" aria-label="Equipment custody chain diagram">
+          <svg viewBox="0 0 960 300" role="img">
+            <defs>
+              <marker id="arrC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="#3d9b6a"/>
+              </marker>
+            </defs>
+            <rect x="20" y="40" width="200" height="120" rx="12" fill="#1c3429" stroke="#c4a35a" stroke-width="2"/>
+            <text x="120" y="78" text-anchor="middle" fill="#e2c988" font-size="12" font-weight="700">RP / GATE</text>
+            <text x="120" y="108" text-anchor="middle" fill="#f4faf6" font-size="16" font-weight="700">Gate Register</text>
+            <text x="120" y="132" text-anchor="middle" fill="#9bb5a6" font-size="12">ICT in / out</text>
+            <text x="120" y="150" text-anchor="middle" fill="#9bb5a6" font-size="12">No GL access</text>
+
+            <line x1="220" y1="100" x2="268" y2="100" stroke="#3d9b6a" stroke-width="2.5" marker-end="url(#arrC)"/>
+            <text x="244" y="88" text-anchor="middle" fill="#8fd4ae" font-size="10" font-weight="700">PUSH</text>
+
+            <rect x="270" y="40" width="200" height="120" rx="12" fill="#1c3429" stroke="#3d9b6a" stroke-width="2"/>
+            <text x="370" y="78" text-anchor="middle" fill="#8fd4ae" font-size="12" font-weight="700">TECHSTORES</text>
+            <text x="370" y="108" text-anchor="middle" fill="#f4faf6" font-size="15" font-weight="700">Equipment Register</text>
+            <text x="370" y="132" text-anchor="middle" fill="#9bb5a6" font-size="12">Storeman / RQ</text>
+            <text x="370" y="150" text-anchor="middle" fill="#9bb5a6" font-size="12">SVCS 1045 ref</text>
+
+            <line x1="470" y1="100" x2="518" y2="100" stroke="#3d9b6a" stroke-width="2.5" marker-end="url(#arrC)"/>
+
+            <rect x="520" y="40" width="200" height="120" rx="12" fill="#1c3429" stroke="#2d4a3c" stroke-width="2"/>
+            <text x="620" y="78" text-anchor="middle" fill="#9bb5a6" font-size="12" font-weight="700">WORKSHOP</text>
+            <text x="620" y="108" text-anchor="middle" fill="#f4faf6" font-size="15" font-weight="700">Workshop Register</text>
+            <text x="620" y="132" text-anchor="middle" fill="#9bb5a6" font-size="12">Fault / repair</text>
+            <text x="620" y="150" text-anchor="middle" fill="#9bb5a6" font-size="12">SVCS 1045</text>
+
+            <line x1="370" y1="160" x2="370" y2="198" stroke="#3d9b6a" stroke-width="2.5" marker-end="url(#arrC)"/>
+
+            <rect x="240" y="200" width="480" height="70" rx="12" fill="#243f32" stroke="#3d9b6a" stroke-width="2"/>
+            <text x="480" y="230" text-anchor="middle" fill="#f4faf6" font-size="15" font-weight="700">Stock ledger path (separate)</text>
+            <text x="480" y="252" text-anchor="middle" fill="#9bb5a6" font-size="12">Issue Voucher · Stock Take · GL impact · Q 1033 — TechStores edit only</text>
+
+            <rect x="760" y="70" width="170" height="90" rx="12" fill="rgba(61,155,106,0.12)" stroke="#3d9b6a" stroke-dasharray="5 4"/>
+            <text x="845" y="108" text-anchor="middle" fill="#8fd4ae" font-size="13" font-weight="700">COMMAND</text>
+            <text x="845" y="130" text-anchor="middle" fill="#9bb5a6" font-size="12">VIEW ONLY</text>
+            <text x="845" y="148" text-anchor="middle" fill="#9bb5a6" font-size="12">Inspect all stages</text>
+          </svg>
+          <p class="diagram-caption">Custody movement does not by itself change inventory quantities — ledger edits stay with TechStores</p>
+        </div>
+      </section>
+
+      <!-- RBAC DIAGRAM -->
+      <section class="slide" data-title="Access diagram">
+        <p class="kicker">Roles diagram</p>
+        <h2>Access layers at a glance</h2>
+        <div class="diagram-row">
+          <div class="diagram" aria-label="Role access layers diagram">
+            <svg viewBox="0 0 560 320" role="img">
+              <rect x="40" y="20" width="480" height="52" rx="10" fill="#243f32" stroke="#3d9b6a" stroke-width="2"/>
+              <text x="280" y="42" text-anchor="middle" fill="#8fd4ae" font-size="12" font-weight="700">OVERSIGHT · VIEW ONLY</text>
+              <text x="280" y="60" text-anchor="middle" fill="#f4faf6" font-size="13">Commander · Brig · Dir · DD · AQSO2 · TSO — see all, edit none</text>
+
+              <rect x="70" y="90" width="420" height="52" rx="10" fill="#1c3429" stroke="#3d9b6a" stroke-width="2"/>
+              <text x="280" y="112" text-anchor="middle" fill="#8fd4ae" font-size="12" font-weight="700">TECHSTORES EDIT</text>
+              <text x="280" y="130" text-anchor="middle" fill="#f4faf6" font-size="13">Admin · RQ · Storeman — quantities &amp; GL</text>
+
+              <rect x="100" y="160" width="160" height="70" rx="10" fill="#1c3429" stroke="#c4a35a" stroke-width="1.5"/>
+              <text x="180" y="190" text-anchor="middle" fill="#e2c988" font-size="12" font-weight="700">RP GATE</text>
+              <text x="180" y="210" text-anchor="middle" fill="#9bb5a6" font-size="11">Gate + Comms</text>
+
+              <rect x="280" y="160" width="160" height="70" rx="10" fill="#1c3429" stroke="#2d4a3c" stroke-width="1.5"/>
+              <text x="360" y="190" text-anchor="middle" fill="#9bb5a6" font-size="12" font-weight="700">ORDERLY</text>
+              <text x="360" y="210" text-anchor="middle" fill="#9bb5a6" font-size="11">DF + Comms · no GL</text>
+
+              <rect x="190" y="250" width="180" height="50" rx="10" fill="#1c3429" stroke="#2d4a3c" stroke-width="1.5"/>
+              <text x="280" y="272" text-anchor="middle" fill="#9bb5a6" font-size="12" font-weight="700">WORKSHOP / DEPT OCs</text>
+              <text x="280" y="290" text-anchor="middle" fill="#9bb5a6" font-size="11">Own desk only</text>
+            </svg>
+          </div>
+          <div class="card">
+            <h3>Demo contrast</h3>
+            <ul class="clean">
+              <li><span class="code">admin</span> — full edit</li>
+              <li><span class="code">dir</span> — VIEW ONLY badge</li>
+              <li><span class="code">rp</span> — no GL in sidebar</li>
+              <li><span class="code">rq</span> — stores + ledgers</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- BUYING POWER DIAGRAM -->
+      <section class="slide" data-title="Buying power">
+        <p class="kicker">Finance diagram</p>
+        <h2>GL buying power — how to explain it</h2>
+        <div class="diagram" aria-label="Buying power formula diagram">
+          <svg viewBox="0 0 960 260" role="img">
+            <defs>
+              <marker id="arrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="#3d9b6a"/>
+              </marker>
+            </defs>
+            <rect x="30" y="70" width="170" height="80" rx="12" fill="#1c3429" stroke="#3d9b6a" stroke-width="2"/>
+            <text x="115" y="105" text-anchor="middle" fill="#8fd4ae" font-size="12" font-weight="700">DAF TARGET</text>
+            <text x="115" y="128" text-anchor="middle" fill="#f4faf6" font-size="14" font-weight="700">Monthly vote</text>
+
+            <text x="220" y="115" text-anchor="middle" fill="#c45c4a" font-size="28" font-weight="700">−</text>
+
+            <rect x="250" y="40" width="200" height="54" rx="10" fill="#1c3429" stroke="#2d4a3c"/>
+            <text x="350" y="72" text-anchor="middle" fill="#f4faf6" font-size="13" font-weight="600">Committed (Bids / PO / DP F1)</text>
+            <rect x="250" y="110" width="200" height="54" rx="10" fill="#1c3429" stroke="#2d4a3c"/>
+            <text x="350" y="142" text-anchor="middle" fill="#f4faf6" font-size="13" font-weight="600">Vouchers expended</text>
+
+            <text x="480" y="115" text-anchor="middle" fill="#3d9b6a" font-size="28" font-weight="700">=</text>
+
+            <rect x="520" y="70" width="200" height="80" rx="12" fill="#243f32" stroke="#3d9b6a" stroke-width="2.5"/>
+            <text x="620" y="105" text-anchor="middle" fill="#8fd4ae" font-size="12" font-weight="700">BUYING POWER</text>
+            <text x="620" y="128" text-anchor="middle" fill="#f4faf6" font-size="14" font-weight="700">Available to buy</text>
+
+            <rect x="750" y="55" width="180" height="110" rx="12" fill="rgba(61,155,106,0.12)" stroke="#3d9b6a" stroke-dasharray="4 3"/>
+            <text x="840" y="90" text-anchor="middle" fill="#f4faf6" font-size="13" font-weight="700">Per GL account</text>
+            <text x="840" y="112" text-anchor="middle" fill="#9bb5a6" font-size="11">ICT · Software</text>
+            <text x="840" y="130" text-anchor="middle" fill="#9bb5a6" font-size="11">Spares · Maint</text>
+            <text x="840" y="148" text-anchor="middle" fill="#9bb5a6" font-size="11">ZOFF</text>
+
+            <!-- bar visual -->
+            <text x="30" y="200" fill="#9bb5a6" font-size="12" font-weight="600">Example utilisation (illustrative)</text>
+            <rect x="30" y="212" width="700" height="22" rx="6" fill="#152920" stroke="#2d4a3c"/>
+            <rect x="30" y="212" width="280" height="22" rx="6" fill="#c4a35a"/>
+            <rect x="310" y="212" width="160" height="22" fill="#3d9b6a"/>
+            <rect x="470" y="212" width="260" height="22" rx="0 6 6 0" fill="#1c3429"/>
+            <text x="160" y="228" text-anchor="middle" fill="#0f1f18" font-size="11" font-weight="700">Committed</text>
+            <text x="390" y="228" text-anchor="middle" fill="#0f1f18" font-size="11" font-weight="700">Vouchers</text>
+            <text x="600" y="228" text-anchor="middle" fill="#8fd4ae" font-size="11" font-weight="700">Buying power left</text>
+          </svg>
+          <p class="diagram-caption">Open any GL ledger in the live demo and point to Target · Committed · Vouchers · Buying Power</p>
+        </div>
+      </section>
+
+      <!-- DEMO JOURNEY -->
+      <section class="slide" data-title="Demo map">
+        <p class="kicker">Demonstration journey</p>
+        <h2>Ten beats on one map</h2>
+        <div class="diagram" aria-label="Demo journey timeline">
+          <svg viewBox="0 0 960 270" role="img">
+            <line x1="40" y1="120" x2="920" y2="120" stroke="#2d4a3c" stroke-width="3"/>
+            <!-- steps -->
+            <g font-family="DM Sans, sans-serif">
+              <circle cx="60" cy="120" r="14" fill="#3d9b6a"/><text x="60" y="125" text-anchor="middle" fill="#0f1f18" font-size="12" font-weight="700">1</text>
+              <text x="60" y="160" text-anchor="middle" fill="#f4faf6" font-size="11" font-weight="600">Problem</text>
+              <circle cx="155" cy="120" r="14" fill="#3d9b6a"/><text x="155" y="125" text-anchor="middle" fill="#0f1f18" font-size="12" font-weight="700">2</text>
+              <text x="155" y="160" text-anchor="middle" fill="#f4faf6" font-size="11" font-weight="600">Start DB</text>
+              <circle cx="250" cy="120" r="14" fill="#3d9b6a"/><text x="250" y="125" text-anchor="middle" fill="#0f1f18" font-size="12" font-weight="700">3</text>
+              <text x="250" y="160" text-anchor="middle" fill="#f4faf6" font-size="11" font-weight="600">Architecture</text>
+              <circle cx="345" cy="120" r="14" fill="#c4a35a"/><text x="345" y="125" text-anchor="middle" fill="#0f1f18" font-size="12" font-weight="700">4</text>
+              <text x="345" y="160" text-anchor="middle" fill="#f4faf6" font-size="11" font-weight="600">Roles</text>
+              <text x="345" y="176" text-anchor="middle" fill="#e2c988" font-size="10">VIEW ONLY</text>
+              <circle cx="440" cy="120" r="14" fill="#c4a35a"/><text x="440" y="125" text-anchor="middle" fill="#0f1f18" font-size="12" font-weight="700">5</text>
+              <text x="440" y="160" text-anchor="middle" fill="#f4faf6" font-size="11" font-weight="600">RP Gate</text>
+              <circle cx="535" cy="120" r="14" fill="#3d9b6a"/><text x="535" y="125" text-anchor="middle" fill="#0f1f18" font-size="12" font-weight="700">6</text>
+              <text x="535" y="160" text-anchor="middle" fill="#f4faf6" font-size="11" font-weight="600">Stock</text>
+              <circle cx="630" cy="120" r="14" fill="#3d9b6a"/><text x="630" y="125" text-anchor="middle" fill="#0f1f18" font-size="12" font-weight="700">7</text>
+              <text x="630" y="160" text-anchor="middle" fill="#f4faf6" font-size="11" font-weight="600">GL power</text>
+              <circle cx="725" cy="120" r="14" fill="#3d9b6a"/><text x="725" y="125" text-anchor="middle" fill="#0f1f18" font-size="12" font-weight="700">8</text>
+              <text x="725" y="160" text-anchor="middle" fill="#f4faf6" font-size="11" font-weight="600">Q / DP</text>
+              <circle cx="820" cy="120" r="14" fill="#3d9b6a"/><text x="820" y="125" text-anchor="middle" fill="#0f1f18" font-size="12" font-weight="700">9</text>
+              <text x="820" y="160" text-anchor="middle" fill="#f4faf6" font-size="11" font-weight="600">Orderly</text>
+              <circle cx="900" cy="120" r="14" fill="#3d9b6a"/><text x="900" y="125" text-anchor="middle" fill="#0f1f18" font-size="12" font-weight="700">10</text>
+              <text x="900" y="160" text-anchor="middle" fill="#f4faf6" font-size="11" font-weight="600">Close</text>
+            </g>
+            <text x="480" y="220" text-anchor="middle" fill="#9bb5a6" font-size="13">Live system on projector · this deck on second screen · ~35 minutes</text>
+            <text x="480" y="245" text-anchor="middle" fill="#6f8a7a" font-size="12">Gold steps = accountability contrast (oversight / gate scope)</text>
+          </svg>
+        </div>
+      </section>
+
+      <!-- 5 LAYERS -->
+      <section class="slide" data-title="Layers">
+        <p class="kicker">Architecture detail</p>
+        <h2>Layers of responsibility</h2>
+        <div class="diagram" style="margin-bottom:12px;" aria-label="Stacked layers diagram">
+          <svg viewBox="0 0 960 160" role="img">
+            <rect x="60" y="16" width="840" height="28" rx="6" fill="#243f32" stroke="#3d9b6a"/>
+            <text x="480" y="35" text-anchor="middle" fill="#f4faf6" font-size="13" font-weight="600">Browser UI — forms, role nav, VIEW ONLY guards</text>
+            <rect x="100" y="52" width="760" height="28" rx="6" fill="#1c3429" stroke="#2d4a3c"/>
+            <text x="480" y="71" text-anchor="middle" fill="#f4faf6" font-size="13" font-weight="600">server.py API — login, state save, audit POST, static files</text>
+            <rect x="140" y="88" width="680" height="28" rx="6" fill="#1c3429" stroke="#3d9b6a"/>
+            <text x="480" y="107" text-anchor="middle" fill="#8fd4ae" font-size="13" font-weight="700">techstores.db — users, modules, budgets, cuts, audit_log (on disk)</text>
+            <rect x="180" y="124" width="600" height="28" rx="6" fill="#152920" stroke="#2d4a3c"/>
+            <text x="480" y="143" text-anchor="middle" fill="#9bb5a6" font-size="13" font-weight="600">Role engine — ROLE_PERMISSIONS + applyAccessControl</text>
+          </svg>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Layer</th><th>Persists?</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Browser UI</td><td>Session + localStorage mirror</td></tr>
+            <tr><td>server.py API</td><td>Yes — writes SQLite</td></tr>
+            <tr><td>techstores.db</td><td>Yes — survives reboot</td></tr>
+            <tr><td>Role engine</td><td>Policy in application code</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 6 ROLES -->
+      <section class="slide" data-title="Roles">
+        <p class="kicker">Access model</p>
+        <h2>Who sees what — who can edit</h2>
+        <table>
+          <thead>
+            <tr><th>Account</th><th>Login</th><th>Sees</th><th>Edits</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Admin</td><td><span class="code">admin</span></td><td>All</td><td>Full + users + Release Cut</td></tr>
+            <tr><td>Commander / Dir / DD / AQSO2 / TSO</td><td><span class="code">commander</span>, <span class="code">dir</span>…</td><td>All</td><td><span class="pill warn">VIEW ONLY</span></td></tr>
+            <tr><td>RQ</td><td><span class="code">rq</span></td><td>Stores + GL + Q + procurement</td><td>Yes</td></tr>
+            <tr><td>Storeman</td><td><span class="code">storeman</span></td><td>Voucher, stock, equipment, selected Q</td><td>Yes — scoped</td></tr>
+            <tr><td>Orderly</td><td><span class="code">orderly</span></td><td>Orderly + Comms + requisitions</td><td>Yes — no GL</td></tr>
+            <tr><td>RP Gate</td><td><span class="code">rp</span></td><td>Gate Register + Comms</td><td>Custody only</td></tr>
+            <tr><td>Workshop</td><td><span class="code">workshop</span></td><td>Workshop + SVCS 1045</td><td>Yes</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 7 ROLE PITCH -->
+      <section class="slide" data-title="Role pitch">
+        <p class="kicker">Three sentences for command</p>
+        <h2>How to explain the roles</h2>
+        <div class="grid-3">
+          <div class="card accent">
+            <h3>Oversight</h3>
+            <p class="lead" style="font-size:0.95rem;max-width:none;">Command visibility without ledger risk. Header shows VIEW ONLY. Saves are blocked.</p>
+          </div>
+          <div class="card">
+            <h3>TechStores</h3>
+            <p class="lead" style="font-size:0.95rem;max-width:none;">RQ and Storeman own quantities. GL, vouchers, stock take, and Q forms live here.</p>
+          </div>
+          <div class="card">
+            <h3>Non-stores</h3>
+            <p class="lead" style="font-size:0.95rem;max-width:none;">Orderly, RP, Workshop only see duty-relevant modules — no browsing GL stocks.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- DEMO STEPS 8-17 roughly -->
+      <section class="slide" data-title="Demo 1–2">
+        <p class="kicker">Live demo script</p>
+        <h2>Beats 1–2 · Open & architecture</h2>
+        <div class="grid-2">
+          <div class="card demo-beat">
+            <div class="demo-num">01</div>
+            <div>
+              <h3>Problem · 2 min</h3>
+              <p><strong>Say:</strong> Fragmented ICT stores; weak custody; buying power invisible.</p>
+              <p style="color:var(--muted);margin-top:8px;"><strong>Show:</strong> Speak to the gap — no system yet.</p>
+            </div>
+          </div>
+          <div class="card demo-beat">
+            <div class="demo-num">02</div>
+            <div>
+              <h3>How it runs · 3 min</h3>
+              <p><strong>Say:</strong> Local install; START-SYSTEM.bat; saves to techstores.db.</p>
+              <p style="color:var(--muted);margin-top:8px;"><strong>Show:</strong> Green Database Connected + DB path.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Demo 3–4">
+        <p class="kicker">Live demo script</p>
+        <h2>Beats 3–4 · Architecture & roles</h2>
+        <div class="grid-2">
+          <div class="card demo-beat">
+            <div class="demo-num">03</div>
+            <div>
+              <h3>Architecture · 2 min</h3>
+              <p><strong>Say:</strong> Browser → server → SQLite. Roles decide modules and edit rights.</p>
+              <p style="color:var(--muted);margin-top:8px;"><strong>Show:</strong> Flow diagram · Z04P2SP212.</p>
+            </div>
+          </div>
+          <div class="card demo-beat">
+            <div class="demo-num">04</div>
+            <div>
+              <h3>Admin vs Commander · 4 min</h3>
+              <p><strong>Say:</strong> Admin edits. Commander / Dir open all but cannot alter quantities.</p>
+              <p style="color:var(--muted);margin-top:8px;"><strong>Show:</strong> VIEW ONLY badge · blocked qty save.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Demo 5–6">
+        <p class="kicker">Live demo script</p>
+        <h2>Beats 5–6 · Gate → TechStores</h2>
+        <div class="grid-2">
+          <div class="card demo-beat">
+            <div class="demo-num">05</div>
+            <div>
+              <h3>RP Gate · 5 min</h3>
+              <p><strong>Login:</strong> <span class="code">rp</span> / <span class="code">rp123</span></p>
+              <p><strong>Show:</strong> Gate Register + Comms only · Date In cannot be tomorrow.</p>
+              <p style="color:var(--muted);margin-top:8px;">Custody ≠ inventory ledger.</p>
+            </div>
+          </div>
+          <div class="card demo-beat">
+            <div class="demo-num">06</div>
+            <div>
+              <h3>TechStores stock · 6 min</h3>
+              <p><strong>Login:</strong> <span class="code">rq</span> or <span class="code">storeman</span></p>
+              <p><strong>Show:</strong> Issue Voucher → Stock Take → Equipment Register.</p>
+              <p style="color:var(--muted);margin-top:8px;">Only stores roles change quantities.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Demo 7–8">
+        <p class="kicker">Live demo script</p>
+        <h2>Beats 7–8 · GL & procurement</h2>
+        <div class="grid-2">
+          <div class="card demo-beat">
+            <div class="demo-num">07</div>
+            <div>
+              <h3>Buying power · 5 min</h3>
+              <p><strong>Show:</strong> GL 3112210001 ICT · Software · Spares · Maintenance · ZOFF.</p>
+              <p style="color:var(--muted);margin-top:8px;">Buying power = DAF target − expended.</p>
+            </div>
+          </div>
+          <div class="card demo-beat">
+            <div class="demo-num">08</div>
+            <div>
+              <h3>Procurement & Q forms · 4 min</h3>
+              <p><strong>Show:</strong> ICT Procurement → DP F1 → Q Forms Index → Q 1033 + SVCS 1045.</p>
+              <p style="color:var(--muted);margin-top:8px;">Do not open every Q form.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Demo 9–10">
+        <p class="kicker">Live demo script</p>
+        <h2>Beats 9–10 · Comms & oversight close</h2>
+        <div class="grid-2">
+          <div class="card demo-beat">
+            <div class="demo-num">09</div>
+            <div>
+              <h3>Orderly & Comms · 4 min</h3>
+              <p><strong>Login:</strong> <span class="code">orderly</span></p>
+              <p><strong>Show:</strong> Orderly Room · IT Dir Comms (Directed to + Message date ≤ today).</p>
+            </div>
+          </div>
+          <div class="card demo-beat">
+            <div class="demo-num">10</div>
+            <div>
+              <h3>Oversight close · 3 min</h3>
+              <p><strong>Login:</strong> <span class="code">dir</span> or <span class="code">commander</span></p>
+              <p><strong>Show:</strong> Same modules · VIEW ONLY · mention audit_log.</p>
+              <p style="color:var(--muted);margin-top:8px;">Close: one system, role accountability, on-disk trail.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODULES -->
+      <section class="slide" data-title="Modules">
+        <p class="kicker">Module map</p>
+        <h2>Present by story — not every sidebar item</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Dashboard & GL</h3>
+            <p style="color:var(--muted);font-size:0.9rem;line-height:1.5;">Dashboard · System Alerts · five GL accounts (ICT, Software, Spares, Maintenance, ZOFF)</p>
+          </div>
+          <div class="card">
+            <h3>Inventory & stock</h3>
+            <p style="color:var(--muted);font-size:0.9rem;line-height:1.5;">Issue Voucher · Stock Take · Loans · Undelivered · Unit Equipment · ICT Asset Register · Equipment Register · Monthly Returns</p>
+          </div>
+          <div class="card">
+            <h3>Procurement & finance</h3>
+            <p style="color:var(--muted);font-size:0.9rem;line-height:1.5;">ICT Procurement · DP F1 · Spec Eval · POs · Suppliers · FY Bids · Release Cut (admin)</p>
+          </div>
+          <div class="card">
+            <h3>Gate · Workshop · Offices</h3>
+            <p style="color:var(--muted);font-size:0.9rem;line-height:1.5;">Gate Register · Workshop · Communications Portal · Orderly Room · Unit Requisitions · Dept desks</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- FORMS -->
+      <section class="slide" data-title="Forms">
+        <p class="kicker">Forms & registers</p>
+        <h2>What to open live</h2>
+        <table>
+          <thead>
+            <tr><th>Form</th><th>Who</th><th>Talking point</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Gate Register</td><td>RP</td><td>ICT in/out — custody, not ledger</td></tr>
+            <tr><td>TechStores Equipment Register</td><td>Storeman / RQ</td><td>Handover from gate; workshop push</td></tr>
+            <tr><td>Workshop + SVCS 1045</td><td>Workshop</td><td>Fault / work indent trail</td></tr>
+            <tr><td>Issue Voucher</td><td>RQ / Storeman</td><td>Receive / issue; day stock session</td></tr>
+            <tr><td>Stock Take</td><td>RQ / Storeman</td><td>Physical vs system · Q 987</td></tr>
+            <tr><td>Orderly Room</td><td>Orderly</td><td>DF / correspondence — no GL</td></tr>
+            <tr><td>IT Dir Comms</td><td>Offices</td><td>Directed memo · message date ≤ today</td></tr>
+            <tr><td>GL ledgers</td><td>RQ + oversight</td><td>Buying power & expenditure</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Q FORMS -->
+      <section class="slide" data-title="Q forms">
+        <p class="kicker">ZNA Q / SVCS catalogue</p>
+        <h2>Available in the system</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Core stores / voucher</h3>
+            <p style="color:var(--muted);font-size:0.9rem;line-height:1.55;">Q 982 · Q 1033 · Q 178 · Q 80 · SVCS/890 · SVCS 1045</p>
+          </div>
+          <div class="card">
+            <h3>Stocktake / loss / write-off</h3>
+            <p style="color:var(--muted);font-size:0.9rem;line-height:1.55;">Q 987 · Q 985 · Q 1 / Q 998 · Q 1043 · Q 3977</p>
+          </div>
+          <div class="card">
+            <h3>Transfers & recoveries</h3>
+            <p style="color:var(--muted);font-size:0.9rem;line-height:1.55;">Q 1049 · Q 1680 · Q 1571 · Q 1954 · Q 3 · Q 31</p>
+          </div>
+          <div class="card">
+            <h3>Clothing / tools / breakage</h3>
+            <p style="color:var(--muted);font-size:0.9rem;line-height:1.55;">Q 1179 · Q 1157 · Q 40 · Q 1229</p>
+          </div>
+        </div>
+        <p class="lead" style="font-size:0.92rem;margin-top:4px;">
+          Demo discipline: show the <strong>Q Forms Index</strong>, then two live examples only.
+        </p>
+      </section>
+
+      <!-- CONTROLS -->
+      <section class="slide" data-title="Controls">
+        <p class="kicker">Accountability</p>
+        <h2>Controls commanders care about</h2>
+        <div class="diagram" style="margin-bottom:10px;" aria-label="Accountability loop diagram">
+          <svg viewBox="0 0 960 150" role="img">
+            <defs>
+              <marker id="arrCtrl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="#3d9b6a"/>
+              </marker>
+            </defs>
+            <rect x="20" y="40" width="160" height="60" rx="10" fill="#1c3429" stroke="#3d9b6a"/>
+            <text x="100" y="75" text-anchor="middle" fill="#f4faf6" font-size="13" font-weight="700">Login / Role</text>
+            <line x1="180" y1="70" x2="220" y2="70" stroke="#3d9b6a" stroke-width="2" marker-end="url(#arrCtrl)"/>
+            <rect x="220" y="40" width="160" height="60" rx="10" fill="#1c3429" stroke="#3d9b6a"/>
+            <text x="300" y="75" text-anchor="middle" fill="#f4faf6" font-size="13" font-weight="700">Module filter</text>
+            <line x1="380" y1="70" x2="420" y2="70" stroke="#3d9b6a" stroke-width="2" marker-end="url(#arrCtrl)"/>
+            <rect x="420" y="40" width="160" height="60" rx="10" fill="#1c3429" stroke="#c4a35a"/>
+            <text x="500" y="68" text-anchor="middle" fill="#e2c988" font-size="12" font-weight="700">Edit guard</text>
+            <text x="500" y="86" text-anchor="middle" fill="#9bb5a6" font-size="11">VIEW ONLY / dates</text>
+            <line x1="580" y1="70" x2="620" y2="70" stroke="#3d9b6a" stroke-width="2" marker-end="url(#arrCtrl)"/>
+            <rect x="620" y="40" width="160" height="60" rx="10" fill="#1c3429" stroke="#3d9b6a"/>
+            <text x="700" y="75" text-anchor="middle" fill="#f4faf6" font-size="13" font-weight="700">Save / Deny</text>
+            <line x1="780" y1="70" x2="820" y2="70" stroke="#3d9b6a" stroke-width="2" marker-end="url(#arrCtrl)"/>
+            <rect x="820" y="40" width="120" height="60" rx="10" fill="#243f32" stroke="#3d9b6a" stroke-width="2"/>
+            <text x="880" y="75" text-anchor="middle" fill="#8fd4ae" font-size="13" font-weight="700">audit_log</text>
+          </svg>
+        </div>
+        <div class="grid-4">
+          <div class="card stat"><b>VIEW ONLY</b><span>Oversight cannot save qty</span></div>
+          <div class="card stat"><b>audit_log</b><span>Login · denied edit · session</span></div>
+          <div class="card stat"><b>RBAC nav</b><span>Hidden non-stores modules</span></div>
+          <div class="card stat"><b>Date rules</b><span>No future document dates</span></div>
+        </div>
+      </section>
+
+      <!-- SETUP -->
+      <section class="slide" data-title="Room setup">
+        <p class="kicker">Before they enter</p>
+        <h2>Room & talk track</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Setup</h3>
+            <ul class="clean">
+              <li>Server already running · Database Connected</li>
+              <li>Projector on login (default accounts collapsed)</li>
+              <li>Passwords on a paper card — not on screen</li>
+              <li>This HTML deck on a second screen</li>
+              <li>Live app on the projector</li>
+            </ul>
+          </div>
+          <div class="card accent">
+            <h3>Phrases that land</h3>
+            <ul class="clean">
+              <li>“Command sees everything; TechStores alone changes stock.”</li>
+              <li>“RP owns the gate book; the ledger stays with TechStores.”</li>
+              <li>“Buying power is DAF target less what we have spent.”</li>
+              <li>“If it is not in the database, it did not happen.”</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Q&A -->
+      <section class="slide" data-title="Q&A">
+        <p class="kicker">Expected questions</p>
+        <h2>Suggested answers</h2>
+        <table>
+          <thead><tr><th>Question</th><th>Answer</th></tr></thead>
+          <tbody>
+            <tr><td>Does this replace Army Q forms?</td><td>No — it digitises and indexes them for IT Dir Tech Stores; forms remain the authority.</td></tr>
+            <tr><td>Can Ord Dir use it?</td><td>Same process pattern; this build is the IT Dir cost-centre instance.</td></tr>
+            <tr><td>What if the PC fails?</td><td>Copy techstores.db / admin backup; portable pack for a spare laptop.</td></tr>
+            <tr><td>Who creates users?</td><td>Admin only — roles map to duty, not convenience.</td></tr>
+            <tr><td>Can Dir fix a wrong quantity?</td><td>No — VIEW ONLY. Correction via TechStores edit roles with audit.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- CLOSE -->
+      <section class="slide" data-title="Close">
+        <p class="kicker">Closing</p>
+        <h1 style="max-width:22ch;">One installation. Role accountability. On-disk trail.</h1>
+        <p class="lead">
+          Gate custody, stock accountability, GL buying power, and directed
+          communications — with superiors able to inspect without altering the books.
+        </p>
+        <div class="card accent" style="margin-top:12px;max-width:36rem;">
+          <h3>IT-DIR Tech Stores · Z04P2SP212</h3>
+          <p style="color:var(--muted);margin-top:6px;">FY 2026 · IT Logistics · General Ledger System</p>
+        </div>
+      </section>
+
+    </main>
+
+    <div class="hint-bar">
+      <span>← → / Space · Home / End · T room theme · P print · Esc agenda</span>
+      <span id="hintTitle">Cover</span>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const slides = [...document.querySelectorAll(".slide")];
+      const btnPrev = document.getElementById("btnPrev");
+      const btnNext = document.getElementById("btnNext");
+      const slideCount = document.getElementById("slideCount");
+      const progressBar = document.getElementById("progressBar");
+      const hintTitle = document.getElementById("hintTitle");
+      const toc = document.getElementById("toc");
+      const roomSwitch = document.getElementById("roomSwitch");
+      const rooms = ["dark", "bright", "projector", "parade"];
+      let i = 0;
+
+      function setRoom(room) {
+        if (!rooms.includes(room)) room = "dark";
+        document.body.setAttribute("data-room", room);
+        try { localStorage.setItem("techstores_demo_room", room); } catch (_) {}
+        if (roomSwitch) {
+          roomSwitch.querySelectorAll("[data-room]").forEach((btn) => {
+            btn.classList.toggle("active", btn.getAttribute("data-room") === room);
+          });
+        }
+      }
+
+      function cycleRoom() {
+        const cur = document.body.getAttribute("data-room") || "dark";
+        const next = rooms[(rooms.indexOf(cur) + 1) % rooms.length];
+        setRoom(next);
+      }
+
+      if (roomSwitch) {
+        roomSwitch.querySelectorAll("[data-room]").forEach((btn) => {
+          btn.addEventListener("click", () => setRoom(btn.getAttribute("data-room")));
+        });
+      }
+
+      try {
+        setRoom(localStorage.getItem("techstores_demo_room") || "dark");
+      } catch (_) {
+        setRoom("dark");
+      }
+
+      const agendaLabels = slides.map((s, idx) => ({
+        idx,
+        title: s.getAttribute("data-title") || ("Slide " + (idx + 1))
+      }));
+
+      function renderToc() {
+        if (!toc) return;
+        toc.innerHTML = agendaLabels
+          .filter((a) => a.idx > 0)
+          .map((a) => `
+            <button type="button" data-go="${a.idx}">
+              <strong>${String(a.idx).padStart(2, "0")}. ${a.title}</strong>
+              <span>Jump to slide</span>
+            </button>
+          `).join("");
+        toc.querySelectorAll("[data-go]").forEach((btn) => {
+          btn.addEventListener("click", () => go(Number(btn.getAttribute("data-go"))));
+        });
+      }
+
+      function go(n) {
+        i = Math.max(0, Math.min(slides.length - 1, n));
+        slides.forEach((s, idx) => s.classList.toggle("active", idx === i));
+        slideCount.textContent = (i + 1) + " / " + slides.length;
+        progressBar.style.width = ((i + 1) / slides.length * 100) + "%";
+        hintTitle.textContent = slides[i].getAttribute("data-title") || "";
+        btnPrev.disabled = i === 0;
+        btnNext.disabled = i === slides.length - 1;
+        history.replaceState(null, "", "#" + (i + 1));
+      }
+
+      btnPrev.addEventListener("click", () => go(i - 1));
+      btnNext.addEventListener("click", () => go(i + 1));
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+          e.preventDefault();
+          go(i + 1);
+        } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+          e.preventDefault();
+          go(i - 1);
+        } else if (e.key === "Home") {
+          go(0);
+        } else if (e.key === "End") {
+          go(slides.length - 1);
+        } else if (e.key === "Escape") {
+          go(1);
+        } else if (e.key === "t" || e.key === "T") {
+          cycleRoom();
+        } else if (e.key === "p" || e.key === "P") {
+          window.print();
+        }
+      });
+
+      renderToc();
+      const hash = parseInt(location.hash.replace("#", ""), 10);
+      go(Number.isFinite(hash) && hash >= 1 ? hash - 1 : 0);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<div id="release-cut" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Release Cut — move DAF buying power between GLs</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <p class="gl-target-help" style="margin-bottom:14px;">
+                    When DAF votes only one (or a few) GLs for the month, use Release Cut to shift
+                    <strong>buying power</strong> from a funded GL to another GL that needs to buy.
+                    You can only cut up to the source GL’s remaining buying power for that month.
+                </p>
+                
+                <div class="form-group">
+                    <label class="form-label">Transfer Date:</label>
+                    <input type="date" class="form-control" id="releaseCutDate">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label class="form-label">From GL Account (funded):</label>
+                        <select class="form-control" id="releaseCutFrom">
+                            <option value="6122100009">6122100009 - Office Supplies &amp; Services (ZOFF)</option>
+                            <option value="2200600002">2200600002 - Computer Consumables (legacy)</option>
+                            <option value="2200600003">2200600003 - Software Licenses</option>
+                            <option value="220200002">220200002 - Tech Equipment Maintenance</option>
+                            <option value="2201900002">2201900002 - Spare Parts</option>
+                            <option value="3112210001">3112210001 - ICT Equipment</option>
+                        </select>
+                        <div class="gl-buying-power-hint" id="releaseCutFromPower">Select GL to see buying power</div>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">To GL Account (needs buying power):</label>
+                        <select class="form-control" id="releaseCutTo">
+                            <option value="6122100009">6122100009 - Office Supplies &amp; Services (ZOFF)</option>
+                            <option value="2200600002">2200600002 - Computer Consumables (legacy)</option>
+                            <option value="2200600003">2200600003 - Software Licenses</option>
+                            <option value="220200002">220200002 - Tech Equipment Maintenance</option>
+                            <option value="2201900002">2201900002 - Spare Parts</option>
+                            <option value="3112210001">3112210001 - ICT Equipment</option>
+                        </select>
+                        <div class="gl-buying-power-hint" id="releaseCutToPower">Select GL to see buying power</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Amount to Transfer:</label>
+                    <input type="number" class="form-control" id="releaseCutAmount" placeholder="Enter amount" min="0" step="0.01">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Reason for Transfer:</label>
+                    <textarea class="form-control" id="releaseCutReason" rows="3" placeholder="Enter reason for the transfer"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Authorized By:</label>
+                    <input type="text" class="form-control" id="releaseCutAuthorized" placeholder="Name of authorized person">
+                </div>
+                
+                <button class="btn btn-success" id="processReleaseCutBtn" style="margin-top: 15px;">Process Transfer</button>
+                <button class="btn btn-secondary btn-generate-report" data-report-module="release-cut" style="margin-top: 15px;">Generate Report</button>
+
+                <h3 style="margin: 24px 0 12px; color: var(--primary); font-size: 1.05rem;">Transfer History</h3>
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" data-search-target="release-cuts-table-body" placeholder="Search release cuts...">
+
+                    <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                </div>
+                <div class="form-table-wrapper">
+                    <table class="overview-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>From GL</th>
+                                <th>To GL</th>
+                                <th>Amount</th>
+                                <th>Reason</th>
+                                <th>Authorized By</th>
+                            </tr>
+                        </thead>
+                        <tbody id="release-cuts-table-body"></tbody>
+                    </table>
+                </div>
+            </div>

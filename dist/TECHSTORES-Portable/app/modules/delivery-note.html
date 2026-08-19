@@ -1,0 +1,52 @@
+<div id="delivery-note" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Delivery Note</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" data-search-target="delivery-table-body" placeholder="Search delivery notes...">
+                    <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                </div>
+                
+                <div class="form-table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Item</th>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>Unit of Measure</th>
+                            <th>Product Serial</th>
+                            <th>Purchase No.</th>
+                            <th>Supplied By</th>
+                            <th>Received By (Force Number, Rank, Name, Appointment)</th>
+                            <th>Initials</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="delivery-table-body">
+                        <tr>
+                            <td><input type="date" class="form-control"></td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><input type="number" class="form-control"></td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+                
+                <button class="btn btn-primary" style="margin-top: 15px;" onclick="addDeliveryRow()">Add Delivery</button>
+                <button class="btn btn-success btn-save-module" style="margin-top: 15px;">Save Delivery Note</button>
+                <button class="btn btn-secondary btn-print-module" data-print-target="delivery-note" style="margin-top: 15px;">Print Delivery Note</button>
+                <button class="btn btn-secondary btn-generate-report" data-report-module="delivery-note" style="margin-top: 15px;">Generate Report</button>
+            </div>

@@ -1,0 +1,101 @@
+<div id="workshop-repairs" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">IT Workshop Register — Repairs / Upgrades</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="req-intro">
+                    <span class="aso-ref">ASO Pt 1 Ch 15 · Pt 2 Ch 5 · Repair intake · Stage 3</span>
+                    Equipment arrives from TechStores for repairs, software upgrades, antivirus update / renewal or related IT workshop action.
+                    Book here in the <strong>Workshop Register</strong>. Every item <strong>must</strong> be accompanied by
+                    <strong>ZNA SVCS 1045</strong>. Beyond local repair → Q 1043 → indent Q 982 → strike off Q 1033.
+                </p>
+                <div class="repair-flow-strip" aria-label="Repair intake stages">
+                    <span class="repair-flow-step">1. Gate (RP)</span>
+                    <span class="repair-flow-arrow">→</span>
+                    <span class="repair-flow-step">2. TechStores Equipment Register</span>
+                    <span class="repair-flow-arrow">→</span>
+                    <span class="repair-flow-step is-active">3. IT Workshop Register</span>
+                    <span class="repair-flow-arrow">→</span>
+                    <span class="repair-flow-step">SVCS 1045</span>
+                </div>
+
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" data-search-target="workshop-repairs-table-body" placeholder="Search workshop register…">
+                    <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="wsOpen1045Btn">Open SVCS 1045</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="wsScrollStoresBtn" title="Indent TechStores / Request QM">Stores Request</button>
+                </div>
+
+                <section id="wsStoresRequestPanel" class="ws-stores-panel" aria-label="Workshop stores indent and request">
+                    <h3 class="ws-stores-title">Stores Request — Indent TechStores / Request QM</h3>
+                    <p class="ws-stores-intro">
+                        Look up spares, accessories or equipment in TechStores / QM stock.
+                        If the item is <strong>not found</strong> or on hand is zero, the system raises a
+                        <strong>Unit Requisition</strong> and messages TechStores to procure / buy.
+                    </p>
+                    <div class="ws-stores-grid">
+                        <label class="ws-stores-field">
+                            <span>Item / spare / accessory</span>
+                            <input type="text" class="form-control" id="wsStoresItem" placeholder="e.g. SSD 512GB NVMe, laptop hinge, toner…">
+                        </label>
+                        <label class="ws-stores-field ws-stores-qty">
+                            <span>Qty</span>
+                            <input type="number" class="form-control" id="wsStoresQty" min="1" value="1">
+                        </label>
+                        <label class="ws-stores-field">
+                            <span>Category</span>
+                            <select class="form-control" id="wsStoresCategory"></select>
+                        </label>
+                        <label class="ws-stores-field">
+                            <span>Job / SVCS 1045 ref</span>
+                            <input type="text" class="form-control" id="wsStoresJobRef" placeholder="Optional">
+                        </label>
+                        <label class="ws-stores-field">
+                            <span>Preferred channel</span>
+                            <select class="form-control" id="wsStoresChannel">
+                                <option value="techstores">TechStores</option>
+                                <option value="qm">QM Stores</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="ws-stores-actions">
+                        <button type="button" class="btn btn-ghost btn-sm" id="wsStoresLookupBtn">Check stock</button>
+                        <button type="button" class="btn btn-primary btn-sm" id="wsStoresIndentTsBtn">Indent TechStores</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="wsStoresRequestQmBtn">Request QM</button>
+                        <button type="button" class="btn btn-danger btn-sm" id="wsStoresEscalateBuyBtn">Not found — raise buy / requisition</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="wsStoresOpenReqsBtn">Open Unit Requisitions</button>
+                    </div>
+                    <div id="wsStoresLookupResult" class="ws-stores-lookup" hidden></div>
+                </section>
+                
+                <p class="repair-register-hint">Tip: scroll sideways on the table if needed — <strong>Action</strong> stays pinned on the right. Use <strong>Stores</strong> on a row to prefill the request above.</p>
+                <div class="form-table-wrapper repair-register-wrap">
+                <table class="qm-batch-table repair-register-table">
+                    <thead>
+                        <tr>
+                            <th>Serial</th>
+                            <th>Equipment Type</th>
+                            <th>S/N or ZA No.</th>
+                            <th>Unit</th>
+                            <th>Diagnosis</th>
+                            <th>Remarks</th>
+                            <th>Date In</th>
+                            <th>Received By</th>
+                            <th>Date Out</th>
+                            <th>SVCS 1045 Ref</th>
+                            <th class="qm-screen-only">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="workshop-repairs-table-body"></tbody>
+                </table>
+                </div>
+                
+                <div class="module-actions module-actions-sticky" style="margin-top:15px;">
+                    <button type="button" class="btn btn-primary" id="wsAddBtn">Add Workshop Entry</button>
+                    <button type="button" class="btn btn-success btn-save-module">Save Workshop Register</button>
+                    <button type="button" class="btn btn-secondary btn-generate-report" data-report-module="workshop-repairs">Generate Report</button>
+                    <button type="button" class="btn btn-ghost btn-save-pdf" data-pdf-module="workshop-repairs">Save PDF</button>
+                </div>
+            </div>

@@ -1,0 +1,92 @@
+<div id="zna-q-1043" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">ZNA Q 1043 — Condemnation Certificate</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <p class="q982-intro">Report equipment sentenced BLR/BER. Print/report matches ZNAQ1043 Report on Equipment and Condemnation Certificate.</p>
+                <div class="q1043-form">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Workshop job number</label>
+                            <input type="text" id="q1043JobNo" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Serial number</label>
+                            <input type="text" id="q1043SerialNo" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Dated</label>
+                            <input type="date" id="q1043Dated" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">To Officer Commanding</label>
+                        <input type="text" id="q1043ToOc" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Unit / address line</label>
+                        <input type="text" id="q1043ToUnit" class="form-control">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">ZNA SVCS 1045 number</label>
+                            <input type="text" id="q1043IndentRef" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Forward equipment to (ZNA Q 982/1033)</label>
+                            <input type="text" id="q1043ForwardTo" class="form-control">
+                        </div>
+                    </div>
+                    <div class="module-toolbar q1043-screen-only">
+                        <input type="search" class="form-control table-search" data-search-target="zna-q-1043-table-body" placeholder="Search equipment lines...">
+                        <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                        <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                    </div>
+                    <div class="form-table-wrapper q1043-table-wrap">
+                        <table class="q1043-items-table">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">Designation (incl. part / registered number)</th>
+                                    <th rowspan="2">Quantity</th>
+                                    <th colspan="2">Condition</th>
+                                    <th rowspan="2" class="q1043-screen-only">Action</th>
+                                </tr>
+                                <tr>
+                                    <th>BLR</th>
+                                    <th>BER</th>
+                                </tr>
+                            </thead>
+                            <tbody id="zna-q-1043-table-body"></tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="btn btn-primary q1043-screen-only" style="margin: 10px 0;" onclick="addZnaQ1043Row()">Add Row</button>
+                    <h4 class="q982-section-title">Sentencing officer</h4>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Date</label>
+                            <input type="date" id="q1043SentenceDate" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Sentencing officer (name)</label>
+                            <input type="text" id="q1043OfficerName" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Rank</label>
+                            <input type="text" id="q1043Rank" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Appointment</label>
+                            <input type="text" id="q1043Appointment" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Unit or Headquarters</label>
+                        <input type="text" id="q1043UnitHq" class="form-control">
+                    </div>
+                </div>
+                <button class="btn btn-success btn-save-module" style="margin-top: 15px;">Save Form</button>
+                <button class="btn btn-secondary btn-print-module" data-print-target="zna-q-1043" style="margin-top: 15px;">Print Form</button>
+                <button class="btn btn-secondary btn-generate-report" data-report-module="zna-q-1043" style="margin-top: 15px;">Generate Report</button>
+            </div>

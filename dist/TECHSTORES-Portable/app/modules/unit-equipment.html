@@ -1,0 +1,104 @@
+<div id="unit-equipment" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Unit Equipment Table</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="req-intro">
+                    Record IT Directorate equipment with a <strong>ZA number</strong> and <strong>Holding Unit / Formation</strong>
+                    so items are traceable in the <strong>ZNA ICT Asset Register</strong> (Track by ZA / item name).
+                    Use Location for the IT Dir room/section (e.g. QM, ITTS).
+                </p>
+
+                <div class="ue-summary-strip" id="ueSummaryStrip" aria-label="Equipment by holding unit"></div>
+
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" id="ueSearchInput" data-search-history-key="unit-equipment" data-search-history="1" placeholder="Search item, ZA, holding unit…">
+                    <select class="form-control" id="ueHoldingFilter" title="Filter by holding unit" style="max-width:220px;">
+                        <option value="all">All holding units</option>
+                    </select>
+                    <select class="form-control" id="ueLocationFilter" title="Filter by IT Dir location" style="max-width:180px;">
+                        <option value="all">All locations</option>
+                    </select>
+                    <button type="button" class="btn btn-primary btn-sm" id="ueSearchBtn">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="ueClearBtn">Clear</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="ueViewModeBtn">View Table</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="ueEditModeBtn">Edit Records</button>
+                </div>
+
+                <div id="ueViewPanel">
+                    <div class="form-table-wrapper">
+                        <table class="overview-table ue-view-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:64px;">Ser</th>
+                                    <th>Item Name</th>
+                                    <th>ZA Number</th>
+                                    <th>Description</th>
+                                    <th>Holding Unit</th>
+                                    <th>Location</th>
+                                </tr>
+                            </thead>
+                            <tbody id="unit-equipment-view-body">
+                                <tr><td colspan="6" class="req-empty-row">No equipment recorded yet. Switch to Edit Records to add items.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="module-actions" style="margin-top: 15px;">
+                        <button type="button" class="btn btn-secondary btn-generate-report" data-report-module="unit-equipment">Generate Report</button>
+                        <button type="button" class="btn btn-primary" id="ueSyncAssetRegisterBtn" title="Push ZA items into ZNA ICT Asset Register for tracking">Sync to Asset Register</button>
+                    </div>
+                </div>
+
+                <div id="ueEditPanel" hidden>
+                    <div class="form-table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Ser</th>
+                                    <th>Item Name</th>
+                                    <th>ZA Number</th>
+                                    <th>Description</th>
+                                    <th>Holding Unit</th>
+                                    <th>Location (IT Dir)</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="unit-equipment-table-body">
+                                <tr>
+                                    <td>1</td>
+                                    <td><input type="text" class="form-control ue-item" value="Desktop Computer" placeholder="Item name"></td>
+                                    <td><input type="text" class="form-control ue-za" placeholder="e.g. ZA820"></td>
+                                    <td><input type="text" class="form-control ue-desc" value="Dell OptiPlex 7070" placeholder="Model / notes"></td>
+                                    <td>
+                                        <select class="form-control ue-holding-unit zna-unit-select" title="Holding unit / formation">
+                                            <option value="">— Select holding unit —</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-control ue-location">
+                                            <option value="">— IT Dir location —</option>
+                                            <option>System Development Department</option>
+                                            <option>Workshop</option>
+                                            <option>ITTS</option>
+                                            <option>Orderly Room</option>
+                                            <option>DBA</option>
+                                            <option selected>QM</option>
+                                            <option>Programmers</option>
+                                            <option>AQSO</option>
+                                            <option>RP</option>
+                                            <option>Server Room</option>
+                                        </select>
+                                    </td>
+                                    <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="module-actions" style="margin-top: 15px;">
+                        <button class="btn btn-primary" type="button" onclick="addUnitEquipmentRow()">Add Equipment</button>
+                        <button class="btn btn-success btn-save-module" type="button">Save Changes</button>
+                        <button class="btn btn-secondary btn-generate-report" data-report-module="unit-equipment" type="button">Generate Report</button>
+                    </div>
+                </div>
+            </div>

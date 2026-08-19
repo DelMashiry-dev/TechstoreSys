@@ -1,0 +1,129 @@
+<section class="content-section" id="it-dir-comms" style="display:none;">
+    <div class="idc-shell">
+        <header class="idc-hero">
+            <div>
+                <p class="idc-kicker">IT Directorate</p>
+                <h2>Communications Portal</h2>
+                <p class="idc-lead">
+                    Internal memos, letters and correspondence between IT Dir departments.
+                    Use <strong>Directed to</strong> to choose which department(s) receive the message.
+                </p>
+            </div>
+            <div class="idc-hero-meta">
+                <span class="idc-chip" id="idcFromOffice">Your office: —</span>
+                <span class="idc-chip idc-chip-unread" id="idcUnreadChip" hidden>0 unread</span>
+            </div>
+        </header>
+
+        <div class="idc-layout">
+            <aside class="idc-rail" aria-label="IT Dir directory">
+                <div class="idc-rail-head">
+                    <h3>Directory</h3>
+                </div>
+                <p class="idc-rail-hint">Quick-add a department into <strong>Directed to</strong> on the compose form.</p>
+                <div class="idc-office-list" id="idcOfficeList" role="group" aria-label="IT Dir directory"></div>
+            </aside>
+
+            <div class="idc-main">
+                <div class="idc-tabs" role="tablist">
+                    <button type="button" class="idc-tab is-active" data-idc-tab="compose" role="tab" aria-selected="true">Compose memo</button>
+                    <button type="button" class="idc-tab" data-idc-tab="inbox" role="tab" aria-selected="false">Inbox <span class="idc-tab-badge" id="idcInboxBadge" hidden></span></button>
+                    <button type="button" class="idc-tab" data-idc-tab="sent" role="tab" aria-selected="false">Sent</button>
+                    <button type="button" class="idc-tab" data-idc-tab="establishment" role="tab" aria-selected="false">Establishment</button>
+                </div>
+
+                <div class="idc-pane" id="idcPaneCompose" data-idc-pane="compose">
+                    <form class="idc-compose" id="idcComposeForm">
+                        <fieldset class="idc-to-box" id="idcToBox">
+                            <legend>Directed to <span class="idc-req">*</span></legend>
+                            <p class="idc-to-lead">
+                                Pick the IT Directorate department(s) this memo / letter / correspondence is addressed to.
+                                Departments can write to each other — select one or many.
+                            </p>
+                            <div class="idc-to-actions">
+                                <button type="button" class="btn btn-ghost btn-sm" id="idcSelectAllBtn" title="Select all departments">Select all</button>
+                                <button type="button" class="btn btn-ghost btn-sm" id="idcClearOfficesBtn" title="Clear selection">Clear</button>
+                            </div>
+                            <div class="idc-to-grid" id="idcToGrid" role="group" aria-label="Directed to departments"></div>
+                            <div class="idc-selected-summary" id="idcSelectedSummary">No department selected yet.</div>
+                        </fieldset>
+
+                        <div class="idc-compose-grid">
+                            <label class="ad-field">
+                                <span>Document type</span>
+                                <select class="form-control" id="idcMemoType">
+                                    <option value="memo">Internal memo</option>
+                                    <option value="correspondence">Correspondence / letter</option>
+                                    <option value="minutes">Minutes</option>
+                                    <option value="message">Message</option>
+                                    <option value="directive">Directive / instruction</option>
+                                    <option value="request">Request / demand</option>
+                                    <option value="reminder">Reminder</option>
+                                </select>
+                            </label>
+                            <label class="ad-field">
+                                <span>Priority</span>
+                                <select class="form-control" id="idcPriority">
+                                    <option value="normal">Normal</option>
+                                    <option value="immediate">Immediate</option>
+                                    <option value="urgent">Urgent</option>
+                                    <option value="critical">Critical</option>
+                                    <option value="flash">⚡ Flash</option>
+                                </select>
+                            </label>
+                            <label class="ad-field">
+                                <span>Message date</span>
+                                <input type="date" class="form-control" id="idcMsgDate" data-date-rule="not-future" data-date-label="Message date" required>
+                            </label>
+                            <label class="ad-field">
+                                <span>Action due (optional)</span>
+                                <input type="date" class="form-control" id="idcDueDate" data-date-rule="not-past" data-date-label="Action due">
+                            </label>
+                            <label class="ad-field idc-span-2">
+                                <span>Subject / reference</span>
+                                <input type="text" class="form-control" id="idcSubject" maxlength="160" placeholder="e.g. MEMO — ICT asset handover — ITTS" required>
+                            </label>
+                            <label class="ad-field idc-span-2">
+                                <span>Body</span>
+                                <textarea class="form-control" id="idcBody" rows="7" maxlength="4000" placeholder="Write the memo / letter / correspondence…" required></textarea>
+                            </label>
+                        </div>
+                        <div class="idc-compose-actions">
+                            <label class="idc-sample-pick">
+                                <span>Sample correspondence</span>
+                                <select class="form-control" id="idcSampleSelect" aria-label="Load sample correspondence">
+                                    <option value="">Load sample correspondence…</option>
+                                </select>
+                            </label>
+                            <button type="button" class="btn btn-secondary" id="idcLoadSampleBtn">Load sample</button>
+                            <button type="button" class="btn btn-secondary" id="idcPrintLetterBtn" hidden>Print letter</button>
+                            <button type="submit" class="btn btn-primary" id="idcSendBtn">Send to directed department(s)</button>
+                            <button type="button" class="btn btn-ghost" id="idcResetComposeBtn">Clear form</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="idc-pane idc-pane-hidden" id="idcPaneInbox" data-idc-pane="inbox" hidden>
+                    <div class="idc-toolbar">
+                        <button type="button" class="btn btn-ghost btn-sm" id="idcRefreshBtn">↻ Refresh</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="idcMarkAllReadBtn">Mark all read</button>
+                        <span class="idc-toolbar-note" id="idcInboxCount">0 items</span>
+                    </div>
+                    <div class="idc-msg-list" id="idcInboxList"></div>
+                </div>
+
+                <div class="idc-pane idc-pane-hidden" id="idcPaneSent" data-idc-pane="sent" hidden>
+                    <div class="idc-toolbar">
+                        <button type="button" class="btn btn-ghost btn-sm" id="idcRefreshSentBtn">↻ Refresh</button>
+                        <span class="idc-toolbar-note" id="idcSentCount">0 items</span>
+                    </div>
+                    <div class="idc-msg-list" id="idcSentList"></div>
+                </div>
+
+                <div class="idc-pane idc-pane-hidden" id="idcPaneEstablishment" data-idc-pane="establishment" hidden>
+                    <div id="idcEstablishmentView" class="idc-est-view"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,137 @@
+<div id="zna-q-1033" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">ZNA Q 1033 — Issue &amp; Receipt Voucher</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <p class="q982-intro">
+                    Official turnaround document for day-to-day stock. Use it to <strong>receive</strong> goods from suppliers
+                    (increase inventory) or <strong>issue</strong> to units/users (decrease inventory). Posting updates the
+                    Inventory Ledgers — separate from GL Portfolio procurement budgets.
+                </p>
+                <div class="q1033-form">
+                    <div class="form-row q1033-screen-only">
+                        <div class="form-col">
+                            <label class="form-label">Stock movement</label>
+                            <select id="q1033MovementType" class="form-control">
+                                <option value="receipt">Receipt — increase inventory (from supplier)</option>
+                                <option value="issue">Issue — decrease inventory (to unit / user)</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Inventory ledger</label>
+                            <select id="q1033InventoryLedger" class="form-control">
+                                <option value="">Auto-detect from designation</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Office stamp / unit</label>
+                            <input type="text" id="q1033OfficeStamp" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Consignor (original &amp; triplicate)</label>
+                            <input type="text" id="q1033Consignor" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Consignee (duplicate)</label>
+                            <input type="text" id="q1033Consignee" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Signature</label>
+                            <input type="text" id="q1033Signature" class="form-control">
+                        </div>
+                    </div>
+                    <h4 class="q982-section-title">Issue</h4>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">ISSUE voucher number</label>
+                            <input type="text" id="q1033IssueVoucherNo" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">ISSUE date</label>
+                            <input type="date" id="q1033IssueDate" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Account</label>
+                            <input type="text" id="q1033IssueAccount" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Issued BY</label>
+                            <input type="text" id="q1033IssuedBy" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Authority for issue</label>
+                            <input type="text" id="q1033Authority" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Sheet Number</label>
+                            <input type="text" id="q1033SheetNo" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Number of sheets</label>
+                            <input type="text" id="q1033NumSheets" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Invoice number and date</label>
+                            <input type="text" id="q1033Invoice" class="form-control">
+                        </div>
+                    </div>
+                    <h4 class="q982-section-title">Receipt</h4>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">RECEIPT voucher number</label>
+                            <input type="text" id="q1033ReceiptVoucherNo" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">RECEIPT date</label>
+                            <input type="date" id="q1033ReceiptDate" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Account</label>
+                            <input type="text" id="q1033ReceiptAccount" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Issued TO</label>
+                            <input type="text" id="q1033IssuedTo" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date &amp; mode of conveyance</label>
+                        <input type="text" id="q1033Conveyance" class="form-control">
+                    </div>
+                    <div class="module-toolbar q1033-screen-only">
+                        <input type="search" class="form-control table-search" data-search-target="zna-q-1033-table-body" placeholder="Search voucher lines...">
+                        <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                        <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                    </div>
+                    <div class="form-table-wrapper q1033-table-wrap">
+                        <table class="q1033-items-table">
+                            <thead>
+                                <tr>
+                                    <th>a · VAOS / Section / Part No.</th>
+                                    <th>b · Designation</th>
+                                    <th>c · Qty</th>
+                                    <th>d · Description &amp; marks / Line</th>
+                                    <th>e · Balance Posting</th>
+                                    <th>f · Location</th>
+                                    <th>g · Rate</th>
+                                    <th>h1</th>
+                                    <th>h2</th>
+                                    <th>h3</th>
+                                    <th>h4</th>
+                                    <th class="q1033-screen-only">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="zna-q-1033-table-body"></tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="btn btn-primary q1033-screen-only" style="margin: 10px 0;" onclick="addZnaQ1033Row()">Add Row</button>
+                </div>
+                <button class="btn btn-success btn-save-module" style="margin-top: 15px;">Save Form</button>
+                <button type="button" class="btn btn-primary q1033-screen-only" id="btnPost1033Inventory" style="margin-top: 15px;">Post to Inventory Ledgers</button>
+                <button class="btn btn-secondary btn-print-module" data-print-target="zna-q-1033" style="margin-top: 15px;">Print Form</button>
+                <button class="btn btn-secondary btn-generate-report" data-report-module="zna-q-1033" style="margin-top: 15px;">Generate Report</button>
+            </div>

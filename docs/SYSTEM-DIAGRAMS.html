@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT Dir TechStores — System Diagrams</title>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "base",
+    themeVariables: {
+      primaryColor: "#1a365d",
+      primaryTextColor: "#fff",
+      primaryBorderColor: "#0f2744",
+      lineColor: "#2c5268",
+      secondaryColor: "#e8f0f7",
+      tertiaryColor: "#f3f7fb",
+      fontFamily: "IBM Plex Sans, Segoe UI, sans-serif"
+    },
+    flowchart: { curve: "basis", htmlLabels: true }
+  });
+</script>
+<style>
+  :root { --ink: #0b1c28; --navy: #1a365d; --paper: #f4f7fa; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+  header {
+    background: var(--navy);
+    color: #fff;
+    padding: 20px 28px;
+  }
+  header h1 { margin: 0 0 6px; font-size: 1.45rem; }
+  header p { margin: 0; opacity: 0.85; font-size: 0.9rem; }
+  .bar {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    padding: 12px 28px; background: #fff; border-bottom: 1px solid #d5dee8;
+  }
+  .bar a, .bar button {
+    font-size: 0.88rem; padding: 8px 12px; border-radius: 4px;
+    border: 1px solid #c5d3de; background: #fff; color: var(--navy);
+    text-decoration: none; cursor: pointer;
+  }
+  .bar button.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+  section {
+    background: #fff; border: 1px solid #d5dee8; border-radius: 6px;
+    padding: 18px 20px; margin-bottom: 18px;
+  }
+  h2 { margin: 0 0 8px; font-size: 1.15rem; color: var(--navy); }
+  .note { font-size: 0.85rem; color: #5b7384; margin: 0 0 14px; }
+  .mermaid { overflow-x: auto; }
+  textarea {
+    width: 100%; min-height: 140px; font-family: ui-monospace, Consolas, monospace;
+    font-size: 0.8rem; border: 1px solid #c5d3de; border-radius: 4px; padding: 10px;
+  }
+  @media print {
+    .bar { display: none; }
+    header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>IT Dir TechStores — System Diagrams</h1>
+    <p>Editable Mermaid diagrams · Full text manual: docs/SYSTEM-DOCUMENTATION.md · Cost centre Z04P2SP212</p>
+  </header>
+  <div class="bar">
+    <a href="SYSTEM-DOCUMENTATION.md">Open full documentation (Markdown)</a>
+    <a href="TechStores-System-Flow-Infographic.html">Flow infographic</a>
+    <button type="button" class="primary" onclick="window.print()">Print / Save PDF</button>
+  </div>
+  <main>
+    <section>
+      <h2>1. Architecture (client ↔ server ↔ SQLite)</h2>
+      <p class="note">Edit the Mermaid source in the textarea, then reload the page after saving this HTML file.</p>
+      <pre class="mermaid">
+flowchart TB
+  subgraph Client["Browser client"]
+    UI[app/index.html UI]
+    JS[JS modules]
+    LS[(localStorage appState)]
+    SS[(sessionStorage session)]
+    UI --> JS
+    JS --> LS
+    JS --> SS
+  end
+  subgraph Server["Python server :8080"]
+    API["/api/login · /api/state · /api/health"]
+    STATIC[Static /app /assets]
+    API --> DB[(techstores.db)]
+  end
+  JS -->|JSON HTTP| API
+  UI --> STATIC
+      </pre>
+    </section>
+
+    <section>
+      <h2>2. Context DFD (Level 0)</h2>
+      <pre class="mermaid">
+flowchart LR
+  UNIT[Units / Formations]
+  DAF[DAF Finance]
+  DP[Directorate of Procurement]
+  USER[TechStores Officer]
+  SYS((IT Dir TechStores System))
+  ITDIR[IT Dir leadership]
+  UNIT -->|Monthly returns · Requisitions| SYS
+  DAF -->|Monthly targets| SYS
+  DP -->|F1 · PO · delivery| SYS
+  USER -->|Operate stores| SYS
+  SYS -->|Reports · Alerts · QM forms| ITDIR
+  SYS -->|Issues · ZA register| UNIT
+      </pre>
+    </section>
+
+    <section>
+      <h2>3. Level-1 processes</h2>
+      <pre class="mermaid">
+flowchart TB
+  LOGIN[1.0 Access] --> BUDGET[2.0 Budget / buying power]
+  BUDGET --> PROC[3.0 Procurement]
+  PROC --> STOCK[4.0 Stock receive / issue]
+  STOCK --> ACCT[5.0 Accountability ZA / loans]
+  UNITL[6.0 Unit liaison · reqs · monthly returns · undelivered] --> STOCK
+  UNITL --> ACCT
+  STOCK --> REP[7.0 Reports and alerts]
+  ACCT --> REP
+  PROC --> REP
+      </pre>
+    </section>
+
+    <section>
+      <h2>4. Procurement cycle (8 steps)</h2>
+      <pre class="mermaid">
+flowchart LR
+  S1[1 Requisition] --> S2[2 Spec to F1]
+  S2 --> S3[3 F1 with DP]
+  S3 --> S3b[3b ITDIR eval]
+  S3b --> S4[4 AIAD]
+  S4 --> S5[5 PO e-PO or Manual/DAF]
+  S5 --> S6[6 Supply]
+  S6 --> S7[7 Verify]
+  S7 --> S8[8 Payment]
+      </pre>
+    </section>
+
+    <section>
+      <h2>5. Stock path</h2>
+      <pre class="mermaid">
+flowchart TD
+  OPEN[Day start openings] --> RCV[Receive]
+  RCV --> OH[On hand]
+  OH --> ISS[Issue]
+  ISS --> OH
+  OH --> ST[Stock take]
+  OH --> END[Day end reconcile]
+  ST --> Q987[ZNA Q 987 optional]
+      </pre>
+    </section>
+
+    <section>
+      <h2>6. SQLite ER sketch</h2>
+      <pre class="mermaid">
+erDiagram
+  USERS {
+    text id PK
+    text username
+    text role
+  }
+  GL_BUDGETS {
+    text gl_code PK
+    real budget
+  }
+  MODULES {
+    text module_id PK
+    text payload
+  }
+  RELEASE_CUTS {
+    text id PK
+    text from_gl
+    text to_gl
+    real amount
+  }
+  SETTINGS {
+    text key PK
+    text value
+  }
+  AUDIT_LOG {
+    int id PK
+    text action
+  }
+      </pre>
+    </section>
+
+    <section>
+      <h2>How to edit diagrams</h2>
+      <ol>
+        <li>Open this file in Cursor: <code>docs/SYSTEM-DIAGRAMS.html</code></li>
+        <li>Edit the Mermaid text inside any <code>&lt;pre class="mermaid"&gt;</code> block</li>
+        <li>Save and refresh the browser</li>
+        <li>For narrative documentation, edit <code>docs/SYSTEM-DOCUMENTATION.md</code></li>
+      </ol>
+      <p class="note">Mermaid syntax reference: <a href="https://mermaid.js.org/" target="_blank" rel="noopener">mermaid.js.org</a></p>
+    </section>
+  </main>
+</body>
+</html>

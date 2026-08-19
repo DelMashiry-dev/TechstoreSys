@@ -1,0 +1,102 @@
+<div id="reports-module" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Module Reports</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <div class="reports-controls">
+                    <p style="margin-bottom: 12px; color: #555;">
+                        Generate module reports, or the consolidated <strong>TechStores Period Report</strong> (monthly / quarterly / yearly) for the state of the TechStores department.
+                    </p>
+                    <div class="ts-period-presets" role="group" aria-label="Report period">
+                        <span class="ts-period-presets-label">Period:</span>
+                        <button type="button" class="btn btn-ghost btn-sm" data-report-period="month">This month</button>
+                        <button type="button" class="btn btn-ghost btn-sm" data-report-period="quarter">This quarter</button>
+                        <button type="button" class="btn btn-ghost btn-sm" data-report-period="year">This year</button>
+                        <button type="button" class="btn btn-ghost btn-sm" data-report-period="custom">Custom dates</button>
+                        <span class="ts-period-current" id="reportPeriodLabel">—</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Module:</label>
+                            <select class="form-control" id="reportModuleSelect">
+                                <option value="techstores-period">TechStores Period Report (consolidated)</option>
+                                <option value="dashboard">Dashboard Overview</option>
+                                <option value="stores-inventory">Stores Inventory</option>
+                                <option value="unit-requisitions">Unit / Formation Requisitions</option>
+                                <option value="monthly-returns">Monthly Returns (Unit ICT)</option>
+                                <option value="stock-take">Stock Take</option>
+                                <option value="inventory-accountability">Inventory Accountability</option>
+                                <option value="ict-accountability">ZNA ICT Asset Register</option>
+                                <option value="dp-procurement">ICT Procurement Cycle</option>
+                                <option value="gl-2200600002">GL 6122100009 - ZOFF / Office Supplies &amp; Services</option>
+                                <option value="gl-2200600003">GL 2200600003 - Software Licenses</option>
+                                <option value="gl-220200002">GL 220200002 - Tech Equipment Maintenance</option>
+                                <option value="gl-2201900002">GL 2201900002 - Spare Parts</option>
+                                <option value="gl-3112210001">GL 3112210001 - ICT Equipment</option>
+                                <option value="voucher-module">Issue Voucher</option>
+                                <option value="financial-year-bids">Financial Year Bids</option>
+                                <option value="unit-equipment">Unit Equipment Table</option>
+                                <option value="temporary-loans">Temporary Loans</option>
+                                <option value="spec-evaluation">Spec Evaluation Form</option>
+                                <option value="dp-f1-form">DP F1 Form</option>
+                                <option value="zna-q-982">ZNA Q 982 — Combined Indent</option>
+                                <option value="zna-q-178">ZNA Q 178 — Sub Ledger Sheet</option>
+                                <option value="zna-q-1033">ZNA Q 1033 — Issue & Receipt Voucher</option>
+                                <option value="zna-q-1043">ZNA Q 1043 — Condemnation Certificate</option>
+                                <option value="zna-q-80">ZNA Q 80 — Ledger Sheet</option>
+                                <option value="zna-svcs-890">ZNA SVCS/890 — Demand / Issue</option>
+                                <option value="zna-q-1179">ZNA Q 1179 — Clothing Issue Voucher</option>
+                                <option value="zna-q-987">ZNA Q 987 — Stocktaking Certificate</option>
+                                <option value="zna-q-3977">ZNA Q 3977 — Neglect / Damage</option>
+                                <option value="zna-q-985">ZNA Q 985 — Discrepancy Report</option>
+                                <option value="zna-q-1">ZNA Q 1 — Write-off Schedule</option>
+                                <option value="zna-q-998">ZNA Q 998 — Loss / Damage / Destruction</option>
+                                <option value="zna-q-1680">ZNA Q 1680 — Debit Voucher</option>
+                                <option value="zna-svcs-1045">ZNA SVCS 1045 — Workshop Indent</option>
+                                <option value="zna-q-1157">ZNA Q 1157 — Clothing Record</option>
+                                <option value="accommodation-stores">Inventory of Accommodation Stores</option>
+                                <option value="delivery-note">Delivery Note</option>
+                                <option value="purchase-orders">Purchase Orders</option>
+                                <option value="workshop-repairs">Workshop Repairs</option>
+                                <option value="suppliers-contracts">Suppliers and Contracts</option>
+                                <option value="release-cut">Release Cut</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Date From (optional):</label>
+                            <input type="date" class="form-control" id="reportDateFrom">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Date To (optional):</label>
+                            <input type="date" class="form-control" id="reportDateTo">
+                        </div>
+                    </div>
+                    <div class="module-actions" style="margin-top: 12px;">
+                        <button class="btn btn-primary" id="btnGenerateTechStoresPeriod" type="button">Generate TechStores Period Report</button>
+                        <button class="btn btn-secondary" id="generateSelectedReportBtn" type="button">Generate Report</button>
+                        <button class="btn btn-secondary" id="printGeneratedReportBtn" type="button">Print Report</button>
+                        <button class="btn btn-secondary" id="exportReportPdfBtn" type="button">Save PDF</button>
+                        <button class="btn btn-secondary" id="exportReportWordBtn" type="button">Save Word</button>
+                        <button class="btn btn-secondary" id="exportReportCsvBtn" type="button">Export CSV</button>
+                    </div>
+                </div>
+
+                <details class="dashboard-panel reports-cards-collapse" id="reportsCardsCollapse">
+                    <summary class="reports-cards-summary">
+                        <span>All module report cards</span>
+                        <span class="muted reports-cards-hint">Collapsed by default — click to expand</span>
+                    </summary>
+                    <div class="module-toolbar">
+                        <input type="search" class="form-control table-search" data-search-scope="reportsModuleGrid" data-search-item=".report-module-card" placeholder="Search reports...">
+
+                        <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                        <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                    </div>
+                    <div class="reports-grid" id="reportsModuleGrid"></div>
+                </details>
+
+                <div class="report-preview" id="report-output">
+                    <div class="report-empty">Select a module and click Generate Report to preview output here.</div>
+                </div>
+            </div>

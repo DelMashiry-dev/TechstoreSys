@@ -1,0 +1,101 @@
+<div id="financial-year-bids" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Financial Year Bids — IT DIR</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="bids-intro">
+                    Official <strong>IT DIR BIDS</strong> workbooks are built into the system (from your Excel files).
+                    Load a pack to populate the bid schedule by GL (consumables, software, parts, ICT equipment, maintenance).
+                    These bids inform target/budget provision for the ICT procurement cycle.
+                </p>
+
+                <div class="dashboard-panel bids-import-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>Load Official IT DIR BIDS</h3>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col" style="flex: 2;">
+                            <label class="form-label">Bids pack</label>
+                            <select class="form-control" id="bidsPackSelect"></select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">GL filter</label>
+                            <select class="form-control" id="bidsPackGlFilter">
+                                <option value="all">All GLs</option>
+                                <option value="2200600002">2200600002 Consumables</option>
+                                <option value="2200600003">2200600003 Software</option>
+                                <option value="2201900002">2201900002 Spare Parts</option>
+                                <option value="220200002">220200002 Tech Maint</option>
+                                <option value="3112210001">3112210001 ICT Equipment</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Load mode</label>
+                            <select class="form-control" id="bidsPackLoadMode">
+                                <option value="replace">Replace table</option>
+                                <option value="append">Append to table</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p id="bidsPackSummary" class="bids-pack-summary">Select an official IT DIR BIDS workbook pack to load.</p>
+                    <div class="module-actions">
+                        <button type="button" class="btn btn-primary" id="bidsLoadPackBtn">Load Official Bids Pack</button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 12px;">
+                    <label class="form-label">Other Excel file (optional):</label>
+                    <input type="file" class="form-control" id="excelFile" accept=".xlsx, .xls">
+                </div>
+
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" data-search-target="bids-table-body" placeholder="Search bids...">
+                    <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                </div>
+                
+                <div class="form-table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Serial</th>
+                            <th>Item</th>
+                            <th>Cost Centre No.</th>
+                            <th>GL A/C</th>
+                            <th>Item Description / Justification</th>
+                            <th>Quantity Required</th>
+                            <th>Unit Cost</th>
+                            <th>Total Cost</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bids-table-body">
+                        <tr>
+                            <td>1</td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><input type="text" class="form-control" value="Z04P2SP212" readonly></td>
+                            <td>
+                                <select class="form-control">
+                                    <option value="6122100009">6122100009 - Office Supplies &amp; Services (ZOFF)</option>
+                            <option value="2200600002">2200600002 - Computer Consumables (legacy)</option>
+                                    <option value="2200600003">2200600003 - Software Licenses</option>
+                                    <option value="220200002">220200002 - Tech Equipment Maintenance</option>
+                                    <option value="2201900002">2201900002 - Spare Parts</option>
+                                    <option value="3112210001">3112210001 - ICT Equipment</option>
+                                </select>
+                            </td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><input type="number" class="form-control bid-qty"></td>
+                            <td><input type="number" class="form-control bid-unit-cost"></td>
+                            <td><input type="number" class="form-control bid-total-cost" readonly></td>
+                            <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+                
+                <button class="btn btn-primary" style="margin-top: 15px;" onclick="addBidRow()">Add Item</button>
+                <button class="btn btn-success btn-save-module" style="margin-top: 15px;">Submit Bids</button>
+                <button class="btn btn-secondary btn-generate-report" data-report-module="financial-year-bids" style="margin-top: 15px;">Generate Report</button>
+            </div>

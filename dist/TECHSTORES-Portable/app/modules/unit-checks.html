@@ -1,0 +1,44 @@
+<div id="unit-checks" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Unit Check Log — ASO Ch 28</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <p class="stock-take-intro">
+                    <span class="aso-ref">ASO Pt 1 Ch 28</span>
+                    Record routine and surprise unit / stores checks. Schedule follow-ups and keep the trail for audit.
+                </p>
+                <div class="dashboard-panel" id="unitCheckForm" data-editing-id="">
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Date</label><input type="date" id="ucDate" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Check type</label>
+                            <select id="ucType" class="form-control">
+                                <option value="Routine">Routine</option>
+                                <option value="Surprise">Surprise</option>
+                                <option value="Follow-up">Follow-up</option>
+                                <option value="Command">Command / visit</option>
+                            </select>
+                        </div>
+                        <div class="form-col"><label class="form-label">Area / ledger</label><input id="ucArea" class="form-control" placeholder="e.g. Main store / ICT ledger"></div>
+                        <div class="form-col"><label class="form-label">Checked by</label><input id="ucBy" class="form-control"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Findings</label><textarea id="ucFindings" class="form-control" rows="2"></textarea></div>
+                        <div class="form-col"><label class="form-label">Action / remediation</label><textarea id="ucAction" class="form-control" rows="2"></textarea></div>
+                        <div class="form-col"><label class="form-label">Next due</label><input type="date" id="ucNextDue" class="form-control"></div>
+                    </div>
+                    <div class="module-actions">
+                        <button type="button" class="btn btn-success" id="ucSaveBtn">Save check</button>
+                        <button type="button" class="btn btn-ghost" id="ucResetBtn">Clear form</button>
+                    </div>
+                </div>
+                <div class="form-table-wrapper" style="margin-top:14px;">
+                    <table class="overview-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th><th>Type</th><th>Area</th><th>By</th><th>Findings</th><th>Action</th><th>Next due</th><th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="unitChecksBody"></tbody>
+                    </table>
+                </div>
+            </div>

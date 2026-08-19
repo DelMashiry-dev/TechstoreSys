@@ -1,0 +1,57 @@
+<div id="techstores-equipment-register" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">TechStores Equipment Register — Repair Intake</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <p class="req-intro">
+                    <span class="aso-ref">Repair intake · Stage 2</span>
+                    After gate booking, the <strong>storeman</strong> books equipment into this register.
+                    This is a <strong>custody / repair book only</strong> — it does <strong>not</strong> change the TechStores equipment inventory on charge.
+                    Item then proceeds to the IT Workshop. Each job requires <strong>ZNA SVCS 1045</strong>.
+                </p>
+                <div class="repair-flow-strip" aria-label="Repair intake stages">
+                    <span class="repair-flow-step">1. Gate (RP)</span>
+                    <span class="repair-flow-arrow">→</span>
+                    <span class="repair-flow-step is-active">2. TechStores Equipment Register</span>
+                    <span class="repair-flow-arrow">→</span>
+                    <span class="repair-flow-step">3. IT Workshop Register</span>
+                    <span class="repair-flow-arrow">→</span>
+                    <span class="repair-flow-step">SVCS 1045</span>
+                </div>
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" data-search-target="techstores-equipment-register-table-body" placeholder="Search equipment register…">
+                    <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="terOpen1045Btn">Open SVCS 1045</button>
+                </div>
+                <p class="repair-register-hint">Tip: scroll sideways on the table if needed — <strong>Action</strong> stays pinned on the right.</p>
+                <div class="form-table-wrapper repair-register-wrap">
+                    <table class="qm-batch-table repair-register-table">
+                        <thead>
+                            <tr>
+                                <th>Date In</th>
+                                <th>Equipment Type</th>
+                                <th>S/N or ZA No.</th>
+                                <th>Unit</th>
+                                <th>Received By</th>
+                                <th>Remark</th>
+                                <th>Date Out</th>
+                                <th>Number</th>
+                                <th>Rank</th>
+                                <th>Name</th>
+                                <th>Signature</th>
+                                <th>SVCS 1045 Ref</th>
+                                <th class="qm-screen-only">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="techstores-equipment-register-table-body"></tbody>
+                    </table>
+                </div>
+                <div class="module-actions module-actions-sticky" style="margin-top:15px;">
+                    <button type="button" class="btn btn-primary" id="terAddBtn">Add Equipment Entry</button>
+                    <button type="button" class="btn btn-success btn-save-module">Save Equipment Register</button>
+                    <button type="button" class="btn btn-secondary" id="terPushWorkshopBtn">Push selected → Workshop Register</button>
+                    <button type="button" class="btn btn-secondary btn-generate-report" data-report-module="techstores-equipment-register">Generate Report</button>
+                    <button type="button" class="btn btn-ghost btn-save-pdf" data-pdf-module="techstores-equipment-register">Save PDF</button>
+                </div>
+            </div>

@@ -1,0 +1,15 @@
+---
+description: Use the official TechStores badge as the Windows executable / installer icon
+alwaysApply: true
+---
+
+# Executable & app icon
+
+When building a portable EXE, installer, shortcut, or PyInstaller package for TECHSTORESys:
+
+1. **Canonical source image:** `assets/techstores-icon-source.png` (ZNA crest + techstores badge on red circle). Same artwork is also stored as `assets/techstores-badge.png`.
+2. **Windows icon file:** `assets/techstores.ico` (multi-size). Prefer this for `--icon` / PyInstaller `icon=`.
+3. **Regenerate ICO if the source PNG changes:** run `python scripts/build-icon.py` (reads `assets/techstores-icon-source.png`).
+4. Do **not** invent a different logo or use a generic Python/Electron icon for the shipped executable.
+
+Related: `scripts/build-portable.bat` already expects `assets\techstores.ico`.

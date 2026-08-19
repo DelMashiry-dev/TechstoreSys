@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TechStores ↔ ASO Compliance Matrix — RESTRICTED</title>
+<style>
+  :root {
+    --navy: #1a365d;
+    --navy-mid: #2a4a7a;
+    --ink: #1e293b;
+    --muted: #64748b;
+    --line: #c5d0de;
+    --ok: #166534;
+    --ok-bg: #dcfce7;
+    --part: #92400e;
+    --part-bg: #fef3c7;
+    --gap: #991b1b;
+    --gap-bg: #fee2e2;
+    --na: #475569;
+    --na-bg: #e2e8f0;
+    --paper: #f7f9fc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Calibri, sans-serif;
+    color: var(--ink);
+    background: linear-gradient(165deg, #e8eef6 0%, var(--paper) 40%, #eef2f7 100%);
+    line-height: 1.45;
+  }
+  .page { max-width: 1100px; margin: 0 auto; padding: 28px 24px 64px; }
+  .banner {
+    text-align: center;
+    border: 2px solid var(--navy);
+    background: #fff;
+    padding: 18px 20px 22px;
+    margin-bottom: 22px;
+  }
+  .classif { font-weight: 700; letter-spacing: 0.12em; color: var(--navy); font-size: 0.85rem; }
+  h1 { margin: 8px 0 4px; font-size: 1.55rem; color: var(--navy); }
+  .sub { color: var(--muted); font-size: 0.95rem; margin: 0; }
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end;
+    margin-bottom: 16px;
+  }
+  .toolbar button, .toolbar a {
+    border: 1px solid var(--navy);
+    background: var(--navy);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .toolbar a.ghost { background: #fff; color: var(--navy); }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 10px 18px;
+    background: #fff; border: 1px solid var(--line);
+    padding: 12px 16px; margin-bottom: 18px; font-size: 0.88rem;
+  }
+  .pill {
+    display: inline-block; padding: 2px 10px; border-radius: 3px;
+    font-weight: 700; font-size: 0.75rem; letter-spacing: 0.03em;
+  }
+  .pill-ok { background: var(--ok-bg); color: var(--ok); }
+  .pill-part { background: var(--part-bg); color: var(--part); }
+  .pill-gap { background: var(--gap-bg); color: var(--gap); }
+  .pill-na { background: var(--na-bg); color: var(--na); }
+  h2 {
+    color: var(--navy); font-size: 1.15rem; margin: 28px 0 10px;
+    border-bottom: 2px solid var(--navy); padding-bottom: 4px;
+  }
+  p.lead { max-width: 70ch; color: var(--muted); }
+  table {
+    width: 100%; border-collapse: collapse; background: #fff;
+    font-size: 0.82rem; margin-bottom: 8px;
+  }
+  th, td {
+    border: 1px solid var(--line); padding: 7px 8px; vertical-align: top;
+    text-align: left;
+  }
+  th {
+    background: var(--navy); color: #fff; font-weight: 600;
+    position: sticky; top: 0;
+  }
+  tr:nth-child(even) td { background: #f3f7fb; }
+  .ops {
+    background: #fff; border: 1px solid var(--line);
+    padding: 14px 18px; margin-top: 8px;
+  }
+  .ops ol { margin: 8px 0 0; padding-left: 1.2rem; }
+  .ops li { margin: 6px 0; }
+  footer {
+    text-align: center; margin-top: 28px; font-size: 0.8rem; color: var(--muted);
+  }
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none; }
+    .page { max-width: none; padding: 0; }
+    th { position: static; }
+    tr:nth-child(even) td { background: #f8fafc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    th, .pill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="toolbar">
+      <button type="button" onclick="window.print()">Print / PDF</button>
+      <a class="ghost" href="ASO-COMPLIANCE-MATRIX.md">Markdown source</a>
+      <a class="ghost" href="SYSTEM-DOCUMENTATION.md">System docs</a>
+    </div>
+
+    <header class="banner">
+      <div class="classif">RESTRICTED</div>
+      <h1>TechStores ↔ Accounting Standing Orders</h1>
+      <p class="sub">Compliance matrix — IT Dir Tech Stores · Cost centre Z04P2SP212</p>
+      <p class="sub">Authority: ASO (QS Branch, Army HQ, August 2011) · Updated 28 July 2026</p>
+    </header>
+
+    <div class="legend">
+      <span><span class="pill pill-ok">ALIGNED</span> Implements ASO intent for IT Dir scope</span>
+      <span><span class="pill pill-part">PARTIAL</span> Core present; form / frequency / detail missing</span>
+      <span><span class="pill pill-gap">GAP</span> Not yet in system</span>
+      <span><span class="pill pill-na">N/A</span> Outside Tech Stores scope</span>
+    </div>
+
+    <p class="lead">
+      TechStores is a directorate stores information aid. It amplifies ASO practice for ICT stock,
+      vouchers, stocktaking, loans, and procurement tracking — it does not replace unit QM equipment ledgers where ASO still applies in full.
+    </p>
+
+    <h2>1. Module → ASO chapter</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:18%">Module</th>
+          <th style="width:18%">ASO</th>
+          <th style="width:10%">Status</th>
+          <th>Support / gap</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Dashboard / Alerts</td><td>Pt 1 Ch 1, 28</td><td><span class="pill pill-part">PARTIAL</span></td><td>Open reqs, DP, undelivered, loan overstays. No Ch 28 check certificate log.</td></tr>
+        <tr><td>GL ledgers (5 families)</td><td>Pt 1 Ch 2–3, 11</td><td><span class="pill pill-part">PARTIAL</span></td><td>Electronic surrogate for ledger categories; not paper Q 80/178/183.</td></tr>
+        <tr><td>Issue Voucher</td><td>Pt 1 Ch 2, 3</td><td><span class="pill pill-ok">ALIGNED</span></td><td>Receive/issue posting; keep distinct RV/IV series.</td></tr>
+        <tr><td>Stock Take</td><td><strong>Pt 1 Ch 9</strong></td><td><span class="pill pill-ok">ALIGNED</span></td><td>Physical vs system; push <strong>ZNA Q 987</strong>. Annual 31 May CO certificate still manual.</td></tr>
+        <tr><td>ICT Asset Register</td><td>Pt 1 Ch 1, 3, 28</td><td><span class="pill pill-ok">ALIGNED</span></td><td>ZA-controlled accountability. Weekly serial check not automated.</td></tr>
+        <tr><td>Temporary Loans</td><td><strong>Pt 2 Ch 3</strong></td><td><span class="pill pill-ok">ALIGNED</span></td><td>14-day max; due/overstay. Extend 2 weeks before expiry; cover with Q 1033.</td></tr>
+        <tr><td>Unit Requisitions</td><td>Pt 1 Ch 26</td><td><span class="pill pill-part">PARTIAL</span></td><td>Demand capture; official indent = Q 982 / DP F1.</td></tr>
+        <tr><td>Monthly Returns</td><td>Pt 1 Ch 28</td><td><span class="pill pill-part">PARTIAL</span></td><td>SVC/UNSVC/T/LOAN return; not annual Ch 9 certificate.</td></tr>
+        <tr><td>DP F1 / Procurement Cycle</td><td>Pt 1 Ch 26</td><td><span class="pill pill-part">PARTIAL</span></td><td>Indent &amp; 8-step tracker; vouchers still Ch 2.</td></tr>
+        <tr><td>Purchase Orders</td><td><strong>Pt 1 Ch 26</strong></td><td><span class="pill pill-ok">ALIGNED</span></td><td>PO register; cancelled copies retained; weekly book check procedural.</td></tr>
+        <tr><td>Delivery Note</td><td>Pt 1 Ch 2 §4(b)</td><td><span class="pill pill-part">PARTIAL</span></td><td>DN → raise Q 1033 for local supplier receipt.</td></tr>
+        <tr><td>Undelivered Items</td><td>Pt 1 Ch 7</td><td><span class="pill pill-part">PARTIAL</span></td><td>Awaiting delivery. Shortage/excess → <strong>Q 985</strong> <span class="pill pill-gap">GAP</span>.</td></tr>
+        <tr><td>Workshop Repairs</td><td>Pt 1 Ch 15; Pt 2 Ch 5</td><td><span class="pill pill-ok">ALIGNED</span></td><td>1045 → 1043 → 982 → 1033 strike-off chain.</td></tr>
+        <tr><td>Accommodation Stores</td><td>Pt 1 Ch 3 §1(3)</td><td><span class="pill pill-part">PARTIAL</span></td><td>Furniture/office inventory.</td></tr>
+        <tr><td>ZNA Q 982 / 1033 / 178 / 80 / 987 / 1043 / SVCS 890 / 1045</td><td>Pt 1 Ch 2, 9, 15, 17</td><td><span class="pill pill-ok">ALIGNED</span></td><td>Core ASO forms implemented as fillable modules.</td></tr>
+        <tr><td>ZNA Q 3977</td><td>Pt 1 Ch 6</td><td><span class="pill pill-part">PARTIAL</span></td><td>Damage/neglect. Write-off Q 1 / Q 998 <span class="pill pill-gap">GAP</span>.</td></tr>
+        <tr><td>Reports / Backup</td><td>Pt 1 Ch 8, 25</td><td><span class="pill pill-part">PARTIAL</span></td><td>Audit packs. Retain completed records <strong>3 years</strong> (Ch 25).</td></tr>
+        <tr><td>Spec Eval / Release Cut / Suppliers</td><td>Local / DAF</td><td><span class="pill pill-na">N/A</span></td><td>Operational aids outside core ASO Q chapters.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>2. ASO chapter coverage (summary)</h2>
+    <table>
+      <thead>
+        <tr><th>Chapter</th><th>Topic</th><th>Status</th><th>TechStores</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Pt 1 Ch 2</td><td>Accounting documents</td><td><span class="pill pill-ok">ALIGNED</span></td><td>QM form modules + vouchers</td></tr>
+        <tr><td>Pt 1 Ch 6</td><td>Write-off</td><td><span class="pill pill-ok">ALIGNED</span></td><td>Q 1, Q 998, Q 3977, Q 1043</td></tr>
+        <tr><td>Pt 1 Ch 7</td><td>Consignment discrepancies</td><td><span class="pill pill-ok">ALIGNED</span></td><td>ZNA Q 985</td></tr>
+        <tr><td>Pt 1 Ch 9</td><td>Stocktaking</td><td><span class="pill pill-ok">ALIGNED</span></td><td>Stock Take + Q 987</td></tr>
+        <tr><td>Pt 1 Ch 11</td><td>Consumables</td><td><span class="pill pill-part">PARTIAL</span></td><td>Consumables GL + issues</td></tr>
+        <tr><td>Pt 1 Ch 15 / Pt 2 Ch 5</td><td>Tech repair &amp; replace</td><td><span class="pill pill-ok">ALIGNED</span></td><td>Workshop + 1045/1043/982</td></tr>
+        <tr><td>Pt 1 Ch 17</td><td>Signal spares / tools</td><td><span class="pill pill-ok">ALIGNED</span></td><td>Spares GL, 890, Q 80</td></tr>
+        <tr><td>Pt 1 Ch 25</td><td>Disposal of Q records</td><td><span class="pill pill-part">PARTIAL</span></td><td>3-year retention policy</td></tr>
+        <tr><td>Pt 1 Ch 26</td><td>Requisitions &amp; POs</td><td><span class="pill pill-ok">ALIGNED</span></td><td>Reqs, PO, DP F1, Q 982</td></tr>
+        <tr><td>Pt 1 Ch 27</td><td>Debit vouchers</td><td><span class="pill pill-ok">ALIGNED</span></td><td>Q 1680 implemented</td></tr>
+        <tr><td>Pt 1 Ch 28</td><td>Unit checks</td><td><span class="pill pill-part">PARTIAL</span></td><td>Returns / alerts; no check log</td></tr>
+        <tr><td>Pt 2 Ch 3</td><td>Stores on loan</td><td><span class="pill pill-ok">ALIGNED</span></td><td>Temporary Loans module</td></tr>
+        <tr><td>Ch 4, 10, 14, 18–24…</td><td>Rations, ammo, medical, FOL…</td><td><span class="pill pill-na">N/A</span></td><td>Outside IT Dir scope</td></tr>
+      </tbody>
+    </table>
+
+    <h2>3. Priority gaps</h2>
+    <table>
+      <thead><tr><th>#</th><th>Gap</th><th>ASO</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>P1</td><td>Annual stock-take certificate (31 May)</td><td>Ch 9 §8</td><td>Reminder + export pack to Bde by 20 Jun</td></tr>
+        <tr><td>P2</td><td>Unit check certificates</td><td>Ch 28</td><td>Log daily / weekly serial / monthly 10%</td></tr>
+        <tr><td>P3</td><td>Records disposal schedule</td><td>Ch 25</td><td>Enforce 3-year retention on archives</td></tr>
+        <tr><td>✓</td><td>Q 985 / Q 1 / Q 998 / Q 1680</td><td>Ch 7, 6, 27</td><td>Added Jul 2026</td></tr>
+      </tbody>
+    </table>
+
+    <h2>4. Operating rules (ASO-aligned)</h2>
+    <div class="ops">
+      <ol>
+        <li>Every receipt/issue supportable by Q 982, Q 1033, or SVCS 890/1045.</li>
+        <li>Stock takes → <strong>ZNA Q 987</strong>; surplus on charge; deficit under Ch 6.</li>
+        <li>Loans returned by voucher date; extensions <strong>2 weeks before</strong> expiry; Q 1033 for internal issues.</li>
+        <li>Beyond local repair → 1045 → 1043 → 982 → strike off 1033.</li>
+        <li>Local supplier: check DN → raise Q 1033 → attach to PO/invoice.</li>
+        <li>Military consignment discrepancy → Q 985 (when available); do not casually amend vouchers.</li>
+        <li>Retain completed Q records <strong>three years</strong> (Ch 25).</li>
+      </ol>
+    </div>
+
+    <footer>
+      <strong>RESTRICTED</strong> — End of compliance matrix<br>
+      Full detail: <code>docs/ASO-COMPLIANCE-MATRIX.md</code>
+    </footer>
+  </div>
+</body>
+</html>

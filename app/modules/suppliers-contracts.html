@@ -1,0 +1,127 @@
+<div id="suppliers-contracts" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Suppliers and Contracts</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="req-intro">
+                    <strong>Registered Suppliers List — G/C/006</strong>
+                    (Computers, Printers, Photocopiers, Networking Equipment and Accessories).
+                    Listed suppliers are treated as <strong>compliant</strong> with the
+                    <strong>Requirements for Supplier Evaluation</strong> pack (Director Procurement, Army HQ).
+                    Use <strong>Import / Refresh Registered List</strong> to load or replace the official register.
+                </p>
+
+                <details class="dashboard-panel supplier-eval-reqs" style="margin-bottom:14px;">
+                    <summary style="cursor:pointer;font-weight:700;color:#1b4332;">
+                        Requirements for Supplier Evaluation (12) — click to expand
+                    </summary>
+                    <ol id="supplierEvalReqsList" class="supplier-eval-reqs-list" style="margin:10px 0 0;padding-left:1.25rem;font-size:0.86rem;line-height:1.45;"></ol>
+                    <p class="muted" style="margin:10px 0 0;font-size:0.8rem;">
+                        Address introductory letter to: Director Procurement, Army HQ, P Bag 7720, Causeway, Harare.
+                        All documents must be bound, valid, up to date and certified.
+                    </p>
+                </details>
+
+                <div class="ue-summary-strip" id="supplierSummaryStrip" aria-label="Supplier status summary"></div>
+
+                <div class="dashboard-panel req-capture-panel" id="supplierDetailsForm">
+                    <div class="section-heading section-heading-compact">
+                        <h3 id="supplierFormTitle">Add Supplier</h3>
+                    </div>
+                    <input type="hidden" id="supplierEditIndex" value="">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Supplier ID</label>
+                            <input type="text" class="form-control" id="supplierId" placeholder="e.g. SUP-001">
+                        </div>
+                        <div class="form-col" style="flex: 1.4;">
+                            <label class="form-label">Supplier Name</label>
+                            <input type="text" class="form-control" id="supplierName" placeholder="Company / trading name">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Status</label>
+                            <select class="form-control" id="supplierStatus">
+                                <option>Active</option>
+                                <option>Inactive</option>
+                                <option>Pending</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Contact Person</label>
+                            <input type="text" class="form-control" id="supplierContact" placeholder="Name of contact">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Phone</label>
+                            <input type="text" class="form-control" id="supplierPhone" placeholder="Phone / mobile">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="supplierEmail" placeholder="email@example.com">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Contract Start Date</label>
+                            <input type="date" class="form-control" id="supplierStart">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Contract End Date</label>
+                            <input type="date" class="form-control" id="supplierEnd">
+                        </div>
+                        <div class="form-col" style="flex: 1.4;">
+                            <label class="form-label">Notes (optional)</label>
+                            <input type="text" class="form-control" id="supplierNotes" placeholder="Contract / service notes">
+                        </div>
+                    </div>
+                    <div class="module-actions">
+                        <button type="button" class="btn btn-success" id="supplierSaveBtn">Save Supplier</button>
+                        <button type="button" class="btn btn-ghost" id="supplierFormClearBtn">Clear Form</button>
+                        <button type="button" class="btn btn-primary" id="supplierImportOfficialBtn" title="Replace/load Registered Suppliers List G/C/006">
+                            Import / Refresh Registered List
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-generate-report" data-report-module="suppliers-contracts">Generate Report</button>
+                        <button type="button" class="btn btn-success btn-save-module" hidden>Save Suppliers</button>
+                    </div>
+                </div>
+
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" id="supplierSearchInput" data-search-history-key="suppliers-contracts" data-search-history="1" placeholder="Search suppliers...">
+                    <select class="form-control" id="supplierStatusFilter" title="Filter by status" style="max-width:180px;">
+                        <option value="all">All statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Pending">Pending</option>
+                    </select>
+                    <button type="button" class="btn btn-primary btn-sm" id="supplierSearchBtn">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="supplierClearBtn">Clear</button>
+                </div>
+
+                <div class="form-table-wrapper">
+                    <table class="overview-table ue-view-table">
+                        <thead>
+                            <tr>
+                                <th>Supplier ID</th>
+                                <th>Supplier Name</th>
+                                <th>Contact Person</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Contract Start</th>
+                                <th>Contract End</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="suppliers-view-body">
+                            <tr><td colspan="9" class="req-empty-row">No suppliers recorded yet. Use the form above to add one.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Hidden persistence table used by saveModule / restoreModule / reports -->
+                <table hidden aria-hidden="true">
+                    <tbody id="suppliers-table-body"></tbody>
+                </table>
+            </div>

@@ -1,0 +1,226 @@
+<div id="zna-q-982" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">ZNA Q 982 — Combined Indent and Voucher for Stores</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="q982-intro">Complete the indent fields and line items below. Print Form / Generate Report produces the official ZNAQ 982 (LARGE) layout.</p>
+
+                <div class="q982-form">
+                    <div class="q982-screen-header">
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Unit Indent No.</label>
+                                <input type="text" id="q982UnitIndentNo" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Date</label>
+                                <input type="date" id="q982Date" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Date Stores Required</label>
+                                <input type="date" id="q982DateRequired" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Authority for Issue</label>
+                                <input type="text" id="q982Authority" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Normal / Special</label>
+                                <select id="q982NormalSpecial" class="form-control">
+                                    <option value="NORMAL">NORMAL</option>
+                                    <option value="SPECIAL">SPECIAL</option>
+                                </select>
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Degree of Urgency</label>
+                                <input type="text" id="q982DegreeUrgency" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Issuing Depot</label>
+                                <input type="text" id="q982IssuingDepot" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Control No.</label>
+                                <input type="text" id="q982ControlNo" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Reason for Indent (delete / leave codes not applicable)</label>
+                            <div class="q982-reason-codes">
+                                <label><input type="checkbox" id="q982ReasonA" value="A"> A</label>
+                                <label><input type="checkbox" id="q982ReasonB" value="B"> B</label>
+                                <label><input type="checkbox" id="q982ReasonC" value="C"> C</label>
+                                <label><input type="checkbox" id="q982ReasonD" value="D"> D</label>
+                                <label><input type="checkbox" id="q982ReasonE" value="E"> E</label>
+                            </div>
+                            <small class="q982-note-hint">A=initial scale · B=replace B of S/C · C=stock replenishment · D=repayment · E=re-indent</small>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Voucher To</label>
+                                <input type="text" id="q982VoucherTo" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Nearest Railway Station</label>
+                                <input type="text" id="q982Railway" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Address for Stores</label>
+                            <textarea id="q982Address" class="form-control" rows="2"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Special Instructions</label>
+                            <textarea id="q982SpecialInstructions" class="form-control" rows="2"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Signature and Rank of Demanding Officer</label>
+                                <input type="text" id="q982DemandingSig" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">NAME (Block Capitals)</label>
+                                <input type="text" id="q982DemandingName" class="form-control" style="text-transform: uppercase;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="module-toolbar q982-screen-only">
+                        <input type="search" class="form-control table-search" data-search-target="zna-q-982-table-body" placeholder="Search indent lines...">
+                        <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                        <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                    </div>
+
+                    <div class="form-table-wrapper q982-table-wrap">
+                        <table class="q982-items-table">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">Line</th>
+                                    <th rowspan="2">Stock Balance</th>
+                                    <th rowspan="2">Location</th>
+                                    <th rowspan="2">Vocab / Part No.</th>
+                                    <th rowspan="2">Section</th>
+                                    <th rowspan="2">Designation</th>
+                                    <th rowspan="2">Unit of Issue</th>
+                                    <th colspan="3">Quantities</th>
+                                    <th rowspan="2">Package No.</th>
+                                    <th rowspan="2">Weight</th>
+                                    <th colspan="2">Value</th>
+                                    <th rowspan="2" class="q982-screen-only">Action</th>
+                                </tr>
+                                <tr>
+                                    <th>Required</th>
+                                    <th>Issued</th>
+                                    <th>To Follow</th>
+                                    <th>$</th>
+                                    <th>c</th>
+                                </tr>
+                            </thead>
+                            <tbody id="zna-q-982-table-body"></tbody>
+                        </table>
+                    </div>
+
+                    <button type="button" class="btn btn-primary q982-screen-only" style="margin: 10px 0;" onclick="addZnaQ982Row()">Add Row</button>
+
+                    <div class="q982-footer-fields">
+                        <h4 class="q982-section-title">Approvals &amp; Control</h4>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Approved DASC ARMY H.Q. — Initials</label>
+                                <input type="text" id="q982ApprDascInitials" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Date</label>
+                                <input type="date" id="q982ApprDascDate" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Approved and Checked By — Initials</label>
+                                <input type="text" id="q982ApprCheckedInitials" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Date</label>
+                                <input type="date" id="q982ApprCheckedDate" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Posted Accounts — Initials</label>
+                                <input type="text" id="q982PostedAccountsInitials" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Date</label>
+                                <input type="date" id="q982PostedAccountsDate" class="form-control">
+                            </div>
+                        </div>
+
+                        <h4 class="q982-section-title">Depot Processing</h4>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">SELECTED BY — Initials</label>
+                                <input type="text" id="q982SelectedInitials" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Date</label>
+                                <input type="date" id="q982SelectedDate" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">CHECKED BY — Initials</label>
+                                <input type="text" id="q982CheckedInitials" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Date</label>
+                                <input type="date" id="q982CheckedDate" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">POSTED BY — Initials</label>
+                                <input type="text" id="q982PostedByInitials" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Date</label>
+                                <input type="date" id="q982PostedByDate" class="form-control">
+                            </div>
+                        </div>
+
+                        <h4 class="q982-section-title">Receipt for Stores</h4>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Receipt Date</label>
+                                <input type="date" id="q982ReceiptDate" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Receipt Voucher No.</label>
+                                <input type="text" id="q982ReceiptVoucherNo" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Signature, Rank and Appointment</label>
+                                <input type="text" id="q982ReceiptSig" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">No.</label>
+                                <input type="text" id="q982ReceiptNo" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">NAME (Block Capitals)</label>
+                                <input type="text" id="q982ReceiptName" class="form-control" style="text-transform: uppercase;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-success btn-save-module" style="margin-top: 15px;">Save Form</button>
+                <button class="btn btn-secondary btn-print-module" data-print-target="zna-q-982" style="margin-top: 15px;">Print Form</button>
+                <button class="btn btn-secondary btn-generate-report" data-report-module="zna-q-982" style="margin-top: 15px;">Generate Report</button>
+            </div>

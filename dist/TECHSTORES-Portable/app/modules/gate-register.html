@@ -1,0 +1,60 @@
+<div id="gate-register" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Gate Register — Equipment In / Out (Regimental Police)</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <p class="req-intro">
+                    <span class="aso-ref">Repair intake · Stage 1</span>
+                    Units / individuals bring equipment for repairs, software upgrades, antivirus update or renewal.
+                    <strong>Regimental Police</strong> book every item at the gate first.
+                    This register does <strong>not</strong> change TechStores inventory.
+                    Each repair job must be accompanied by <strong>ZNA SVCS 1045</strong>.
+                </p>
+                <div class="repair-flow-strip" aria-label="Repair intake stages">
+                    <span class="repair-flow-step is-active">1. Gate (RP)</span>
+                    <span class="repair-flow-arrow">→</span>
+                    <span class="repair-flow-step">2. TechStores Equipment Register</span>
+                    <span class="repair-flow-arrow">→</span>
+                    <span class="repair-flow-step">3. IT Workshop Register</span>
+                    <span class="repair-flow-arrow">→</span>
+                    <span class="repair-flow-step">SVCS 1045</span>
+                </div>
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" data-search-target="gate-register-table-body" placeholder="Search gate register…">
+                    <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                    <button type="button" class="btn btn-ghost btn-sm" data-pg-open="zna-svcs-1045" id="gateOpen1045Btn">Open SVCS 1045</button>
+                </div>
+                <p class="repair-register-hint">Tip: scroll sideways on the table if needed — <strong>Action</strong> stays pinned on the right.</p>
+                <div class="form-table-wrapper repair-register-wrap">
+                    <table class="qm-batch-table repair-register-table">
+                        <thead>
+                            <tr>
+                                <th data-help-key="date in">Date In</th>
+                                <th>Equipment Type</th>
+                                <th data-help-key="s/n or za no">S/N or ZA No.</th>
+                                <th>Unit</th>
+                                <th data-help-key="received by">Received By</th>
+                                <th>Remark</th>
+                                <th>Date Out</th>
+                                <th>Number</th>
+                                <th>Rank</th>
+                                <th>Name</th>
+                                <th>Signature</th>
+                                <th data-help-key="svcs 1045">SVCS 1045 Ref</th>
+                                <th class="qm-screen-only">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gate-register-table-body"></tbody>
+                    </table>
+                </div>
+                <div class="module-actions module-actions-sticky" style="margin-top:15px;">
+                    <button type="button" class="btn btn-primary" id="gateRegisterAddBtn">Add Gate Entry</button>
+                    <button type="button" class="btn btn-success btn-save-module">Save Gate Register</button>
+                    <button type="button" class="btn btn-secondary" id="gatePushTechstoresBtn">Push selected → TechStores Register</button>
+                    <button type="button" class="btn btn-secondary btn-generate-report" data-report-module="gate-register">Generate Report</button>
+                    <button type="button" class="btn btn-ghost btn-save-pdf" data-pdf-module="gate-register">Save PDF</button>
+                    <button type="button" class="btn btn-ghost btn-sm" data-mod-msg-jump="gateMsgPortal">Open messaging portal</button>
+                </div>
+                <!-- Messaging portal injected by module-messaging-portal.js (#gateMsgPortal) -->
+            </div>

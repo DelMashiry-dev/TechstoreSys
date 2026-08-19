@@ -1,0 +1,42 @@
+<div id="zna-svcs-1045" class="form-container">
+                <div class="form-header"><h2 class="form-title">ZNA SVCS 1045 — Workshop Indent</h2><button class="close-btn">&times;</button></div>
+                <p class="q982-intro">
+                    Workshop indent (two copies on print).
+                    <strong>Required</strong> with every equipment item booked for repair / software upgrade / antivirus work
+                    (Gate → TechStores Equipment Register → IT Workshop Register).
+                </p>
+                <div class="qm-batch-form">
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Unit Number</label><input id="svcs1045UnitNumber" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Unit</label><input id="svcs1045Unit" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Station and Date</label><input id="svcs1045StationDate" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Commenced</label><input type="date" id="svcs1045Commenced" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Completed</label><input type="date" id="svcs1045Completed" class="form-control"></div>
+                    </div>
+                    <div class="form-table-wrapper"><table class="qm-batch-table"><thead><tr>
+                        <th>Job no</th><th>Designation</th><th>No</th><th>Nature of service and authority</th><th class="qm-screen-only">Action</th>
+                    </tr></thead><tbody id="zna-svcs-1045-table-body"></tbody></table></div>
+                    <button type="button" class="btn btn-primary qm-screen-only" style="margin:10px 0" onclick="addZnaSvcs1045Row()">Add Row</button>
+                    <h4 class="q982-section-title">Summary of costs</h4>
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Labour</label><input id="svcs1045Labour" class="form-control" type="number" step="any"></div>
+                        <div class="form-col"><label class="form-label">Materials</label><input id="svcs1045Materials" class="form-control" type="number" step="any"></div>
+                        <div class="form-col"><label class="form-label">Contracts</label><input id="svcs1045Contracts" class="form-control" type="number" step="any"></div>
+                        <div class="form-col"><label class="form-label">Travelling</label><input id="svcs1045Travelling" class="form-control" type="number" step="any"></div>
+                        <div class="form-col"><label class="form-label">Carriage</label><input id="svcs1045Carriage" class="form-control" type="number" step="any"></div>
+                        <div class="form-col"><label class="form-label">Total cost</label><input id="svcs1045Total" class="form-control" readonly></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Signed</label><input id="svcs1045Signed" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">OC (Unit)</label><input id="svcs1045OcUnit" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Approved</label><input id="svcs1045Approved" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">OC</label><input id="svcs1045Oc" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">OC Workshops</label><input id="svcs1045OcWorkshops" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Received</label><input id="svcs1045Received" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Received Date</label><input type="date" id="svcs1045ReceivedDate" class="form-control"></div>
+                    </div>
+                </div>
+                <button class="btn btn-success btn-save-module" style="margin-top:15px">Save Form</button>
+                <button class="btn btn-secondary btn-print-module" data-print-target="zna-svcs-1045" style="margin-top:15px">Print Form</button>
+                <button class="btn btn-secondary btn-generate-report" data-report-module="zna-svcs-1045" style="margin-top:15px">Generate Report</button>
+            </div>

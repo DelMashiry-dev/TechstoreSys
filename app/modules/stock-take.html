@@ -1,0 +1,98 @@
+<div id="stock-take" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title stock-take-title">
+                        <img class="stock-take-title-icon" src="../assets/nav-icons/stock-take.png" alt="" width="36" height="36">
+                        <span>Stock Take — Full Stores Inventory</span>
+                    </h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="stock-take-intro">
+                    <span class="aso-ref" title="Accounting Standing Orders">ASO Pt 1 Ch 9</span>
+                    Enlist everything on hand across <strong>Consumables</strong> (toners, USB sticks, media),
+                    <strong>ICT Equipment</strong> (laptops, desktops, projectors), <strong>Spares &amp; Parts</strong>,
+                    and <strong>Softwares</strong>. Enter physical counts; variance is calculated against system on-hand.
+                    Record results on <strong>ZNA Q 987</strong>. Surpluses: bring on charge (Q 1033 / transfer numbering per Ch 9).
+                    Deficits: action under ASO Ch 6. Annual CO certificate as at <strong>31 May</strong> (to Bde by 20 Jun).
+                </p>
+
+                <div class="dashboard-panel stock-take-meta">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label" for="stockTakeDate">Stock take date</label>
+                            <input type="date" class="form-control" id="stockTakeDate">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="stockTakeBy">Conducted by</label>
+                            <input type="text" class="form-control" id="stockTakeBy" placeholder="Name / rank">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="stockTakeLocation">Location</label>
+                            <input type="text" class="form-control" id="stockTakeLocation" value="IT Dir Tech Stores">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="stockTakeHistory">Saved stock takes</label>
+                            <select class="form-control" id="stockTakeHistory">
+                                <option value="">— Saved stock takes —</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col" style="flex: 2;">
+                            <label class="form-label" for="stockTakeNotes">Notes</label>
+                            <input type="text" class="form-control" id="stockTakeNotes" placeholder="Board / witness / reference">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stock-take-toolbar module-toolbar">
+                    <select class="form-control" id="stockTakeFamily" aria-label="Filter by family"></select>
+                    <input type="search" class="form-control" id="stockTakeSearch" placeholder="Search item / ledger…" autocomplete="off">
+                    <label class="stock-take-check">
+                        <input type="checkbox" id="stockTakeShowZero"> Show zero on-hand (with activity)
+                    </label>
+                    <label class="stock-take-check">
+                        <input type="checkbox" id="stockTakeShowAllCatalog" checked> Show all catalog items
+                    </label>
+                    <button type="button" class="btn btn-ghost btn-sm" id="stockTakeRefreshBtn">Refresh system qty</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="stockTakeFillSystemBtn">Fill physical = system</button>
+                </div>
+
+                <div class="stock-take-stats" aria-live="polite">
+                    <span><strong id="stStatLines">0</strong> lines</span>
+                    <span>System <strong id="stStatSystem">0</strong></span>
+                    <span>Physical <strong id="stStatPhysical">0</strong></span>
+                    <span class="st-var-ok">Match <strong id="stStatMatch">0</strong></span>
+                    <span class="st-var-surplus">Surplus <strong id="stStatSurplus">0</strong></span>
+                    <span class="st-var-deficit">Deficit <strong id="stStatDeficit">0</strong></span>
+                </div>
+
+                <div class="form-table-wrapper stock-take-table-wrap">
+                    <table class="stock-take-table">
+                        <thead>
+                            <tr>
+                                <th data-help-key="ledger">Ledger</th>
+                                <th>Item</th>
+                                <th data-help-key="gl">GL</th>
+                                <th data-help-key="system on hand">System on hand</th>
+                                <th data-help-key="physical count">Physical count</th>
+                                <th data-help-key="variance">Variance</th>
+                                <th data-help-key="bin / note">Remarks (Bin / note)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockTakeBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="module-actions module-actions-sticky" style="margin-top: 15px;">
+                    <button type="button" class="btn btn-success" id="stockTakeSaveBtn">Save Stock Take</button>
+                    <button type="button" class="btn btn-secondary btn-generate-report" data-report-module="stock-take">Generate Report</button>
+                    <button type="button" class="btn btn-secondary" id="stockTakePushQ987Btn">Push to ZNA Q 987</button>
+                    <button type="button" class="btn btn-secondary" id="stockTakePushQ1033Btn" title="Surplus → Issue &amp; Receipt">Surplus → Q 1033</button>
+                    <button type="button" class="btn btn-secondary" id="stockTakePushQ998Btn" title="Deficit → Loss statement">Deficit → Q 998</button>
+                    <button type="button" class="btn btn-secondary" id="stockTakePushQ1Btn" title="Deficit → Write-off">Deficit → Q 1</button>
+                    <button type="button" class="btn btn-ghost" id="stockTakeAnnualPackBtn">Annual pack (31 May / 20 Jun)</button>
+                    <button type="button" class="btn btn-ghost btn-save-pdf" data-pdf-module="stock-take">Save PDF</button>
+                </div>
+            </div>

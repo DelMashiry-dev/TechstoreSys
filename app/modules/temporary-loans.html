@@ -1,0 +1,131 @@
+<div id="temporary-loans" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Temporary Loans — Controlled Stores</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="loan-intro">
+                    <span class="aso-ref" title="Accounting Standing Orders">ASO Pt 2 Ch 3</span>
+                    Temporary loans of <strong>controlled stores</strong> engraved with a <strong>ZA number</strong>
+                    (e.g. HP Intel Core Ultra 7 AIO desktop — ZA820) to an individual serving in a ZNA unit, formation,
+                    directorate, branch, or establishment. Return by the date on the loan voucher.
+                    Maximum authorised loan period: <strong>2 weeks (14 days)</strong>.
+                    Extensions: apply through Bde / Dist HQ <strong>two weeks before</strong> expiry.
+                    Cover internal issues / returns with <strong>ZNA Q 1033</strong>; keep a loan voucher receipt file.
+                </p>
+
+                <div class="loan-aging-strip" aria-label="Temporary loans summary">
+                    <button type="button" class="loan-stat loan-stat-filter" data-loan-filter="active" title="Show all items currently on loan">
+                        <span class="loan-stat-value" id="loanStatOnLoan">0</span>
+                        <span class="loan-stat-label">On Loan</span>
+                    </button>
+                    <button type="button" class="loan-stat loan-stat-filter" data-loan-filter="due_soon" title="Due within 3 days">
+                        <span class="loan-stat-value" id="loanStatDueSoon">0</span>
+                        <span class="loan-stat-label">Due Soon</span>
+                    </button>
+                    <button type="button" class="loan-stat loan-stat-filter loan-stat-danger" data-loan-filter="overstayed" title="Past expected return / 14-day max">
+                        <span class="loan-stat-value" id="loanStatOverstayed">0</span>
+                        <span class="loan-stat-label">Overstayed</span>
+                    </button>
+                    <button type="button" class="loan-stat loan-stat-filter" data-loan-filter="returned" title="Returned items">
+                        <span class="loan-stat-value" id="loanStatReturned">0</span>
+                        <span class="loan-stat-label">Returned</span>
+                    </button>
+                </div>
+
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" id="loanSearchInput" data-search-history-key="temporary-loans" data-search-history="1" placeholder="Search ZA no., item, borrower, unit...">
+                    <select class="form-control" id="loanStatusFilter" title="Filter by loan status" style="max-width:200px;">
+                        <option value="active">Currently on loan</option>
+                        <option value="overstayed">Overstayed only</option>
+                        <option value="due_soon">Due soon</option>
+                        <option value="on_loan">On loan (not due soon)</option>
+                        <option value="returned">Returned</option>
+                        <option value="all">All loans</option>
+                    </select>
+                    <button type="button" class="btn btn-primary btn-sm" id="loanSearchBtn">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="loanClearBtn">Clear</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="loanViewModeBtn">View Loans</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="loanEditModeBtn">Edit Records</button>
+                </div>
+
+                <div id="loanViewPanel">
+                    <div class="form-table-wrapper">
+                        <table class="overview-table loan-view-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:48px;">Ser</th>
+                                    <th>ZA No.</th>
+                                    <th>Item</th>
+                                    <th>Issued To / Force No.</th>
+                                    <th>Unit / Formation / Dir</th>
+                                    <th>Loaned</th>
+                                    <th>Due</th>
+                                    <th>Days</th>
+                                    <th>Status</th>
+                                    <th>Returned</th>
+                                </tr>
+                            </thead>
+                            <tbody id="loans-view-body">
+                                <tr><td colspan="10" class="req-empty-row">No temporary loans recorded yet.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="module-actions" style="margin-top: 15px;">
+                        <button type="button" class="btn btn-secondary btn-generate-report" data-report-module="temporary-loans">Generate Report</button>
+                    </div>
+                </div>
+
+                <div id="loanEditPanel" hidden>
+                    <div class="form-table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date Loaned</th>
+                                    <th>ZA Number</th>
+                                    <th>Item</th>
+                                    <th>Description</th>
+                                    <th>Qty</th>
+                                    <th>UoM</th>
+                                    <th>Issued To</th>
+                                    <th>Force No.</th>
+                                    <th>Unit / Formation / Dir</th>
+                                    <th>Expected Return</th>
+                                    <th>Date Returned</th>
+                                    <th>Issued By</th>
+                                    <th>Issuer Initials</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="loans-table-body">
+                                <tr>
+                                    <td><input type="date" class="form-control loan-date"></td>
+                                    <td><input type="text" class="form-control loan-za" placeholder="e.g. ZA820"></td>
+                                    <td><input type="text" class="form-control" placeholder="e.g. AIO Desktop"></td>
+                                    <td><input type="text" class="form-control" placeholder="e.g. HP Intel Core Ultra 7"></td>
+                                    <td><input type="number" class="form-control" value="1" min="1"></td>
+                                    <td><input type="text" class="form-control" value="ea"></td>
+                                    <td><input type="text" class="form-control" placeholder="Rank, Name"></td>
+                                    <td><input type="text" class="form-control"></td>
+                                    <td>
+                                        <select class="form-control loan-unit zna-unit-select" title="Unit / Formation / Dir">
+                                            <option value="">— Select unit / formation —</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="date" class="form-control loan-expected-return" title="Defaults to Date Loaned + 14 days"></td>
+                                    <td><input type="date" class="form-control loan-date-returned"></td>
+                                    <td><input type="text" class="form-control"></td>
+                                    <td><input type="text" class="form-control"></td>
+                                    <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="module-actions" style="margin-top: 15px;">
+                        <button class="btn btn-primary" type="button" onclick="addLoanRow()">Add Loan</button>
+                        <button class="btn btn-success btn-save-module" type="button">Save Loans</button>
+                        <button class="btn btn-secondary btn-generate-report" data-report-module="temporary-loans" type="button">Generate Report</button>
+                    </div>
+                </div>
+            </div>

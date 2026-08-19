@@ -1,0 +1,254 @@
+<div id="spec-evaluation" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Spec/Tech Evaluation</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="spec-eval-intro">
+                    Prepare technical specifications before procurement. Use <strong>Intelligent Spec Search</strong> to set
+                    minimum requirements (product type, brand, processor, RAM, storage), review ranked options, then pick the
+                    best match into this datasheet.
+                </p>
+
+                <div class="dashboard-panel spec-search-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>Intelligent Spec Search — “I need at least these specs”</h3>
+                    </div>
+                    <p class="spec-search-hint">
+                        Set product type, brand, processor, RAM and/or storage. Keywords are optional.
+                        Returns a ranked table of the best options (at least 5 when available). Local catalog is
+                        searched first; optionally enrich with online lookup (when the server is running). Pick a
+                        row to load the Spec Evaluation datasheet.
+                    </p>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Product type</label>
+                            <select class="form-control" id="specSearchProductType">
+                                <option value="">Any product type</option>
+                                <option value="laptop">Laptop</option>
+                                <option value="desktop">Desktop Computer</option>
+                                <option value="tablet">Tablet</option>
+                                <option value="printer">Printer</option>
+                                <option value="server">Server</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Preferred brand</label>
+                            <select class="form-control" id="specSearchBrand">
+                                <option value="Any">Any</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Processor type</label>
+                            <select class="form-control" id="specSearchProcessorType">
+                                <option value="any">Any processor type</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Processor speed</label>
+                            <select class="form-control" id="specSearchProcessorSpeed">
+                                <option value="any">Any processor speed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">RAM</label>
+                            <select class="form-control" id="specSearchRam">
+                                <option value="any">Any RAM</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Storage</label>
+                            <select class="form-control" id="specSearchStorage">
+                                <option value="any">Any storage size</option>
+                                <option value="32">32 GB</option>
+                                <option value="64">64 GB</option>
+                                <option value="128">128 GB</option>
+                                <option value="256">256 GB</option>
+                                <option value="512">512 GB</option>
+                                <option value="1024">1 TB</option>
+                                <option value="2048">2 TB</option>
+                                <option value="4096">4 TB</option>
+                                <option value="8192">8 TB</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Storage type</label>
+                            <select class="form-control" id="specSearchStorageType">
+                                <option value="any">Any storage type</option>
+                            </select>
+                        </div>
+                        <div class="form-col" style="flex: 1.4;">
+                            <label class="form-label">Keywords</label>
+                            <input type="text" class="form-control" id="specSearchFreeText" placeholder="Optional — e.g. Toughbook, EliteBook, Latitude, ThinkPad">
+                        </div>
+                    </div>
+                    <div class="module-actions">
+                        <button type="button" class="btn btn-primary" id="specSearchBtn">Search Matching Products</button>
+                        <button type="button" class="btn btn-secondary" id="specSearchOnlineBtn" title="Also query online sources via server">Search + Online Enrich</button>
+                        <button type="button" class="btn btn-ghost" id="specSearchClearBtn">Clear Criteria</button>
+                    </div>
+                    <div id="specSearchStatus" class="spec-search-status" aria-live="polite"></div>
+                    <div class="form-table-wrapper spec-search-results-wrap">
+                        <table class="overview-table spec-search-results-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:48px;">#</th>
+                                    <th>Brand / Model</th>
+                                    <th>Type</th>
+                                    <th>Processor</th>
+                                    <th>RAM</th>
+                                    <th>Storage</th>
+                                    <th>Match</th>
+                                    <th>Source</th>
+                                    <th style="width:110px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="specSearchResultsBody">
+                                <tr><td colspan="9" class="req-empty-row">Set minimum specs above, then Search Matching Products.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <label class="form-label">Evaluation No.</label>
+                        <input type="text" class="form-control" id="specEvalNumber" placeholder="e.g. SE/ITDIR/2026/001">
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control" id="specEvalDate">
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Equipment Category</label>
+                        <select class="form-control" id="specEvalCategory">
+                            <option value="">Select category…</option>
+                            <option value="laptop">Laptop</option>
+                            <option value="desktop">Desktop Computer</option>
+                            <option value="tablet">Tablet</option>
+                            <option value="printer">Printer</option>
+                            <option value="server">Server</option>
+                            <option value="network">Network Equipment</option>
+                            <option value="other">Other ICT Equipment</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col" style="flex: 2;">
+                        <label class="form-label">Item / Product Name</label>
+                        <div class="spec-item-autofill">
+                            <input type="text" class="form-control" id="specEvalItemName" placeholder="e.g. Samsung Tab 11 / HP EliteBook 840 G10" list="specProductCatalogHints">
+                            <button type="button" class="btn btn-primary" id="autofillFromItemBtn" title="Fill from local catalog, then online lookup">Auto-fill Specs</button>
+                        </div>
+                        <datalist id="specProductCatalogHints"></datalist>
+                        <small class="spec-autofill-hint">Uses the local product catalog first, then online search + intelligent extract if needed. Always review specs before procurement.</small>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Preferred Brand / Model (if known)</label>
+                        <input type="text" class="form-control" id="specEvalBrand" placeholder="Auto-filled from item name">
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">GL Account</label>
+                        <select class="form-control" id="specEvalGl">
+                            <option value="3112210001">3112210001 - ICT Equipment</option>
+                            <option value="6122100009">6122100009 - Office Supplies &amp; Services (ZOFF)</option>
+                            <option value="2200600002">2200600002 - Computer Consumables (legacy)</option>
+                            <option value="2200600003">2200600003 - Software Licenses</option>
+                            <option value="220200002">220200002 - Tech Equipment Maintenance</option>
+                            <option value="2201900002">2201900002 - Spare Parts</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <label class="form-label">Quantity Required</label>
+                        <input type="number" class="form-control" id="specEvalQty" min="1" step="1" value="1">
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Estimated Unit Price</label>
+                        <input type="number" class="form-control" id="specEvalUnitPrice" min="0" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Estimated Total</label>
+                        <input type="number" class="form-control" id="specEvalTotal" min="0" step="0.01" readonly>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Purpose / Operational Justification</label>
+                    <textarea class="form-control" id="specEvalPurpose" rows="3" placeholder="Why is this equipment required? How does the specification justify the price?"></textarea>
+                </div>
+
+                <div class="spec-template-bar">
+                    <span class="spec-template-label">Load standard specs:</span>
+                    <button type="button" class="btn btn-ghost btn-sm" id="loadLaptopSpecsBtn">Laptop</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="loadDesktopSpecsBtn">Desktop</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="loadTabletSpecsBtn">Tablet</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="loadPrinterSpecsBtn">Printer</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="loadServerSpecsBtn">Server</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="clearSpecsBtn">Clear Specs</button>
+                </div>
+
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" data-search-target="spec-eval-table-body" placeholder="Search specifications...">
+                    <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                </div>
+
+                <div class="form-table-wrapper">
+                    <table class="spec-eval-table">
+                        <thead>
+                            <tr>
+                                <th style="width:48px;">Ser</th>
+                                <th>Specification Field</th>
+                                <th>Required Spec / Value</th>
+                                <th>Price Justification / Notes</th>
+                                <th style="width:90px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spec-eval-table-body">
+                            <tr>
+                                <td>1</td>
+                                <td><input type="text" class="form-control spec-field-name" placeholder="e.g. Processor"></td>
+                                <td><input type="text" class="form-control spec-field-value" placeholder="e.g. Intel Core i7 / AMD Ryzen 7"></td>
+                                <td><input type="text" class="form-control spec-field-note" placeholder="Why this spec is needed"></td>
+                                <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="spec-add-field-bar">
+                    <input type="text" class="form-control" id="newSpecFieldName" placeholder="New specification field name (e.g. Webcam, Touchscreen)">
+                    <button type="button" class="btn btn-primary" id="addNamedSpecFieldBtn">Add Spec Field</button>
+                    <button type="button" class="btn btn-secondary" onclick="addSpecEvalRow()">Add Blank Row</button>
+                </div>
+
+                <div class="form-row" style="margin-top: 18px;">
+                    <div class="form-col">
+                        <label class="form-label">Prepared By</label>
+                        <input type="text" class="form-control" id="specEvalPreparedBy" placeholder="Force No., Rank, Name">
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Checked / Recommended By</label>
+                        <input type="text" class="form-control" id="specEvalRecommendedBy" placeholder="Force No., Rank, Name, Appointment">
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Approved By</label>
+                        <input type="text" class="form-control" id="specEvalApprovedBy" placeholder="Approving officer">
+                    </div>
+                </div>
+
+                <div class="module-actions" style="margin-top: 16px;">
+                    <button class="btn btn-success btn-save-module" type="button">Save Spec Evaluation</button>
+                    <button class="btn btn-secondary" id="specEvalPreviewBtn" type="button">Preview / Print</button>
+                    <button class="btn btn-secondary btn-print-module" data-print-target="spec-evaluation" type="button" hidden>Print</button>
+                    <button class="btn btn-secondary" id="specEvalSavePdfBtn" type="button">Save PDF</button>
+                    <button class="btn btn-secondary" id="specEvalSaveWordBtn" type="button">Save Word</button>
+                    <button class="btn btn-secondary btn-generate-report" data-report-module="spec-evaluation" type="button">Generate Report</button>
+                </div>
+            </div>

@@ -1,0 +1,41 @@
+<div id="zna-q-1954" class="form-container">
+                <div class="form-header"><h2 class="form-title">ZNA Q 1954 — Recoveries from individuals</h2><button class="close-btn">&times;</button></div>
+                <p class="q982-intro"><span class="aso-ref">Annex A</span> Recoveries from individuals (clothing / equipment on repayment or loss).</p>
+                <div class="qm-batch-form">
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Form No</label><input id="q1954FormNo" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Date</label><input type="date" id="q1954Date" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Unit</label><input id="q1954Unit" class="form-control" value="IT Dir Tech Stores"></div>
+                        <div class="form-col"><label class="form-label">Name</label><input id="q1954Name" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Force No</label><input id="q1954ForceNo" class="form-control"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Recovery type</label>
+                            <select id="q1954RecoveryType" class="form-control">
+                                <option value="Clothing / necessaries on repayment">Clothing / necessaries on repayment</option>
+                                <option value="Loss of equipment">Loss of equipment</option>
+                                <option value="Damage">Damage</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-col"><label class="form-label">Method</label>
+                            <select id="q1954Method" class="form-control">
+                                <option value="From pay">From pay</option>
+                                <option value="Cash">Cash</option>
+                            </select>
+                        </div>
+                        <div class="form-col"><label class="form-label">Total</label><input id="q1954Total" class="form-control"></div>
+                    </div>
+                    <div class="form-table-wrapper"><table class="qm-batch-table"><thead>
+                        <tr><th>Particulars</th><th>Qty</th><th>Amount</th><th>Remarks</th><th class="qm-screen-only">Action</th></tr>
+                    </thead><tbody id="zna-q-1954-table-body"></tbody></table></div>
+                    <button type="button" class="btn btn-primary qm-screen-only" style="margin:10px 0" onclick="addZnaQ1954Row()">Add Row</button>
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Issuing officer</label><input id="q1954Issuer" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Individual</label><input id="q1954Individual" class="form-control"></div>
+                    </div>
+                </div>
+                <button class="btn btn-success btn-save-module" style="margin-top:15px">Save Form</button>
+                <button class="btn btn-secondary btn-print-module" data-print-target="zna-q-1954" style="margin-top:15px">Print Form</button>
+                <button class="btn btn-secondary btn-generate-report" data-report-module="zna-q-1954" style="margin-top:15px">Generate Report</button>
+            </div>

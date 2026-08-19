@@ -1,0 +1,285 @@
+<div id="ict-accountability" class="form-container" aria-labelledby="ictAccFloatTitle">
+                <div class="ict-acc-page">
+                <div class="form-header ict-acc-float-header">
+                    <div class="ict-acc-float-title-wrap">
+                        <span class="ict-acc-za-badge" aria-hidden="true">ZA</span>
+                        <div>
+                            <h2 class="form-title" id="ictAccFloatTitle">ZNA ICT Asset Register</h2>
+                            <p class="ict-acc-float-sub">Engraved equipment · Traceable expendables · Software renewals</p>
+                        </div>
+                    </div>
+                    <button class="close-btn" type="button" title="Close panel">&times;</button>
+                </div>
+                <p class="req-intro ict-acc-intro-compact">
+                    ZNA ICT accounted by IT Dir. <strong>ZA numbers</strong> engraved at <strong>MLG</strong> (Masasa Logistics Garrison — Master Ledger).
+                    Printers / laptops / desktops are <strong>Serviceable (S)</strong> or <strong>Unserviceable (U/S)</strong>.
+                    U/S items must be <strong>backloaded</strong>, struck off the unit or MLG ledger, then <strong>boarded</strong>.
+                    Also account for <strong>stolen</strong> or <strong>destroyed by natural causes</strong>.
+                    Forms: <strong>1033</strong>, <strong>ZNA 982</strong>, <strong>ZNA/Q/1045</strong>, DP F1.
+                </p>
+
+                <div class="ict-acc-stat-strip" aria-label="Accountability summary">
+                    <button type="button" class="ict-acc-stat" data-ict-acc-stat-filter="all"><span>Total</span><strong id="ictAccStatTotal">0</strong></button>
+                    <button type="button" class="ict-acc-stat" data-ict-acc-stat-filter="equipment"><span>ZA Eqpt</span><strong id="ictAccStatEquipment">0</strong></button>
+                    <button type="button" class="ict-acc-stat" data-ict-acc-stat-filter="issued"><span>Issued / S</span><strong id="ictAccStatIssued">0</strong></button>
+                    <button type="button" class="ict-acc-stat ict-acc-stat-warn" data-ict-acc-stat-filter="unserviceable"><span>U/S</span><strong id="ictAccStatUnserviceable">0</strong></button>
+                    <button type="button" class="ict-acc-stat" data-ict-acc-stat-filter="backloaded"><span>Backload / Board</span><strong id="ictAccStatBackloaded">0</strong></button>
+                    <button type="button" class="ict-acc-stat ict-acc-stat-warn" data-ict-acc-stat-filter="losses"><span>Stolen / Loss</span><strong id="ictAccStatLosses">0</strong></button>
+                    <button type="button" class="ict-acc-stat ict-acc-stat-warn" data-ict-acc-stat-filter="renewals"><span>Renew ≤90d</span><strong id="ictAccStatRenewals">0</strong></button>
+                </div>
+
+                <div class="dashboard-panel ict-acc-track-panel" id="ictAccTrackPanel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>Track by ZA / Serial Number</h3>
+                        <p>
+                            Find <strong>current location</strong> of issued controlled stores —
+                            engraved <strong>ZA</strong> numbers, or manufacturer <strong>S/N</strong>
+                            (printer, laptop, desktop, projector, tablet, router, access point, etc.).
+                            Also available from Universal Search (Ctrl+K).
+                        </p>
+                    </div>
+                    <div class="ict-acc-track-bar">
+                        <input type="search" class="form-control" id="ictAccTrackQuery"
+                            placeholder="ZA820 or S/N e.g. CN8A2041" autocomplete="off" aria-label="Track by ZA or serial number">
+                        <button type="button" class="btn btn-primary" id="ictAccTrackBtn">Track</button>
+                        <button type="button" class="btn btn-ghost" id="ictAccTrackClear">Clear</button>
+                    </div>
+                    <div class="ict-acc-track-results" id="ictAccTrackResults" hidden></div>
+                </div>
+
+                <div class="dashboard-panel ict-acc-form-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3 id="ictAccFormTitle">Register / update item</h3>
+                    </div>
+                    <input type="hidden" id="ictAccRecordId" value="">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Class</label>
+                            <select class="form-control" id="ictAccClass"></select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Status</label>
+                            <select class="form-control" id="ictAccStatus"></select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Engraved?</label>
+                            <select class="form-control" id="ictAccEngraved">
+                                <option value="yes">Yes (ZA)</option>
+                                <option value="no">No (trace ref)</option>
+                            </select>
+                        </div>
+                        <div class="form-col ict-acc-col-qty">
+                            <label class="form-label">Qty</label>
+                            <input type="number" class="form-control" id="ictAccQty" min="1" step="1" value="1">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col" style="flex:1.5;">
+                            <label class="form-label">Designation</label>
+                            <input type="text" class="form-control" id="ictAccDesignation" placeholder="EliteBook · Kaspersky · CE285A toner">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Description</label>
+                            <input type="text" class="form-control" id="ictAccDescription" placeholder="Model / seats / SKU">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">ZA Number</label>
+                            <input type="text" class="form-control" id="ictAccZa" placeholder="ZA820 — unique ID" autocomplete="off">
+                            <div class="ict-acc-za-hint" id="ictAccZaHint" aria-live="polite"></div>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Trace / batch</label>
+                            <input type="text" class="form-control" id="ictAccTrace" placeholder="Expendable ref">
+                        </div>
+                        <div class="form-col" style="flex:1.2;">
+                            <label class="form-label">S/N</label>
+                            <input type="text" class="form-control" id="ictAccSerial" placeholder="Manufacturer serial">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Issued to</label>
+                            <input type="text" class="form-control" id="ictAccHolder" placeholder="Name">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Force No.</label>
+                            <input type="text" class="form-control" id="ictAccForce">
+                        </div>
+                        <div class="form-col" style="flex:1.5;">
+                            <label class="form-label" for="ictAccUnit">Holding Unit / Formation</label>
+                            <div class="zna-unit-picker">
+                                <input type="search" class="form-control zna-unit-filter" id="ictAccUnitFilter"
+                                    placeholder="Type to filter units…" autocomplete="off" aria-label="Filter holding units">
+                                <select class="form-control zna-unit-select" id="ictAccUnit" title="ZNA unit / formation">
+                                    <option value="">— Select unit / formation —</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Purchased</label>
+                            <input type="date" class="form-control" id="ictAccPurchase">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Received</label>
+                            <input type="date" class="form-control" id="ictAccReceived">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Issued</label>
+                            <input type="date" class="form-control" id="ictAccIssue">
+                        </div>
+                        <div class="form-col" data-ict-acc-soft-only>
+                            <label class="form-label">Expiry / renewal</label>
+                            <input type="date" class="form-control" id="ictAccExpiry">
+                            <div class="ict-acc-days-hint" id="ictAccDaysLeftHint" aria-live="polite"></div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Form 1033</label>
+                            <input type="text" class="form-control" id="ictAcc1033" placeholder="IV / RV no.">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">ZNA 982</label>
+                            <input type="text" class="form-control" id="ictAcc982" placeholder="Issue / transfer ref">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">ZNA/Q/1045</label>
+                            <input type="text" class="form-control" id="ictAcc1045" placeholder="Technical assessment">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Board / survey ref</label>
+                            <input type="text" class="form-control" id="ictAccBoardRef" placeholder="Boarding board ref">
+                        </div>
+                    </div>
+                    <div class="form-row" data-ict-acc-disposal-row>
+                        <div class="form-col">
+                            <label class="form-label">U/S reason</label>
+                            <select class="form-control" id="ictAccUsReason"></select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Initial value</label>
+                            <input type="number" class="form-control" id="ictAccInitialValue" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Repair cost</label>
+                            <input type="number" class="form-control" id="ictAccRepairCost" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Struck off ledger</label>
+                            <select class="form-control" id="ictAccStruckOff"></select>
+                        </div>
+                    </div>
+                    <p class="ict-acc-repair-hint" id="ictAccRepairRuleHint" hidden></p>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Inventory ledger</label>
+                            <select class="form-control" id="ictAccLedger"></select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">GL charge</label>
+                            <select class="form-control" id="ictAccGl"></select>
+                        </div>
+                        <div class="form-col" data-ict-acc-soft-only style="flex:1.2;">
+                            <label class="form-label">Renewal notes</label>
+                            <input type="text" class="form-control" id="ictAccRenewalNotes" placeholder="Vendor / seats / quote">
+                        </div>
+                    </div>
+                    <div class="form-group ict-acc-remarks-row">
+                        <label class="form-label">Remarks / accountability narrative</label>
+                        <input type="text" class="form-control" id="ictAccRemarks" placeholder="Backload movement, theft report, natural cause, accessories…">
+                    </div>
+                    <div class="module-actions ict-acc-actions-bar">
+                        <button type="button" class="btn btn-success btn-sm" id="ictAccSaveBtn">Save Record</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="ictAccClearBtn">Clear</button>
+                        <button type="button" class="btn btn-secondary btn-sm btn-generate-report" data-report-module="ict-accountability">Report</button>
+                    </div>
+                </div>
+
+                <div class="ict-acc-filters" role="search" aria-label="Asset register filters">
+                    <div class="ict-acc-filters-row ict-acc-filters-primary">
+                        <label class="ict-acc-filter-field ict-acc-filter-za">
+                            <span>ZA / Serial No.</span>
+                            <input type="search" class="form-control" id="ictAccSearch"
+                                placeholder="e.g. ZA820 or CN8A2041" autocomplete="off"
+                                title="Search by ZA number or manufacturer serial number">
+                        </label>
+                        <label class="ict-acc-filter-field ict-acc-filter-item">
+                            <span>Item name</span>
+                            <input type="search" class="form-control" id="ictAccItemFilter"
+                                placeholder="Laptop, toner, Kaspersky…" autocomplete="off">
+                        </label>
+                        <label class="ict-acc-filter-field">
+                            <span>Class</span>
+                            <select class="form-control" id="ictAccFilter">
+                                <option value="all">All classes</option>
+                                <option value="equipment">ICT Equipment (ZA)</option>
+                                <option value="expendable">Expendables</option>
+                                <option value="software">Software licences</option>
+                                <option value="spare">Spares &amp; parts</option>
+                                <option value="issued">Issued / Serviceable</option>
+                                <option value="serviceable">Serviceable (S) only</option>
+                                <option value="unserviceable">Unserviceable (U/S)</option>
+                                <option value="backloaded">Backloaded / Boarded / Condemned</option>
+                                <option value="losses">Stolen / Natural destruction</option>
+                                <option value="renewals">Renewals due (≤90 days)</option>
+                            </select>
+                        </label>
+                        <label class="ict-acc-filter-field ict-acc-filter-unit">
+                            <span>Holding unit</span>
+                            <select class="form-control" id="ictAccUnitFilterSelect" title="Filter by holding unit">
+                                <option value="">Any unit</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="ict-acc-filters-row ict-acc-filters-dates">
+                        <label class="ict-acc-filter-field">
+                            <span>Issue from</span>
+                            <input type="date" class="form-control" id="ictAccIssueFrom">
+                        </label>
+                        <label class="ict-acc-filter-field">
+                            <span>Issue to</span>
+                            <input type="date" class="form-control" id="ictAccIssueTo">
+                        </label>
+                        <label class="ict-acc-filter-field">
+                            <span>Month</span>
+                            <input type="month" class="form-control" id="ictAccIssueMonth" title="Filter by issue month">
+                        </label>
+                        <label class="ict-acc-filter-field">
+                            <span>Year</span>
+                            <select class="form-control" id="ictAccIssueYear">
+                                <option value="">Any year</option>
+                            </select>
+                        </label>
+                        <div class="ict-acc-filter-actions">
+                            <button type="button" class="btn btn-primary btn-sm" id="ictAccSearchBtn">Apply</button>
+                            <button type="button" class="btn btn-ghost btn-sm" id="ictAccSearchClear">Clear</button>
+                        </div>
+                    </div>
+                </div>
+                <p class="ict-acc-filter-hint" id="ictAccFilterHint" hidden></p>
+                <div class="form-table-wrapper ict-acc-table-wrap">
+                    <table class="overview-table ict-acc-table">
+                        <thead>
+                            <tr>
+                                <th>ZA Number</th>
+                                <th>Item Name</th>
+                                <th>Date of Issue</th>
+                                <th>Description</th>
+                                <th>Holding Unit</th>
+                                <th>Status</th>
+                                <th>Days left</th>
+                                <th>Remarks</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ictAccountabilityBody">
+                            <tr><td colspan="9" class="req-empty-row">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>

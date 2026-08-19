@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Multi-unit / multi cost-centre roadmap — TechStores</title>
+  <style>
+    :root {
+      --ink: #1a1f16;
+      --muted: #4a5540;
+      --line: #d5dcd0;
+      --accent: #1b4332;
+      --bg: #f7f8f5;
+      --card: #fff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+    .sheet {
+      max-width: 820px;
+      margin: 24px auto;
+      padding: 28px 32px 40px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      box-shadow: 0 8px 24px rgba(0,0,0,.06);
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .toolbar h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      color: var(--accent);
+    }
+    .btn {
+      appearance: none;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      font-size: 0.9rem;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .btn-ghost {
+      background: #fff;
+      color: var(--accent);
+    }
+    h2 {
+      margin: 1.6em 0 0.5em;
+      font-size: 1.1rem;
+      color: var(--accent);
+      border-bottom: 2px solid #e8efe6;
+      padding-bottom: 4px;
+    }
+    h3 { margin: 1.2em 0 0.4em; font-size: 1rem; }
+    p, li { color: var(--ink); }
+    .muted { color: var(--muted); }
+    hr {
+      border: 0;
+      border-top: 1px solid var(--line);
+      margin: 1.5em 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.6em 0 1em;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #eef3eb; color: var(--accent); }
+    code {
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.88em;
+      background: #eef3eb;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    ul, ol { padding-left: 1.25em; }
+    .note {
+      background: #eef3eb;
+      border-left: 4px solid var(--accent);
+      padding: 10px 14px;
+      margin: 12px 0;
+      font-size: 0.95rem;
+    }
+    @media print {
+      body { background: #fff; }
+      .sheet {
+        margin: 0;
+        border: 0;
+        box-shadow: none;
+        max-width: none;
+        padding: 0;
+      }
+      .toolbar .btn { display: none; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="toolbar">
+      <h1>Multi-unit / multi cost-centre roadmap</h1>
+      <div>
+        <button type="button" class="btn" onclick="window.print()">Print / Save as PDF</button>
+        <a class="btn btn-ghost" href="MULTI-UNIT-ROADMAP.md">Open .md source</a>
+      </div>
+    </div>
+
+    <h2>Principle</h2>
+    <p><strong>Ord Dir</strong> in the ZNA procurement procedure charts is only an <strong>example cost centre</strong>.</p>
+    <p>The <strong>same process</strong> applies to:</p>
+    <ul>
+      <li><strong>IT Dir</strong> (this TechStores deployment — cost centre <code>Z04P2SP212</code>)</li>
+      <li>Ordnance and other <strong>ZNA cost centres</strong></li>
+      <li>Unit / formation <strong>Quartermasters</strong></li>
+      <li><strong>Directorate Procurement</strong> desks (with their own module packs)</li>
+    </ul>
+    <p class="note">TechStores today is the <strong>IT Dir instance</strong> of a pattern that should later become <strong>configurable</strong>.</p>
+
+    <hr>
+
+    <h2>Generic actors (not hard-coded to Ord Dir)</h2>
+    <table>
+      <thead>
+        <tr><th>Actor</th><th>Role in process</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>User</td><td>Originates need (indent / requisition)</td></tr>
+        <tr><td><strong>Cost Centre Directorate</strong></td><td>IT Dir, Ord Dir, or any other ZNA cost centre — seeks authority, receives goods, accounts</td></tr>
+        <tr><td>QS Branch</td><td>Authority, distribution, minute sheets</td></tr>
+        <tr><td>COS QS / Comd Elm / Comd ZNA</td><td>Higher approval</td></tr>
+        <tr><td>DP</td><td>Executes purchase, RFQ, PO / contract</td></tr>
+        <tr><td>AIAD</td><td>Due diligence on quotations</td></tr>
+      </tbody>
+    </table>
+    <p>Replace “Ord Dir” in any chart with <strong>Cost Centre Dir</strong> when describing this system.</p>
+
+    <hr>
+
+    <h2>Standard process (Army-wide)</h2>
+    <ol>
+      <li>User request (indent) → Cost Centre Dir</li>
+      <li>Cost Centre Dir → QS Br (minute sheet / authority)</li>
+      <li>QS Br → DP (authority to process)</li>
+      <li>DP executes / notifies</li>
+      <li>AIAD due diligence on RFQs</li>
+      <li>Supplier selection (quality / value, not price alone)</li>
+      <li>PO / contract</li>
+      <li>Goods receipt report by Cost Centre Dir</li>
+      <li>Distribution authorisation</li>
+      <li>Pro-forma / minute sheet closure</li>
+    </ol>
+
+    <hr>
+
+    <h2>Supplier evaluation pack (for future vendor module)</h2>
+    <p>Documents for Director Procurement, Army HQ (P Bag 7720, Causeway, Harare):</p>
+    <ol>
+      <li>Introductory letter</li>
+      <li>Certificate of Incorporation</li>
+      <li>CR14</li>
+      <li>ZIMRA / VAT11</li>
+      <li>Tax Clearance</li>
+      <li>NSSA</li>
+      <li>PRAZ receipt</li>
+      <li>Vendor number renewal</li>
+      <li>Bank statement (≥ 3 months)</li>
+      <li>Trade references (≥ 3)</li>
+      <li>Company profile</li>
+      <li>Bound, valid, certified set</li>
+    </ol>
+
+    <hr>
+
+    <h2>Future customisation model</h2>
+    <table>
+      <thead>
+        <tr><th>Layer</th><th>Customisable?</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Process steps</td><td>Shared</td><td>Same Army workflow</td></tr>
+        <tr><td>Cost centre profile</td><td>Yes</td><td>Name, code, location, branding</td></tr>
+        <tr><td>Module pack</td><td>Yes</td><td>TechStores / QM clothing / ammo / DP desk, etc.</td></tr>
+        <tr><td>Forms (Q 982, Q 1033…)</td><td>Shared catalogue</td><td>Enable/disable per pack</td></tr>
+        <tr><td>Users &amp; roles</td><td>Per installation</td><td>Admin / store / viewer (+ future QM / DP roles)</td></tr>
+        <tr><td>Database</td><td>Per installation or multi-tenant</td><td>Start: one <code>techstores.db</code> per site</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Code hook (already started)</h3>
+    <p><code>app/js/org-profile.js</code> holds:</p>
+    <ul>
+      <li><code>ORG_PROFILES['it-dir-techstores']</code> — live profile</li>
+      <li><code>ORG_PROFILES['ord-dir-example']</code> — sample only</li>
+      <li><code>ZNA_PROCUREMENT_PROCESS</code> — generic steps</li>
+      <li><code>SUPPLIER_EVALUATION_REQUIREMENTS</code> — vendor pack checklist</li>
+    </ul>
+    <p>Change active profile later with <code>setOrgProfile('…')</code> or load from SQLite settings.</p>
+
+    <hr>
+
+    <h2>Near-term (IT Dir TechStores)</h2>
+    <p>Keep building IT Dir modules; word UI/docs as <strong>Cost Centre Dir</strong> where the process is Army-generic; avoid locking copy to “Ord Dir” only.</p>
+  </div>
+</body>
+</html>

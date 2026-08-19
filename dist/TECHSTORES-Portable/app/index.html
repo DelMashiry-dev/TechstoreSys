@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1b5e3b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TechStores">
+    <title>IT-DIR Tech Stores - General Ledger System</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" href="../assets/favicon.png">
+    <link rel="apple-touch-icon" href="../assets/pwa-icon-180.png">
+    <link rel="stylesheet" href="css/main.css">
+
+</head>
+<body class="app-locked">
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="pwa-install-banner" id="pwaInstallBanner" hidden>
+        <div class="pwa-install-copy">
+            <strong>Install Tech Stores</strong>
+            <p id="pwaInstallHint">Add this system to your phone home screen for quick access.</p>
+        </div>
+        <div class="pwa-install-actions">
+            <button type="button" class="btn btn-primary btn-sm" id="pwaInstallBtn" hidden>Install app</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="pwaInstallDismiss" aria-label="Dismiss">Not now</button>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen">
+        <div class="login-card">
+            <div class="login-brand">
+                <img class="login-brand-mark" src="../assets/login-logo.png" alt="TechStores Zimbabwe National Army logo">
+                <h1>IT-DIR Tech Stores</h1>
+                <p>General Ledger System — Sign in to continue</p>
+                <p class="login-version">Version 1.0.0.0</p>
+            </div>
+            <p class="pwa-lan-tip" id="pwaLanTip" hidden></p>
+            <div class="login-error" id="loginError"></div>
+            <form id="loginForm" method="post" action="#" autocomplete="on" onsubmit="return false;">
+                <div class="form-group">
+                    <label class="form-label" for="loginUsername">Username</label>
+                    <input type="text" class="form-control" id="loginUsername" name="username" required autofocus placeholder="Enter username" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="loginPassword">Password</label>
+                    <div class="password-field">
+                        <input type="password" class="form-control" id="loginPassword" name="password" required placeholder="Enter password" autocomplete="current-password">
+                        <button type="button" class="password-peep-btn" id="loginPasswordPeep" aria-label="Show password" title="Show password" aria-pressed="false">
+                            <svg class="password-peep-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+                                <g class="peep-eye-open">
+                                    <path fill="currentColor" d="M12 5c-5.5 0-9.7 3.6-11 7 1.3 3.4 5.5 7 11 7s9.7-3.6 11-7c-1.3-3.4-5.5-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-2.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
+                                </g>
+                                <g class="peep-eye-shut" hidden>
+                                    <path fill="currentColor" d="M12 7c-4.2 0-7.6 2.2-9.5 5 1.1 1.6 2.7 3 4.7 3.9L5.8 17.3l1.4 1.4 12-12-1.4-1.4-1.6 1.6C14.8 7.2 13.5 7 12 7zm0 2c.6 0 1.1.1 1.6.2l-1.4 1.4A2.5 2.5 0 0 0 9.6 13l-1.5 1.5C7.2 13.8 6.4 12.9 5.8 12 7.2 10.2 9.4 9 12 9zm9.5 3c-.5.8-1.2 1.6-2 2.3l1.7 1.7-1.4 1.4-2.1-2.1c-1.4.7-3 1.1-4.7 1.1-1 0-1.9-.1-2.8-.4l-1.7 1.7C9.7 18.8 10.8 19 12 19c5.5 0 9.7-3.6 11-7-.3-.8-.8-1.6-1.5-2z"/>
+                                </g>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary login-submit">Sign In</button>
+            </form>
+            <div class="login-hint is-collapsed" id="loginHint">
+                <div class="login-hint-head">
+                    <button type="button" class="login-hint-toggle" id="loginHintToggle" aria-expanded="false" title="Expand default accounts">
+                        <span class="login-hint-toggle-label">Default accounts</span>
+                        <span class="login-hint-caret" aria-hidden="true">▾</span>
+                    </button>
+                    <button type="button" class="login-hint-peep" id="loginHintPeep" aria-label="Show demo passwords" title="Show demo passwords" aria-pressed="false" hidden>
+                        <svg class="password-peep-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+                            <g class="peep-eye-open">
+                                <path fill="currentColor" d="M12 5c-5.5 0-9.7 3.6-11 7 1.3 3.4 5.5 7 11 7s9.7-3.6 11-7c-1.3-3.4-5.5-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-2.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
+                            </g>
+                            <g class="peep-eye-shut" hidden>
+                                <path fill="currentColor" d="M12 7c-4.2 0-7.6 2.2-9.5 5 1.1 1.6 2.7 3 4.7 3.9L5.8 17.3l1.4 1.4 12-12-1.4-1.4-1.6 1.6C14.8 7.2 13.5 7 12 7zm0 2c.6 0 1.1.1 1.6.2l-1.4 1.4A2.5 2.5 0 0 0 9.6 13l-1.5 1.5C7.2 13.8 6.4 12.9 5.8 12 7.2 10.2 9.4 9 12 9zm9.5 3c-.5.8-1.2 1.6-2 2.3l1.7 1.7-1.4 1.4-2.1-2.1c-1.4.7-3 1.1-4.7 1.1-1 0-1.9-.1-2.8-.4l-1.7 1.7C9.7 18.8 10.8 19 12 19c5.5 0 9.7-3.6 11-7-.3-.8-.8-1.6-1.5-2z"/>
+                            </g>
+                        </svg>
+                        <span class="login-hint-peep-label">Show passwords</span>
+                    </button>
+                </div>
+                <div class="login-hint-body" id="loginHintBody" hidden>
+                    Admin (full edit) — <code>admin</code> / <code class="login-pwd" data-pwd="admin123">••••••••</code><br>
+                    Oversight VIEW ONLY (all modules, no quantity changes) — Dir/DD/AQSO2/TSO:
+                    <code>dir</code>, <code>dd</code>, <code>aqso2</code>, <code>tso</code>
+                    (+ <code class="login-pwd" data-pwd="…123">••••</code>)<br>
+                    TechStores edit — RQ: <code>rq</code>/<code class="login-pwd" data-pwd="rq123">••••••</code>
+                    · Storeman: <code>storeman</code>/<code class="login-pwd" data-pwd="storeman123">••••••••••</code><br>
+                    Orderly / RP Gate / Workshop — own modules only (no GL ledgers):
+                    <code>orderly</code>/<code class="login-pwd" data-pwd="orderly123">•••••••••</code>,
+                    <code>rp</code>/<code class="login-pwd" data-pwd="rp123">•••••</code>
+                    (Gate Register + Comms only; also <code>RP Gate</code> / <code class="login-pwd" data-pwd="RPGate123">•••••••••</code>),
+                    <code>workshop</code>/<code class="login-pwd" data-pwd="workshop123">••••••••••</code><br>
+                    Viewer — <code>viewer</code> / <code class="login-pwd" data-pwd="view123">•••••••</code>
+                    <hr class="login-hint-rule">
+                    <strong>Access:</strong> non–TechStores roles do not see GL accounts, stock ledgers, or related stores forms.
+                    Oversight (Commander / Brig / Dir / DD / AQSO2 / TSO) can open everything but cannot alter quantities.
+                    <hr class="login-hint-rule">
+                    <strong>Persistent database:</strong> start with <code>START-SYSTEM.bat</code>
+                    so data saves to <code>techstores.db</code> on disk
+                    (survives logout, browser close, and PC shutdown).
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container app-shell">
+        <div class="mobile-nav-backdrop" id="mobileNavBackdrop" aria-hidden="true"></div>
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-header-top">
+                    <img class="sidebar-logo" src="../assets/login-logo.png" alt="TechStores logo">
+                    <button class="toggle-sidebar" type="button" title="Collapse sidebar" aria-label="Collapse sidebar">☰</button>
+                </div>
+                <div class="sidebar-brand">
+                    <h2>IT-DIR Tech Stores</h2>
+                    <p>General Ledger System</p>
+                </div>
+                <div class="sidebar-meta">
+                    <span>Cost Centre Z04P2SP212</span>
+                    <span>FY 2026 · IT Logistics</span>
+                </div>
+            </div>
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="#" class="nav-btn active" data-target="dashboard">
+                        <img class="nav-ico-img" src="../assets/nav-icons/dashboard.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="accommodation-stores">
+                        <img class="nav-ico-img" src="../assets/nav-icons/accommodation-stores.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Accommodation Stores</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="delivery-note">
+                        <img class="nav-ico-img" src="../assets/nav-icons/delivery-note.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Delivery Note</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="dp-f1-form">
+                        <img class="nav-ico-img" src="../assets/nav-icons/dp-f1-form.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">DP F1 Form</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="cost-comparative-schedule">
+                        <img class="nav-ico-img" src="../assets/nav-icons/cost-comparative-schedule.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Cost Comparative Schedule</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="duties-roles">
+                        <img class="nav-ico-img" src="../assets/nav-icons/duties-roles.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Duties &amp; Roles</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="techstores-equipment-register">
+                        <img class="nav-ico-img" src="../assets/nav-icons/techstores-equipment-register.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Equipment Register</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="financial-year-bids">
+                        <img class="nav-ico-img" src="../assets/nav-icons/financial-year-bids.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Financial Year Bids</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="gate-register">
+                        <img class="nav-ico-img" src="../assets/nav-icons/gate-register.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Gate Register</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn gl-accounts-toggle nav-submenu-toggle">
+                        <img class="nav-ico-img" src="../assets/nav-icons/gl-accounts.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">GL Accounts</span>
+                        <span class="nav-caret" aria-hidden="true">▾</span>
+                    </a>
+                    <ul class="submenu">
+                        <li>
+                            <a href="#" class="gl-nav-btn gl-nav-ict" data-target="gl-3112210001">
+                                <span class="nav-ico" aria-hidden="true">ICT</span>
+                                <span class="gl-nav-text">
+                                    <strong>GL 3112210001</strong>
+                                    <small>ICT Equipment</small>
+                                </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="gl-nav-btn gl-nav-software" data-target="gl-2200600003">
+                                <span class="nav-ico" aria-hidden="true">SW</span>
+                                <span class="gl-nav-text">
+                                    <strong>GL 2200600003</strong>
+                                    <small>Software Licenses</small>
+                                </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="gl-nav-btn gl-nav-spares" data-target="gl-2201900002">
+                                <span class="nav-ico" aria-hidden="true">SP</span>
+                                <span class="gl-nav-text">
+                                    <strong>GL 2201900002</strong>
+                                    <small>Spare Parts</small>
+                                </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="gl-nav-btn gl-nav-maintenance" data-target="gl-220200002">
+                                <span class="nav-ico" aria-hidden="true">TM</span>
+                                <span class="gl-nav-text">
+                                    <strong>GL 220200002</strong>
+                                    <small>Tech Equipment Maintenance</small>
+                                </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="gl-nav-btn gl-nav-consumables" data-target="gl-2200600002">
+                                <span class="nav-ico" aria-hidden="true">ZO</span>
+                                <span class="gl-nav-text">
+                                    <strong>GL 6122100009</strong>
+                                    <small>ZOFF / Office Supplies &amp; Services</small>
+                                </span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="dp-procurement">
+                        <img class="nav-ico-img" src="../assets/nav-icons/dp-procurement.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">ICT Procurement Cycle</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="voucher-module">
+                        <img class="nav-ico-img" src="../assets/nav-icons/voucher-module.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Issue Voucher</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="it-dir-comms" id="idcNavBtn" title="IT Directorate Communications">
+                        <img class="nav-ico-img" src="../assets/nav-icons/ict-distribution.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">IT Dir Comms</span>
+                        <span class="nav-unread-badge" id="idcSideBadge" hidden>0</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn nav-submenu-toggle">
+                        <img class="nav-ico-img" src="../assets/nav-icons/it-dir-departments.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">IT Dir Departments</span>
+                        <span class="submenu-caret" aria-hidden="true">▾</span>
+                    </a>
+                    <ul class="submenu">
+                        <li class="nav-nested">
+                            <a href="#" class="nav-btn nav-submenu-toggle nav-nested-toggle">
+                                <span class="nav-label">Admin Office</span>
+                                <span class="submenu-caret" aria-hidden="true">▾</span>
+                            </a>
+                            <ul class="submenu submenu-nested">
+                                <li><a href="#" class="nav-btn" data-target="dept-admin"><span class="nav-label">Desk</span></a></li>
+                                <li><a href="#" class="nav-btn" data-target="dept-admin" data-dept-panel="establishment"><span class="nav-label">Establishment</span></a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-nested">
+                            <a href="#" class="nav-btn nav-submenu-toggle nav-nested-toggle">
+                                <span class="nav-label">Computer Engineering</span>
+                                <span class="submenu-caret" aria-hidden="true">▾</span>
+                            </a>
+                            <ul class="submenu submenu-nested">
+                                <li><a href="#" class="nav-btn" data-target="dept-compengr"><span class="nav-label">Desk</span></a></li>
+                                <li><a href="#" class="nav-btn" data-target="dept-compengr" data-dept-panel="establishment"><span class="nav-label">Establishment</span></a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-nested">
+                            <a href="#" class="nav-btn nav-submenu-toggle nav-nested-toggle">
+                                <span class="nav-label">Gate / RP Desk</span>
+                                <span class="submenu-caret" aria-hidden="true">▾</span>
+                            </a>
+                            <ul class="submenu submenu-nested">
+                                <li><a href="#" class="nav-btn" data-target="dept-gate"><span class="nav-label">Desk</span></a></li>
+                                <li><a href="#" class="nav-btn" data-target="dept-gate" data-dept-panel="establishment"><span class="nav-label">Establishment</span></a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-nested">
+                            <a href="#" class="nav-btn nav-submenu-toggle nav-nested-toggle">
+                                <span class="nav-label">ICT Security</span>
+                                <span class="submenu-caret" aria-hidden="true">▾</span>
+                            </a>
+                            <ul class="submenu submenu-nested">
+                                <li><a href="#" class="nav-btn" data-target="dept-ictsec"><span class="nav-label">Desk</span></a></li>
+                                <li><a href="#" class="nav-btn" data-target="dept-ictsec" data-dept-panel="establishment"><span class="nav-label">Establishment</span></a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-nested">
+                            <a href="#" class="nav-btn nav-submenu-toggle nav-nested-toggle">
+                                <span class="nav-label">ITTS</span>
+                                <span class="submenu-caret" aria-hidden="true">▾</span>
+                            </a>
+                            <ul class="submenu submenu-nested">
+                                <li><a href="#" class="nav-btn" data-target="dept-itts"><span class="nav-label">Desk</span></a></li>
+                                <li><a href="#" class="nav-btn" data-target="dept-itts" data-dept-panel="establishment"><span class="nav-label">Establishment</span></a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-nested">
+                            <a href="#" class="nav-btn nav-submenu-toggle nav-nested-toggle">
+                                <span class="nav-label">Software Engineering</span>
+                                <span class="submenu-caret" aria-hidden="true">▾</span>
+                            </a>
+                            <ul class="submenu submenu-nested">
+                                <li><a href="#" class="nav-btn" data-target="dept-swengr"><span class="nav-label">Desk</span></a></li>
+                                <li><a href="#" class="nav-btn" data-target="dept-swengr" data-dept-panel="establishment"><span class="nav-label">Establishment</span></a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-nested">
+                            <a href="#" class="nav-btn nav-submenu-toggle nav-nested-toggle">
+                                <span class="nav-label">Systems Administration</span>
+                                <span class="submenu-caret" aria-hidden="true">▾</span>
+                            </a>
+                            <ul class="submenu submenu-nested">
+                                <li><a href="#" class="nav-btn" data-target="dept-sysadmin"><span class="nav-label">Desk</span></a></li>
+                                <li><a href="#" class="nav-btn" data-target="dept-sysadmin" data-dept-panel="establishment"><span class="nav-label">Establishment</span></a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-nested">
+                            <a href="#" class="nav-btn nav-submenu-toggle nav-nested-toggle">
+                                <span class="nav-label">Engineering Support</span>
+                                <span class="submenu-caret" aria-hidden="true">▾</span>
+                            </a>
+                            <ul class="submenu submenu-nested">
+                                <li><a href="#" class="nav-btn" data-target="dept-workshop"><span class="nav-label">Desk</span></a></li>
+                                <li><a href="#" class="nav-btn" data-target="dept-workshop" data-dept-panel="establishment"><span class="nav-label">Establishment</span></a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="process-guides">
+                        <img class="nav-ico-img" src="../assets/nav-icons/process-guides.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Learning Centre</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="monthly-returns">
+                        <img class="nav-ico-img" src="../assets/nav-icons/monthly-returns.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Monthly Returns</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="orderly-room">
+                        <img class="nav-ico-img" src="../assets/nav-icons/orderly-room.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Orderly Room</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="purchase-orders">
+                        <img class="nav-ico-img" src="../assets/nav-icons/purchase-orders.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Purchase Orders</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="release-cut">
+                        <img class="nav-ico-img" src="../assets/nav-icons/release-cut.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Release Cut</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="reports-module">
+                        <img class="nav-ico-img" src="../assets/nav-icons/reports-module.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Reports</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="stock-take">
+                        <img class="nav-ico-img" src="../assets/nav-icons/stock-take.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Stock Take</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="suppliers-contracts">
+                        <img class="nav-ico-img" src="../assets/nav-icons/suppliers-contracts.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Suppliers and Contracts</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="system-help">
+                        <img class="nav-ico-img" src="../assets/nav-icons/system-help.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">System Help / Dictionary</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="temporary-loans">
+                        <img class="nav-ico-img" src="../assets/nav-icons/temporary-loans.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Temporary Loans</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="undelivered-orders">
+                        <img class="nav-ico-img" src="../assets/nav-icons/undelivered-orders.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Undelivered Items</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="unit-checks">
+                        <img class="nav-ico-img" src="../assets/nav-icons/unit-checks.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Unit Check Log</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="unit-equipment">
+                        <img class="nav-ico-img" src="../assets/nav-icons/unit-equipment.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Unit Equipment Table</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="unit-requisitions">
+                        <img class="nav-ico-img" src="../assets/nav-icons/unit-requisitions.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Unit Requisitions</span>
+                    </a>
+                </li>
+                <li class="nav-admin-only">
+                    <a href="#" class="nav-btn" data-target="user-management">
+                        <img class="nav-ico-img" src="../assets/nav-icons/user-management.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">User Management</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn nav-submenu-toggle" title="Workshop / Engineering Support Department">
+                        <img class="nav-ico-img" src="../assets/nav-icons/workshop-repairs.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Workshop/Engineering Sp Dept</span>
+                        <span class="nav-caret" aria-hidden="true">▾</span>
+                    </a>
+                    <ul class="submenu">
+                        <li>
+                            <a href="#" class="nav-btn" data-target="workshop-repairs">
+                                <img class="nav-ico-img" src="../assets/nav-icons/workshop-repairs.png" alt="" width="46" height="46" loading="lazy">
+                                <span class="nav-label">Workshop Register</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="spec-evaluation">
+                                <span class="nav-ico nav-ico-specs" aria-hidden="true">SE</span>
+                                <span class="nav-label">Spec/Tech Evaluation</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="ict-accountability">
+                        <img class="nav-ico-img" src="../assets/nav-icons/ict-accountability.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">ZNA ICT Asset Register</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn" data-target="ict-distribution">
+                        <img class="nav-ico-img" src="../assets/nav-icons/ict-distribution.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">ICT Distribution Lists</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn nav-submenu-toggle zna-qm-toggle">
+                        <img class="nav-ico-img" src="../assets/nav-icons/zna-qm-forms.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">ZNA QM Forms</span>
+                        <span class="nav-caret" aria-hidden="true">▾</span>
+                    </a>
+                    <ul class="submenu">
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-forms-index">
+                                <span class="nav-ico" aria-hidden="true">IDX</span>
+                                <span class="nav-label">Q Forms Index</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-1">
+                                <span class="nav-ico" aria-hidden="true">Q1</span>
+                                <span class="nav-label">ZNA Q 1</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-3">
+                                <span class="nav-ico" aria-hidden="true">3</span>
+                                <span class="nav-label">ZNA Q 3</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-31">
+                                <span class="nav-ico" aria-hidden="true">31</span>
+                                <span class="nav-label">ZNA Q 31</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-40">
+                                <span class="nav-ico" aria-hidden="true">40</span>
+                                <span class="nav-label">ZNA Q 40</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-80">
+                                <span class="nav-ico" aria-hidden="true">80</span>
+                                <span class="nav-label">ZNA Q 80</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-178">
+                                <span class="nav-ico" aria-hidden="true">178</span>
+                                <span class="nav-label">ZNA Q 178</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-982">
+                                <span class="nav-ico" aria-hidden="true">982</span>
+                                <span class="nav-label">ZNA Q 982</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-985">
+                                <span class="nav-ico" aria-hidden="true">985</span>
+                                <span class="nav-label">ZNA Q 985</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-987">
+                                <span class="nav-ico" aria-hidden="true">987</span>
+                                <span class="nav-label">ZNA Q 987</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-998">
+                                <span class="nav-ico" aria-hidden="true">998</span>
+                                <span class="nav-label">ZNA Q 998</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-1033">
+                                <span class="nav-ico" aria-hidden="true">1033</span>
+                                <span class="nav-label">ZNA Q 1033</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-1043">
+                                <span class="nav-ico" aria-hidden="true">1043</span>
+                                <span class="nav-label">ZNA Q 1043</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-1049">
+                                <span class="nav-ico" aria-hidden="true">1049</span>
+                                <span class="nav-label">ZNA Q 1049</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-1157">
+                                <span class="nav-ico" aria-hidden="true">1157</span>
+                                <span class="nav-label">ZNA Q 1157</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-1179">
+                                <span class="nav-ico" aria-hidden="true">1179</span>
+                                <span class="nav-label">ZNA Q 1179</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-1229">
+                                <span class="nav-ico" aria-hidden="true">1229</span>
+                                <span class="nav-label">ZNA Q 1229</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-1571">
+                                <span class="nav-ico" aria-hidden="true">1571</span>
+                                <span class="nav-label">ZNA Q 1571</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-1680">
+                                <span class="nav-ico" aria-hidden="true">1680</span>
+                                <span class="nav-label">ZNA Q 1680</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-1954">
+                                <span class="nav-ico" aria-hidden="true">1954</span>
+                                <span class="nav-label">ZNA Q 1954</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-q-3977">
+                                <span class="nav-ico" aria-hidden="true">3977</span>
+                                <span class="nav-label">ZNA Q 3977</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-svcs-1045">
+                                <span class="nav-ico" aria-hidden="true">1045</span>
+                                <span class="nav-label">ZNA SVCS 1045</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn" data-target="zna-svcs-890">
+                                <span class="nav-ico" aria-hidden="true">890</span>
+                                <span class="nav-label">ZNA SVCS/890</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h1>IT-DIR Tech Stores Dashboard</h1>
+                <div class="header-aside">
+                    <div class="user-controls">
+                        <span class="db-status-badge db-offline" id="dbStatusBadge" title="Database status">Local Only</span>
+                        <button class="glossy-pill-btn theme-toggle" id="themeToggle" type="button" title="Appearance — themes &amp; UI preferences">Appearance</button>
+                        <button class="btn btn-ghost btn-sm" id="logoutBtn" type="button">Logout</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dashboard Cards -->
+            <div id="dashboard" class="content-section">
+                <div class="dashboard-hero">
+                    <div class="dashboard-hero-main">
+                        <div class="dashboard-kicker">IT-DIR DISPENSABLES AND CONTROLLED STORES INVENTORY</div>
+                        <p class="dashboard-hero-sub dashboard-last-login">
+                            <strong id="dashboardLastUpdated">—</strong>
+                        </p>
+                        <div class="dashboard-ops-strip">
+                            <div class="dashboard-context-row" aria-label="Operations context">
+                                <span class="context-chip">Josiah Magama Tongogara Barracks</span>
+                                <span class="context-chip" id="dashboardSignedInChip">Signed in: —</span>
+                                <span class="context-chip" id="dashboardDbChip">Storage: —</span>
+                            </div>
+                            <div class="dashboard-toolbar" aria-label="Dashboard actions">
+                                <label class="sr-only" for="dashboardUniversalSearchInput">Universal search</label>
+                                <input type="search" id="dashboardUniversalSearchInput" class="form-control dashboard-universal-search-input"
+                                    placeholder="Search anything… memo, fuel, PO, ZA (Ctrl+K)"
+                                    autocomplete="off" readonly>
+                                <button class="btn btn-primary btn-sm" id="universalSearchBtn" type="button"
+                                    data-universal-search title="Search anything in the system (Ctrl+K)">Universal Search</button>
+                                <button class="btn btn-primary btn-sm" id="refreshDashboardBtn" type="button">Refresh</button>
+                                <button class="btn btn-secondary btn-sm" id="btnLoadDemoPack" type="button" title="Fill GL cards, stock ledgers, POs, vouchers, ZA register with realistic demo figures">Load demo figures</button>
+                                <button class="btn btn-primary btn-sm" id="dashboardTrackBtn" type="button"
+                                    title="Track location of serialised / ZA-engraved controlled stores (printer, laptop, desktop, projector, tablet, router, AP…)">Track</button>
+                                <button class="btn btn-secondary btn-sm btn-generate-report" data-report-module="dashboard" type="button">Generate Report</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Command board: Notifications at the top (collapsible) -->
+                <section class="dash-command-board dash-collapse" id="dashCommandBoard" data-collapse-key="system-alerts" aria-label="Notifications and office messages">
+                    <div class="command-panel command-alerts alert-panel" id="systemAlerts">
+                        <div class="command-panel-head">
+                            <button type="button" class="dash-collapse-toggle command-collapse-toggle" aria-expanded="false" title="Expand section">
+                                <div class="dash-collapse-titles">
+                                    <h3>Notifications</h3>
+                                </div>
+                                <span class="dash-collapse-caret" aria-hidden="true">▾</span>
+                            </button>
+                            <div class="command-head-right">
+                                <div class="sa-view-toggle" role="group" aria-label="Alerts view format">
+                                    <button type="button" class="sa-view-btn is-active" data-sa-view="cards" title="Card layout">Cards</button>
+                                    <button type="button" class="sa-view-btn" data-sa-view="mail" title="Mail layout (Gmail-style)">Mail</button>
+                                    <button type="button" class="sa-view-btn" data-sa-view="whatsapp" title="WhatsIn message layout">WhatsIn</button>
+                                </div>
+                                <div class="sa-win-controls" role="group" aria-label="Window controls">
+                                    <button type="button" class="sa-win-btn" data-sa-win="float" title="Pop out window">⧉</button>
+                                    <button type="button" class="sa-win-btn" data-sa-win="min" title="Minimize" hidden>─</button>
+                                    <button type="button" class="sa-win-btn" data-sa-win="max" title="Maximize" hidden>▢</button>
+                                    <button type="button" class="sa-win-btn" data-sa-win="dock" title="Dock back to dashboard" hidden>⬇</button>
+                                </div>
+                                <div class="command-badges" title="Unread · Total alerts">
+                                    <button type="button" class="command-count command-count-unread" id="systemAlertsUnread" hidden aria-label="Open unread messages">0</button>
+                                    <span class="command-count" id="systemAlertsCount">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dash-collapse-body command-collapse-body">
+                            <details class="alert-panel-help">
+                                <summary>How this works</summary>
+                                <p class="alert-panel-hint">
+                                    Alerts + office messages — Compose to IT Dir departments (Sys Admin, Workshop, DBA, Gate, ITTS…) or peer Commanders / Directors.
+                                    Switch <strong>Cards</strong> / <strong>Mail</strong> / <strong>WhatsIn</strong> for layout.
+                                    Use <strong>⧉</strong> to pop out, then drag / resize / min / max.
+                                </p>
+                            </details>
+                            <div class="sa-tabs" id="saTabs" role="tablist">
+                                <button type="button" class="sa-tab is-active" data-sa-tab="alerts" role="tab">Alerts <span class="sa-tab-badge" id="saTabAlertBadge" hidden></span></button>
+                                <button type="button" class="sa-tab" data-sa-tab="messages" role="tab">Inbox <span class="sa-tab-badge" id="saTabMsgBadge" hidden></span></button>
+                                <button type="button" class="sa-tab" data-sa-tab="compose" id="saTabCompose" role="tab" hidden>Compose</button>
+                            </div>
+                            <div id="saMailShell" class="sa-mail" hidden aria-label="Mail layout"></div>
+                            <div id="saWaShell" class="sa-wa" hidden aria-label="WhatsIn message layout"></div>
+                            <div class="command-panel-body" id="systemAlertsList" role="tabpanel"></div>
+                            <div class="command-panel-body sa-pane-hidden" id="systemMessagesList" role="tabpanel" hidden></div>
+                            <div class="command-panel-body sa-pane-hidden" id="systemComposePane" role="tabpanel" hidden></div>
+                            <div class="sa-scroll-controls" id="saScrollControls">
+                                <button type="button" class="sa-scroll-btn" id="saScrollUpBtn" title="Scroll up" aria-label="Scroll notifications up">▲</button>
+                                <button type="button" class="sa-scroll-btn sa-scroll-btn-down" id="saScrollDownBtn" title="Scroll down" aria-label="Scroll notifications down">▼</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="rpGateHome" class="rp-gate-home" hidden aria-label="RP Gate workspace">
+                    <div class="rp-gate-home-card">
+                        <h3>RP Gate — ICT equipment in / out</h3>
+                        <p>
+                            Record ICT equipment entering and leaving the Directorate at the gate.
+                            You do not have access to GL accounts, stock ledgers, or stores vouchers.
+                        </p>
+                        <div class="rp-gate-home-actions">
+                            <button type="button" class="btn btn-primary" data-target="gate-register">Open Gate Register</button>
+                            <button type="button" class="btn btn-secondary" data-target="it-dir-comms">Communications Portal</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="inventory-section" aria-label="Inventory ledgers">
+                    <div class="dash-collapse inventory-ledgers-collapse" data-collapse-key="inventory-ledgers">
+                        <div class="inventory-ledgers-head-row">
+                            <button type="button" class="dash-collapse-toggle" aria-expanded="false" title="Expand section">
+                                <div class="dash-collapse-titles">
+                                    <h3>INVENTORY LEDGERS</h3>
+                                    <p>ZNA ICT Asset Register · key stores modules (3 × 3)</p>
+                                </div>
+                                <span class="dash-collapse-caret" aria-hidden="true">▾</span>
+                            </button>
+                            <button type="button" class="btn btn-ghost btn-sm" id="btnAddInventoryLedgerDash">＋ Add Ledger</button>
+                        </div>
+                        <div class="dash-collapse-body">
+                            <div class="inventory-cards float-card-grid" id="inventoryCards"></div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-panel inventory-panel dash-collapse" data-collapse-key="inventory-recon">
+                        <button type="button" class="dash-collapse-toggle" aria-expanded="false" title="Expand section">
+                            <div class="dash-collapse-titles">
+                                <h3>Inventory Reconciliation</h3>
+                                <span class="inventory-formula">On Hand = Opening + Received − Issued · via ZNA Q 1033</span>
+                            </div>
+                            <span class="dash-collapse-caret" aria-hidden="true">▾</span>
+                        </button>
+                        <div class="dash-collapse-body">
+                        <div class="module-toolbar">
+                            <input type="search" class="form-control table-search" data-search-target="inventoryOverviewBody" placeholder="Search inventory ledgers...">
+                            <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                            <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                        </div>
+                        <div class="form-table-wrapper">
+                            <table class="overview-table inventory-table">
+                                <thead>
+                                    <tr>
+                                        <th>Inventory Ledger</th>
+                                        <th>Coverage</th>
+                                        <th>Opening</th>
+                                        <th>Received</th>
+                                        <th>Issued</th>
+                                        <th>On Hand</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventoryOverviewBody"></tbody>
+                            </table>
+                        </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="dashboard-main-grid">
+                    <div class="dash-collapse dash-collapse-gl" data-collapse-key="gl-portfolio">
+                        <button type="button" class="dash-collapse-toggle" aria-expanded="false" title="Expand section">
+                            <div class="dash-collapse-titles">
+                                <h3>IT DIR. GENERAL LEDGER ACCOUNTS</h3>
+                                <p>DAF monthly targets · buying power · Release Cuts · available to buy</p>
+                            </div>
+                            <span class="dash-collapse-caret" aria-hidden="true">▾</span>
+                        </button>
+                        <div class="gl-collapsed-summary" id="glCollapsedSummary" aria-label="GL portfolio summary">
+                            <div class="gl-summary-metrics">
+                                <div class="gl-summary-metric">
+                                    <span class="gl-summary-label">Target</span>
+                                    <strong id="glSumTarget">$0</strong>
+                                </div>
+                                <div class="gl-summary-metric">
+                                    <span class="gl-summary-label">Committed</span>
+                                    <strong id="glSumCommitted">$0</strong>
+                                </div>
+                                <div class="gl-summary-metric">
+                                    <span class="gl-summary-label">Buying power</span>
+                                    <strong id="glSumBalance" class="buying-power-ok">$0</strong>
+                                </div>
+                                <div class="gl-summary-metric gl-summary-util">
+                                    <span class="gl-summary-label">Utilized <span id="glSumUtilPct">0%</span></span>
+                                    <div class="gl-summary-bar" aria-hidden="true">
+                                        <i id="glSumUtilCommitted"></i>
+                                        <i id="glSumUtilVouchers" class="is-vouchers"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="gl-summary-split">
+                                <div class="gl-summary-bars" id="glSummaryChips" role="list" aria-label="GL account balances"></div>
+                                <aside class="gl-summary-visual" aria-label="GL target mix">
+                                    <div class="gl-ring-wrap">
+                                        <ul class="gl-ring-legend" id="glSummaryRingLegend"></ul>
+                                        <div class="gl-ring" id="glSummaryRing" aria-hidden="true">
+                                            <div class="gl-ring-disk" id="glSummaryRingDisk"></div>
+                                            <div class="gl-ring-hole">
+                                                <strong id="glRingCenterPct">0%</strong>
+                                                <span>utilized</span>
+                                            </div>
+                                            <div class="gl-ring-labels" id="glSummaryRingLabels"></div>
+                                        </div>
+                                    </div>
+                                    <p class="gl-ring-caption" id="glRingCaption">Share of monthly DAF target</p>
+                                </aside>
+                            </div>
+                            <div class="gl-summary-charts">
+                                <div class="gl-chart-card">
+                                    <div class="gl-chart-head">
+                                        <h4>Bar · Target / Committed / Buying power</h4>
+                                        <div class="gl-chart-keys" aria-hidden="true">
+                                            <span class="gl-key"><i class="is-target"></i> Target</span>
+                                            <span class="gl-key"><i class="is-committed"></i> Committed</span>
+                                            <span class="gl-key"><i class="is-power"></i> Buying power</span>
+                                        </div>
+                                    </div>
+                                    <div class="gl-chart-host" id="glSummaryBarChart" role="img" aria-label="Bar chart of target, committed and buying power by GL"></div>
+                                </div>
+                                <div class="gl-chart-card">
+                                    <div class="gl-chart-head">
+                                        <h4>Line · Utilization by GL</h4>
+                                        <div class="gl-chart-keys" aria-hidden="true">
+                                            <span class="gl-key"><i class="is-util"></i> Utilized %</span>
+                                            <span class="gl-key"><i class="is-power-line"></i> Buying power index</span>
+                                        </div>
+                                    </div>
+                                    <div class="gl-chart-host" id="glSummaryLineChart" role="img" aria-label="Line chart of utilization by GL"></div>
+                                </div>
+                            </div>
+                            <p class="gl-summary-hint">Expand for GL cards · <span id="glSumStatusLine">All on track</span></p>
+                        </div>
+                        <div class="dash-collapse-body">
+                    <div class="dashboard-cards">
+                        <div class="card gl-card" data-target="gl-2200600002" data-gl="6122100009">
+                            <div class="card-header" style="background-color: var(--gl-6122100009, var(--gl-2200600002));">GL 6122100009</div>
+                            <div class="card-body">
+                                <div class="gl-card-top">
+                                    <h3 class="card-title">Office Supplies &amp; Services (ZOFF)</h3>
+                                    <span class="card-status-badge status-neutral" data-status-badge>On Track</span>
+                                </div>
+                                <p class="card-text">Computer consumables, accessories, stationery supplies</p>
+                                <div class="budget-info">
+                                    <div class="budget-progress-stacked">
+                                        <div class="budget-progress-track">
+                                            <div class="budget-progress-committed" data-budget-bar-committed style="width:0%"></div>
+                                            <div class="budget-progress-vouchers" data-budget-bar-vouchers style="width:0%"></div>
+                                        </div>
+                                        <span class="budget-utilization" data-utilization>0% utilized</span>
+                                    </div>
+                                    <div class="committed-breakdown">
+                                        <span>Bids <strong class="budget-bids">$0</strong></span>
+                                        <span>POs <strong class="budget-pos">$0</strong></span>
+                                        <span>DP F1 <strong class="budget-dpf1">$0</strong></span>
+                                    </div>
+                                    <div class="budget-metrics">
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Target</span>
+                                            <span class="budget-amount budget-total">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Committed</span>
+                                            <span class="budget-amount budget-committed">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Vouchers</span>
+                                            <span class="budget-amount budget-vouchers">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Buying Power</span>
+                                            <span class="budget-amount budget-balance">$0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card gl-card" data-target="gl-2200600003" data-gl="2200600003">
+                            <div class="card-header" style="background-color: var(--gl-2200600003);">GL 2200600003</div>
+                            <div class="card-body">
+                                <div class="gl-card-top">
+                                    <h3 class="card-title">Software Licences</h3>
+                                    <span class="card-status-badge status-neutral" data-status-badge>On Track</span>
+                                </div>
+                                <p class="card-text">Antivirus, Office, DevExpress renewals</p>
+                                <div class="budget-info">
+                                    <div class="budget-progress-stacked">
+                                        <div class="budget-progress-track">
+                                            <div class="budget-progress-committed" data-budget-bar-committed style="width:0%"></div>
+                                            <div class="budget-progress-vouchers" data-budget-bar-vouchers style="width:0%"></div>
+                                        </div>
+                                        <span class="budget-utilization" data-utilization>0% utilized</span>
+                                    </div>
+                                    <div class="committed-breakdown">
+                                        <span>Bids <strong class="budget-bids">$0</strong></span>
+                                        <span>POs <strong class="budget-pos">$0</strong></span>
+                                        <span>DP F1 <strong class="budget-dpf1">$0</strong></span>
+                                    </div>
+                                    <div class="budget-metrics">
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Target</span>
+                                            <span class="budget-amount budget-total">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Committed</span>
+                                            <span class="budget-amount budget-committed">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Vouchers</span>
+                                            <span class="budget-amount budget-vouchers">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Buying Power</span>
+                                            <span class="budget-amount budget-balance">$0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card gl-card" data-target="gl-220200002" data-gl="220200002">
+                            <div class="card-header" style="background-color: var(--gl-220200002);">GL 220200002</div>
+                            <div class="card-body">
+                                <div class="gl-card-top">
+                                    <h3 class="card-title">Tech Maintenance</h3>
+                                    <span class="card-status-badge status-neutral" data-status-badge>On Track</span>
+                                </div>
+                                <p class="card-text">Technical equipment maintenance</p>
+                                <div class="budget-info">
+                                    <div class="budget-progress-stacked">
+                                        <div class="budget-progress-track">
+                                            <div class="budget-progress-committed" data-budget-bar-committed style="width:0%"></div>
+                                            <div class="budget-progress-vouchers" data-budget-bar-vouchers style="width:0%"></div>
+                                        </div>
+                                        <span class="budget-utilization" data-utilization>0% utilized</span>
+                                    </div>
+                                    <div class="committed-breakdown">
+                                        <span>Bids <strong class="budget-bids">$0</strong></span>
+                                        <span>POs <strong class="budget-pos">$0</strong></span>
+                                        <span>DP F1 <strong class="budget-dpf1">$0</strong></span>
+                                    </div>
+                                    <div class="budget-metrics">
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Target</span>
+                                            <span class="budget-amount budget-total">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Committed</span>
+                                            <span class="budget-amount budget-committed">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Vouchers</span>
+                                            <span class="budget-amount budget-vouchers">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Buying Power</span>
+                                            <span class="budget-amount budget-balance">$0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card gl-card" data-target="gl-2201900002" data-gl="2201900002">
+                            <div class="card-header" style="background-color: var(--gl-2201900002);">GL 2201900002</div>
+                            <div class="card-body">
+                                <div class="gl-card-top">
+                                    <h3 class="card-title">Spare Parts</h3>
+                                    <span class="card-status-badge status-neutral" data-status-badge>On Track</span>
+                                </div>
+                                <p class="card-text">Printer, desktop, and laptop spares</p>
+                                <div class="budget-info">
+                                    <div class="budget-progress-stacked">
+                                        <div class="budget-progress-track">
+                                            <div class="budget-progress-committed" data-budget-bar-committed style="width:0%"></div>
+                                            <div class="budget-progress-vouchers" data-budget-bar-vouchers style="width:0%"></div>
+                                        </div>
+                                        <span class="budget-utilization" data-utilization>0% utilized</span>
+                                    </div>
+                                    <div class="committed-breakdown">
+                                        <span>Bids <strong class="budget-bids">$0</strong></span>
+                                        <span>POs <strong class="budget-pos">$0</strong></span>
+                                        <span>DP F1 <strong class="budget-dpf1">$0</strong></span>
+                                    </div>
+                                    <div class="budget-metrics">
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Target</span>
+                                            <span class="budget-amount budget-total">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Committed</span>
+                                            <span class="budget-amount budget-committed">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Vouchers</span>
+                                            <span class="budget-amount budget-vouchers">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Buying Power</span>
+                                            <span class="budget-amount budget-balance">$0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card gl-card" data-target="gl-3112210001" data-gl="3112210001">
+                            <div class="card-header" style="background-color: var(--gl-3112210001);">GL 3112210001</div>
+                            <div class="card-body">
+                                <div class="gl-card-top">
+                                    <h3 class="card-title">ICT Equipment</h3>
+                                    <span class="card-status-badge status-neutral" data-status-badge>On Track</span>
+                                </div>
+                                <p class="card-text">Printers, PCs, laptops, servers, cabling</p>
+                                <div class="budget-info">
+                                    <div class="budget-progress-stacked">
+                                        <div class="budget-progress-track">
+                                            <div class="budget-progress-committed" data-budget-bar-committed style="width:0%"></div>
+                                            <div class="budget-progress-vouchers" data-budget-bar-vouchers style="width:0%"></div>
+                                        </div>
+                                        <span class="budget-utilization" data-utilization>0% utilized</span>
+                                    </div>
+                                    <div class="committed-breakdown">
+                                        <span>Bids <strong class="budget-bids">$0</strong></span>
+                                        <span>POs <strong class="budget-pos">$0</strong></span>
+                                        <span>DP F1 <strong class="budget-dpf1">$0</strong></span>
+                                    </div>
+                                    <div class="budget-metrics">
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Target</span>
+                                            <span class="budget-amount budget-total">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Committed</span>
+                                            <span class="budget-amount budget-committed">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Vouchers</span>
+                                            <span class="budget-amount budget-vouchers">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Buying Power</span>
+                                            <span class="budget-amount budget-balance">$0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card gl-card gl-card-summary" data-target="financial-year-bids" data-gl="summary">
+                            <div class="card-header" style="background-color: var(--gl-financial-bids);">FY Portfolio Total</div>
+                            <div class="card-body">
+                                <div class="gl-card-top">
+                                    <h3 class="card-title">Financial Year Bids</h3>
+                                    <span class="card-status-badge status-neutral" data-status-badge>On Track</span>
+                                </div>
+                                <p class="card-text">Combined commitment across all GL accounts</p>
+                                <div class="budget-info">
+                                    <div class="budget-progress-stacked">
+                                        <div class="budget-progress-track">
+                                            <div class="budget-progress-committed" data-budget-bar-committed style="width:0%"></div>
+                                            <div class="budget-progress-vouchers" data-budget-bar-vouchers style="width:0%"></div>
+                                        </div>
+                                        <span class="budget-utilization" data-utilization>0% utilized</span>
+                                    </div>
+                                    <div class="committed-breakdown">
+                                        <span>Bids <strong class="budget-bids">$0</strong></span>
+                                        <span>POs <strong class="budget-pos">$0</strong></span>
+                                        <span>DP F1 <strong class="budget-dpf1">$0</strong></span>
+                                    </div>
+                                    <div class="budget-metrics">
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Target</span>
+                                            <span class="budget-amount budget-total">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Committed</span>
+                                            <span class="budget-amount budget-committed">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Vouchers</span>
+                                            <span class="budget-amount budget-vouchers">$0</span>
+                                        </div>
+                                        <div class="budget-metric">
+                                            <span class="budget-label">Buying Power</span>
+                                            <span class="budget-amount budget-balance">$0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                        </div><!-- /.dash-collapse-body GL Portfolio -->
+                    </div><!-- /.dash-collapse-gl -->
+                </div>
+
+                <div class="dashboard-panel dashboard-panel-wide dash-collapse" data-collapse-key="gl-target-overview">
+                    <button type="button" class="dash-collapse-toggle" aria-expanded="true">
+                        <div class="dash-collapse-titles">
+                            <h3>GL Target Overview — DAF monthly votes</h3>
+                            <p>Targets come from Directorate of Army Finance (DAF). You may buy only up to each GL’s buying power.</p>
+                        </div>
+                        <span class="dash-collapse-caret" aria-hidden="true">▾</span>
+                    </button>
+                    <div class="dash-collapse-body">
+                    <div id="dafTargetBanner" class="daf-target-banner" role="status"></div>
+                    <div class="gl-target-month-bar">
+                        <label class="form-label" for="glTargetMonth">Target month</label>
+                        <input type="month" class="form-control" id="glTargetMonth" title="Month of the DAF vote">
+                        <strong id="glTargetMonthLabel">—</strong>
+                        <button type="button" class="btn btn-ghost btn-sm" id="btnSeedMonthTargets" title="Optional helper — prefer typing the DAF advice amounts">Seed empty from FY ref</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="btnClearMonthTargets">Clear month targets</button>
+                        <a href="#" class="btn btn-secondary btn-sm" data-target="release-cut">Release Cut</a>
+                    </div>
+                    <div class="form-row daf-advice-row">
+                        <div class="form-col">
+                            <label class="form-label" for="dafTargetRef">DAF advice / vote ref</label>
+                            <input type="text" class="form-control" id="dafTargetRef" placeholder="e.g. DAF/IT/JUL26/01" autocomplete="off">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="dafTargetReceived">Date received from DAF</label>
+                            <input type="date" class="form-control" id="dafTargetReceived">
+                        </div>
+                        <div class="form-col" style="flex:1.4;">
+                            <label class="form-label" for="dafTargetNotes">Notes</label>
+                            <input type="text" class="form-control" id="dafTargetNotes" placeholder="e.g. Only ZOFF voted this month" autocomplete="off">
+                        </div>
+                    </div>
+                    <p class="gl-target-help">
+                        <strong>Buying power</strong> = DAF Target − Expended on that GL for the month.
+                        If a GL has <strong>No DAF vote</strong>, you cannot buy on it until you record a DAF target or
+                        move buying power via <strong>Release Cut</strong> from a funded GL.
+                        Edit the <strong>DAF Target</strong> column to capture the vote amounts.
+                    </p>
+                    <div class="module-toolbar">
+                        <input type="search" class="form-control table-search" data-search-target="budgetOverviewBody" placeholder="Search GL target overview...">
+                        <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                        <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                    </div>
+                    <div class="form-table-wrapper">
+                        <table class="overview-table">
+                            <thead>
+                                <tr>
+                                    <th>GL Account</th>
+                                    <th>DAF Target</th>
+                                    <th>Committed</th>
+                                    <th>Vouchers</th>
+                                    <th>Expended</th>
+                                    <th>Buying Power</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="budgetOverviewBody"></tbody>
+                        </table>
+                    </div>
+                    </div><!-- /.dash-collapse-body GL Target Overview -->
+                </div>
+
+                <div class="dashboard-panel dashboard-panel-wide dash-collapse" data-collapse-key="portfolio-pulse">
+                    <button type="button" class="dash-collapse-toggle" aria-expanded="true">
+                        <div class="dash-collapse-titles">
+                            <h3>Portfolio Pulse &amp; Activity</h3>
+                            <p>Targets · commitments · buying power · utilization · operational counts</p>
+                        </div>
+                        <span class="dash-collapse-caret" aria-hidden="true">▾</span>
+                    </button>
+                    <div class="dash-collapse-body">
+                <div class="dashboard-pulse">
+                    <div class="kpi-grid">
+                        <div class="kpi-card kpi-budget">
+                            <div class="kpi-label">Total Target</div>
+                            <div class="kpi-value" id="kpiTotalBudget">$0</div>
+                            <div class="kpi-sub">All GL accounts</div>
+                        </div>
+                        <div class="kpi-card kpi-committed">
+                            <div class="kpi-label">Committed</div>
+                            <div class="kpi-value" id="kpiTotalCommitted">$0</div>
+                            <div class="kpi-sub" id="kpiCommittedBreakdown">Bids · POs · DP F1</div>
+                        </div>
+                        <div class="kpi-card kpi-balance">
+                            <div class="kpi-label">Buying Power</div>
+                            <div class="kpi-value" id="kpiTotalBalance">$0</div>
+                            <div class="kpi-sub" id="kpiVoucherImpact">Vouchers: $0</div>
+                        </div>
+                        <div class="kpi-card kpi-utilization">
+                            <div class="kpi-label">Utilization</div>
+                            <div class="kpi-value" id="kpiUtilization">0%</div>
+                            <div class="kpi-sub" id="kpiUtilizationStatus">On track</div>
+                        </div>
+                        <div class="kpi-card kpi-alerts">
+                            <div class="kpi-label">Alerts</div>
+                            <div class="kpi-value" id="kpiAlertCount">0</div>
+                            <div class="kpi-sub">DP · POs · loans</div>
+                        </div>
+                    </div>
+
+                    <div class="utilization-panel" aria-label="Target utilization breakdown">
+                        <div class="utilization-panel-head">
+                            <span>Portfolio spend (selected month)</span>
+                            <strong id="kpiUtilizationDetail">0% used</strong>
+                        </div>
+                        <div class="utilization-meter" role="img" aria-label="Target utilization meter">
+                            <div class="utilization-meter-committed" id="kpiUtilCommittedBar" style="width:0%"></div>
+                            <div class="utilization-meter-vouchers" id="kpiUtilVoucherBar" style="width:0%"></div>
+                        </div>
+                        <div class="utilization-legend">
+                            <span><i class="util-dot util-dot-committed"></i> Committed</span>
+                            <span><i class="util-dot util-dot-vouchers"></i> Vouchers</span>
+                            <span><i class="util-dot util-dot-available"></i> Available</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ops-strip" aria-label="Operational activity">
+                    <div class="ops-stat">
+                        <span class="ops-stat-value" id="opsVoucherLines">0</span>
+                        <span class="ops-stat-label">Voucher lines</span>
+                    </div>
+                    <div class="ops-stat">
+                        <span class="ops-stat-value" id="opsBidLines">0</span>
+                        <span class="ops-stat-label">Bid lines</span>
+                    </div>
+                    <div class="ops-stat">
+                        <span class="ops-stat-value" id="opsPoLines">0</span>
+                        <span class="ops-stat-label">Purchase orders</span>
+                    </div>
+                    <div class="ops-stat">
+                        <span class="ops-stat-value" id="opsLoanLines">0</span>
+                        <span class="ops-stat-label">Temp loans</span>
+                    </div>
+                    <div class="ops-stat">
+                        <span class="ops-stat-value" id="opsWorkshopLines">0</span>
+                        <span class="ops-stat-label">Workshop jobs</span>
+                    </div>
+                    <div class="ops-stat">
+                        <span class="ops-stat-value" id="opsTransferCount">0</span>
+                        <span class="ops-stat-label">Release cuts</span>
+                    </div>
+                </div>
+                    </div><!-- /.dash-collapse-body portfolio pulse -->
+                </div>
+
+                <div class="dashboard-panel dashboard-backup-panel admin-only" aria-label="Database">
+                    <div class="backup-menu" id="backupMenu">
+                        <button class="glossy-pill-btn backup-menu-trigger" id="backupMenuBtn" type="button" aria-haspopup="true" aria-expanded="false" title="Database — backup and view SQLite tables/records">
+                            <img class="backup-menu-icon" src="../assets/sqlite-backup-icon.png" alt="" width="22" height="22">
+                            <span>Database</span>
+                            <span class="backup-menu-caret" aria-hidden="true">▴</span>
+                        </button>
+                        <div class="backup-menu-panel" id="backupMenuPanel" hidden role="menu" aria-label="Database actions">
+                            <button class="backup-menu-item" id="viewDbTablesBtn" type="button" role="menuitem">View tables</button>
+                            <button class="backup-menu-item" id="viewDbRecordsBtn" type="button" role="menuitem">View records</button>
+                            <button class="backup-menu-item" id="viewDbAuditBtn" type="button" role="menuitem">Audit trail</button>
+                            <div class="backup-menu-sep" role="separator"></div>
+                            <button class="backup-menu-item" id="exportDataBtn" type="button" role="menuitem">Export Backup</button>
+                            <label class="backup-menu-item" id="importDataLabel" role="menuitem">
+                                Import Backup
+                                <input type="file" id="importDataFile" accept=".json" hidden>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div id="modules-host" class="modules-host" aria-live="polite"></div>
+            <!-- GL Account Forms -->
+<!-- module:gl-2200600003 loaded on demand from modules/gl-2200600003.html -->
+<!-- module:gl-2201900002 loaded on demand from modules/gl-2201900002.html -->
+<!-- Issue Voucher -->
+<!-- Stock Take — full stores physical count -->
+<!-- Unit Check Log (ASO Ch 28) -->
+<!-- Financial Year Bids -->
+<!-- Unit Equipment Table -->
+<!-- ZNA ICT Asset Register -->
+<!-- Temporary Loans -->
+<!-- Unit / Formation Requisitions -->
+<!-- Monthly Returns — each unit / formation -->
+<!-- DP F1 Form -->
+<!-- Cost Comparative Schedule -->
+<!-- ICT Procurement Cycle -->
+<!-- ZNA Q 982 — Combined Indent and Voucher for Stores -->
+<!-- ZNA Q 178 — Sub Ledger Sheet -->
+<!-- ZNA Q 1033 — Issue & Receipt Voucher -->
+<!-- ZNA Q 1043 — Report on Equipment and Condemnation Certificate -->
+<!-- ZNA Q 80 -->
+<!-- ZNA SVCS 890 -->
+<!-- ZNA Q 1179 -->
+<!-- ZNA Q 987 -->
+<!-- ZNA Q 3977 -->
+<!-- ZNA Q 985 Discrepancy Report -->
+<!-- ZNA Q 1 Write-off Schedule -->
+<!-- ZNA Q 998 Statement of Loss / Damage / Destruction -->
+<!-- ZNA Q 1680 Debit Voucher -->
+<!-- ZNA Q Forms Index (Annex A) -->
+<!-- ZNA Q 3 -->
+<!-- ZNA Q 31 -->
+<!-- ZNA Q 40 -->
+<!-- ZNA Q 1049 -->
+<!-- ZNA Q 1229 -->
+<!-- ZNA Q 1571 -->
+<!-- ZNA Q 1954 -->
+<!-- ZNA SVCS 1045 -->
+<!-- ZNA Q 1157 -->
+<!-- Inventory of Accommodation Stores -->
+<!-- Spec Evaluation Form -->
+<!-- Delivery Note -->
+<!-- Purchase Orders -->
+<!-- Undelivered Purchase Order Items -->
+<!-- Workshop Repairs -->
+<!-- Suppliers and Contracts -->
+<!-- Release Cut -->
+<!-- Duties & Roles (Storeman / QM / Controlled Stores NCO) -->
+<!-- Reports Module -->
+<!-- User Management (Admin) -->
+</div>
+    </div>
+
+    <div id="uiPrefsModal" class="ui-prefs-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="uiPrefsTitle">
+        <div class="ui-prefs-backdrop" id="uiPrefsBackdrop"></div>
+        <div class="ui-prefs-panel">
+            <div class="ui-prefs-head">
+                <div>
+                    <h2 id="uiPrefsTitle">Appearance</h2>
+                    <p class="ui-prefs-sub">Choose a theme and layout density. Preferences are saved with your system data.</p>
+                </div>
+                <button type="button" class="ui-prefs-close" id="uiPrefsCloseBtn" aria-label="Close">&times;</button>
+            </div>
+            <section class="ui-prefs-section">
+                <h3>Theme</h3>
+                <div id="uiThemeCards" class="ui-theme-grid"></div>
+            </section>
+            <section class="ui-prefs-section">
+                <h3>Density</h3>
+                <div id="uiDensityCards" class="ui-density-grid"></div>
+            </section>
+            <div class="ui-prefs-foot">
+                <button type="button" class="btn btn-primary" id="uiPrefsDoneBtn">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="stockTxnModal" class="stock-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="stockTxnModalTitle">
+        <div class="stock-modal-dialog" id="stockTxnModalDialog">
+            <div class="stock-modal-header">
+                <div class="stock-modal-title-wrap">
+                    <h3 id="stockTxnModalTitle">Stock Movement</h3>
+                    <label class="stock-modal-date-field">
+                        <span>Date</span>
+                        <input type="date" class="form-control" id="stockTxnModalDate" data-date-rule="not-future" data-date-label="Transaction date" title="Transaction / store day date">
+                    </label>
+                </div>
+                <div class="stock-modal-window-controls" role="group" aria-label="Window controls">
+                    <button type="button" class="stock-win-btn" id="stockTxnModalMinimize" title="Minimize" aria-label="Minimize">─</button>
+                    <button type="button" class="stock-win-btn" id="stockTxnModalMaximize" title="Maximize" aria-label="Maximize">▢</button>
+                    <button type="button" class="stock-win-btn stock-win-close" id="stockTxnModalClose" title="Close" aria-label="Close">&times;</button>
+                </div>
+            </div>
+            <div class="stock-modal-minimized-bar" id="stockTxnMinimizedBar" hidden>
+                <span id="stockTxnMinimizedLabel">Stock form minimized</span>
+                <button type="button" class="btn btn-primary btn-sm" id="stockTxnModalRestore">Restore</button>
+            </div>
+            <div class="stock-modal-body" id="stockTxnModalBody"></div>
+            <div class="stock-modal-footer">
+                <button type="button" class="btn btn-ghost" id="stockTxnModalCancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="stockTxnModalConfirm">Confirm</button>
+            </div>
+            <div class="stock-modal-resize-hint" aria-hidden="true">Drag corner to resize</div>
+        </div>
+    </div>
+
+    <div id="specSheetPreviewModal" class="stock-modal spec-sheet-preview-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="specSheetPreviewTitle">
+        <div class="stock-modal-dialog spec-sheet-preview-dialog" id="specSheetPreviewDialog">
+            <div class="stock-modal-header">
+                <div class="stock-modal-title-wrap">
+                    <h3 id="specSheetPreviewTitle">Specification Datasheet Preview</h3>
+                    <div class="spec-sheet-zoom-controls" role="group" aria-label="Zoom">
+                        <button type="button" class="btn btn-ghost btn-sm" id="specSheetZoomOutBtn" title="Zoom out">−</button>
+                        <span id="specSheetZoomLabel" class="spec-sheet-zoom-label">100%</span>
+                        <button type="button" class="btn btn-ghost btn-sm" id="specSheetZoomInBtn" title="Zoom in">+</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="specSheetZoomResetBtn" title="Reset zoom">Reset</button>
+                    </div>
+                </div>
+                <div class="stock-modal-window-controls" role="group" aria-label="Window controls">
+                    <button type="button" class="stock-win-btn" id="specSheetMinimizeBtn" title="Minimize" aria-label="Minimize">─</button>
+                    <button type="button" class="stock-win-btn" id="specSheetMaximizeBtn" title="Maximize" aria-label="Maximize">▢</button>
+                    <button type="button" class="stock-win-btn stock-win-close" id="specSheetCloseBtn" title="Close" aria-label="Close">&times;</button>
+                </div>
+            </div>
+            <div class="stock-modal-minimized-bar" id="specSheetMinimizedBar" hidden>
+                <span id="specSheetMinimizedLabel">Specification datasheet</span>
+                <button type="button" class="btn btn-primary btn-sm" id="specSheetRestoreBtn">Restore</button>
+            </div>
+            <div class="stock-modal-body spec-sheet-preview-body" id="specSheetPreviewBody">
+                <div class="spec-sheet-preview-stage" id="specSheetPreviewStage"></div>
+            </div>
+            <div class="stock-modal-footer">
+                <span class="spec-sheet-preview-hint">Maximize, minimize, or zoom the preview. Print opens the browser print dialog.</span>
+                <div class="spec-sheet-preview-actions">
+                    <button type="button" class="btn btn-ghost" id="specSheetCancelBtn">Close</button>
+                    <button type="button" class="btn btn-primary" id="specSheetPrintBtn">Print</button>
+                </div>
+            </div>
+            <div class="stock-modal-resize-hint" aria-hidden="true">Drag corner to resize</div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/org-profile.js"></script>
+    <script src="js/zna-units.js"></script>
+    <script src="js/catalog.js"></script>
+    <script src="js/inventory-ledgers.js"></script>
+    <script src="js/it-dir-bids-seed.js"></script>
+    <script src="js/product-specs-catalog.js"></script>
+    <script src="js/suppliers-seed.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/gl-targets.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/module-loader.js"></script>
+    <script src="js/search-history.js"></script>
+    <script src="js/universal-search.js"></script>
+    <script src="js/duties-roles.js"></script>
+    <script src="js/it-dir-departments.js"></script>
+    <script src="js/it-dir-establishment.js"></script>
+    <script src="js/process-guides.js"></script>
+    <script src="js/system-dictionary.js"></script>
+    <script src="js/field-help.js"></script>
+    <script src="js/ui-preferences.js"></script>
+    <script src="js/modules-data.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/inventory.js"></script>
+    <script src="js/gl-inventory-view.js"></script>
+    <script src="js/voucher-inventory.js"></script>
+    <script src="js/physical-stock-count.js"></script>
+    <script src="js/commander-demo-pack.js"></script>
+    <script src="js/stock-take.js"></script>
+    <script src="js/unit-checks.js"></script>
+    <script src="js/inventory-accountability.js"></script>
+    <script src="js/ict-accountability.js"></script>
+    <script src="js/ict-distribution.js"></script>
+    <script src="js/requisitions.js"></script>
+    <script src="js/requisition-procurement.js"></script>
+    <script src="js/dept-desk.js"></script>
+    <script src="js/orderly-room.js"></script>
+    <script src="js/correspondence-files-seed.js"></script>
+    <script src="js/correspondence-files.js"></script>
+    <script src="js/monthly-returns.js"></script>
+    <script src="js/undelivered.js"></script>
+    <script src="js/temporary-loans.js"></script>
+    <script src="js/rows.js"></script>
+    <script src="js/repair-intake.js"></script>
+    <script src="js/workshop-stores-request.js"></script>
+    <script src="js/bids-import.js"></script>
+    <script src="js/spec-eval.js"></script>
+    <script src="js/dp-f1.js"></script>
+    <script src="js/purchase-orders.js"></script>
+    <script src="js/cost-comparative-schedule.js"></script>
+    <script src="js/dp-procurement.js"></script>
+    <script src="js/zna-q-982.js"></script>
+    <script src="js/zna-qm-forms.js"></script>
+    <script src="js/zna-qm-batch2.js"></script>
+    <script src="js/zna-qm-aso-gap.js"></script>
+    <script src="js/zna-q-catalogue.js"></script>
+    <script src="js/zna-qm-annex-forms.js"></script>
+    <script src="js/zna-q-forms-index.js"></script>
+    <script src="js/accommodation-stores.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="js/techstores-period-report.js"></script>
+    <script src="js/backup.js"></script>
+    <script src="js/alerts.js"></script>
+    <script src="js/alert-desk.js"></script>
+    <script src="js/message-priority.js"></script>
+    <script src="js/office-messages.js"></script>
+    <script src="js/mail-layout.js"></script>
+    <script src="js/sa-window.js"></script>
+    <script src="js/whatsapp-layout.js"></script>
+    <script src="js/module-messaging-portal.js"></script>
+    <script src="js/correspondence-samples.js"></script>
+    <script src="js/it-dir-comms.js"></script>
+    <script src="js/command-board.js"></script>
+    <script src="js/tables.js"></script>
+    <script src="js/ux-improvements.js"></script>
+    <script src="js/pwa-install.js"></script>
+    <script src="js/boot.js"></script>
+
+</body>
+</html>

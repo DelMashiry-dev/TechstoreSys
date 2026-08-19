@@ -1,0 +1,78 @@
+<div id="gl-2200600002" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">GL 6122100009 — ZOFF / Office Supplies &amp; Services</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <!-- Form content for GL 2200600002 -->
+                <div class="form-group">
+                    <label class="form-label">Folio:</label>
+                    <input type="text" class="form-control" placeholder="Enter Folio Number">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">VAOS SECTION:</label>
+                    <input type="text" class="form-control" placeholder="Enter VAOS Section">
+                </div>
+
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" data-search-target="gl-2200600002-table-body" placeholder="Search consumables...">
+
+                    <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Voucher No.</th>
+                            <th>Received From or Issued To</th>
+                            <th>Cat or Part No</th>
+                            <th>Designation</th>
+                            <th>Entitlement</th>
+                            <th>Initial of Officer</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gl-2200600002-table-body">
+                        <tr>
+                            <td><input type="date" class="form-control"></td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><input type="number" class="form-control gl-issue-qty" min="0" step="1"></td>
+                            <td><input type="text" class="form-control"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <button class="btn btn-primary" style="margin-top: 15px;" onclick="addRow('gl-2200600002-table-body')">Add Row</button>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label class="form-label">Stock Balances:</label>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">B/F from Folio:</label>
+                            <input type="number" class="form-control stock-opening-balance" min="0" step="1" value="0">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Receipts:</label>
+                            <input type="number" class="form-control stock-receipts-total" min="0" step="1" value="0">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Issues:</label>
+                            <input type="number" class="form-control stock-issues-total stock-summary-readonly" readonly>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Stock:</label>
+                            <input type="number" class="form-control stock-on-hand stock-summary-readonly" readonly>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Stock Balances Carried Forward to Folio No.:</label>
+                    <input type="text" class="form-control">
+                </div>
+                
+                <button class="btn btn-success btn-save-module" style="margin-top: 15px;">Save</button>
+                <button class="btn btn-secondary btn-generate-report" data-report-module="gl-2200600002" style="margin-top: 15px;">Generate Report</button>
+            </div>

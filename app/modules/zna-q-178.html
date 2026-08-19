@@ -1,0 +1,80 @@
+<div id="zna-q-178" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">ZNA Q 178 — Sub Ledger Sheet</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <p class="q982-intro">Record stock movement on the sub ledger. Print/report uses the official ZNAQ 178 layout (two sheets per landscape page).</p>
+                <div class="q178-form">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Description</label>
+                            <input type="text" id="q178Description" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Vocabulary Number</label>
+                            <input type="text" id="q178VocabNo" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Folio Number</label>
+                            <input type="text" id="q178FolioNo" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Establishment</label>
+                            <input type="text" id="q178Establishment" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Entitlement</label>
+                            <input type="text" id="q178Entitlement" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Regimental Number (person opening account)</label>
+                            <input type="text" id="q178RegNo" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Name of person opening account</label>
+                            <input type="text" id="q178OpenerName" class="form-control">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Signature</label>
+                            <input type="text" id="q178Signature" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Unit Stamp (text / unit name)</label>
+                        <input type="text" id="q178UnitStamp" class="form-control" placeholder="Optional unit stamp text">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Carried forward</label>
+                        <input type="text" id="q178CarriedForward" class="form-control" readonly placeholder="Auto from last stock balance">
+                    </div>
+                    <div class="module-toolbar q178-screen-only">
+                        <input type="search" class="form-control table-search" data-search-target="zna-q-178-table-body" placeholder="Search ledger lines...">
+                        <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                        <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                    </div>
+                    <div class="form-table-wrapper q178-table-wrap">
+                        <table class="q178-items-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Consignor / Consignee To/From</th>
+                                    <th>Receipts</th>
+                                    <th>Issues</th>
+                                    <th>Stock</th>
+                                    <th>Voucher No. or QM Signature No. &amp; Name</th>
+                                    <th class="q178-screen-only">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="zna-q-178-table-body"></tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="btn btn-primary q178-screen-only" style="margin: 10px 0;" onclick="addZnaQ178Row()">Add Row</button>
+                </div>
+                <button class="btn btn-success btn-save-module" style="margin-top: 15px;">Save Form</button>
+                <button class="btn btn-secondary btn-print-module" data-print-target="zna-q-178" style="margin-top: 15px;">Print Form</button>
+                <button class="btn btn-secondary btn-generate-report" data-report-module="zna-q-178" style="margin-top: 15px;">Generate Report</button>
+            </div>

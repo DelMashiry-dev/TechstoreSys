@@ -1,0 +1,214 @@
+<div id="dp-f1-form" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">DP F1 ITDIR Form</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                
+                <div class="dp-f1-form">
+                    <div class="dp-f1-header">RESTRICTED</div>
+
+                    <div class="dp-f1-letterhead">
+                        <div class="dp-f1-letterhead-left">
+                            <div class="dp-f1-form-code">IT Dir F1</div>
+                            <img class="dp-f1-logo" src="../assets/zna-logo.png" alt="Zimbabwe National Army logo">
+                            <div class="dp-f1-org">
+                                Information Technology Directorate<br>
+                                Josiah Magama Tongogara Barracks
+                            </div>
+                        </div>
+                        <div class="dp-f1-address">
+                            P Bag 7720<br>
+                            Causeway<br>
+                            Harare: 2708518<br>
+                            <input type="date" id="dpF1Date" class="form-control" style="display: inline-block; width: auto; margin-top: 6px;">
+                        </div>
+                    </div>
+                    
+                    <h3 class="dp-f1-title">OFFICIAL INDENT FOR PURCHASING/PROCUREMENT OF GOODS/SERVICES/EQUIPMENT</h3>
+                    
+                    <p>1. The Directorate request you to purchase/procure the following goods/services/equipment.</p>
+
+                <div class="module-toolbar dp-f1-screen-only">
+                    <input type="search" class="form-control table-search" data-search-target="dp-f1-table-body" placeholder="Search DP F1 items...">
+                    <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                </div>
+                    <div class="form-table-wrapper dp-f1-table-wrap">
+                    <table class="dp-f1-items-table">
+                        <thead>
+                            <tr>
+                                <th>Ser</th>
+                                <th>Official Designation of Goods/Services/Equipment</th>
+                                <th>Qty</th>
+                                <th>Current Holding Stock</th>
+                                <th>Name of Potential Supplier if Known</th>
+                                <th class="dp-f1-screen-only">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dp-f1-table-body">
+                            <tr>
+                                <td>1</td>
+                                <td><input type="text" class="form-control"></td>
+                                <td><input type="number" class="form-control"></td>
+                                <td><input type="number" class="form-control"></td>
+                                <td><input type="text" class="form-control"></td>
+                                <td class="dp-f1-screen-only"><button class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    </div>
+                    
+                    <button class="btn btn-primary dp-f1-screen-only" style="margin: 10px 0;" onclick="addDPF1Row()">Add Row</button>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="dpF1EstimatedCost">2. Estimated cost of goods:</label>
+                        <div class="dp-f1-cost-row">
+                            <select id="dpF1Currency" class="form-control" aria-label="Currency" title="Currency">
+                                <option value="USD">USD</option>
+                                <option value="ZiG">ZiG</option>
+                                <option value="ZWL">ZWL</option>
+                                <option value="ZAR">ZAR</option>
+                            </select>
+                            <input type="number" id="dpF1EstimatedCost" class="form-control" min="0" step="0.01" placeholder="Amount e.g. 2000" inputmode="decimal">
+                        </div>
+                        <div id="dpF1FundingAlert" class="dp-f1-funding-alert" hidden role="alert"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">3. Place where goods should be delivered:</label>
+                        <select id="dpF1Delivery" class="form-control">
+                            <option>IT Directorate</option>
+                            <option>IT Dir</option>
+                            <option>System Development Department</option>
+                            <option>Workshop</option>
+                            <option>ITTS</option>
+                            <option>Orderly Room</option>
+                            <option>DBA</option>
+                            <option>QM</option>
+                            <option>Programmers</option>
+                            <option>AQSO</option>
+                            <option>RP</option>
+                            <option>Server Room</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">4. General Ledger to be charged:</label>
+                        <select id="dpF1Gl" class="form-control">
+                            <option value="6122100009">6122100009 - Office Supplies &amp; Services (ZOFF)</option>
+                            <option value="2200600002">2200600002 - Computer Consumables (legacy)</option>
+                            <option value="2200600003">2200600003 - Software Licenses</option>
+                            <option value="220200002">220200002 - Tech Equipment Maintenance</option>
+                            <option value="2201900002">2201900002 - Spare Parts</option>
+                            <option value="3112210001">3112210001 - ICT Equipment</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">5. Cost Centre:</label>
+                        <select id="dpF1CostCentre" class="form-control">
+                            <option>Z04P2SP212</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">6. Any remarks in respect of this order:</label>
+                        <input type="text" id="dpF1Remarks" class="form-control" list="dpF1RemarksList" placeholder="e.g. for Snr Offrs">
+                        <datalist id="dpF1RemarksList">
+                            <option value="AS Br"></option>
+                            <option value="QS Br"></option>
+                            <option value="GS Br"></option>
+                            <option value="for Snr Offrs"></option>
+                        </datalist>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">7. Details of the Directorate/Branch/Unit Designated Provision Officer:</label>
+                        
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">No:</label>
+                                <input type="text" id="dpF1Off1No" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Rank:</label>
+                                <input type="text" id="dpF1Off1Rank" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Name:</label>
+                                <input type="text" id="dpF1Off1Name" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Appt:</label>
+                                <input type="text" id="dpF1Off1Appt" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Signature:</label>
+                                <input type="text" id="dpF1Off1Signature" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Date:</label>
+                                <input type="date" id="dpF1Off1Date" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="form-row" style="margin-top: 14px;">
+                            <div class="form-col">
+                                <label class="form-label">No:</label>
+                                <input type="text" id="dpF1Off2No" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Rank:</label>
+                                <input type="text" id="dpF1Off2Rank" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Name:</label>
+                                <input type="text" id="dpF1Off2Name" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Appt:</label>
+                                <input type="text" id="dpF1Off2Appt" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Signature:</label>
+                                <input type="text" id="dpF1Off2Signature" class="form-control">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Date:</label>
+                                <input type="date" id="dpF1Off2Date" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dp-f1-dir-signoff">Information Technology Directorate</div>
+                    <div class="dp-f1-footer">RESTRICTED</div>
+                </div>
+                
+                <div id="dpF1SendStatus" class="dp-f1-send-status" hidden></div>
+
+                <div class="dp-f1-actions">
+                    <button class="btn btn-success btn-save-module" style="margin-top: 15px;">Save Form</button>
+                    <button class="btn btn-secondary btn-print-module" data-print-target="dp-f1-form" style="margin-top: 15px;">Print Form</button>
+                    <button class="btn btn-secondary btn-generate-report" data-report-module="dp-f1-form" style="margin-top: 15px;">Generate Report</button>
+                    <button type="button" class="btn btn-ghost" style="margin-top: 15px;" data-target-nav="cost-comparative-schedule" title="Compare vendor quotations for AIAD due diligence">
+                        Cost Comparative Schedule
+                    </button>
+                    <button type="button" id="btnSendDpF1ToDp" class="btn btn-primary" style="margin-top: 15px;" title="Submit IT Dir F1 to DP to start call for quotations in the ICT procurement cycle">
+                        Send to Directorate of Procurement (DP)
+                    </button>
+                </div>
+                <p class="dp-f1-send-hint">
+                    <strong>ICT Procurement Cycle (step 3):</strong> Send this F1 to <strong>DP</strong> for a call for quotations.
+                    Quotes return to <strong>ITDIR</strong> for tech/spec evaluation; complete the
+                    <strong>Cost Comparative Schedule</strong> (value for money) and attach it with F1 + quotations for
+                    <strong>AIAD</strong> due diligence / certificate; then DP raises an
+                    <strong>Electronic P/O</strong> (against DAF target/budget) or a <strong>Manual P/O</strong>
+                    (requires <strong>DAF</strong> authorisation if not provisioned) → delivery note → verification → payment.
+                </p>
+            </div>

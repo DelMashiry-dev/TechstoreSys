@@ -1,0 +1,30 @@
+<div id="zna-q-80" class="form-container">
+                <div class="form-header"><h2 class="form-title">ZNA Q 80 — Ledger Sheet</h2><button class="close-btn">&times;</button></div>
+                <p class="q982-intro">Stock ledger with dual-column official print (ZNA Q 80).</p>
+                <div class="qm-batch-form">
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Description</label><input type="text" id="q80Description" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Reference number</label><input type="text" id="q80RefNo" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Section number</label><input type="text" id="q80SectionNo" class="form-control"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Unit stamps</label><input type="text" id="q80UnitStamp" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Establishment</label><input type="text" id="q80Establishment" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Maximum</label><input type="text" id="q80Maximum" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Minimum</label><input type="text" id="q80Minimum" class="form-control"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Price of item</label><input type="text" id="q80Price" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Part number / specification</label><input type="text" id="q80PartNo" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Denomination of quantity</label><input type="text" id="q80Denomination" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Carried forward</label><input type="text" id="q80CarriedForward" class="form-control" readonly></div>
+                    </div>
+                    <div class="form-table-wrapper"><table class="qm-batch-table"><thead><tr>
+                        <th>Date</th><th>Consignor / Consignee</th><th>Voucher No.</th><th>Receipts</th><th>Issues</th><th>Balance</th><th class="qm-screen-only">Action</th>
+                    </tr></thead><tbody id="zna-q-80-table-body"></tbody></table></div>
+                    <button type="button" class="btn btn-primary qm-screen-only" style="margin:10px 0" onclick="addZnaQ80Row()">Add Row</button>
+                </div>
+                <button class="btn btn-success btn-save-module" style="margin-top:15px">Save Form</button>
+                <button class="btn btn-secondary btn-print-module" data-print-target="zna-q-80" style="margin-top:15px">Print Form</button>
+                <button class="btn btn-secondary btn-generate-report" data-report-module="zna-q-80" style="margin-top:15px">Generate Report</button>
+            </div>

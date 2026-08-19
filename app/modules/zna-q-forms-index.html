@@ -1,0 +1,46 @@
+<div id="zna-q-forms-index" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">SUMMARY OF Q FORMS — Index</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <p class="q982-intro">
+                    <span class="aso-ref">Annex A · Sec 1 Ch 7</span>
+                    Official ZNA-Q catalogue (Q-1 to Q-51, then 58, 71, 79, 80 and higher forms).
+                    <strong>In system</strong> = fillable module. <strong>Reference</strong> = listed for ASO completeness (open paper form as required).
+                </p>
+                <div class="module-toolbar">
+                    <input type="search" class="form-control" id="znaQIndexSearch" placeholder="Search Q number or title…" style="max-width:280px;">
+                    <select class="form-control" id="znaQIndexScope" style="max-width:220px;">
+                        <option value="all">All forms</option>
+                        <option value="implemented">In system only</option>
+                        <option value="reference">Reference only</option>
+                        <option value="itdir">IT Dir / stores</option>
+                        <option value="mt">MT / transport</option>
+                        <option value="rations">Rations</option>
+                        <option value="works">Works / buildings</option>
+                        <option value="unit">Unit admin</option>
+                        <option value="ammo">Ammunition</option>
+                        <option value="medical">Medical</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <select class="form-control" id="znaQIndexGroup" style="max-width:180px;" title="List layout">
+                        <option value="grouped">Group: In system / Reference</option>
+                        <option value="flat">Flat list</option>
+                    </select>
+                    <span id="znaQIndexStats" class="muted"></span>
+                </div>
+                <div class="form-table-wrapper">
+                    <table class="overview-table zna-q-index-table">
+                        <thead>
+                            <tr>
+                                <th>Form</th>
+                                <th>Subject matter</th>
+                                <th>Scope</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="znaQIndexBody"></tbody>
+                    </table>
+                </div>
+            </div>

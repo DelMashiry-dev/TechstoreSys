@@ -1,0 +1,36 @@
+<div id="zna-q-987" class="form-container">
+                <div class="form-header"><h2 class="form-title">ZNA Q 987 — Certificate of Stocktaking</h2><button class="close-btn">&times;</button></div>
+                <p class="q982-intro">Certificate of stocktaking with surplus / deficient columns.</p>
+                <div class="qm-batch-form">
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Section</label><input id="q987Section" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Certificate of stocktaking at</label><input id="q987At" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Year (20..)</label><input id="q987Year" class="form-control" placeholder="26"></div>
+                        <div class="form-col"><label class="form-label">No</label><input id="q987CertNo" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Section (footer group)</label><input id="q987SectionFoot" class="form-control"></div>
+                    </div>
+                    <div class="form-table-wrapper"><table class="qm-batch-table"><thead>
+                        <tr>
+                            <th data-help-key="ledger use">Ledger use</th>
+                            <th>Description</th>
+                            <th data-help-key="vaqs no">VAQS No</th>
+                            <th data-help-key="stock">Stock</th>
+                            <th data-help-key="bin bal">Bin Bal</th>
+                            <th data-help-key="ledger bal">Ledger Bal</th>
+                            <th data-help-key="surplus">Surplus</th>
+                            <th data-help-key="deficient">Deficient</th>
+                            <th data-help-key="tv/ctv/crv">TV/CTV/CRV</th>
+                            <th data-help-key="remarks">Remarks</th>
+                            <th class="qm-screen-only">Action</th>
+                        </tr>
+                    </thead><tbody id="zna-q-987-table-body"></tbody></table></div>
+                    <button type="button" class="btn btn-primary qm-screen-only" style="margin:10px 0" onclick="addZnaQ987Row()">Add Row</button>
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Signature — officer conducting stocktaking</label><input id="q987StockTakerSig" class="form-control"></div>
+                        <div class="form-col"><label class="form-label">Signature — storeholder</label><input id="q987StoreholderSig" class="form-control"></div>
+                    </div>
+                </div>
+                <button class="btn btn-success btn-save-module" style="margin-top:15px">Save Form</button>
+                <button class="btn btn-secondary btn-print-module" data-print-target="zna-q-987" style="margin-top:15px">Print Form</button>
+                <button class="btn btn-secondary btn-generate-report" data-report-module="zna-q-987" style="margin-top:15px">Generate Report</button>
+            </div>

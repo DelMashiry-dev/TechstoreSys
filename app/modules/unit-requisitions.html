@@ -1,0 +1,212 @@
+<div id="unit-requisitions" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Unit / Formation Requisitions</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="req-intro">
+                    Capture <strong>Loose Minutes</strong> and unit/formation requisitions as they arrive at IT Dir.
+                    On save / <strong>Route</strong>, the system checks <strong>inventory</strong>:
+                    in stock → <strong>ZNA Q 1033</strong> issue;
+                    not in stock + GL buying power → raise <strong>DP F1</strong> (electronic procurement);
+                    otherwise flag <em>await replenishment</em> or seek <strong>DAF funds manually</strong>.
+                    Computer equipment correspondence is filed under
+                    <strong>IT/34/1 COMPUTER EQUIPMENT AND MEDIA</strong>.
+                </p>
+
+                <div class="req-aging-strip" aria-label="Requisition aging summary">
+                    <div class="req-stat"><span class="req-stat-value" id="reqStatOpen">0</span><span class="req-stat-label">Open</span></div>
+                    <div class="req-stat"><span class="req-stat-value" id="reqStatNew">0</span><span class="req-stat-label">New 0–1d</span></div>
+                    <div class="req-stat"><span class="req-stat-value" id="reqStatAttention">0</span><span class="req-stat-label">Attention 2–3d</span></div>
+                    <div class="req-stat"><span class="req-stat-value" id="reqStatAging">0</span><span class="req-stat-label">Aging 4–7d</span></div>
+                    <div class="req-stat"><span class="req-stat-value req-stat-overdue" id="reqStatOverdue">0</span><span class="req-stat-label">Overdue 8d+</span></div>
+                    <div class="req-stat"><span class="req-stat-value" id="reqStatUrgent">0</span><span class="req-stat-label">Urgent</span></div>
+                </div>
+
+                <div class="dashboard-panel req-capture-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3 id="reqFormTitle">Capture Loose Minute / Requisition</h3>
+                    </div>
+                    <input type="hidden" id="reqEditId" value="">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Date Received (IT Dir)</label>
+                            <input type="date" class="form-control" id="reqReceivedDate">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">IT Dir Orderly Room stamp date</label>
+                            <input type="date" class="form-control" id="reqItDirStampDate" title="Date stamped in by IT Dir Orderly Room">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Req / Minute No.</label>
+                            <input type="text" class="form-control" id="reqNo" placeholder="Auto-generated">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Originating unit letter Ref</label>
+                            <input type="text" class="form-control" id="reqOriginRef" placeholder="e.g. MR/4/5">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">File / Action Ref</label>
+                            <div class="req-file-ref-row">
+                                <input type="text" class="form-control" id="reqFileRef" list="reqFileRefList" placeholder="e.g. IT/34/1">
+                                <button type="button" class="btn btn-ghost btn-sm" id="reqFileIt341Btn" title="File under IT/34/1 COMPUTER EQUIPMENT AND MEDIA">IT/34/1</button>
+                            </div>
+                            <datalist id="reqFileRefList">
+                                <option value="IT/34/1">COMPUTER EQUIPMENT AND MEDIA</option>
+                            </datalist>
+                            <p class="form-hint" id="reqFileRefHint">Correspondence file — laptop / computer equipment → <strong>IT/34/1 COMPUTER EQUIPMENT AND MEDIA</strong></p>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Doc type</label>
+                            <select class="form-control" id="reqDocType">
+                                <option value="loose_minute">Loose Minute</option>
+                                <option value="letter">Covering letter</option>
+                                <option value="requisition_letter">Unit requisition letter</option>
+                                <option value="verbal">Verbal / counter</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Origin wing / office (detail)</label>
+                            <input type="text" class="form-control" id="reqOriginUnitDetail" placeholder="e.g. Mapping and Research (MID)">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label" for="reqUnit">Unit / Formation (from)</label>
+                            <div class="zna-unit-picker">
+                                <input type="search" class="form-control zna-unit-filter" id="reqUnitFilter"
+                                    placeholder="Type to filter units…" autocomplete="off" aria-label="Filter units">
+                                <select class="form-control zna-unit-select" id="reqUnit" title="Requesting unit / formation">
+                                    <option value="">— Select unit / formation —</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Requested By</label>
+                            <input type="text" class="form-control" id="reqRequestedBy" placeholder="Rank, Name (e.g. Maj A Munyoro)">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Contact / Ext</label>
+                            <input type="text" class="form-control" id="reqContact" placeholder="Phone / extension">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Action / Info</label>
+                            <input type="text" class="form-control" id="reqActionInfo" value="Action: IT Dir · Info: File" placeholder="Action: IT Dir · Info: GS Br, File">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col" style="flex: 2;">
+                            <label class="form-label">Subject / Item description</label>
+                            <input type="text" class="form-control" id="reqSubject" placeholder="e.g. Request for toner · Desktop, printer and flash drives">
+                            <p class="form-hint">One clear line. Copied to Item(s) if that field is left blank.</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Justification / body of minute</label>
+                        <textarea class="form-control" id="reqJustification" rows="2" placeholder="Why the unit needs the items (board, trg, capacity rating cards…)"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Item Category</label>
+                            <select class="form-control" id="reqCategory"></select>
+                        </div>
+                        <div class="form-col" style="flex: 2;">
+                            <label class="form-label">Item(s) detail (optional if same as subject)</label>
+                            <input type="text" class="form-control" id="reqItem" placeholder="Leave blank to use Subject, or list exact part nos / qty breakdown">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" class="form-control" id="reqQty" min="1" step="1" value="1">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Priority</label>
+                            <select class="form-control" id="reqPriority"></select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Status</label>
+                            <select class="form-control" id="reqStatus"></select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Actioned Date</label>
+                            <input type="date" class="form-control" id="reqActionedDate" title="Set when issued / closed">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes / Remarks</label>
+                        <textarea class="form-control" id="reqNotes" rows="2" placeholder="Linked printer ZA, partial issue notes, voucher ref..."></textarea>
+                    </div>
+
+                    <div class="req-minute-stamp" id="reqMinuteStamp">
+                        <div class="req-minute-stamp-head">
+                            <h4>IT Dir Orderly Room stamp — Seen &amp; processed</h4>
+                            <p>When the letter arrives at IT Dir it is stamped. Each Head of Department fills <strong>SIGNATURE</strong> (initials) and <strong>DATE</strong> to confirm seen and processed.</p>
+                        </div>
+                        <div class="form-table-wrapper req-minute-stamp-table-wrap">
+                            <table class="req-minute-stamp-table overview-table">
+                                <thead>
+                                    <tr>
+                                        <th>APPT</th>
+                                        <th>SIGNATURE</th>
+                                        <th>DATE</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reqMinuteSheetBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="module-actions">
+                        <button type="button" class="btn btn-success" id="reqSaveBtn">Save Requisition</button>
+                        <button type="button" class="btn btn-ghost" id="reqClearBtn">Clear Form</button>
+                    </div>
+                </div>
+
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" id="reqTableSearch" data-search-history-key="unit-requisitions" data-search-history="1" placeholder="Search requisitions...">
+                    <select class="form-control" id="reqFilterStatus" title="Status filter" style="max-width:180px;">
+                        <option value="open">Open only</option>
+                        <option value="all">All statuses</option>
+                        <option value="received">Received</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="part_issued">Part Issued</option>
+                        <option value="issued">Issued / Closed</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="closed">Closed (issued/cancelled)</option>
+                    </select>
+                    <select class="form-control" id="reqFilterAge" title="Age filter" style="max-width:180px;">
+                        <option value="all">All ages</option>
+                        <option value="new">New 0–1d</option>
+                        <option value="attention">Attention 2–3d</option>
+                        <option value="aging">Aging 4–7d</option>
+                        <option value="overdue">Overdue 8d+</option>
+                    </select>
+                    <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                </div>
+
+                <div class="form-table-wrapper">
+                    <table class="overview-table req-table">
+                        <thead>
+                            <tr>
+                                <th>Received</th>
+                                <th>Req No.</th>
+                                <th>Unit / Formation</th>
+                                <th>Item / Subject</th>
+                                <th>Qty</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Age</th>
+                                <th>Requested By</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requisitions-table-body"></tbody>
+                    </table>
+                </div>
+            </div>

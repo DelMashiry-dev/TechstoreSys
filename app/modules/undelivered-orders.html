@@ -1,0 +1,130 @@
+<div id="undelivered-orders" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Undelivered Purchase Order Items</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="req-intro">
+                    <span class="aso-ref">ASO Pt 1 Ch 7 / Ch 26</span>
+                    Track undelivered / part-delivered PO lines (IT DIR register). Open lines age automatically and appear in Notifications.
+                    On receipt, check against voucher / DN. Quantity or description discrepancies between military units: raise
+                    <strong>ZNA Q 985</strong> Discrepancy Report (nav → ZNA QM Forms).
+                    Register as at November 2026 is loaded by default.
+                </p>
+
+                <div class="req-aging-strip" aria-label="Undelivered summary">
+                    <div class="req-stat"><span class="req-stat-value" id="undStatOpen">0</span><span class="req-stat-label">Open lines</span></div>
+                    <div class="req-stat"><span class="req-stat-value" id="undStatAwaiting">0</span><span class="req-stat-label">Awaiting</span></div>
+                    <div class="req-stat"><span class="req-stat-value" id="undStatPartial">0</span><span class="req-stat-label">Part delivered</span></div>
+                    <div class="req-stat"><span class="req-stat-value req-stat-overdue" id="undStatOverdue">0</span><span class="req-stat-label">Overdue 31d+</span></div>
+                    <div class="req-stat"><span class="req-stat-value" id="undStatQty">0</span><span class="req-stat-label">Qty outstanding</span></div>
+                </div>
+
+                <div class="dashboard-panel req-capture-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3 id="undFormTitle">Capture Undelivered Item</h3>
+                    </div>
+                    <input type="hidden" id="undEditId" value="">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">As At Date</label>
+                            <input type="date" class="form-control" id="undAsAtDate">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Order / Follow-up Date</label>
+                            <input type="date" class="form-control" id="undOrderDate">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Supplier</label>
+                            <input type="text" class="form-control" id="undSupplier" placeholder="e.g. Upright / Shakeline / Sigcomx" list="undSupplierHints">
+                            <datalist id="undSupplierHints">
+                                <option value="Upright"></option>
+                                <option value="Shakeline"></option>
+                                <option value="Sigcomx"></option>
+                            </datalist>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">P/Order No.</label>
+                            <input type="text" class="form-control" id="undPoNo" placeholder="e.g. DP 564/2025">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Category</label>
+                            <select class="form-control" id="undCategory"></select>
+                        </div>
+                        <div class="form-col" style="flex: 1.6;">
+                            <label class="form-label">Item</label>
+                            <input type="text" class="form-control" id="undItem" placeholder="Official designation of goods">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Qty Ordered</label>
+                            <input type="number" class="form-control" id="undQty" min="1" step="1" value="1">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Qty Delivered</label>
+                            <input type="number" class="form-control" id="undQtyDelivered" min="0" step="1" value="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">UoM</label>
+                            <input type="text" class="form-control" id="undUom" value="ea">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Status</label>
+                            <select class="form-control" id="undStatus"></select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Supplier Contact</label>
+                            <input type="text" class="form-control" id="undContact" placeholder="Phone">
+                        </div>
+                        <div class="form-col" style="flex: 1.4;">
+                            <label class="form-label">Remarks</label>
+                            <input type="text" class="form-control" id="undRemarks" placeholder="awaiting delivery / delivered 03 bal 01">
+                        </div>
+                    </div>
+                    <div class="module-actions">
+                        <button type="button" class="btn btn-success" id="undSaveBtn">Save Item</button>
+                        <button type="button" class="btn btn-ghost" id="undClearBtn">Clear Form</button>
+                        <button type="button" class="btn btn-primary" id="undImportSeedBtn">Load Nov 2026 Register</button>
+                    </div>
+                </div>
+
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" id="undTableSearch" data-search-history-key="undelivered-orders" data-search-history="1" placeholder="Search undelivered items...">
+                    <select class="form-control" id="undFilterStatus" style="max-width:180px;">
+                        <option value="open">Open only</option>
+                        <option value="all">All statuses</option>
+                        <option value="awaiting">Awaiting Delivery</option>
+                        <option value="partial">Part Delivered</option>
+                        <option value="delivered">Fully Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                    <select class="form-control" id="undFilterCategory" style="max-width:180px;"></select>
+                    <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                </div>
+
+                <div class="form-table-wrapper">
+                    <table class="overview-table">
+                        <thead>
+                            <tr>
+                                <th>Supplier</th>
+                                <th>P/Order</th>
+                                <th>Category</th>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th>Delivered</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                                <th>Age</th>
+                                <th>Remarks</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="undelivered-table-body"></tbody>
+                    </table>
+                </div>
+            </div>

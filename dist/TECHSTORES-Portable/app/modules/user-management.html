@@ -1,0 +1,83 @@
+<div id="user-management" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">User Management</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <div class="access-denied-banner" id="userMgmtDenied">Only Administrators can manage users.</div>
+
+                <div id="userMgmtContent">
+                    <p style="margin-bottom: 16px; color: #555;">
+                        Create and manage system users. Access levels control which modules and actions are available after login.
+                    </p>
+
+                    <div class="reports-controls" style="margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 12px; color: var(--primary); font-size: 1.05rem;">Add / Update User</h3>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="newUserName" placeholder="Display name">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" id="newUserUsername" placeholder="Login username">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" id="newUserPassword" placeholder="Password">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Access Level</label>
+                                <select class="form-control" id="newUserRole">
+                                    <option value="admin">Administrator — full access + users</option>
+                                    <option value="army_commander">Army Commander — command messages</option>
+                                    <option value="brig_gs">Brigadier GS — command messages</option>
+                                    <option value="brig_as">Brigadier AS — command messages</option>
+                                    <option value="brig_qs">Brigadier QS — command messages</option>
+                                    <option value="director">Director IT Dir (Col) — whole system</option>
+                                    <option value="deputy_director">Deputy Director (Lt Col) — whole system</option>
+                                    <option value="aqso2">AQSO2 (Maj) — whole system</option>
+                                    <option value="dir_aiad">Director AIAD — command messages</option>
+                                    <option value="dir_daf">Director DAF — command messages</option>
+                                    <option value="dir_dp">Director DP — command messages</option>
+                                    <option value="techstores_officer">TechStores Officer — whole system</option>
+                                    <option value="rq">RQ — whole system</option>
+                                    <option value="store_officer" selected>Store Officer — ops modules</option>
+                                    <option value="orderly_clerk">Orderly Room / Chief Clerk — DF + requisitions</option>
+                                    <option value="storeman">Storeman (Cpl) — issue / receive related</option>
+                                    <option value="rp">RP — Gate Register only</option>
+                                    <option value="workshop">Workshop — workshop module related</option>
+                                    <option value="viewer">Viewer — read / reports only</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="module-actions" style="margin-top: 8px;">
+                            <button class="btn btn-success" id="saveUserBtn" type="button">Save User</button>
+                            <button class="btn btn-ghost" id="resetUserFormBtn" type="button">Clear Form</button>
+                        </div>
+                    </div>
+
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" data-search-target="users-table-body" placeholder="Search users...">
+
+                    <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                </div>
+                    <div class="form-table-wrapper">
+                        <table class="users-admin-table overview-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Username</th>
+                                    <th>Access Level</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>

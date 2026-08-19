@@ -1,0 +1,167 @@
+<div id="purchase-orders" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Purchase Orders</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="req-intro po-screen-only">
+                    <span class="aso-ref">ASO Pt 1 Ch 26</span>
+                    Electronic purchase order — SAP-style layout. Complete the document, add to the register, then save.
+                    Cancelled POs: pin all copies together and file in numerical sequence.
+                </p>
+
+                <div class="po-electronic-doc">
+                    <div class="po-doc-header">
+                        <div class="po-doc-vendor-block">
+                            <label class="po-doc-supplier-label" for="poSupplierName">Supplier's Name</label>
+                            <div class="po-supplier-picker">
+                                <select id="poSupplierPick" class="form-control po-supplier-pick" aria-label="Select registered supplier">
+                                    <option value="">— Select from register —</option>
+                                </select>
+                                <input type="text" id="poSupplierName" list="poSupplierList" class="po-doc-vendor-name form-control" placeholder="Or type supplier's name" autocomplete="off">
+                                <datalist id="poSupplierList"></datalist>
+                            </div>
+                            <textarea id="poSupplierAddress" class="po-doc-vendor-addr form-control" rows="2" placeholder="Supplier address (optional)"></textarea>
+                        </div>
+                        <div class="po-doc-title-block">
+                            <div class="po-doc-title">Purchase Order</div>
+                            <table class="po-doc-ref-box" aria-label="PO reference">
+                                <tbody>
+                                    <tr>
+                                        <td>Our Ref</td>
+                                        <td><input type="text" id="poNumber" class="form-control po-doc-ref-input" placeholder="e.g. 4204004933"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Date</td>
+                                        <td><input type="date" id="poDate" class="form-control po-doc-ref-input"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="po-doc-meta-grid">
+                        <label class="po-doc-meta-item">
+                            <span>Vendor</span>
+                            <input type="text" id="poVendorNo" class="form-control" placeholder="Vendor number">
+                        </label>
+                        <label class="po-doc-meta-item">
+                            <span>Deliver to</span>
+                            <input type="text" id="poDeliverTo" class="form-control" value="IT DIR / 04 731831" placeholder="Delivery location">
+                        </label>
+                        <label class="po-doc-meta-item">
+                            <span>Delivery Date</span>
+                            <input type="date" id="poDeliveryDate" class="form-control">
+                        </label>
+                        <label class="po-doc-meta-item">
+                            <span>Payment Terms</span>
+                            <input type="text" id="poPaymentTerms" class="form-control" placeholder="e.g. 30 days">
+                        </label>
+                        <label class="po-doc-meta-item">
+                            <span>Currency</span>
+                            <select id="poCurrency" class="form-control">
+                                <option value="ZiG">ZiG</option>
+                                <option value="USD">USD</option>
+                                <option value="ZWL">ZWL</option>
+                                <option value="ZAR">ZAR</option>
+                            </select>
+                        </label>
+                        <label class="po-doc-meta-item">
+                            <span>GL Account</span>
+                            <select id="poGl" class="form-control po-gl">
+                                <option value="6122100009">6122100009 - Office Supplies &amp; Services (ZOFF)</option>
+                                <option value="2200600002">2200600002 - Computer Consumables (legacy)</option>
+                                <option value="2200600003">2200600003 - Software Licenses</option>
+                                <option value="220200002">220200002 - Tech Equipment Maintenance</option>
+                                <option value="2201900002">2201900002 - Spare Parts</option>
+                                <option value="3112210001">3112210001 - ICT Equipment</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="module-toolbar po-screen-only">
+                        <input type="search" class="form-control table-search" data-search-target="purchase-orders-lines-body" placeholder="Search line items...">
+                        <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                        <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                    </div>
+
+                    <div class="form-table-wrapper po-doc-lines-wrap">
+                        <table class="po-doc-lines-table">
+                            <thead>
+                                <tr>
+                                    <th>Item (Ser)</th>
+                                    <th>Material Number</th>
+                                    <th>Order Qty</th>
+                                    <th>Unit</th>
+                                    <th>Description</th>
+                                    <th>Price Per Unit</th>
+                                    <th>Net Value</th>
+                                    <th class="po-screen-only">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="purchase-orders-lines-body">
+                                <tr>
+                                    <td><input type="text" class="form-control po-line-item" placeholder="00010" value="00010"></td>
+                                    <td><input type="text" class="form-control po-line-material" placeholder="Material number"></td>
+                                    <td><input type="number" class="form-control po-line-qty" min="0" step="any"></td>
+                                    <td><input type="text" class="form-control po-line-unit" placeholder="each" value="each"></td>
+                                    <td><input type="text" class="form-control po-line-desc" placeholder="Description"></td>
+                                    <td><input type="number" class="form-control po-line-price" min="0" step="0.01"></td>
+                                    <td><input type="number" class="form-control po-line-net" min="0" step="0.01" readonly tabindex="-1"></td>
+                                    <td class="po-screen-only"><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="6" class="po-doc-total-label">Total net value excl. tax <span id="poDocTotalCurrency">ZiG</span></td>
+                                    <td colspan="2"><strong id="poDocTotalDisplay">—</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <button type="button" class="btn btn-primary po-screen-only" style="margin: 10px 0;" onclick="addPurchaseOrderLineRow()">Add Line Item</button>
+
+                    <label class="po-doc-signature po-screen-only">
+                        <span>Authorised signature / initials</span>
+                        <input type="text" id="poSignature" class="form-control" placeholder="Signature">
+                    </label>
+                </div>
+
+                <div class="po-register-section po-screen-only">
+                    <h3 class="po-register-heading">PO Register</h3>
+                    <p class="po-register-hint">Saved purchase orders linked to GL commitments.</p>
+
+                    <div class="module-toolbar">
+                        <input type="search" class="form-control table-search" data-search-target="purchase-orders-table-body" placeholder="Search register...">
+                        <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                        <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                    </div>
+
+                    <div class="form-table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Supplier</th>
+                                    <th>PO Number</th>
+                                    <th>Total</th>
+                                    <th>GL Account</th>
+                                    <th>Vendor No.</th>
+                                    <th>Signature</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="purchase-orders-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="po-doc-actions po-screen-only">
+                    <button type="button" class="btn btn-secondary" onclick="newPurchaseOrderDocument()">New PO</button>
+                    <button type="button" class="btn btn-primary" onclick="addCurrentPoToRegister()">Add to Register</button>
+                    <button type="button" class="btn btn-success btn-save-module">Save Purchase Orders</button>
+                    <button type="button" class="btn btn-secondary btn-print-module" data-print-target="purchase-orders">Print PO</button>
+                    <button type="button" class="btn btn-secondary btn-generate-report" data-report-module="purchase-orders">Generate Report</button>
+                </div>
+            </div>

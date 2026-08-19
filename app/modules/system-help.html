@@ -1,0 +1,78 @@
+<div id="system-help" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title system-help-title">
+                        <img class="system-help-title-icon" src="../assets/nav-icons/system-help.png" alt="" width="36" height="36">
+                        <span>System Help / Dictionary</span>
+                    </h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="q982-intro">
+                    Standing guidance for TechStores operators — retention, backups, and where to find more help.
+                    Use the <strong>System Dictionary</strong> below for every term, GL, form, module, role and status.
+                    Learning Centre covers process charts.
+                </p>
+
+                <div class="dashboard-panel system-help-card" id="systemDictionary">
+                    <div class="sys-dict-header">
+                        <h3 style="margin:0;">System Dictionary</h3>
+                        <span class="muted sys-dict-count" id="systemDictionaryCount">0 terms</span>
+                    </div>
+                    <p class="muted" style="margin:6px 0 12px;font-size:0.82rem;">
+                        Exhaustive glossary of money, stock, procurement, Q forms, modules, roles, organisation and statuses used in this install.
+                        Click a card with <strong>Open →</strong> to jump to that module or form.
+                    </p>
+                    <div class="sys-dict-toolbar">
+                        <input type="search" id="systemDictionarySearch" class="form-control"
+                            placeholder="Search terms (e.g. Buying Power, Q 1033, DAF, Route)…"
+                            autocomplete="off" aria-label="Search system dictionary">
+                        <select id="systemDictionaryGroup" class="form-control" aria-label="Filter by section">
+                            <option value="all">All sections</option>
+                        </select>
+                        <button type="button" class="btn btn-ghost btn-sm" id="systemDictionaryClear">Clear</button>
+                    </div>
+                    <p class="sys-dict-empty muted" id="systemDictionaryEmpty" hidden>No matching terms. Try another word or clear the filter.</p>
+                    <div id="systemDictionaryList" class="sys-dict-list" aria-live="polite"></div>
+                </div>
+
+                <div class="dashboard-panel system-help-card" id="retentionHelpCard">
+                    <h3 style="margin-top:0;">ASO Ch 25 — Q records retention</h3>
+                    <p class="retention-help-body">
+                        Keep completed ledgers, vouchers, and backups for <strong>3 years</strong>
+                        and/or only after Army Internal Audit before destruction.
+                        Export a Backup after major stock takes and month-end.
+                    </p>
+                    <div class="module-actions" style="margin-top:10px;">
+                        <button type="button" class="btn btn-secondary btn-sm" id="retentionBackupBtn">Backup now</button>
+                        <button type="button" class="btn btn-ghost btn-sm" data-target-nav="process-guides">Open Learning Centre</button>
+                    </div>
+                    <p class="muted" style="margin:10px 0 0;font-size:0.78rem;">
+                        Tip: use <strong>START-SYSTEM.bat</strong> so data saves to <code>techstores.db</code> on disk.
+                    </p>
+                </div>
+
+                <div class="dashboard-panel system-help-card">
+                    <h3 style="margin-top:0;">Quick orientation</h3>
+                    <ul class="system-help-list">
+                        <li><strong>Dashboard top strip</strong> — Notifications (Orderly Room, IT Dir, DP, POs).</li>
+                        <li><strong>Orderly Room (DF)</strong> — file letters &amp; requisitions; alert TechStores so work is not piled up.</li>
+                        <li><strong>Unit Requisitions</strong> — action open requests; age shows in Alerts.</li>
+                        <li><strong>Universal Search</strong> — Ctrl+K to jump to modules, GLs, Q forms, dictionary terms, and to track issued controlled stores by <strong>ZA</strong> or <strong>Serial Number</strong> (shows current location / holder).</li>
+                        <li><strong>System Dictionary</strong> — definitions for every money, stock, form and role term (above).</li>
+                    </ul>
+                    <div class="module-actions" style="margin-top:8px;">
+                        <button type="button" class="btn btn-ghost btn-sm" data-target-nav="orderly-room">Orderly Room</button>
+                        <button type="button" class="btn btn-ghost btn-sm" data-target-nav="unit-requisitions">Unit Requisitions</button>
+                        <button type="button" class="btn btn-ghost btn-sm" data-target-nav="duties-roles">Duties &amp; Roles</button>
+                        <button type="button" class="btn btn-ghost btn-sm" data-target-nav="process-guides">Learning Centre</button>
+                    </div>
+                </div>
+
+                <div class="dashboard-panel system-help-card">
+                    <h3 style="margin-top:0;">Demo access levels</h3>
+                    <p class="muted" style="margin-top:0;font-size:0.82rem;">
+                        Default usernames (password = username + <code>123</code>, except viewer = <code>view123</code>):
+                        admin, dir, dd, aqso2, tso, rq, store, orderly, storeman, rp, workshop, viewer.
+                    </p>
+                </div>
+            </div>

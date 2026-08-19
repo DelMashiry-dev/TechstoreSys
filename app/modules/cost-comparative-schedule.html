@@ -1,0 +1,189 @@
+<div id="cost-comparative-schedule" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Cost Comparative Schedule</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="q982-intro">
+                    Filled at <strong>IT Dir</strong> or <strong>DP</strong>. Compares vendor quotations and selects the best
+                    <strong>value-for-money</strong> supplier. Attach with <strong>DP F1</strong> and the listed vendors’
+                    quotations, then send to <strong>AIAD Due Diligence</strong> for the Due Diligence Certificate.
+                </p>
+
+                <div class="ccs-meta form-row">
+                    <div class="form-col">
+                        <label class="form-label" for="ccsRef">Schedule ref</label>
+                        <input type="text" class="form-control" id="ccsRef" placeholder="e.g. CCS/IT/2026/001" autocomplete="off">
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label" for="ccsDate">Date</label>
+                        <input type="date" class="form-control" id="ccsDate">
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label" for="ccsPreparedAt">Prepared at</label>
+                        <select class="form-control" id="ccsPreparedAt">
+                            <option value="IT Dir">IT Dir</option>
+                            <option value="DP">DP (Directorate Procurement)</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label" for="ccsDpF1Ref">Linked DP F1 ref</label>
+                        <input type="text" class="form-control" id="ccsDpF1Ref" list="ccsDpF1RefList" placeholder="e.g. DP-2026-0001" autocomplete="off">
+                        <datalist id="ccsDpF1RefList"></datalist>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label" for="ccsCurrency">Currency</label>
+                        <select class="form-control" id="ccsCurrency">
+                            <option value="USD">USD</option>
+                            <option value="ZiG">ZiG</option>
+                            <option value="ZWL">ZWL</option>
+                            <option value="ZAR">ZAR</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="module-actions ccs-toolbar" style="margin-bottom:12px;">
+                    <button type="button" class="btn btn-secondary btn-sm" id="ccsPrefillDpF1Btn">Prefill items from DP F1</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="ccsLoadSuppliersBtn">Load suppliers → Vendor A–G</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="ccsSuggestBestBtn" title="Pick lowest total quote as value-for-money suggestion">Suggest best (lowest total)</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="ccsAddRowBtn">Add item row</button>
+                </div>
+
+                <div class="form-table-wrapper ccs-table-wrap">
+                    <table class="ccs-table" id="ccsTable">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">Ser</th>
+                                <th rowspan="2">Item description</th>
+                                <th rowspan="2">Qty</th>
+                                <th colspan="7" class="ccs-vendor-group">Vendor quotations (attach quotes for each listed vendor)</th>
+                                <th rowspan="2" class="ccs-screen-only">Action</th>
+                            </tr>
+                            <tr class="ccs-vendor-name-row">
+                                <th><input type="text" class="form-control ccs-vendor-name" data-vendor="A" id="ccsVendorA" placeholder="Vendor A" aria-label="Vendor A name"></th>
+                                <th><input type="text" class="form-control ccs-vendor-name" data-vendor="B" id="ccsVendorB" placeholder="Vendor B" aria-label="Vendor B name"></th>
+                                <th><input type="text" class="form-control ccs-vendor-name" data-vendor="C" id="ccsVendorC" placeholder="Vendor C" aria-label="Vendor C name"></th>
+                                <th><input type="text" class="form-control ccs-vendor-name" data-vendor="D" id="ccsVendorD" placeholder="Vendor D" aria-label="Vendor D name"></th>
+                                <th><input type="text" class="form-control ccs-vendor-name" data-vendor="E" id="ccsVendorE" placeholder="Vendor E" aria-label="Vendor E name"></th>
+                                <th><input type="text" class="form-control ccs-vendor-name" data-vendor="F" id="ccsVendorF" placeholder="Vendor F" aria-label="Vendor F name"></th>
+                                <th><input type="text" class="form-control ccs-vendor-name" data-vendor="G" id="ccsVendorG" placeholder="Vendor G" aria-label="Vendor G name"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="ccs-table-body"></tbody>
+                        <tfoot>
+                            <tr class="ccs-total-row">
+                                <td colspan="3"><strong>Totals</strong></td>
+                                <td class="ccs-total" data-vendor="A">—</td>
+                                <td class="ccs-total" data-vendor="B">—</td>
+                                <td class="ccs-total" data-vendor="C">—</td>
+                                <td class="ccs-total" data-vendor="D">—</td>
+                                <td class="ccs-total" data-vendor="E">—</td>
+                                <td class="ccs-total" data-vendor="F">—</td>
+                                <td class="ccs-total" data-vendor="G">—</td>
+                                <td class="ccs-screen-only"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="ccs-decision dashboard-panel" style="margin-top:14px;">
+                    <h3 style="margin-top:0;">Winning vendor (value for money)</h3>
+                    <div class="form-row">
+                        <div class="form-col" style="flex:1.2;">
+                            <label class="form-label" for="ccsWinningVendor">Winning vendor</label>
+                            <input type="text" class="form-control" id="ccsWinningVendor" list="ccsWinningVendorList" placeholder="Selected supplier / vendor" autocomplete="off">
+                            <datalist id="ccsWinningVendorList"></datalist>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="ccsWinningLetter">Vendor column</label>
+                            <select class="form-control" id="ccsWinningLetter">
+                                <option value="">—</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                                <option value="F">F</option>
+                                <option value="G">G</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="ccsStatus">Status</label>
+                            <select class="form-control" id="ccsStatus">
+                                <option value="draft">Draft — IT / DP</option>
+                                <option value="ready_aiad">Ready for AIAD due diligence</option>
+                                <option value="with_aiad">With AIAD Due Diligence Dept</option>
+                                <option value="dd_cert_awarded">Due Diligence Certificate awarded</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="ccsReasons">Reasons (value for money — not always cheapest)</label>
+                        <textarea class="form-control" id="ccsReasons" rows="3" placeholder="e.g. Best overall value: price, quality, lead time, warranty, after-sales support…"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="ccsAttachmentsNote">Attachments (with this schedule)</label>
+                        <textarea class="form-control" id="ccsAttachmentsNote" rows="2" placeholder="DP F1 ref · Quotation Vendor A · Quotation Vendor B · Spec Eval …"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="ccsAiadCert">AIAD Due Diligence Certificate ref</label>
+                        <input type="text" class="form-control" id="ccsAiadCert" placeholder="Completed when AIAD returns the certificate" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="ccs-signoffs form-table-wrapper" style="margin-top:14px;">
+                    <table class="ccs-sign-table">
+                        <thead>
+                            <tr>
+                                <th>Role</th>
+                                <th>No.</th>
+                                <th>Rank</th>
+                                <th>Name</th>
+                                <th>Sig.</th>
+                                <th>Date</th>
+                                <th>Appt.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Compiled By</td>
+                                <td><input type="text" class="form-control" id="ccsCompNo"></td>
+                                <td><input type="text" class="form-control" id="ccsCompRank"></td>
+                                <td><input type="text" class="form-control" id="ccsCompName"></td>
+                                <td><input type="text" class="form-control" id="ccsCompSig" placeholder="Initials"></td>
+                                <td><input type="date" class="form-control" id="ccsCompDate"></td>
+                                <td><input type="text" class="form-control" id="ccsCompAppt"></td>
+                            </tr>
+                            <tr>
+                                <td>Checked By</td>
+                                <td><input type="text" class="form-control" id="ccsCheckNo"></td>
+                                <td><input type="text" class="form-control" id="ccsCheckRank"></td>
+                                <td><input type="text" class="form-control" id="ccsCheckName"></td>
+                                <td><input type="text" class="form-control" id="ccsCheckSig" placeholder="Initials"></td>
+                                <td><input type="date" class="form-control" id="ccsCheckDate"></td>
+                                <td><input type="text" class="form-control" id="ccsCheckAppt"></td>
+                            </tr>
+                            <tr>
+                                <td>Approved By</td>
+                                <td><input type="text" class="form-control" id="ccsApprNo"></td>
+                                <td><input type="text" class="form-control" id="ccsApprRank"></td>
+                                <td><input type="text" class="form-control" id="ccsApprName"></td>
+                                <td><input type="text" class="form-control" id="ccsApprSig" placeholder="Initials"></td>
+                                <td><input type="date" class="form-control" id="ccsApprDate"></td>
+                                <td><input type="text" class="form-control" id="ccsApprAppt"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="module-actions" style="margin-top:14px;">
+                    <button type="button" class="btn btn-primary btn-sm" id="ccsSaveBtn">Save schedule</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="ccsSendAiadBtn">Mark ready / send to AIAD</button>
+                    <button type="button" class="btn btn-ghost btn-sm" data-target-nav="dp-f1-form">Open DP F1</button>
+                    <button type="button" class="btn btn-ghost btn-sm" data-target-nav="dp-procurement">ICT Procurement Cycle</button>
+                    <button type="button" class="btn btn-ghost btn-sm" data-target-nav="suppliers-contracts">Suppliers</button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-print-module" data-print-target="cost-comparative-schedule">Print</button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-generate-report" data-report-module="cost-comparative-schedule">Generate Report</button>
+                </div>
+                <p class="muted" id="ccsSaveStatus" style="margin-top:8px;font-size:0.8rem;"></p>
+            </div>
