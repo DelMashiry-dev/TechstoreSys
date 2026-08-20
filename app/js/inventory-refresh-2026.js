@@ -205,3 +205,77 @@ function applyInventoryRefreshAug2026(opts = {}) {
 
 window.applyInventoryRefreshAug2026 = applyInventoryRefreshAug2026;
 window.INVENTORY_REFRESH_RECEIPTS_2026 = INVENTORY_REFRESH_RECEIPTS_2026;
+
+const DL380_GEN11_RECEIPT = {
+    itemId: 'ict-equipment__hpe-proliant-dl380-gen11',
+    name: 'HPE ProLiant DL380 Gen11',
+    sourceRef: 'RV/IT/0826/SRV-DL380-G11',
+    source: 'inventory-receipt-dl380-g11'
+};
+
+/** Receipt HPE ProLiant DL380 Gen11 server (qty 1). Idempotent. */
+function receiptDl380Gen11Server(opts = {}) {
+    if (!appState) return { ok: false, reason: 'no-state' };
+    const force = !!opts.force;
+    const inv = typeof ensureStoresInventory === 'function'
+        ? ensureStoresInventory()
+        : (appState.storesInventory = appState.storesInventory || { openings: {}, transactions: [] });
+    if (!inv.openings) inv.openings = {};
+    if (!Array.isArray(inv.transactions)) inv.transactions = [];
+
+    const row = DL380_GEN11_RECEIPT;
+    const exists = (inv.transactions || []).some((t) =>
+        t.source === row.source && t.sourceRef === row.sourceRef
+        && t.itemId === row.itemId && t.type === 'receipt'
+    );
+    if (exists && !force) {
+        return { ok: false, reason: 'already', itemId: row.itemId };
+    }
+
+    const today = typeof todayIsoDate === 'function' ? todayIsoDate() : new Date().toISOString().slice(0, 10);
+    if (typeof postStockTransaction === 'function') {
+        postStockTransaction({
+            type: 'receipt',
+            itemId: row.itemId,
+            item: row.name,
+            category: 'ict-equipment',
+            gl: '3112210001',
+            qty: 1,
+            party: 'ICT procurement — server receipt',
+            description: 'HPE ProLiant DL380 Gen11 server — stores receipt',
+            voucherNo: row.sourceRef,
+            source: row.source,
+            sourceRef: row.sourceRef,
+            date: today,
+            silent: true,
+            skipRender: true
+        });
+    } else {
+        inv.transactions.push({
+            id: `stk-dl380-${Date.now()}`,
+            date: today,
+            type: 'receipt',
+            itemId: row.itemId,
+            category: 'ict-equipment',
+            item: row.name,
+            description: 'HPE ProLiant DL380 Gen11 server — stores receipt',
+            qty: 1,
+            uom: 'EA',
+            gl: '3112210001',
+            voucherNo: row.sourceRef,
+            party: 'ICT procurement — server receipt',
+            source: row.source,
+            sourceRef: row.sourceRef,
+            by: 'Inventory receipt',
+            createdAt: new Date().toISOString()
+        });
+    }
+
+    if (typeof saveState === 'function') saveState();
+    if (typeof renderProductStockRegister === 'function') renderProductStockRegister();
+    if (typeof renderVoucherInventoryTables === 'function') renderVoucherInventoryTables();
+    if (typeof updateDashboard === 'function') updateDashboard();
+    return { ok: true, itemId: row.itemId, name: row.name, qty: 1 };
+}
+
+window.receiptDl380Gen11Server = receiptDl380Gen11Server;

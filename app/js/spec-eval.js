@@ -39,16 +39,20 @@ const SPEC_EVAL_TEMPLATES = {
         ['Drivers / Compatibility', 'Windows 10/11 compatible', 'IT-DIR standard OS support']
     ],
     server: [
-        ['Processor', 'Xeon / EPYC or equivalent server CPU', 'Workload and virtualization needs'],
-        ['RAM', '32 GB ECC minimum (expandable)', 'Stability and capacity'],
-        ['Storage', 'Enterprise SSD/HDD RAID configuration', 'Data integrity and performance'],
-        ['RAID / Controller', 'Hardware RAID as specified', 'Redundancy'],
-        ['Network', 'Dual Gigabit / 10Gb as required', 'Service availability'],
-        ['Power', 'Redundant PSU preferred', 'Uptime'],
-        ['Form Factor', 'Rack / Tower as specified', 'Server room fit'],
-        ['Management', 'iLO / iDRAC / IPMI remote management', 'Remote administration'],
-        ['OS Support', 'Windows Server / Linux as required', 'Platform alignment'],
-        ['Warranty', '3–5 years with onsite support', 'Mission-critical cover']
+        ['Operating System', 'Windows Server 2019/2022 and licence key', 'Domain services, AD, and application hosting'],
+        ['Processor', 'Intel Xeon Scalable / AMD EPYC (latest gen, per workload)', 'Virtualization, databases, and compute capacity'],
+        ['Memory (RAM)', 'ECC DDR5 — capacity per workload (expandable)', 'Stability under sustained server loads'],
+        ['Memory Channels', 'Per processor DIMM channel count (e.g. 8–16 channels)', 'Memory bandwidth for multi-socket configs'],
+        ['Boot Storage', 'RAID M.2 / NVMe boot volume (OS + hypervisor)', 'Reliable OS boot separate from data volumes'],
+        ['Internal Storage', 'Enterprise SSD/HDD/NVMe — bays and capacity as designed', 'Data, VM, and backup storage'],
+        ['RAID / Storage Controller', 'Hardware RAID (Smart Array / PERC / equivalent)', 'Redundancy and array management'],
+        ['Expansion Slots', 'PCIe Gen4/Gen5 slots and risers as required', 'NIC, HBA, GPU, and future upgrades'],
+        ['Graphics / GPUs', 'None standard; discrete GPU(s) if workload requires', 'VDI, AI, or graphics-intensive apps only'],
+        ['Network', 'Dual/quad 1GbE; 10/25GbE optional', 'Service availability and throughput'],
+        ['Power Supply', 'Redundant hot-plug PSU (rated for full config)', 'Uptime and failover'],
+        ['Form Factor', '1U / 2U rack / tower as specified', 'Server room / rack fit'],
+        ['Remote Management', 'iLO / iDRAC / XClarity (licensed)', 'Out-of-band admin and firmware updates'],
+        ['Warranty', '1–3 years onsite / next business day (extendable)', 'Mission-critical support cover']
     ],
     network: [
         ['Device Type', 'Switch / Router / Access Point / Firewall', 'Define role in network'],
@@ -186,8 +190,8 @@ const SPEC_KNOWN_BRANDS = [
 
 const SPEC_SERIES_HINTS = [
     'OmniBook', 'Omnibook', 'EliteBook', 'ProBook', 'Pavilion', 'ZBook', 'Envy',
-    'Latitude', 'Precision', 'XPS', 'Inspiron', 'OptiPlex', 'PowerEdge', 'Vostro',
-    'ThinkPad', 'ThinkCentre', 'IdeaPad', 'Yoga', 'Legion', 'ThinkStation',
+    'Latitude', 'Precision', 'XPS', 'Inspiron', 'OptiPlex', 'PowerEdge', 'ProLiant', 'DL380', 'DL360', 'Vostro',
+    'ThinkPad', 'ThinkCentre', 'ThinkSystem', 'IdeaPad', 'Yoga', 'Legion', 'ThinkStation',
     'LaserJet', 'DeskJet', 'OfficeJet', 'EcoTank', 'ImageCLASS',
     'MacBook', 'iMac', 'Mac mini', 'Mac Studio', 'Surface',
     'ZenBook', 'VivoBook', 'ROG', 'TUF', 'Swift', 'Aspire'
@@ -199,7 +203,7 @@ function detectSpecCategory(text) {
         ['laptop', /\b(laptop|notebook|omnibook|elitebook|probook|thinkpad|macbook|zenbook|vivobook|inspiron|latitude|xps|surface laptop|zbook)\b/i],
         ['desktop', /\b(desktop|optiplex|prodesk|thinkcentre|imac|all[-\s]?in[-\s]?one|\baio\b|tower pc|workstation(?!\s*laptop))\b/i],
         ['printer', /\b(printer|laserjet|inkjet|multifunction|\bmfp\b|deskjet|officejet|ecosys|imageclass)\b/i],
-        ['server', /\b(server|poweredge|proliant|\bxeon\b|rackmount)\b/i],
+        ['server', /\b(server|poweredge|proliant|\bxeon\b|\bepyc\b|rackmount|dl380|dl360|thinksystem|proliant)\b/i],
         ['network', /\b(switch|router|access\s*point|\bap\b|firewall|wireless\s*controller)\b/i],
         ['other', /\b(tablet|ipad|galaxy\s*tab|\btab\s*[as]?\d)\b/i]
     ];
@@ -223,6 +227,8 @@ function extractSpecBrand(text) {
 
 function extractSpecProcessor(text) {
     const patterns = [
+        /\b((?:\d+(?:st|nd|rd|th|5th)\s+Gen\s+)?Intel\s+Xeon(?:\s+Scalable)?(?:\s+[\w-]+)?)\b/i,
+        /\b(AMD\s+EPYC(?:\s+[\w-]+)?)\b/i,
         /\b(Intel\s+Core\s+Ultra\s+\d+\s*(?:[A-Z]\d+)?)\b/i,
         /\b(Intel\s+Core\s+i[3579](?:\s*[-/]?\s*\d{4,5}\w*)?)\b/i,
         /\b(Intel\s+Core\s+i[3579])\b/i,
@@ -239,12 +245,53 @@ function extractSpecProcessor(text) {
     return '';
 }
 
+function extractSpecMemoryChannels(text) {
+    const m = text.match(/\b(\d+)\s*(?:DIMM\s*)?(?:memory\s*)?channels?\s*(?:per\s*processor)?\b/i);
+    if (m) return `${m[1]} DIMM channels per processor`;
+    const m2 = text.match(/\b(\d+)\s*DIMM\s*(?:slots?|channels?)\b/i);
+    if (m2) return `${m2[1]} DIMM channels`;
+    return '';
+}
+
+function extractSpecBootStorage(text) {
+    if (/\braid\s*m\.?2\b/i.test(text)) return 'RAID M.2 boot options';
+    const m = text.match(/\bboot\s*(?:storage|drive)?\s*[:\-–]?\s*([^\n|;]{3,80})/i);
+    if (m) return m[1].trim();
+    if (/\bboot\b/i.test(text) && /\b(nvme|m\.2|ssd)\b/i.test(text)) return 'NVMe/M.2 boot volume';
+    return '';
+}
+
+function extractSpecInternalStorage(text) {
+    const bays = text.match(/\b(\d+)\s*(?:EDSFF|SFF|LFF|hot[-\s]?plug\s*)?(?:drive\s*)?bays?\b/i);
+    if (bays) return `${bays[1]} ${(/EDSFF/i.test(text) ? 'EDSFF ' : '')}drive bays`;
+    if (/\bedsff\b/i.test(text)) return 'EDSFF drive bays as specified';
+    return '';
+}
+
+function extractSpecExpansionSlots(text) {
+    const m = text.match(/\bPCIe\s*Gen\s*(\d+)\b/i);
+    if (m) return `PCIe Gen${m[1]}`;
+    const m2 = text.match(/\b(\d+)\s*(?:x\s*)?(?:PCIe|expansion)\s*slots?\b/i);
+    if (m2) return `${m2[1]} PCIe expansion slots`;
+    if (/\bpcie\b/i.test(text)) return 'PCIe expansion as specified';
+    return '';
+}
+
+function extractSpecServerGraphics(text) {
+    const m = text.match(/\b(\d+)\s*(?:x\s*)?(?:single[-\s]?wide\s*)?GPUs?\b/i);
+    if (m) return `Up to ${m[1]} single-wide GPU(s) as required`;
+    if (/\bgpu\b/i.test(text)) return 'Discrete GPU(s) as required';
+    return '';
+}
+
 function extractSpecRam(text) {
-    const match = text.match(/\b(\d+)\s*(GB|G)\s*(DDR\d)?\s*(RAM|Memory)?\b/i);
+    const match = text.match(/\b(\d+(?:\.\d+)?)\s*(TB|GB|G)\s*(DDR\d)?\s*(ECC\s*)?(RAM|Memory)?\b/i);
     if (!match) return '';
     const amount = match[1];
+    const unit = match[2].toUpperCase().replace(/^G$/, 'GB');
     const ddr = match[3] ? ` ${match[3].toUpperCase()}` : '';
-    return `${amount} GB${ddr} RAM`;
+    const ecc = match[4] ? ' ECC' : (/ECC/i.test(text) ? ' ECC' : '');
+    return `${amount} ${unit}${ddr}${ecc}`.replace(/\s+/g, ' ').trim();
 }
 
 function extractSpecStorage(text) {
@@ -280,6 +327,11 @@ function extractSpecSeries(text) {
 }
 
 function extractSpecOs(text) {
+    if (/\bWindows\s*Server\s*2022\b/i.test(text)) return 'Windows Server 2022 and licence key';
+    if (/\bWindows\s*Server\s*2019\b/i.test(text)) return 'Windows Server 2019 and licence key';
+    if (/\bWindows\s*Server\b/i.test(text)) return 'Windows Server and licence key';
+    if (/\b(RHEL|Red\s*Hat\s*Enterprise)\b/i.test(text)) return 'Red Hat Enterprise Linux';
+    if (/\bUbuntu\s*Server\b/i.test(text)) return 'Ubuntu Server LTS';
     if (/\bWindows\s*11\s*Pro\b/i.test(text)) return 'Windows 11 Pro';
     if (/\bWindows\s*11\b/i.test(text)) return 'Windows 11';
     if (/\bWindows\s*10\s*Pro\b/i.test(text)) return 'Windows 10 Pro';
@@ -299,16 +351,31 @@ function parseSpecItemName(rawName) {
     const display = extractSpecDisplay(text);
     const series = extractSpecSeries(text);
     const os = extractSpecOs(text);
+    const memoryChannels = extractSpecMemoryChannels(text);
+    const bootStorage = extractSpecBootStorage(text);
+    const internalStorage = extractSpecInternalStorage(text);
+    const expansionSlots = extractSpecExpansionSlots(text);
+    const serverGraphics = extractSpecServerGraphics(text);
 
     const brandModel = [brand, series].filter(Boolean).join(' ') || brand || series;
     const overrides = {};
 
     if (processor) {
         overrides.Processor = processor;
-        if (category === 'server') overrides.Processor = processor;
     }
-    if (ram) overrides.RAM = ram;
-    if (storage) overrides.Storage = storage;
+    if (ram) {
+        overrides.RAM = ram;
+        overrides['Memory (RAM)'] = ram;
+    }
+    if (storage) {
+        overrides.Storage = storage;
+        overrides['Internal Storage'] = internalStorage || storage;
+    }
+    if (bootStorage) overrides['Boot Storage'] = bootStorage;
+    if (internalStorage) overrides['Internal Storage'] = internalStorage;
+    if (memoryChannels) overrides['Memory Channels'] = memoryChannels;
+    if (expansionSlots) overrides['Expansion Slots'] = expansionSlots;
+    if (serverGraphics) overrides['Graphics / GPUs'] = serverGraphics;
     if (display) {
         overrides.Display = display;
         overrides['Monitor (if bundled)'] = display;
@@ -317,6 +384,18 @@ function parseSpecItemName(rawName) {
         overrides['Operating System'] = os;
         overrides['OS Support'] = os;
         overrides['Drivers / Compatibility'] = `${os} compatible`;
+    }
+    if (category === 'server') {
+        if (/ilo\b/i.test(text)) overrides['Remote Management'] = 'HPE iLO (licensed)';
+        else if (/idrac\b/i.test(text)) overrides['Remote Management'] = 'Dell iDRAC';
+        else if (/xclarity\b/i.test(text)) overrides['Remote Management'] = 'Lenovo XClarity';
+        if (/\b2u\b/i.test(text)) overrides['Form Factor'] = '2U rack';
+        else if (/\b1u\b/i.test(text)) overrides['Form Factor'] = '1U rack';
+        if (/smart\s*array|perc|raid/i.test(text)) {
+            overrides['RAID / Storage Controller'] = /smart\s*array/i.test(text)
+                ? 'HPE Smart Array'
+                : (/perc/i.test(text) ? 'Dell PERC' : 'Hardware RAID controller');
+        }
     }
     if (brandModel) {
         overrides['Preferred Brand / Model'] = brandModel;
@@ -355,7 +434,13 @@ function applyParsedSpecsToTable(parsed) {
     const fieldMap = {
         Processor: parsed.processor,
         RAM: parsed.ram,
+        'Memory (RAM)': parsed.ram,
         Storage: parsed.storage,
+        'Internal Storage': parsed.storage,
+        'Boot Storage': parsed.overrides?.['Boot Storage'],
+        'Memory Channels': parsed.overrides?.['Memory Channels'],
+        'Expansion Slots': parsed.overrides?.['Expansion Slots'],
+        'Graphics / GPUs': parsed.overrides?.['Graphics / GPUs'],
         Display: parsed.display,
         'Operating System': parsed.os,
         'OS Support': parsed.os,
@@ -657,12 +742,17 @@ function getSpecEvalFormSnapshot() {
 
 function getSpecSheetIcon(label) {
     const key = String(label || '').toLowerCase();
-    if (/operating|os|windows|macos/.test(key)) return 'OS';
+    if (/operating|os|windows|macos|linux/.test(key)) return 'OS';
     if (/processor|cpu|chip/.test(key)) return 'CPU';
     if (/graphics|gpu|video/.test(key)) return 'GPU';
     if (/display|monitor|screen/.test(key)) return 'DSP';
-    if (/memory|ram/.test(key)) return 'RAM';
-    if (/storage|ssd|hdd|disk/.test(key)) return 'SSD';
+    if (/memory|ram|dimm|channel/.test(key)) return 'RAM';
+    if (/boot\s*storage|boot\s*drive/.test(key)) return 'BOOT';
+    if (/internal\s*storage|storage|ssd|hdd|disk|bay/.test(key)) return 'SSD';
+    if (/expansion|pcie|slot/.test(key)) return 'PCI';
+    if (/raid|controller/.test(key)) return 'RAID';
+    if (/remote|management|ilo|idrac/.test(key)) return 'RMT';
+    if (/form\s*factor|rack|tower/.test(key)) return 'RCK';
     if (/wireless|wifi|wi-fi|bluetooth|network/.test(key)) return 'NET';
     if (/power|charger|psu/.test(key)) return 'PWR';
     if (/battery/.test(key)) return 'BAT';

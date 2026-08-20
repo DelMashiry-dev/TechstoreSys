@@ -391,21 +391,31 @@ const PRODUCT_SPECS_CATALOG = [
     {
         id: 'hpe-proliant-dl380',
         brand: 'HPE',
-        model: 'ProLiant DL380',
+        model: 'ProLiant DL380 Gen11',
         category: 'server',
-        names: ['HPE ProLiant DL380', 'HP ProLiant DL380', 'DL380 Gen10/Gen11'],
-        aliases: ['dl380', 'proliant dl380'],
+        names: [
+            'HPE ProLiant DL380 Gen11',
+            'HP ProLiant DL380 Gen11',
+            'HPE ProLiant DL380',
+            'HP ProLiant DL380',
+            'DL380 Gen10/Gen11'
+        ],
+        aliases: ['dl380', 'proliant dl380', 'dl380 gen11'],
         specs: [
-            ['Processor', 'Intel Xeon Scalable (confirm gen/SKU)', 'Virtualization / services'],
-            ['RAM', '32 GB+ ECC (expandable)', 'Stable server capacity'],
-            ['Storage', 'Enterprise SSD/HDD; RAID as designed', 'Data integrity'],
-            ['RAID / Controller', 'HPE Smart Array / equivalent', 'Redundancy'],
-            ['Network', 'Dual/quad NIC; optional 10Gb', 'Service availability'],
-            ['Power', 'Redundant PSU preferred', 'Uptime'],
-            ['Form Factor', '2U rack', 'Server room fit'],
-            ['Management', 'iLO remote management', 'Remote administration'],
-            ['OS Support', 'Windows Server / Linux as required', 'Platform alignment'],
-            ['Warranty', '3–5 years with onsite support preferred', 'Mission-critical cover']
+            ['Operating System', 'Windows Server 2019/2022 and licence key', 'AD, DNS, file/print, and app services'],
+            ['Processor', '5th Gen Intel Xeon Scalable Processors', 'Virtualization and enterprise workloads'],
+            ['Memory (RAM)', 'ECC DDR5 — per workload (platform supports high capacity)', 'Stable server memory'],
+            ['Memory Channels', '16 DIMM channels per processor', 'Memory bandwidth for dual-socket configs'],
+            ['Boot Storage', 'RAID M.2 boot options', 'Dedicated OS / hypervisor boot volume'],
+            ['Internal Storage', 'Up to 20 EDSFF drive bays (config dependent)', 'Data and VM storage'],
+            ['RAID / Storage Controller', 'HPE Smart Array / MR controller', 'Hardware RAID and array management'],
+            ['Expansion Slots', 'PCIe Gen5 slots and risers', 'NIC, HBA, and GPU expansion'],
+            ['Graphics / GPUs', 'Up to 8 single-wide GPUs (optional)', 'VDI / compute GPU workloads only'],
+            ['Network', 'Flexible LOM; 1/10/25GbE options', 'Service availability'],
+            ['Power Supply', 'Redundant hot-plug PSU', 'Uptime and failover'],
+            ['Form Factor', '2U rack', 'Standard server room rack mount'],
+            ['Remote Management', 'HPE iLO 6 (licensed)', 'Out-of-band administration'],
+            ['Warranty', '1 year minimum; 3–5 years onsite preferred', 'Mission-critical cover']
         ]
     },
     {
@@ -916,16 +926,23 @@ const PRODUCT_SPECS_CATALOG = [
         brand: 'Dell',
         model: 'PowerEdge R750',
         category: 'server',
-        names: ['Dell PowerEdge R750', 'PowerEdge R750'],
+        names: ['Dell PowerEdge R750', 'PowerEdge R750', 'Dell R750'],
         aliases: ['r750', 'poweredge r750'],
         specs: [
-            ['Processor', 'Intel Xeon Scalable (dual capable)', 'Virtualization'],
-            ['RAM', '64 GB+ ECC (expandable)', 'Server capacity'],
-            ['Storage', 'Enterprise SSD RAID', 'Integrity'],
-            ['Storage Type', 'SSD / NVMe (RAID)', 'Enterprise'],
-            ['Form Factor', '2U rack', 'Server room'],
-            ['Management', 'iDRAC', 'Remote admin'],
-            ['Warranty', '3–5 years onsite preferred', 'Critical']
+            ['Operating System', 'Windows Server 2019/2022 and licence key', 'Enterprise services platform'],
+            ['Processor', 'Intel Xeon Scalable (dual-socket capable)', 'Virtualization and databases'],
+            ['Memory (RAM)', '64 GB+ ECC DDR4/DDR5 (expandable)', 'Server capacity and stability'],
+            ['Memory Channels', '16 DIMM channels per processor', 'Dual-socket memory bandwidth'],
+            ['Boot Storage', 'BOSS-S2 / NVMe M.2 boot RAID', 'OS boot separate from data'],
+            ['Internal Storage', 'Up to 16 drives (2.5\" / 3.5\" options)', 'Enterprise SSD/HDD/NVMe'],
+            ['RAID / Storage Controller', 'Dell PERC H755 / H965 (hardware RAID)', 'Redundancy and performance'],
+            ['Expansion Slots', 'PCIe Gen4 slots and risers', 'NIC, HBA, GPU expansion'],
+            ['Graphics / GPUs', 'Optional GPU(s) per workload', 'VDI / compute only if required'],
+            ['Network', 'Dual 1GbE OCP; 10/25GbE optional', 'Network throughput'],
+            ['Power Supply', 'Redundant hot-plug PSU (1400W+ class)', 'High availability'],
+            ['Form Factor', '2U rack', 'Server room fit'],
+            ['Remote Management', 'Dell iDRAC9 Enterprise', 'Remote administration'],
+            ['Warranty', '3–5 years ProSupport onsite preferred', 'Critical infrastructure cover']
         ]
     },
     {

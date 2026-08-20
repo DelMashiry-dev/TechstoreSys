@@ -53,26 +53,42 @@ DATASHEET_HOST_HINTS = (
 
 SPEC_LABEL_PATTERNS = [
     ("Processor", re.compile(r"(?:processor|cpu|chipset)\s*[:\-–]\s*([^\n|;]{3,90})", re.I)),
-    ("RAM", re.compile(r"(?:memory|ram)\s*[:\-–]\s*([^\n|;]{2,60})", re.I)),
+    ("Memory (RAM)", re.compile(r"(?:memory\s*\(ram\)|memory|ram)\s*[:\-–]\s*([^\n|;]{2,60})", re.I)),
+    ("Memory Channels", re.compile(r"(?:memory\s*channels?|dimm\s*channels?)\s*[:\-–]\s*([^\n|;]{2,60})", re.I)),
+    ("Boot Storage", re.compile(r"(?:boot\s*(?:storage|drive|volume)|os\s*drive)\s*[:\-–]\s*([^\n|;]{2,80})", re.I)),
+    ("Internal Storage", re.compile(r"(?:internal\s*storage|storage\s*bays?|drive\s*bays?)\s*[:\-–]\s*([^\n|;]{2,90})", re.I)),
     ("Storage", re.compile(r"(?:storage|ssd|hdd|internal\s+memory)\s*[:\-–]\s*([^\n|;]{2,80})", re.I)),
+    ("Expansion Slots", re.compile(r"(?:expansion\s*slots?|pcie)\s*[:\-–]\s*([^\n|;]{2,80})", re.I)),
+    ("RAID / Storage Controller", re.compile(r"(?:raid|storage\s*controller|smart\s*array|perc)\s*[:\-–]\s*([^\n|;]{2,80})", re.I)),
+    ("Remote Management", re.compile(r"(?:remote\s*management|management|ilo|idrac|ipmi)\s*[:\-–]\s*([^\n|;]{2,60})", re.I)),
+    ("Form Factor", re.compile(r"(?:form\s*factor|rack\s*mount)\s*[:\-–]\s*([^\n|;]{2,40})", re.I)),
+    ("Power Supply", re.compile(r"(?:power(?:\s*supply)?|psu|redundant\s*psu)\s*[:\-–]\s*([^\n|;]{2,60})", re.I)),
     ("Display", re.compile(r"(?:display|screen|panel)\s*[:\-–]\s*([^\n|;]{3,90})", re.I)),
     ("Operating System", re.compile(r"(?:operating\s+system|\bos\b)\s*[:\-–]\s*([^\n|;]{2,60})", re.I)),
     ("Battery", re.compile(r"(?:battery)\s*[:\-–]\s*([^\n|;]{2,70})", re.I)),
-    ("Graphics", re.compile(r"(?:graphics|gpu)\s*[:\-–]\s*([^\n|;]{3,80})", re.I)),
+    ("Graphics / GPUs", re.compile(r"(?:graphics|gpu|gpus)\s*[:\-–]\s*([^\n|;]{3,80})", re.I)),
+    ("Network", re.compile(r"(?:network|nic|ethernet)\s*[:\-–]\s*([^\n|;]{3,80})", re.I)),
     ("Connectivity", re.compile(r"(?:connectivity|wireless|wi-?fi)\s*[:\-–]\s*([^\n|;]{3,100})", re.I)),
     ("Weight", re.compile(r"(?:weight)\s*[:\-–]\s*([^\n|;]{2,40})", re.I)),
     ("Dimensions", re.compile(r"(?:dimensions|size)\s*[:\-–]\s*([^\n|;]{3,80})", re.I)),
+    ("Warranty", re.compile(r"(?:warranty)\s*[:\-–]\s*([^\n|;]{2,60})", re.I)),
 ]
 
 INLINE_PATTERNS = [
     ("Processor", re.compile(
-        r"\b((?:Intel\s+Core\s+(?:Ultra\s+)?i?[3579]\w*(?:\s*[-/]?\s*\d{4,5}\w*)?|"
+        r"\b((?:\d+(?:st|nd|rd|th|5th)\s+Gen\s+)?Intel\s+Xeon(?:\s+Scalable)?(?:\s+[\w-]{2,24})?|"
+        r"AMD\s+EPYC(?:\s+[\w-]{2,24})?|"
+        r"Intel\s+Core\s+(?:Ultra\s+)?i?[3579]\w*(?:\s*[-/]?\s*\d{4,5}\w*)?|"
         r"AMD\s+Ryzen(?:\s+AI)?\s*[3579]\w*|Apple\s+[AM]\d(?:\s+(?:Pro|Max|Ultra))?|"
-        r"Snapdragon\s+[\w\s]{2,30}|Exynos\s+\d+|MediaTek\s+[\w\s-]{2,24}|"
-        r"Xeon\s+[\w-]{2,20}))\b",
+        r"Snapdragon\s+[\w\s]{2,30}|Exynos\s+\d+|MediaTek\s+[\w\s-]{2,24})\b",
         re.I,
     )),
-    ("RAM", re.compile(r"\b(\d+\s*GB(?:\s*/\s*\d+\s*GB)?(?:\s*LPDDR\d[xX]?)?(?:\s*RAM)?)\b", re.I)),
+    ("Memory (RAM)", re.compile(r"\b(\d+(?:\.\d+)?\s*(?:TB|GB)(?:\s*DDR\d)?(?:\s*ECC)?(?:\s*RAM|\s*Memory)?)\b", re.I)),
+    ("Memory Channels", re.compile(r"\b(\d+\s*(?:DIMM\s*)?(?:memory\s*)?channels?(?:\s*per\s*processor)?)\b", re.I)),
+    ("Boot Storage", re.compile(r"\b(RAID\s*M\.?2(?:\s+boot)?(?:\s+options)?|BOSS[\w-]*|NVMe\s+boot)\b", re.I)),
+    ("Internal Storage", re.compile(r"\b(\d+\s*(?:EDSFF|SFF|LFF|hot[-\s]?plug\s*)?(?:drive\s*)?bays?)\b", re.I)),
+    ("Expansion Slots", re.compile(r"\b(PCIe\s*Gen\s*\d+)\b", re.I)),
+    ("Graphics / GPUs", re.compile(r"\b(\d+\s*(?:single[-\s]?wide\s*)?GPUs?)\b", re.I)),
     ("Storage", re.compile(
         r"\b(\d+\s*(?:GB|TB)(?:\s*/\s*\d+\s*(?:GB|TB))?(?:\s*(?:NVMe\s*)?(?:SSD|HDD|UFS))?)\b",
         re.I,
@@ -84,8 +100,9 @@ INLINE_PATTERNS = [
         re.I,
     )),
     ("Operating System", re.compile(
-        r"\b(Windows\s*1[01](?:\s*Pro)?|Android(?:\s*\d+)?(?:\s*\([^)]*\))?|"
-        r"iPadOS(?:\s*\d+)?|macOS(?:\s+\w+)?|ChromeOS)\b",
+        r"\b(Windows\s*Server\s*20(?:19|22)(?:\s+and\s+licen[cs]e\s+key)?|Windows\s*Server|"
+        r"Windows\s*1[01](?:\s*Pro)?|Android(?:\s*\d+)?(?:\s*\([^)]*\))?|"
+        r"iPadOS(?:\s*\d+)?|macOS(?:\s+\w+)?|ChromeOS|RHEL|Ubuntu\s*Server)\b",
         re.I,
     )),
 ]
@@ -95,7 +112,7 @@ CATEGORY_RULES = [
     ("laptop", re.compile(r"\b(laptop|notebook|elitebook|probook|thinkpad|macbook|latitude|xps)\b", re.I)),
     ("desktop", re.compile(r"\b(desktop|optiplex|thinkcentre|imac|tower)\b", re.I)),
     ("printer", re.compile(r"\b(printer|laserjet|mfp|imageclass|ecosys)\b", re.I)),
-    ("server", re.compile(r"\b(server|proliant|poweredge|xeon|rack)\b", re.I)),
+    ("server", re.compile(r"\b(server|proliant|poweredge|xeon|epyc|rack|dl380|dl360|thinksystem)\b", re.I)),
     ("network", re.compile(r"\b(switch|router|firewall|access\s*point|wireless\s*controller|catalyst)\b", re.I)),
 ]
 
@@ -322,7 +339,11 @@ def openai_enrich(query: str, source_text: str) -> list[list[str]] | None:
                     "Extract procurement-ready ICT product specifications as JSON with keys: "
                     "brand, model, category (laptop|desktop|printer|server|network|other), "
                     "specs (array of {name, value, note}). Use only facts supported by the text. "
-                    "If unknown, omit the field. Keep values concise."
+                    "If unknown, omit the field. Keep values concise. "
+                    "For servers use fields such as: Operating System, Processor, Memory (RAM), "
+                    "Memory Channels, Boot Storage, Internal Storage, RAID / Storage Controller, "
+                    "Expansion Slots, Graphics / GPUs, Network, Power Supply, Form Factor, "
+                    "Remote Management, Warranty."
                 ),
             },
             {

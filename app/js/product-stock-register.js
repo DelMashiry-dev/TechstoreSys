@@ -143,6 +143,7 @@ const PRODUCT_ITEM_IMAGES = {
     'ict-equipment__hp-omnibook-x-flip-16': '../assets/inventory/hp-omnibook-x-flip-16.png',
     'ict-equipment__hp-prodesk-400-g9': '../assets/inventory/hp-prodesk-400-g9.png',
     'ict-equipment__hp-zbook-firefly': '../assets/inventory/hp-zbook-firefly.png',
+    'ict-equipment__hpe-proliant-dl380-gen11': '../assets/inventory/hpe-proliant-dl380-gen11.png',
     'ict-equipment__kyocera-taskalfa-2554ci': '../assets/inventory/kyocera-taskalfa-2554ci.png',
     'ict-equipment__lenovo-thinkcentre-m90a-gen-5-aio': '../assets/inventory/lenovo-thinkcentre-m90a-gen-5-aio.png',
     'ict-equipment__lenovo-thinkcentre-m90q-gen-4': '../assets/inventory/lenovo-thinkcentre-m90q-gen-4.png',
@@ -167,6 +168,7 @@ function withProductImageCache(src) {
  */
 const PRODUCT_NAME_IMAGES = [
     // --- Exact / product photos ---
+    { re: /\bdl380\b|\bproliant\s*dl380\b|\bhpe\s*proliant\b/i, src: '../assets/inventory/hpe-proliant-dl380-gen11.png' },
     { re: /\blatitude\s*5540\b|\bdell\s*5540\b/i, src: '../assets/inventory/dell-latitude-5540.png' },
     { re: /\bc3025i\b|\bimagerunner\s*c3025/i, src: '../assets/inventory/canon-imagerunner-c3025i.png' },
     { re: /\bomnibook\s*x\s*flip\b|\bomnibook\s*flip\b/i, src: '../assets/inventory/hp-omnibook-x-flip-16.png' },
