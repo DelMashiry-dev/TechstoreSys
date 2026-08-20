@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import mimetypes
+import os
 import secrets
 import sqlite3
 import sys
@@ -1576,8 +1577,11 @@ def main() -> None:
     print(" Keep this window open while using the system.")
     print(" Press Ctrl+C to stop")
     print("=" * 60)
+    print("TECHSTORES_READY", flush=True)
 
     def _open_browser() -> None:
+        if os.environ.get("TECHSTORES_NO_BROWSER"):
+            return
         try:
             webbrowser.open(local_url)
         except Exception:

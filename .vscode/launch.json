@@ -1,20 +1,20 @@
 {
     "version": "0.2.0",
     "configurations": [
-        
-        
-
-
-
-
-        
         {
             "type": "chrome",
             "request": "launch",
             "name": "Tech Stores (Database Server)",
             "url": "http://127.0.0.1:8080/app/",
-            "webRoot": "${workspaceFolder}",
+            "webRoot": "${workspaceFolder}/app",
             "preLaunchTask": "Start Tech Stores Database Server"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Tech Stores (server already running)",
+            "url": "http://127.0.0.1:8080/app/",
+            "webRoot": "${workspaceFolder}/app"
         }
     ]
 }

@@ -4,23 +4,29 @@
         {
             "label": "Start Tech Stores Database Server",
             "type": "shell",
-            "command": "python server.py",
+            "command": "python -u server.py",
             "options": {
-                "cwd": "${workspaceFolder}"
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "TECHSTORES_NO_BROWSER": "1"
+                }
             },
             "isBackground": true,
             "problemMatcher": {
-                "owner": "custom",
-                "pattern": { "regexp": "^$" },
+                "owner": "techstores",
+                "pattern": {
+                    "regexp": "^$"
+                },
                 "background": {
                     "activeOnStart": true,
                     "beginsPattern": ".",
-                    "endsPattern": "Database Server|App:"
+                    "endsPattern": "TECHSTORES_READY"
                 }
             },
             "presentation": {
                 "reveal": "always",
-                "panel": "dedicated"
+                "panel": "dedicated",
+                "focus": false
             }
         }
     ]

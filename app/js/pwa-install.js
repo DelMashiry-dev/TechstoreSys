@@ -1,5 +1,8 @@
 /* pwa-install.js — register service worker + Install / Add to Home Screen helpers */
 
+/** Set false to hide the bottom “Install Tech Stores” banner (desktop / internal use). */
+const PWA_INSTALL_BANNER_ENABLED = false;
+
 let deferredInstallPrompt = null;
 
 function isStandaloneDisplay() {
@@ -16,6 +19,11 @@ function updatePwaInstallUi() {
     const btn = document.getElementById('pwaInstallBtn');
     const hint = document.getElementById('pwaInstallHint');
     if (!banner) return;
+
+    if (!PWA_INSTALL_BANNER_ENABLED) {
+        banner.hidden = true;
+        return;
+    }
 
     if (isStandaloneDisplay()) {
         banner.hidden = true;
