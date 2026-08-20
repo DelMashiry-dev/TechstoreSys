@@ -1,5 +1,110 @@
-/* state.js — app state, API, persistence */
+/* state.js — app state, API, persistence (SQLite when online, IndexedDB offline) */
 let appState = null;
+
+async function apiRequestWithTimeout(path, ms = 5000, options = {}) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+    try {
+        return await apiRequest(path, { ...options, signal: controller.signal });
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+async function persistLocalCopy(state = appState) {
+    if (!state) return;
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (err) {
+        console.warn('localStorage save failed', err);
+    }
+    if (typeof saveOfflineAppState === 'function') {
+        const ok = await saveOfflineAppState(state);
+        if (ok) offlineDurable = true;
+    }
+    if (typeof updateDbStatusBadge === 'function') updateDbStatusBadge();
+}
+
+async function loadBestLocalState() {
+    let parsed = null;
+    if (typeof loadOfflineAppState === 'function') {
+        try {
+            parsed = await loadOfflineAppState();
+        } catch (_) { /* ignore */ }
+    }
+    if (!parsed) {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) parsed = JSON.parse(raw);
+        } catch (_) { /* ignore */ }
+    }
+    return parsed ? mergeState(parsed) : loadState();
+}
+
+async function trySyncStateToServer(force = false) {
+    if (!appState) return false;
+    try {
+        const data = await apiRequest('/api/state', {
+            method: 'PUT',
+            body: JSON.stringify({ appState, force })
+        });
+        dbConnected = true;
+        pendingServerSync = false;
+        if (data?.saveRevision != null) {
+            appState.saveRevision = data.saveRevision;
+        }
+        await persistLocalCopy(appState);
+        updateDbStatusBadge();
+        return true;
+    } catch (error) {
+        if (error.status === 409 && !force) {
+            return trySyncStateToServer(true);
+        }
+        dbConnected = false;
+        pendingServerSync = true;
+        if (typeof queueOfflineSync === 'function') {
+            await queueOfflineSync({ appState, queuedAt: new Date().toISOString() });
+        }
+        updateDbStatusBadge();
+        return false;
+    }
+}
+
+async function reconnectDatabaseIfOnline() {
+    if (!appState) return;
+    if (typeof probeStorageMode === 'function') {
+        await probeStorageMode();
+    }
+    if (storageMode === 'offline-shell') {
+        updateDbStatusBadge();
+        return;
+    }
+    if (dbConnected && !pendingServerSync) return;
+    try {
+        const health = await apiRequestWithTimeout('/api/health', 4000);
+        if (!health?.database) {
+            updateDbStatusBadge();
+            return;
+        }
+        storageMode = 'online';
+        dbConnected = true;
+        const synced = await trySyncStateToServer(true);
+        pendingServerSync = !synced;
+        if (typeof flushOfflineSyncQueue === 'function') {
+            await flushOfflineSyncQueue(async (payload) => {
+                if (payload?.appState) {
+                    appState = mergeState(payload.appState);
+                    await trySyncStateToServer(true);
+                }
+            });
+        }
+        updateDbStatusBadge();
+        if (synced && typeof showToast === 'function') {
+            showToast('Switched to online mode — synced to techstores.db.', 'success');
+        }
+        if (typeof refreshStorageModeModal === 'function') refreshStorageModeModal();
+    } catch (_) { /* still offline */ }
+}
 
 function createDefaultState() {
     const glBudgets = {};
@@ -210,27 +315,42 @@ async function apiRequest(path, options = {}) {
 }
 
 function updateDbStatusBadge() {
+    if (dbConnected) {
+        storageMode = 'online';
+    } else if (storageMode !== 'offline-shell' && offlineDurable) {
+        storageMode = 'offline-local';
+    }
+
     const badge = document.getElementById('dbStatusBadge');
     if (badge) {
-        if (dbConnected) {
-            badge.textContent = 'Database Connected';
+        badge.textContent = typeof getStorageModeLabel === 'function' ? getStorageModeLabel() : 'Storage';
+        if (dbConnected || storageMode === 'online') {
             badge.className = 'db-status-badge db-online';
-            badge.title = 'Persistent SQLite file: techstores.db (survives shutdown & logout)';
+            badge.title = 'Online — techstores.db. Click to switch mode.';
+        } else if (storageMode === 'offline-shell' || offlineDurable) {
+            badge.className = 'db-status-badge db-offline-durable';
+            badge.title = 'Offline mode. Click for switch instructions.';
         } else {
-            badge.textContent = 'Local Only';
             badge.className = 'db-status-badge db-offline';
-            badge.title = 'Start START-SYSTEM.bat / server.py so data saves to techstores.db';
+            badge.title = 'Click to set up online or offline mode.';
         }
     }
     const dbChip = document.getElementById('dashboardDbChip');
     if (dbChip) {
-        dbChip.textContent = dbConnected
-            ? 'Storage: Persistent SQLite (techstores.db)'
-            : 'Storage: Browser only (not durable)';
-        dbChip.title = dbConnected
-            ? 'Data remains after logout, browser close, and PC shutdown'
-            : 'Run START-SYSTEM.bat to enable the durable database';
+        if (dbConnected || storageMode === 'online') {
+            dbChip.textContent = pendingServerSync
+                ? 'Storage: SQLite + pending sync'
+                : 'Storage: Online (techstores.db)';
+        } else if (storageMode === 'offline-shell') {
+            dbChip.textContent = 'Storage: Offline shell (browser)';
+        } else if (offlineDurable) {
+            dbChip.textContent = 'Storage: Offline copy (IndexedDB)';
+        } else {
+            dbChip.textContent = 'Storage: Local only';
+        }
+        dbChip.title = 'Click to switch online / offline mode';
     }
+    if (typeof syncModeToggleUi === 'function') syncModeToggleUi();
 }
 
 function stateHasOperationalData(state) {
@@ -252,36 +372,57 @@ function stateHasOperationalData(state) {
 }
 
 async function loadStateFromDatabase() {
+    if (typeof initOfflineStore === 'function') {
+        await initOfflineStore();
+    }
+    if (typeof probeStorageMode === 'function') {
+        await probeStorageMode({ fresh: false });
+    }
+
+    if (storageMode !== 'online') {
+        dbConnected = false;
+        const localState = await loadBestLocalState();
+        updateDbStatusBadge();
+        if (storageMode === 'offline-shell' && typeof showToast === 'function') {
+            showToast('Offline shell — data saves in browser storage.', 'info');
+        }
+        return localState;
+    }
+
     try {
-        const data = await apiRequest('/api/state');
+        const data = await apiRequestWithTimeout('/api/state', 5000);
         dbConnected = true;
+        pendingServerSync = false;
+        storageMode = 'online';
         updateDbStatusBadge();
         const remote = mergeState(data.appState);
-        const localRaw = localStorage.getItem(STORAGE_KEY);
-        if (localRaw) {
-            const local = mergeState(JSON.parse(localRaw));
-            const remoteEmpty = !stateHasOperationalData(remote);
-            const localHasData = stateHasOperationalData(local);
-            if (remoteEmpty && localHasData) {
-                // First-time / empty DB: migrate browser data into SQLite
-                await apiRequest('/api/state', {
-                    method: 'PUT',
-                    body: JSON.stringify({ appState: local, force: true })
-                });
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(local));
-                if (typeof showToast === 'function') {
-                    showToast('Browser data migrated into persistent database (techstores.db).', 'success');
-                }
-                return local;
+        const localState = await loadBestLocalState();
+        const remoteEmpty = !stateHasOperationalData(remote);
+        const localHasData = stateHasOperationalData(localState);
+        if (remoteEmpty && localHasData) {
+            await trySyncStateToServer(true);
+            await persistLocalCopy(localState);
+            if (typeof showToast === 'function') {
+                showToast('Browser data migrated into persistent database (techstores.db).', 'success');
             }
+            if (typeof warmOfflineModuleCache === 'function') warmOfflineModuleCache();
+            return localState;
         }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remote));
+        await persistLocalCopy(remote);
+        if (typeof warmOfflineModuleCache === 'function') warmOfflineModuleCache();
         return remote;
     } catch (error) {
-        console.warn('Database unavailable, using local storage.', error);
+        console.warn('Database unavailable, using offline storage.', error?.message || error);
         dbConnected = false;
+        if (typeof probeStorageMode === 'function') {
+            await probeStorageMode({ attempts: 1 });
+        }
+        const localState = await loadBestLocalState();
         updateDbStatusBadge();
-        return loadState();
+        if (typeof showToast === 'function' && offlineDurable) {
+            showToast('Offline mode — using your saved browser copy. Use the login toggle or START-SYSTEM.bat for online.', 'info');
+        }
+        return localState;
     }
 }
 
@@ -308,46 +449,42 @@ function saveState() {
         return;
     }
     bumpSaveMeta();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-    if (!dbConnected) return;
+    persistLocalCopy(appState);
+    if (!dbConnected) {
+        pendingServerSync = true;
+        if (typeof queueOfflineSync === 'function') {
+            queueOfflineSync({ appState, queuedAt: new Date().toISOString() });
+        }
+        updateDbStatusBadge();
+        return;
+    }
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(async () => {
         try {
-            const data = await apiRequest('/api/state', {
-                method: 'PUT',
-                body: JSON.stringify({ appState })
-            });
-            if (data?.saveRevision != null) {
-                appState.saveRevision = data.saveRevision;
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-            }
-            if (typeof checkSaveConflictOnLoad === 'function') checkSaveConflictOnLoad();
+            const ok = await trySyncStateToServer(false);
+            if (ok && typeof checkSaveConflictOnLoad === 'function') checkSaveConflictOnLoad();
         } catch (error) {
             if (error.status === 409) {
                 const ok = typeof confirmAction === 'function'
                     ? confirmAction('Another save is newer on the server. Overwrite with your copy?')
                     : window.confirm('Another save is newer on the server. Overwrite with your copy?');
                 if (ok) {
-                    try {
-                        const data = await apiRequest('/api/state', {
-                            method: 'PUT',
-                            body: JSON.stringify({ appState, force: true })
-                        });
-                        if (data?.saveRevision != null) appState.saveRevision = data.saveRevision;
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-                        showToast('Saved (overwrite).', 'success');
-                        return;
-                    } catch (e2) {
-                        console.error('Force save failed', e2);
-                    }
+                    const forced = await trySyncStateToServer(true);
+                    if (forced && typeof showToast === 'function') showToast('Saved (overwrite).', 'success');
+                    return;
                 }
-                showToast('Save skipped — reload to pick up the latest database state.', 'warning');
+                if (typeof showToast === 'function') {
+                    showToast('Save skipped — reload to pick up the latest database state.', 'warning');
+                }
                 return;
             }
             console.error('Failed to save to database', error);
             dbConnected = false;
+            pendingServerSync = true;
             updateDbStatusBadge();
-            showToast('Database save failed. Data kept in browser only.', 'error');
+            if (typeof showToast === 'function') {
+                showToast('Database unavailable — saved to offline copy.', 'warning');
+            }
         }
     }, 250);
 }
@@ -365,34 +502,26 @@ async function saveStateNow() {
         saveTimer = null;
     }
     bumpSaveMeta();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-    if (!dbConnected) return false;
-    try {
-        const data = await apiRequest('/api/state', {
-            method: 'PUT',
-            body: JSON.stringify({ appState })
-        });
-        if (data?.saveRevision != null) {
-            appState.saveRevision = data.saveRevision;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+    await persistLocalCopy(appState);
+    if (!dbConnected) {
+        pendingServerSync = true;
+        if (typeof queueOfflineSync === 'function') {
+            await queueOfflineSync({ appState, queuedAt: new Date().toISOString() });
         }
-        if (typeof checkSaveConflictOnLoad === 'function') checkSaveConflictOnLoad();
-        return true;
+        updateDbStatusBadge();
+        return false;
+    }
+    try {
+        const ok = await trySyncStateToServer(false);
+        if (ok && typeof checkSaveConflictOnLoad === 'function') checkSaveConflictOnLoad();
+        return ok;
     } catch (error) {
         if (error.status === 409) {
-            try {
-                await apiRequest('/api/state', {
-                    method: 'PUT',
-                    body: JSON.stringify({ appState, force: true })
-                });
-                return true;
-            } catch (e2) {
-                showToast('Save conflict — another user may have saved first. Use Backup, then reload.', 'warning');
-                return false;
-            }
+            return trySyncStateToServer(true);
         }
         console.error('Failed to save to database', error);
         dbConnected = false;
+        pendingServerSync = true;
         updateDbStatusBadge();
         return false;
     }
@@ -418,8 +547,10 @@ function initPersistentDatabaseHooks() {
             if (!appState) return;
             bumpSaveMeta();
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            if (typeof saveOfflineAppState === 'function') {
+                saveOfflineAppState(appState);
+            }
             if (dbConnected) {
-                // keepalive fetch survives tab close better than a normal await
                 fetch('/api/state', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -436,17 +567,16 @@ function initPersistentDatabaseHooks() {
         }
     });
 
-    // Reconnect if server comes back after going offline
-    setInterval(async () => {
-        if (dbConnected || !appState) return;
-        try {
-            await apiRequest('/api/state');
-            dbConnected = true;
-            updateDbStatusBadge();
-            await saveStateNow();
-            if (typeof showToast === 'function') {
-                showToast('Database reconnected — data syncing to techstores.db.', 'success');
-            }
-        } catch (e) { /* still offline */ }
+    window.addEventListener('online', () => {
+        updateDbStatusBadge();
+        reconnectDatabaseIfOnline();
+    });
+    window.addEventListener('offline', () => {
+        dbConnected = false;
+        updateDbStatusBadge();
+    });
+
+    setInterval(() => {
+        reconnectDatabaseIfOnline();
     }, 15000);
 }

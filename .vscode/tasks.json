@@ -1,33 +1,62 @@
-{
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Start Tech Stores Database Server",
-            "type": "shell",
-            "command": "python -u server.py",
-            "options": {
-                "cwd": "${workspaceFolder}",
-                "env": {
-                    "TECHSTORES_NO_BROWSER": "1"
-                }
-            },
-            "isBackground": true,
-            "problemMatcher": {
-                "owner": "techstores",
-                "pattern": {
-                    "regexp": "^$"
-                },
-                "background": {
-                    "activeOnStart": true,
-                    "beginsPattern": ".",
-                    "endsPattern": "TECHSTORES_READY"
-                }
-            },
-            "presentation": {
-                "reveal": "always",
-                "panel": "dedicated",
-                "focus": false
-            }
-        }
-    ]
-}
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Start Tech Stores Database Server",
+            "type": "shell",
+            "command": "${command:python.interpreterPath} -u server.py",
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "TECHSTORES_NO_BROWSER": "1"
+                }
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "techstores",
+                "pattern": {
+                    "regexp": "^$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".",
+                    "endsPattern": "TECHSTORES_READY"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "focus": false
+            }
+        },
+        {
+            "label": "Start Tech Stores Offline Shell",
+            "type": "shell",
+            "command": "${command:python.interpreterPath} -u offline_static_server.py",
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "TECHSTORES_NO_BROWSER": "1"
+                }
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "techstores-offline",
+                "pattern": {
+                    "regexp": "^$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".",
+                    "endsPattern": "TECHSTORES_OFFLINE_READY"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "focus": false
+            }
+        }
+    ]
+}
+

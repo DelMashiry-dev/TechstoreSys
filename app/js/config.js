@@ -3,6 +3,10 @@ const SESSION_KEY = 'techstores_session_v1';
 const API_BASE = '';
 
 let dbConnected = false;
+let offlineDurable = false;
+let pendingServerSync = false;
+/** online | offline-shell | offline-local | local-only */
+let storageMode = 'local-only';
 let saveTimer = null;
 
 const ROLE_LABELS = {
@@ -312,7 +316,21 @@ function resolveLoginUsername(username) {
     const compact = key.replace(/\s+/g, '');
     if (LOGIN_USERNAME_ALIASES[key]) return LOGIN_USERNAME_ALIASES[key];
     if (LOGIN_USERNAME_ALIASES[compact]) return LOGIN_USERNAME_ALIASES[compact];
-    return raw;
+    if (typeof createDefaultUsers === 'function') {
+        const seed = createDefaultUsers().find((u) =>
+            String(u.username || '').toLowerCase() === raw.toLowerCase()
+        );
+        if (seed) return seed.username;
+    }
+    return raw.toLowerCase();
+}
+
+function demoPasswordMatches(storedPassword, enteredPassword) {
+    const stored = String(storedPassword || '');
+    const entered = String(enteredPassword || '').trim();
+    if (!stored || !entered) return false;
+    if (stored === entered) return true;
+    return stored.toLowerCase() === entered.toLowerCase();
 }
 
 function passwordMatchesLogin(username, password) {

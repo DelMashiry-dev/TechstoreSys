@@ -6,6 +6,8 @@ let aiAssistantState = {
     busy: false
 };
 
+const AI_ASSISTANT_UI_VERSION = '2';
+
 function aiApiBase() {
     return typeof API_BASE === 'string' ? API_BASE : '';
 }
@@ -146,14 +148,22 @@ function buildStoresAssistantContext() {
 async function askStoresAssistant(question) {
     const q = String(question || '').trim();
     if (q.length < 3) throw new Error('Enter a question.');
-    const res = await fetch(`${aiApiBase()}/api/ai/ask`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q, context: buildStoresAssistantContext() })
-    });
-    const data = await res.json();
-    if (!res.ok || !data.ok) throw new Error(data.error || 'Assistant unavailable');
-    return data;
+    try {
+        const res = await fetch(`${aiApiBase()}/api/ai/ask`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: q, context: buildStoresAssistantContext() })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Assistant unavailable');
+        return data;
+    } catch (err) {
+        if (typeof offlineAnswer === 'function') {
+            const fallback = offlineAnswer(q, buildStoresAssistantContext());
+            if (fallback?.ok) return fallback;
+        }
+        throw err;
+    }
 }
 
 async function parseSpecDocumentUpload({ text = '', file = null, categoryHint = '', productHint = '' } = {}) {
@@ -206,10 +216,12 @@ async function draftRequisitionJustification(params) {
 
 function ensureAiAssistantModal() {
     let modal = document.getElementById('aiAssistantModal');
-    if (modal) return modal;
+    if (modal && modal.dataset.uiVersion === AI_ASSISTANT_UI_VERSION) return modal;
+    if (modal) modal.remove();
 
     modal = document.createElement('div');
     modal.id = 'aiAssistantModal';
+    modal.dataset.uiVersion = AI_ASSISTANT_UI_VERSION;
     modal.className = 'ai-assistant-modal';
     modal.hidden = true;
     modal.innerHTML = `

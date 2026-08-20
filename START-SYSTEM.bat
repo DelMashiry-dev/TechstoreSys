@@ -23,9 +23,13 @@ echo Data is saved to techstores.db and remains after you close
 echo the browser, log out, or shut down the computer.
 echo Press Ctrl+C to stop the server.
 echo.
-python server.py
+call "%~dp0scripts\start-launcher.cmd"
+echo.
+echo Tip: Run scripts\install-autostart.bat once so the Online/Offline toggle auto-starts servers.
+echo.
+call "%~dp0scripts\resolve-python.cmd" -u server.py
 if errorlevel 1 (
   echo.
-  echo Python failed to start. Make sure Python is installed.
+  echo Python failed to start. Make sure Python 3 is installed.
   pause
 )

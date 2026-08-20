@@ -63,6 +63,23 @@
                         </button>
                     </div>
                 </div>
+                <div class="form-group login-mode-group">
+                    <label class="form-label" for="loginStorageModeToggle">Storage mode</label>
+                    <div class="login-storage-panel" id="loginStorageRow">
+                        <p class="login-storage-status" id="loginStorageLabel">Checking connection…</p>
+                        <div class="storage-mode-toggle-wrap storage-mode-toggle-wrap--login">
+                            <span class="storage-mode-toggle-label" data-side="offline">Offline</span>
+                            <button type="button" class="storage-mode-toggle" id="loginStorageModeToggle" role="switch"
+                                aria-checked="false"
+                                aria-label="Switch between online SQLite database and offline browser storage">
+                                <span class="storage-mode-toggle-track"><span class="storage-mode-toggle-thumb"></span></span>
+                            </button>
+                            <span class="storage-mode-toggle-label" data-side="online">Online</span>
+                        </div>
+                        <p class="login-mode-hint">Online saves to <strong>techstores.db</strong> · Offline saves in your browser</p>
+                        <p class="login-mode-status" id="loginModeStatus" hidden></p>
+                    </div>
+                </div>
                 <button type="submit" class="btn btn-primary login-submit">Sign In</button>
             </form>
             <div class="login-hint is-collapsed" id="loginHint">
@@ -630,7 +647,8 @@
                 <h1>IT-DIR Tech Stores Dashboard</h1>
                 <div class="header-aside">
                     <div class="user-controls">
-                        <span class="db-status-badge db-offline" id="dbStatusBadge" title="Database status">Local Only</span>
+                        <div class="storage-mode-toggle-wrap" id="storageModeToggleWrap" title="Switch online / offline"></div>
+                        <button type="button" class="db-status-badge db-offline" id="dbStatusBadge" title="Click for storage details">Local Only</button>
                         <button class="glossy-pill-btn theme-toggle" id="themeToggle" type="button" title="Appearance — themes &amp; UI preferences">Appearance</button>
                         <button class="btn btn-ghost btn-sm" id="logoutBtn" type="button">Logout</button>
                     </div>
@@ -649,7 +667,7 @@
                             <div class="dashboard-context-row" aria-label="Operations context">
                                 <span class="context-chip">Josiah Magama Tongogara Barracks</span>
                                 <span class="context-chip" id="dashboardSignedInChip">Signed in: —</span>
-                                <span class="context-chip" id="dashboardDbChip">Storage: —</span>
+                                <button type="button" class="context-chip" id="dashboardDbChip" title="Click to switch online / offline mode">Storage: —</button>
                                 <button type="button" class="context-chip ai-status-chip is-off" id="aiStatusChip"
                                     title="AI status — click to open assistant">AI: —</button>
                             </div>
@@ -1452,6 +1470,8 @@
     </div>
 
     <script src="js/config.js"></script>
+    <script src="js/offline-store.js"></script>
+    <script src="js/offline-precache.js"></script>
     <script src="js/org-profile.js"></script>
     <script src="js/zna-units.js"></script>
     <script src="js/catalog.js"></script>
@@ -1459,9 +1479,10 @@
     <script src="js/it-dir-bids-seed.js"></script>
     <script src="js/product-specs-catalog.js"></script>
     <script src="js/suppliers-seed.js"></script>
-    <script src="js/state.js"></script>
+    <script src="js/state.js?v=20260820fastboot"></script>
+    <script src="js/storage-mode.js?v=20260820fastboot"></script>
     <script src="js/gl-targets.js"></script>
-    <script src="js/auth.js"></script>
+    <script src="js/auth.js?v=20260820login"></script>
     <script src="js/dept-home.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/module-loader.js"></script>
@@ -1481,7 +1502,8 @@
     <script src="js/voucher-inventory.js"></script>
     <script src="js/toner-compatibility.js"></script>
     <script src="js/product-web-enrich.js"></script>
-    <script src="js/ai-assistant.js"></script>
+    <script src="js/offline-assistant.js"></script>
+    <script src="js/ai-assistant.js?v=20260820b"></script>
     <script src="js/product-datasheets.js"></script>
     <script src="js/product-stock-register.js"></script>
     <script src="js/physical-stock-count.js"></script>
@@ -1535,7 +1557,7 @@
     <script src="js/tables.js"></script>
     <script src="js/ux-improvements.js"></script>
     <script src="js/pwa-install.js"></script>
-    <script src="js/boot.js"></script>
+    <script src="js/boot.js?v=20260820fastboot"></script>
 
 </body>
 </html>

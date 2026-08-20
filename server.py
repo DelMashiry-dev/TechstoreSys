@@ -23,6 +23,7 @@ from urllib.parse import unquote, urlparse, parse_qs
 
 from product_specs_lookup import lookup_product_specs
 from ai_services import ai_status, parse_spec_document, answer_stores_question, draft_requisition_justification
+from mode_switch import handle_mode_switch, mode_status_payload, prepare_server_startup
 
 try:
     from version import APP_VERSION, APP_NAME
@@ -135,7 +136,10 @@ def resolve_login_username(username: str) -> str:
         return LOGIN_USERNAME_ALIASES[key]
     if compact in LOGIN_USERNAME_ALIASES:
         return LOGIN_USERNAME_ALIASES[compact]
-    return raw
+    for user in DEFAULT_USERS:
+        if str(user.get("username") or "").lower() == raw.lower():
+            return str(user["username"])
+    return raw.lower()
 
 
 def password_accepted_for_user(username: str, password: str, stored: str) -> bool:
@@ -143,6 +147,9 @@ def password_accepted_for_user(username: str, password: str, stored: str) -> boo
     if verify_password(pwd, stored):
         return True
     user_key = str(username or "").strip().lower()
+    expected = DEFAULT_PLAIN_PASSWORDS.get(user_key)
+    if expected and pwd.lower() == expected.lower():
+        return True
     aliases = LOGIN_PASSWORD_ALIASES.get(user_key) or set()
     norm = normalize_login_key(pwd).replace(" ", "")
     return norm in aliases
@@ -1301,10 +1308,15 @@ class TechStoresHandler(BaseHTTPRequestHandler):
             status = ai_status()
             self._send_json(200, {
                 "ok": True,
+                "mode": "online",
                 "database": True,
                 "stats": db_stats(),
                 "ai": status,
             })
+            return
+
+        if path == "/api/mode":
+            self._send_json(200, mode_status_payload("online"))
             return
 
         if path == "/api/ai/status":
@@ -1395,6 +1407,10 @@ class TechStoresHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
         path = unquote(parsed.path)
+
+        if path == "/api/mode/switch":
+            handle_mode_switch(self, "online", self._read_json)
+            return
 
         if path == "/api/login":
             try:
@@ -1553,6 +1569,7 @@ def main() -> None:
     mimetypes.add_type("application/manifest+json", ".webmanifest")
 
     init_db()
+    prepare_server_startup("online")
     server = ThreadingHTTPServer((HOST, PORT), TechStoresHandler)
     local_url = f"http://127.0.0.1:{PORT}/app/"
     lan = _lan_urls(PORT)

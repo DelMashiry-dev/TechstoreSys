@@ -285,27 +285,55 @@ Rules:
 Return JSON: {"answer": "..."}"""
 
 
+def _matches_equipment_query(q: str, keywords: tuple[str, ...]) -> bool:
+    if not any(w in q for w in keywords):
+        return False
+    if any(w in q for w in ("stock", "inventory", "hand", "many", "how many", "count", "available", "in store")):
+        return True
+    words = re.findall(r"[a-z0-9]+", q)
+    return len(words) <= 4
+
+
+EQUIPMENT_TREND_SNIPPETS = {
+    "laptop": "Trend: 16 GB RAM, 512 GB NVMe, 3-year warranty; Copilot+ / AI PCs where budget allows.",
+    "desktop": "Trend: USFF/small-form for admin; towers only where expansion or GPU is required.",
+    "printer": "Trend: departmental laser MFP with secure pull-print; managed print contracts.",
+    "server": "Trend: HPE ProLiant Gen11 / Dell PowerEdge 16G — DDR5, redundant PSU, iLO/iDRAC, 10 GbE; 5-year lifecycle.",
+    "tablet": "Trend: rugged or enterprise tablets for field use; MDM-ready with long support life.",
+}
+
+
 def _stock_type_answer(q: str, context: dict[str, Any]) -> str | None:
     stock = context.get("stockByType") or {}
     inv = context.get("inventorySummary") or {}
     type_map = [
         (("laptop", "notebook", "laptops"), "laptop", "laptopLines"),
         (("desktop", "desktops", "pc", "workstation"), "desktop", "desktopLines"),
-        (("printer", "printers", "mfp", "print"), "printer", "printerLines"),
+        (("printer", "printers", "mfp"), "printer", "printerLines"),
         (("server", "servers"), "server", "serverLines"),
         (("tablet", "tablets", "ipad"), "tablet", "tabletLines"),
     ]
     for keywords, key, lines_key in type_map:
-        if any(w in q for w in keywords) and any(w in q for w in ("stock", "inventory", "hand", "many", "how many", "count", "available")):
-            total = int(stock.get(key) or 0)
-            typed_lines = inv.get(lines_key) or []
-            if total > 0:
-                detail = ""
-                if typed_lines:
-                    detail = " Detail: " + "; ".join(typed_lines[:6]) + "."
-                return f"Total {key}s on hand: {total} unit(s).{detail} Open ICT Equipment / Product Stock Register for full ledger."
+        if not _matches_equipment_query(q, keywords):
+            continue
+        total = int(stock.get(key) or 0)
+        typed_lines = inv.get(lines_key) or []
+        trend = EQUIPMENT_TREND_SNIPPETS.get(key, "")
+        if total > 0:
+            detail = ""
             if typed_lines:
-                return f"{key.title()} stock: " + "; ".join(typed_lines[:8]) + "."
+                detail = " Detail: " + "; ".join(typed_lines[:6]) + "."
+            msg = f"Total {key}s on hand: {total} unit(s).{detail} Open ICT Equipment / Product Stock Register for full ledger."
+            if trend and len(q.split()) <= 4:
+                msg += f" {trend}"
+            return msg
+        if typed_lines:
+            return f"{key.title()} stock: " + "; ".join(typed_lines[:8]) + "."
+        if trend:
+            return (
+                f"No {key}s currently on hand in the stock register. {trend} "
+                f"Use Unit Requisitions or Spec Evaluation to raise a procurement need."
+            )
     return None
 
 

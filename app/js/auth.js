@@ -129,40 +129,81 @@ async function attemptLogin(username, password) {
         : String(username || '').trim();
     const pwd = String(password || '').trim();
 
-    if (dbConnected) {
+    if (navigator.onLine !== false && typeof apiRequestWithTimeout === 'function') {
         try {
-            const data = await apiRequest('/api/login', {
+            const data = await apiRequestWithTimeout('/api/login', 5000, {
                 method: 'POST',
                 body: JSON.stringify({
                     username: resolvedUser,
                     password: pwd
                 })
             });
-            // Refresh users/state from DB after login
-            const stateData = await apiRequest('/api/state');
+            dbConnected = true;
+            pendingServerSync = false;
+            const stateData = await apiRequestWithTimeout('/api/state', 5000);
             appState = mergeState(stateData.appState);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            if (typeof persistLocalCopy === 'function') {
+                await persistLocalCopy(appState);
+            } else {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            }
+            if (typeof cacheOfflineLogin === 'function') {
+                await cacheOfflineLogin(data.user.username, pwd, data.user);
+            }
+            updateDbStatusBadge();
             return { ok: true, user: data.user };
         } catch (error) {
-            return { ok: false, message: error.message || 'Invalid username or password.' };
+            if (error.status === 401 || error.status === 403) {
+                return { ok: false, message: error.message || 'Invalid username or password.' };
+            }
+            dbConnected = false;
+            updateDbStatusBadge();
         }
     }
 
-    const users = appState.users || [];
-    const user = users.find((u) =>
-        String(u.username || '').toLowerCase() === String(resolvedUser || '').trim().toLowerCase()
-    );
-    const pwdOk = user && (
-        String(user.password || '') === pwd
-        || (typeof passwordMatchesLogin === 'function' && passwordMatchesLogin(user.username, pwd))
-    );
-    if (!user || !pwdOk) {
+    if (typeof verifyOfflineLogin === 'function') {
+        const cached = await verifyOfflineLogin(resolvedUser, pwd);
+        if (cached) {
+            if (cached.active === false) {
+                return { ok: false, message: 'This account is disabled. Contact an administrator.' };
+            }
+            return { ok: true, user: cached };
+        }
+    }
+
+    const users = appState?.users || [];
+    const userKey = String(resolvedUser || '').trim().toLowerCase();
+    const user = users.find((u) => String(u.username || '').toLowerCase() === userKey);
+    const seed = typeof createDefaultUsers === 'function'
+        ? createDefaultUsers().find((u) => String(u.username || '').toLowerCase() === userKey)
+        : null;
+    if (!user && !seed) {
         return { ok: false, message: 'Invalid username or password.' };
     }
-    if (user.active === false) {
+    const usernameForAliases = (user || seed).username;
+    const pwdOk = (seed && demoPasswordMatches(seed.password, pwd))
+        || (user?.password && demoPasswordMatches(user.password, pwd))
+        || (typeof passwordMatchesLogin === 'function' && passwordMatchesLogin(usernameForAliases, pwd));
+    if (!pwdOk) {
+        return { ok: false, message: 'Invalid username or password.' };
+    }
+    const base = user || seed;
+    if (base.active === false) {
         return { ok: false, message: 'This account is disabled. Contact an administrator.' };
     }
-    return { ok: true, user };
+    const loginUser = {
+        id: base.id,
+        username: base.username,
+        name: base.name || base.username,
+        role: base.role,
+        department: base.department,
+        active: base.active !== false,
+        mustChangePassword: !!base.mustChangePassword
+    };
+    if (typeof cacheOfflineLogin === 'function') {
+        await cacheOfflineLogin(loginUser.username, pwd, loginUser);
+    }
+    return { ok: true, user: loginUser };
 }
 
 function updateHeaderUser() {
@@ -336,27 +377,36 @@ function enterApp(user) {
     currentUser = user;
     saveSession(user);
     document.body.classList.remove('app-locked');
+    sessionStorage.removeItem('techstoresAutoStartFailed');
     if (typeof closePasswordChangeModal === 'function') closePasswordChangeModal();
-    updateHeaderUser();
-    applyAccessControl();
-    if (typeof refreshLastLoggedInDisplay === 'function') refreshLastLoggedInDisplay();
-    navigateToModule('dashboard', { clearHistory: true, skipHistory: true });
-    if (typeof initCommandBoard === 'function') initCommandBoard();
-    updateDashboard();
-    if (typeof updateCommandBoard === 'function') updateCommandBoard();
-    else updateSystemAlerts();
-    if (typeof initItDirCommsSideButton === 'function') initItDirCommsSideButton();
-    if (canManageUsers()) renderUsersTable();
-    const roleLabel = ROLE_LABELS[user.role] || user.role;
-    recordAccessAudit('session_start', `Session open as ${user.username} (${roleLabel}; edit=${canEditData() ? 'yes' : 'no'})`);
-    if (!canEditData()) {
-        showToast(
-            `Welcome, ${user.name || user.username} (${roleLabel}) — VIEW ONLY. You cannot alter quantities or save changes.`,
-            'info'
-        );
-    } else {
-        showToast(`Welcome, ${user.name || user.username} (${roleLabel})`);
-    }
+    const bootReady = typeof runHeavyBootInit === 'function'
+        ? runHeavyBootInit()
+        : Promise.resolve();
+    bootReady.then(() => {
+        updateHeaderUser();
+        applyAccessControl();
+        if (typeof refreshLastLoggedInDisplay === 'function') refreshLastLoggedInDisplay();
+        navigateToModule('dashboard', { clearHistory: true, skipHistory: true });
+        if (typeof initCommandBoard === 'function') initCommandBoard();
+        updateDashboard();
+        if (typeof updateCommandBoard === 'function') updateCommandBoard();
+        else updateSystemAlerts();
+        if (typeof initItDirCommsSideButton === 'function') initItDirCommsSideButton();
+        if (canManageUsers()) renderUsersTable();
+        const roleLabel = ROLE_LABELS[user.role] || user.role;
+        recordAccessAudit('session_start', `Session open as ${user.username} (${roleLabel}; edit=${canEditData() ? 'yes' : 'no'})`);
+        if (!canEditData()) {
+            showToast(
+                `Welcome, ${user.name || user.username} (${roleLabel}) — VIEW ONLY. You cannot alter quantities or save changes.`,
+                'info'
+            );
+        } else {
+            showToast(`Welcome, ${user.name || user.username} (${roleLabel})`);
+        }
+    }).catch((err) => {
+        console.error('Heavy boot failed after login', err);
+        showToast('Some modules may load slowly — refresh if needed.', 'warning');
+    });
 }
 
 async function logoutUser() {
