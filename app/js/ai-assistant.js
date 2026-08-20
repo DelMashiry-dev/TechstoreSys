@@ -32,11 +32,11 @@ function updateAiStatusUi(status) {
     if (status?.aiEnabled) {
         chip.textContent = 'AI: On';
         chip.className = 'context-chip ai-status-chip is-on';
-        chip.title = `OpenAI enabled (${status.model || 'model'}) — spec documents, assistant, drafts`;
+        chip.title = `OpenAI enabled (${status.model || 'model'}) — click to open assistant`;
     } else {
         chip.textContent = 'AI: Off';
         chip.className = 'context-chip ai-status-chip is-off';
-        chip.title = status?.hint || 'Set OPENAI_API_KEY on server for full AI';
+        chip.title = `${status?.hint || 'Set OPENAI_API_KEY on server for full AI'} — click to open assistant`;
     }
 }
 
@@ -49,25 +49,95 @@ function buildStoresAssistantContext() {
     };
     const inv = typeof appState !== 'undefined' ? appState?.storesInventory : null;
     const txns = inv?.transactions || [];
+    const stockByType = { laptop: 0, desktop: 0, printer: 0, server: 0, tablet: 0 };
+    const linesByType = { laptopLines: [], desktopLines: [], printerLines: [], serverLines: [], tabletLines: [] };
     const lines = [];
     if (typeof buildProductStockRows === 'function') {
         try {
-            const { rows } = buildProductStockRows();
-            (rows || []).slice(0, 8).forEach((r) => {
-                if (r.onHand > 0) lines.push(`${r.itemName}: ${r.onHand} on hand`);
+            const { rows } = buildProductStockRows({ showZero: false });
+            (rows || []).forEach((r) => {
+                const oh = r.onHand || 0;
+                if (oh <= 0) return;
+                const entry = `${r.itemName}: ${oh} on hand`;
+                lines.push(entry);
+                const tc = r.typeCode || '';
+                if (tc === 'Lap') {
+                    stockByType.laptop += oh;
+                    linesByType.laptopLines.push(entry);
+                } else if (tc === 'Desk') {
+                    stockByType.desktop += oh;
+                    linesByType.desktopLines.push(entry);
+                } else if (tc === 'Print') {
+                    stockByType.printer += oh;
+                    linesByType.printerLines.push(entry);
+                } else if (tc === 'Srv') {
+                    stockByType.server += oh;
+                    linesByType.serverLines.push(entry);
+                } else if (tc === 'Tab') {
+                    stockByType.tablet += oh;
+                    linesByType.tabletLines.push(entry);
+                }
             });
         } catch (_) { /* optional */ }
     }
+
+    let temporaryLoans = null;
+    if (typeof collectTemporaryLoanRows === 'function' && typeof getTemporaryLoansSummary === 'function') {
+        try {
+            const loanRows = collectTemporaryLoanRows();
+            const summary = getTemporaryLoansSummary(loanRows);
+            temporaryLoans = {
+                summary,
+                active: loanRows
+                    .filter((l) => l.status?.active)
+                    .slice(0, 8)
+                    .map((l) => {
+                        const id = l.zaNumber || l.item || 'item';
+                        return `${id} → ${l.issuedTo || '—'} (${l.status?.label || 'on loan'})`;
+                    })
+            };
+        } catch (_) { /* optional */ }
+    }
+
+    let requisitions = null;
+    if (typeof ensureRequisitions === 'function') {
+        try {
+            const list = ensureRequisitions();
+            const recent = list.slice(-5).map((r) =>
+                `${r.subject || r.item || 'Req'} (${r.unit || 'unit'}) — ${r.status || 'open'}`
+            );
+            requisitions = {
+                total: list.length,
+                pendingAtItDir: typeof getPendingRequisitionsAtItDir === 'function'
+                    ? getPendingRequisitionsAtItDir().length : 0,
+                pendingAtDp: typeof getPendingRequisitionsAtDp === 'function'
+                    ? getPendingRequisitionsAtDp().length : 0,
+                recent
+            };
+        } catch (_) { /* optional */ }
+    }
+
+    const alerts = {
+        atItDir: requisitions?.pendingAtItDir || 0,
+        atDp: requisitions?.pendingAtDp || 0,
+        overstayedLoans: temporaryLoans?.summary?.overstayed || 0
+    };
+
     return {
         target: parseMoney('glSumTarget'),
         committed: parseMoney('glSumCommitted'),
         vouchers: parseMoney('glSumVouchers'),
         buyingPower: parseMoney('glSumBalance'),
+        stockByType,
         inventorySummary: {
             ictLines: txns.filter((t) => String(t.itemId || '').includes('ict-equipment')).length,
             totalTransactions: txns.length,
-            lines
+            lines: lines.slice(0, 12),
+            ...linesByType
         },
+        temporaryLoans,
+        requisitions,
+        alerts,
         user: appState?.currentUser?.username || '',
         role: appState?.currentUser?.role || ''
     };
@@ -148,20 +218,26 @@ function ensureAiAssistantModal() {
             <header class="ai-assistant-head">
                 <div>
                     <h2 id="aiAssistantTitle">Tech Stores AI Assistant</h2>
-                    <p class="ai-assistant-sub" id="aiAssistantSub">Read-only help for GL balances and inventory</p>
+                    <p class="ai-assistant-sub" id="aiAssistantSub">Ask about GL, stock, requisitions, loans, procurement, modules, or ICT trends</p>
                 </div>
                 <button type="button" class="btn btn-ghost btn-sm" data-ai-close aria-label="Close">✕</button>
             </header>
             <div class="ai-assistant-body">
                 <div class="ai-assistant-messages" id="aiAssistantMessages" aria-live="polite"></div>
+                <div class="ai-assistant-suggestions" id="aiAssistantSuggestions" aria-label="Suggested questions">
+                    <button type="button" class="ai-suggest-chip" data-ai-suggest="How many laptops are in stock?">Laptops in stock</button>
+                    <button type="button" class="ai-suggest-chip" data-ai-suggest="Temporary loans status">Loans status</button>
+                    <button type="button" class="ai-suggest-chip" data-ai-suggest="What is our buying power?">Buying power</button>
+                    <button type="button" class="ai-suggest-chip" data-ai-suggest="ICT equipment trends for 2026">ICT trends 2026</button>
+                </div>
                 <form id="aiAssistantForm" class="ai-assistant-form">
                     <input type="text" class="form-control" id="aiAssistantInput"
-                        placeholder="e.g. What is our buying power? Which servers are in stock?"
+                        placeholder="Ask anything about Tech Stores — stock, requisitions, DP F1, advice…"
                         autocomplete="off">
                     <button type="submit" class="btn btn-primary" id="aiAssistantSendBtn">Ask</button>
                 </form>
                 <p class="ai-assistant-foot muted" id="aiAssistantFoot">
-                    Answers use dashboard figures only. AI does not change ledger or stock.
+                    Read-only — figures from your dashboard and modules. Industry advice is general guidance, not official policy.
                 </p>
             </div>
         </div>
@@ -174,6 +250,14 @@ function ensureAiAssistantModal() {
     modal.querySelector('#aiAssistantForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         await submitAiAssistantQuestion();
+    });
+    modal.querySelectorAll('[data-ai-suggest]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const input = modal.querySelector('#aiAssistantInput');
+            const q = btn.getAttribute('data-ai-suggest') || '';
+            if (input) input.value = q;
+            await submitAiAssistantQuestion(q);
+        });
     });
     return modal;
 }
@@ -188,20 +272,17 @@ function appendAiMessage(text, role = 'assistant') {
     box.scrollTop = box.scrollHeight;
 }
 
-async function submitAiAssistantQuestion() {
+async function submitAiAssistantQuestion(presetQuestion) {
     const input = document.getElementById('aiAssistantInput');
     const btn = document.getElementById('aiAssistantSendBtn');
-    const q = input?.value?.trim();
+    const q = String(presetQuestion || input?.value || '').trim();
     if (!q) return;
     appendAiMessage(q, 'user');
-    if (input) input.value = '';
+    if (input && !presetQuestion) input.value = '';
     if (btn) { btn.disabled = true; btn.textContent = 'Thinking…'; }
     try {
         const data = await askStoresAssistant(q);
-        appendAiMessage(
-            data.answer + (data.ai ? '' : ' (rule-based)'),
-            'assistant'
-        );
+        appendAiMessage(data.answer, 'assistant');
     } catch (err) {
         appendAiMessage(err.message || 'Assistant error', 'error');
     } finally {
@@ -307,8 +388,20 @@ async function handleReqDraftJustification() {
     }
 }
 
+function handleAiStatusChipClick() {
+    openAiAssistant();
+    const status = aiAssistantState.status;
+    if (status && !status.aiEnabled && typeof showToast === 'function') {
+        showToast(
+            status.hint || 'Copy .env.example to .env, set OPENAI_API_KEY, and restart the server for full AI.',
+            'info'
+        );
+    }
+}
+
 function initAiAssistant() {
     document.getElementById('openAiAssistantBtn')?.addEventListener('click', openAiAssistant);
+    document.getElementById('aiStatusChip')?.addEventListener('click', handleAiStatusChipClick);
     document.getElementById('specDocUploadInput')?.addEventListener('change', (e) => {
         const file = e.target.files?.[0];
         if (file) handleSpecDocumentUpload(file);
