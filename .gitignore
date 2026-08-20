@@ -19,3 +19,11 @@ data/product-web-cache.json
 .DS_Store
 Thumbs.db
 *.swp
+
+
+# Python temporary files
+__pycache__/
+*.pyc
+
+# Local TechstoreSys database
+techstores.db
