@@ -21,6 +21,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse, parse_qs
 
 from product_specs_lookup import lookup_product_specs
+from ai_services import ai_status, parse_spec_document, answer_stores_question, draft_requisition_justification
 
 try:
     from version import APP_VERSION, APP_NAME
@@ -1296,7 +1297,17 @@ class TechStoresHandler(BaseHTTPRequestHandler):
         path = unquote(parsed.path)
 
         if path == "/api/health":
-            self._send_json(200, {"ok": True, "database": True, "stats": db_stats()})
+            status = ai_status()
+            self._send_json(200, {
+                "ok": True,
+                "database": True,
+                "stats": db_stats(),
+                "ai": status,
+            })
+            return
+
+        if path == "/api/ai/status":
+            self._send_json(200, ai_status())
             return
 
         if path == "/api/state":
@@ -1440,6 +1451,44 @@ class TechStoresHandler(BaseHTTPRequestHandler):
                 self._send_json(500, {"ok": False, "error": f"Product lookup failed: {exc}"})
             return
 
+        if path == "/api/ai/spec-document":
+            try:
+                payload = self._read_json()
+                result = parse_spec_document(
+                    text=str(payload.get("text") or ""),
+                    image_base64=str(payload.get("imageBase64") or payload.get("image") or ""),
+                    mime_type=str(payload.get("mimeType") or "image/jpeg"),
+                    category_hint=str(payload.get("category") or payload.get("categoryHint") or ""),
+                    product_hint=str(payload.get("productHint") or payload.get("productName") or ""),
+                )
+                status = 200 if result.get("ok") else 400
+                self._send_json(status, result)
+            except Exception as exc:
+                self._send_json(500, {"ok": False, "error": f"Spec document parse failed: {exc}"})
+            return
+
+        if path == "/api/ai/ask":
+            try:
+                payload = self._read_json()
+                question = str(payload.get("question") or "").strip()
+                context = payload.get("context") if isinstance(payload.get("context"), dict) else {}
+                result = answer_stores_question(question, context)
+                status = 200 if result.get("ok") else 400
+                self._send_json(status, result)
+            except Exception as exc:
+                self._send_json(500, {"ok": False, "error": f"AI assistant failed: {exc}"})
+            return
+
+        if path == "/api/ai/draft-justification":
+            try:
+                payload = self._read_json()
+                result = draft_requisition_justification(payload)
+                status = 200 if result.get("ok") else 400
+                self._send_json(status, result)
+            except Exception as exc:
+                self._send_json(500, {"ok": False, "error": f"Draft failed: {exc}"})
+            return
+
         self._send_json(404, {"ok": False, "error": "Not found"})
 
 
@@ -1465,7 +1514,25 @@ def _lan_urls(port: int) -> list[str]:
     return out
 
 
+def _load_dotenv() -> None:
+    """Load ROOT/.env into os.environ (simple KEY=VALUE, no quotes required)."""
+    env_path = ROOT / ".env"
+    if not env_path.is_file():
+        return
+    import os
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, val = line.partition("=")
+        key = key.strip()
+        val = val.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = val
+
+
 def main() -> None:
+    _load_dotenv()
     if hasattr(sys.stdout, "reconfigure"):
         try:
             sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -1504,6 +1571,8 @@ def main() -> None:
     print("           (persistent on disk — survives logout & PC shutdown)")
     print(f" DB View:  http://127.0.0.1:{PORT}/db-viewer")
     print(f" API:      http://127.0.0.1:{PORT}/api/health")
+    ai = ai_status()
+    print(f" AI:       {'enabled (' + str(ai.get('model') or 'model') + ')' if ai.get('aiEnabled') else 'off — copy .env.example to .env and set OPENAI_API_KEY'}")
     print(" Keep this window open while using the system.")
     print(" Press Ctrl+C to stop")
     print("=" * 60)

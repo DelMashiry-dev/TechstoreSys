@@ -185,6 +185,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         initReportsModule();
         if (typeof initGlTargetMonthControls === 'function') initGlTargetMonthControls();
         initSpecEvaluationModule();
+        if (typeof initAiAssistant === 'function') initAiAssistant();
         if (typeof initRequisitionsModule === 'function') initRequisitionsModule();
         if (typeof initOrderlyRoomModule === 'function') initOrderlyRoomModule();
         if (typeof initCorrespondenceFilesModule === 'function') initCorrespondenceFilesModule();

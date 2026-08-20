@@ -1,0 +1,21 @@
+# Local secrets — never commit
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Local SQLite database (machine-specific inventory & state)
+techstores.db
+techstores.db-journal
+techstores.db-wal
+techstores.db-shm
+
+# Product lookup cache
+data/product-web-cache.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp

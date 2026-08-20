@@ -549,6 +549,29 @@ function applyCatalogProductToForm(product, rawName) {
     });
 }
 
+/** Apply AI / OCR parsed spec document to the evaluation form. */
+function applySpecDocumentToForm(result) {
+    const rawName = result.productName || [result.brand, result.model].filter(Boolean).join(' ') || '';
+    if (rawName) {
+        const itemEl = document.getElementById('specEvalItemName');
+        if (itemEl && !itemEl.value.trim()) itemEl.value = rawName;
+    }
+    applyWebLookupToForm({
+        brand: result.brand,
+        model: result.model || result.productName,
+        category: result.category,
+        specs: result.specs,
+        sources: [{ provider: result.ai ? 'AI document parse' : 'Document parse' }]
+    }, rawName || result.productName || 'Uploaded spec');
+
+    const purposeEl = document.getElementById('specEvalPurpose');
+    if (purposeEl && result.purpose && !purposeEl.value.trim()) {
+        purposeEl.value = result.purpose;
+    } else if (purposeEl && result.summary && !purposeEl.value.trim()) {
+        purposeEl.value = result.summary;
+    }
+}
+
 function applyWebLookupToForm(result, rawName) {
     const brandModel = [result.brand, result.model].filter(Boolean).join(' ') || result.model || rawName;
     const category = result.category || detectSpecCategory(rawName);
@@ -1517,3 +1540,5 @@ function initSpecEvaluationModule() {
 
     updateSpecEvalTotal();
 }
+
+window.applySpecDocumentToForm = applySpecDocumentToForm;
