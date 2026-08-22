@@ -17,15 +17,25 @@ function getModulesHost() {
     return host;
 }
 
+async function fetchAppAsset(url) {
+    try {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (res.ok) return res;
+    } catch (_) { /* offline */ }
+    if ('caches' in window) {
+        const cached = await caches.match(url);
+        if (cached) return cached;
+    }
+    throw new Error(`Asset unavailable offline: ${url}`);
+}
+
 async function fetchModuleManifest() {
     if (moduleManifestIds) return moduleManifestIds;
     try {
-        const res = await fetch('modules/manifest.json', { cache: 'no-cache' });
-        if (res.ok) {
-            const data = await res.json();
-            moduleManifestIds = Array.isArray(data.modules) ? data.modules : [];
-            return moduleManifestIds;
-        }
+        const res = await fetchAppAsset('modules/manifest.json');
+        const data = await res.json();
+        moduleManifestIds = Array.isArray(data.modules) ? data.modules : [];
+        return moduleManifestIds;
     } catch (e) {
         console.warn('Module manifest unavailable', e);
     }
@@ -48,7 +58,8 @@ async function loadModuleHtml(moduleId) {
     }
 
     MODULE_LOAD_PROMISES[moduleId] = (async () => {
-        const res = await fetch(`modules/${encodeURIComponent(moduleId)}.html`, { cache: 'no-cache' });
+        const url = `modules/${encodeURIComponent(moduleId)}.html`;
+        const res = await fetchAppAsset(url);
         if (!res.ok) throw new Error(`Module HTML not found: ${moduleId} (${res.status})`);
         const html = await res.text();
         MODULE_HTML_CACHE[moduleId] = html;

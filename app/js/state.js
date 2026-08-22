@@ -118,6 +118,7 @@ function createDefaultState() {
         glBudgets,
         glMonthlyTargets: {},
         glTargetViewMonth: '',
+        monthlyTargetProposals: {},
         releaseCuts: [],
         storesInventory: createDefaultStoresInventory(),
         customInventoryLedgers: [],
@@ -189,6 +190,9 @@ function loadState() {
                 ? parsed.glMonthlyTargets
                 : {},
             glTargetViewMonth: parsed.glTargetViewMonth || '',
+            monthlyTargetProposals: (parsed.monthlyTargetProposals && typeof parsed.monthlyTargetProposals === 'object')
+                ? parsed.monthlyTargetProposals
+                : {},
             releaseCuts: parsed.releaseCuts || [],
             storesInventory: mergeStoresInventory(parsed.storesInventory),
             customInventoryLedgers: Array.isArray(parsed.customInventoryLedgers) ? parsed.customInventoryLedgers : [],
@@ -257,6 +261,9 @@ function mergeState(parsed) {
             ? parsed.glMonthlyTargets
             : {},
         glTargetViewMonth: parsed.glTargetViewMonth || '',
+        monthlyTargetProposals: (parsed.monthlyTargetProposals && typeof parsed.monthlyTargetProposals === 'object')
+            ? parsed.monthlyTargetProposals
+            : {},
         releaseCuts: parsed.releaseCuts || [],
         storesInventory: mergeStoresInventory(parsed.storesInventory),
         customInventoryLedgers: Array.isArray(parsed.customInventoryLedgers) ? parsed.customInventoryLedgers : [],
@@ -368,6 +375,7 @@ function stateHasOperationalData(state) {
     const inv = state.storesInventory;
     if (inv && Array.isArray(inv.transactions) && inv.transactions.length > 0) return true;
     if (Object.keys(state.glMonthlyTargets || {}).length > 0) return true;
+    if (Object.keys(state.monthlyTargetProposals || {}).length > 0) return true;
     return false;
 }
 

@@ -21,8 +21,9 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from mode_switch import handle_mode_switch, mode_status_payload, prepare_server_startup
+from python_runtime import runtime_root
 
-ROOT = Path(__file__).resolve().parent
+ROOT = runtime_root()
 APP_INDEX = "app/index.html"
 HOST = "0.0.0.0"
 PORT = 8080

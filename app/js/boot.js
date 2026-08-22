@@ -163,6 +163,7 @@ async function runHeavyBootInit() {
     initTableSearch();
     initReportsModule();
     if (typeof initGlTargetMonthControls === 'function') initGlTargetMonthControls();
+    if (typeof initMonthlyTargetProposalControls === 'function') initMonthlyTargetProposalControls();
     initSpecEvaluationModule();
     if (typeof initAiAssistant === 'function') initAiAssistant();
     if (typeof initRequisitionsModule === 'function') initRequisitionsModule();

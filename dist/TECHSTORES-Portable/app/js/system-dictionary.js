@@ -124,7 +124,7 @@ const SYSTEM_DICTIONARY_GROUPS = [
         title: 'Modules & workflows',
         terms: [
             { t: 'Dashboard', d: 'KPIs, Notifications, GL cards, stock overview and navigation hub.', w: 'dashboard' },
-            { t: 'Issue Voucher', d: 'Post IV/RV stock movements by catalog category against GLs.', w: 'voucher-module' },
+            { t: 'Issue Voucher / ZNA-Q-1033', d: 'Post IV/RV stock movements by catalog category against GLs (official form ZNA-Q-1033).', w: 'voucher-module' },
             { t: 'Unit / Formation Requisitions', d: 'Capture loose minutes, age open requests, Route to Q 1033 or DP F1.', w: 'unit-requisitions' },
             { t: 'Orderly Room', d: 'Daily File / First Sight correspondence and TechStores alerts.', w: 'orderly-room' },
             { t: 'Gate Register (RP)', d: 'Equipment in/out at the gate. Does not change inventory balances.', w: 'gate-register' },

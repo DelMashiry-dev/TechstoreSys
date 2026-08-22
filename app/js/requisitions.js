@@ -228,6 +228,29 @@ function getRequisitionAlerts(options = {}) {
         });
     }
 
+    open.filter(({ req }) => req.fulfillmentPath === 'manual_daf' || req.fulfillmentPath === 'await_replenishment').slice(0, 4).forEach(({ req }) => {
+        alerts.push({
+            type: 'warning',
+            target: 'unit-requisitions',
+            reqId: req.id,
+            text: `Awaiting DAF / target: ${req.unit || 'Unit'} — ${req.itemDescription || req.subject} (${req.fulfillmentLabel || 'needs funding'}).`
+        });
+    });
+
+    const ym = typeof getSelectedGlTargetMonth === 'function' ? getSelectedGlTargetMonth() : '';
+    open.filter(({ req }) => (req.targetMonth || String(req.receivedDate || '').slice(0, 7)) === ym).slice(0, 3).forEach(({ req }) => {
+        const proposal = typeof getMonthlyTargetProposal === 'function' ? getMonthlyTargetProposal(ym) : null;
+        const linked = proposal?.lines?.some((l) => l.requisitionId === req.id);
+        if (!linked) {
+            alerts.push({
+                type: 'info',
+                target: 'unit-requisitions',
+                reqId: req.id,
+                text: `${req.reqNo || 'REQ'} for ${typeof formatYmLabel === 'function' ? formatYmLabel(ym) : ym} — add to monthly target proposal (Build from requisitions).`
+            });
+        }
+    });
+
     return alerts;
 }
 
@@ -256,6 +279,9 @@ function clearRequisitionForm() {
     set('reqCategory', getRequisitionCategoryOptions()[0]?.value || 'other');
     set('reqItem', '');
     set('reqQty', '1');
+    set('reqUnitPrice', '');
+    set('reqEstimatedCost', '');
+    set('reqTargetMonth', typeof getSelectedGlTargetMonth === 'function' ? getSelectedGlTargetMonth() : '');
     set('reqPriority', 'normal');
     set('reqStatus', 'received');
     set('reqNotes', '');
@@ -295,6 +321,9 @@ function fillRequisitionForm(req) {
     set('reqCategory', req.category || 'other');
     set('reqItem', req.itemDescription || '');
     set('reqQty', req.qty != null ? String(req.qty) : '1');
+    set('reqUnitPrice', req.unitPrice != null ? String(req.unitPrice) : '');
+    set('reqEstimatedCost', req.estimatedCost != null ? String(req.estimatedCost) : '');
+    set('reqTargetMonth', req.targetMonth || (typeof getSelectedGlTargetMonth === 'function' ? getSelectedGlTargetMonth() : ''));
     set('reqPriority', req.priority || 'normal');
     set('reqStatus', req.status || 'received');
     set('reqNotes', req.notes || '');
@@ -390,6 +419,9 @@ function readRequisitionForm() {
         category: document.getElementById('reqCategory')?.value || 'other',
         itemDescription: (document.getElementById('reqItem')?.value || '').trim(),
         qty: parseFloat(document.getElementById('reqQty')?.value) || 0,
+        unitPrice: parseFloat(document.getElementById('reqUnitPrice')?.value) || 0,
+        estimatedCost: parseFloat(document.getElementById('reqEstimatedCost')?.value) || 0,
+        targetMonth: document.getElementById('reqTargetMonth')?.value || '',
         priority: document.getElementById('reqPriority')?.value || 'normal',
         status: document.getElementById('reqStatus')?.value || 'received',
         notes: (document.getElementById('reqNotes')?.value || '').trim(),
@@ -419,6 +451,12 @@ function saveRequisitionFromForm() {
         showToast('Quantity must be at least 1.', 'error');
         document.getElementById('reqQty')?.focus();
         return;
+    }
+    if (!data.estimatedCost && data.unitPrice && data.qty) {
+        data.estimatedCost = data.unitPrice * data.qty;
+    }
+    if (!data.targetMonth) {
+        data.targetMonth = typeof getSelectedGlTargetMonth === 'function' ? getSelectedGlTargetMonth() : String(data.receivedDate || '').slice(0, 7);
     }
 
     const list = ensureRequisitions();
@@ -594,7 +632,7 @@ function renderRequisitionsTable() {
         });
 
     if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="10" class="req-empty-row">No requisitions match this filter. Capture unit/formation requests above.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="12" class="req-empty-row">No requisitions match this filter. Capture unit/formation requests above.</td></tr>';
         return;
     }
 
@@ -605,6 +643,10 @@ function renderRequisitionsTable() {
         const item = getRequisitionItemCell(req);
         const unitLabel = (typeof resolveZnaUnitLabel === 'function' ? resolveZnaUnitLabel(req.unit) : req.unit) || '—';
         const open = REQ_OPEN_STATUSES.has(req.status);
+        const est = Number(req.estimatedCost) || (Number(req.unitPrice) && req.qty ? Number(req.unitPrice) * Number(req.qty) : 0);
+        const ym = req.targetMonth || String(req.receivedDate || '').slice(0, 7) || '—';
+        const proposal = typeof getMonthlyTargetProposal === 'function' ? getMonthlyTargetProposal(ym) : null;
+        const inProposal = proposal?.lines?.some((l) => l.requisitionId === req.id);
         return `
             <tr class="${bucket.className}" data-req-id="${reqEscape(req.id)}">
                 <td class="req-cell-date">${reqEscape(req.receivedDate || '—')}</td>
@@ -616,8 +658,11 @@ function renderRequisitionsTable() {
                     ${item.refLine ? `<div class="req-item-meta">${reqEscape(item.refLine)}</div>` : ''}
                     <div class="req-item-meta">${reqEscape(getRequisitionCategoryLabel(req.category))}</div>
                     ${typeof fulfillmentBadgeHtml === 'function' ? fulfillmentBadgeHtml(req) : ''}
+                    ${inProposal ? '<span class="req-proposal-badge">In target proposal</span>' : ''}
                 </td>
                 <td class="req-cell-qty">${reqEscape(req.qty || 0)}</td>
+                <td class="req-cell-cost">${est > 0 ? reqEscape(typeof formatCurrency === 'function' ? formatCurrency(est) : est) : '—'}</td>
+                <td class="req-cell-month">${reqEscape(ym)}</td>
                 <td><span class="req-priority req-priority-${reqEscape(req.priority || 'normal')}">${reqEscape((req.priority || 'normal').toUpperCase())}</span></td>
                 <td><span class="req-status-badge req-status-${reqEscape(req.status || 'received')}">${reqEscape(getRequisitionStatusLabel(req.status))}</span></td>
                 <td><span class="req-age-badge ${bucket.className}" title="${reqEscape(bucket.label)}">${age}d</span></td>
@@ -717,6 +762,16 @@ function initRequisitionsModule() {
         const subjectEl = document.getElementById('reqSubject');
         if (!subjectEl || !item) return;
         if (!String(subjectEl.value || '').trim()) subjectEl.value = item;
+    });
+
+    const syncReqEstimatedCost = () => {
+        const qty = parseFloat(document.getElementById('reqQty')?.value) || 0;
+        const unit = parseFloat(document.getElementById('reqUnitPrice')?.value) || 0;
+        const estEl = document.getElementById('reqEstimatedCost');
+        if (estEl && qty > 0 && unit > 0) estEl.value = String(qty * unit);
+    };
+    ['reqQty', 'reqUnitPrice'].forEach((id) => {
+        document.getElementById(id)?.addEventListener('input', syncReqEstimatedCost);
     });
 
     document.getElementById('reqFilterStatus')?.addEventListener('change', renderRequisitionsTable);
@@ -837,6 +892,49 @@ function ensureExampleMidLaptopRequisition() {
     return req;
 }
 
+function buildUnitRequisitionsReportData() {
+    const rows = ensureRequisitions()
+        .filter((req) => REQ_OPEN_STATUSES.has(req.status))
+        .sort((a, b) => {
+            if (a.priority === 'urgent' && b.priority !== 'urgent') return -1;
+            if (b.priority === 'urgent' && a.priority !== 'urgent') return 1;
+            return getRequisitionAgeDays(b) - getRequisitionAgeDays(a);
+        })
+        .map((req) => {
+            const est = Number(req.estimatedCost) || (Number(req.unitPrice) && req.qty ? Number(req.unitPrice) * Number(req.qty) : 0);
+            const gl = typeof resolveGlForRequisition === 'function' ? resolveGlForRequisition(req) : '—';
+            return [
+                req.reqNo || '',
+                req.receivedDate || '',
+                req.unit || '',
+                req.itemDescription || req.subject || '',
+                req.qty || '',
+                est ? formatCurrency(est) : '',
+                gl,
+                req.targetMonth || String(req.receivedDate || '').slice(0, 7),
+                (req.priority || 'normal').toUpperCase(),
+                getRequisitionStatusLabel(req.status),
+                `${getRequisitionAgeDays(req)}d`
+            ];
+        });
+    return {
+        title: 'Unit Requisitions — Priority List (Open)',
+        summary: [
+            `Open requisitions: ${rows.length}`,
+            'Sorted urgent first, then by age.',
+            'Use Monthly Target Proposal on the dashboard to roll needs into a DAF target request.'
+        ],
+        fields: [],
+        tables: [{
+            tbodyId: 'unit-requisitions-priority',
+            title: 'Open unit / formation requisitions',
+            headers: ['Req No', 'Received', 'Unit', 'Item', 'Qty', 'Est. cost', 'GL', 'Target month', 'Priority', 'Status', 'Age'],
+            rows
+        }]
+    };
+}
+
+window.buildUnitRequisitionsReportData = buildUnitRequisitionsReportData;
 window.ensureExampleMidLaptopRequisition = ensureExampleMidLaptopRequisition;
 window.createBlankMinuteSheet = createBlankMinuteSheet;
 window.REQ_MINUTE_SHEET_APPTS = REQ_MINUTE_SHEET_APPTS;

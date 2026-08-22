@@ -34,6 +34,16 @@ const PHYSICAL_STOCK_COUNT_2026_07_31 = [
         name: 'Samsung Galaxy Tab S11',
         qty: 2,
         custom: { category: 'inv-tablets', sourceCategory: 'ict-equipment', gl: '3112210001', sectionLabel: 'Tablets' }
+    },
+    {
+        id: 'ict-equipment__canon-imagerunner-c3025i',
+        name: 'Canon imageRUNNER C3025i',
+        qty: 1
+    },
+    {
+        id: 'ict-equipment__hp-omnibook-x-flip-16',
+        name: 'HP OmniBook X Flip 16 AI (Intel Core Ultra 9)',
+        qty: 1
     }
 ];
 

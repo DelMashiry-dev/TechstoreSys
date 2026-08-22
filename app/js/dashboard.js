@@ -19,6 +19,8 @@ function getModuleLabel(moduleId) {
         'orderly-room': 'Orderly Room — DF & Correspondence Files',
         'it-dir-comms': 'IT Directorate — Communications Portal',
         'unit-requisitions': 'Unit / Formation Requisitions',
+        'monthly-target-proposal': 'IT Dir Monthly Target / Priority List',
+        'daf-fund-request-memo': 'DAF Fund Request Memo',
         'monthly-returns': 'Monthly Returns — Unit ICT Equipment',
         'spec-evaluation': 'Spec/Tech Evaluation',
         'dp-f1-form': 'DP F1 Form',
@@ -315,15 +317,22 @@ function renderBudgetOverviewTable(rows) {
         const status = getBudgetStatus(row.budget, row.balance);
         const funding = row.fundingNote || '';
         const isTotal = row.code === 'ALL';
+        const proposed = row.proposed != null ? row.proposed : 0;
         const targetCell = isTotal || !canEdit
             ? formatCurrency(row.budget)
             : `<input type="number" class="form-control gl-target-input" min="0" step="0.01"
                     data-gl-target="${row.code}" value="${row.budget || 0}" title="DAF monthly target / vote for ${row.code}">`;
+        const proposedCell = isTotal
+            ? formatCurrency(proposed)
+            : (proposed > 0
+                ? `<strong class="${proposed > row.budget && row.budget > 0 ? 'proposal-over-vote' : 'proposal-ok'}">${formatCurrency(proposed)}</strong>`
+                : '—');
         return `
             <tr class="${isTotal ? 'gl-target-total-row' : ''} ${row.budget > 0 ? 'is-funded' : 'is-unfunded'}">
                 <td><span class="gl-link" data-target="${row.target}">${row.code}</span><br><small>${row.name}</small>
                     ${!isTotal && funding ? `<div class="gl-funding-note">${funding}</div>` : ''}
                 </td>
+                <td>${proposedCell}</td>
                 <td>${targetCell}</td>
                 <td>${formatCurrency(row.committed)}</td>
                 <td>${(row.vouchers >= 0 ? '+' : '') + formatCurrency(row.vouchers)}</td>
@@ -1295,6 +1304,7 @@ function updateDashboard() {
             code: gl,
             name: GL_ACCOUNTS[gl].name,
             target: card.getAttribute('data-target'),
+            proposed: typeof getProposalAmountForGl === 'function' ? getProposalAmountForGl(gl, month) : 0,
             budget: totals.budget,
             committed: totals.committed,
             vouchers: totals.vouchers,
@@ -1312,6 +1322,7 @@ function updateDashboard() {
             code: 'ALL',
             name: month ? `Month total · ${typeof formatYmLabel === 'function' ? formatYmLabel(month) : month}` : 'Financial Year Total',
             target: 'financial-year-bids',
+            proposed: overviewRows.reduce((s, r) => s + (r.proposed || 0), 0),
             budget: summaryBudget,
             committed: summaryCommitted,
             vouchers: summaryVouchers,

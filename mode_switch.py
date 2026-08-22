@@ -10,10 +10,17 @@ import sys
 import time
 from pathlib import Path
 
-from python_runtime import python_executable
+from python_runtime import (
+    FROZEN_MODE_EXE,
+    frozen_server_exe,
+    is_frozen,
+    python_command,
+    python_executable,
+    runtime_root,
+)
 
 PORT = 8080
-ROOT = Path(__file__).resolve().parent
+ROOT = runtime_root()
 LOG_PATH = ROOT / "mode_switch.log"
 
 CREATE_NEW_CONSOLE = 0x00000010
@@ -54,15 +61,26 @@ def kill_port(port: int = PORT) -> None:
 
 def kill_techstores_servers(exclude_pid: int | None = None) -> None:
     skip = int(exclude_pid if exclude_pid is not None else os.getpid())
-    root_text = str(ROOT).replace("\\", "\\\\")
-    ps = (
-        "$procs = Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" -ErrorAction SilentlyContinue | "
-        "Where-Object { $_.CommandLine -and "
-        f"($_.CommandLine -like '*{root_text}*') -and "
-        "($_.CommandLine -match 'server\\.py|offline_static_server\\.py') }; "
-        f"foreach ($p in $procs) {{ if ($p.ProcessId -ne {skip}) {{ "
-        "Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue }} }}"
-    )
+    root_text = str(ROOT).replace("\\", "\\\\").replace("'", "''")
+    if is_frozen() or (ROOT / "TECHSTORES.exe").is_file():
+        ps = (
+            f"$root = '{root_text}'; $skip = {skip}; "
+            "$names = @('TECHSTORES','TECHSTORES-OFFLINE','TECHSTORES-LAUNCHER'); "
+            "Get-Process -ErrorAction SilentlyContinue | Where-Object { "
+            "$names -contains $_.ProcessName -and $_.Id -ne $skip "
+            "} | ForEach-Object { "
+            "try { $path = $_.Path; if ($path -and $path.StartsWith($root, [System.StringComparison]::OrdinalIgnoreCase)) { "
+            "Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue } } catch {} }"
+        )
+    else:
+        ps = (
+            "$procs = Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" -ErrorAction SilentlyContinue | "
+            "Where-Object { $_.CommandLine -and "
+            f"($_.CommandLine -like '*{root_text}*') -and "
+            "($_.CommandLine -match 'server\\.py|offline_static_server\\.py') }; "
+            f"foreach ($p in $procs) {{ if ($p.ProcessId -ne {skip}) {{ "
+            "Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue }} }}"
+        )
     subprocess.run(
         ["powershell", "-NoProfile", "-Command", ps],
         cwd=ROOT,
@@ -83,14 +101,14 @@ def ensure_port_free(timeout: float = 12.0) -> bool:
 
 
 def start_server(script_name: str, title: str) -> None:
-    script = ROOT / script_name
-    if not script.is_file():
-        raise FileNotFoundError(script)
-    py = python_executable()
-    if Path(py).name.lower() == "py.exe":
-        run_args = [py, "-3", "-u", str(script)]
+    frozen_exe = frozen_server_exe(script_name)
+    if frozen_exe:
+        run_args = [str(frozen_exe)]
     else:
-        run_args = [py, "-u", str(script)]
+        script = ROOT / script_name
+        if not script.is_file():
+            raise FileNotFoundError(script)
+        run_args = python_command(script)
     # Use argv form of `start` — the old single-string cmd line often failed to launch Python.
     launch = ["cmd.exe", "/c", "start", title, "cmd", "/k", *run_args]
     _log(f"start_server launch={launch}")
@@ -158,11 +176,11 @@ def prepare_server_startup(expected: str) -> None:
 def request_switch(target: str) -> None:
     """Run switch in a detached helper so the current HTTP response can finish."""
     log_handle = LOG_PATH.open("a", encoding="utf-8")
-    py = python_executable()
-    if Path(py).name.lower() == "py.exe":
-        cmd = [py, "-3", "-u", str(ROOT / "mode_switch.py"), "--perform", target]
+    mode_exe = ROOT / FROZEN_MODE_EXE
+    if mode_exe.is_file():
+        cmd = [str(mode_exe), "--perform", target]
     else:
-        cmd = [py, "-u", str(ROOT / "mode_switch.py"), "--perform", target]
+        cmd = python_command(ROOT / "mode_switch.py", ["--perform", target])
     subprocess.Popen(
         cmd,
         cwd=ROOT,
@@ -216,6 +234,14 @@ def handle_mode_switch(handler, current_mode: str, read_json) -> bool:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Switch Tech Stores server mode")
     parser.add_argument("--perform", choices=["online", "offline"])
+    parser.add_argument("--wait", choices=["online", "offline"])
+    parser.add_argument("--timeout", type=float, default=45.0)
+    parser.add_argument("--port-check", action="store_true")
     args = parser.parse_args()
+    if args.port_check:
+        raise SystemExit(0 if port_is_listening(PORT) else 1)
     if args.perform:
         perform_switch(args.perform)
+    if args.wait:
+        ok = wait_for_mode(args.wait, timeout=args.timeout)
+        raise SystemExit(0 if ok else 1)

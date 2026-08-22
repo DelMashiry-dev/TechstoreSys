@@ -279,11 +279,12 @@ function demoSeedInventory() {
         'consumables-toners__hp-ce280a-toner': 6,
         'custom__inv-usb__sandisk-32g-usb-memory-stick': 42,
         'custom__inv-tablets__samsung-galaxy-tab-s11': 5,
+        'ict-equipment__canon-imagerunner-c3025i': 1,
+        'ict-equipment__hp-omnibook-x-flip-16': 1,
         // Legacy category-level openings (fill empty parent cards)
         'inv-softwares': 36,
         'inv-spares': 54,
         'inv-maintenance': 22,
-        'inv-laptops': 14,
         'inv-desktops': 9,
         'inv-printers': 7,
         'inv-projectors': 4,
@@ -344,13 +345,13 @@ function demoSeedInventory() {
             party: 'Server room', sourceRef: 'IV/IT/0826/028'
         }),
         demoStockTxn({
-            date: demoIsoDaysAgo(14), type: 'receipt', itemId: 'inv-laptops',
-            category: 'inv-laptops', item: 'Dell Latitude 5540', qty: 8, gl: '3112210001',
+            date: demoIsoDaysAgo(14), type: 'receipt', itemId: 'ict-equipment__dell-latitude-5540',
+            category: 'ict-equipment', item: 'Dell Latitude 5540', qty: 8, gl: '3112210001',
             party: 'ICT Hub', sourceRef: 'RV/IT/0826/003'
         }),
         demoStockTxn({
-            date: demoIsoDaysAgo(7), type: 'issue', itemId: 'inv-laptops',
-            category: 'inv-laptops', item: 'Dell Latitude 5540', qty: 3, gl: '3112210001',
+            date: demoIsoDaysAgo(7), type: 'issue', itemId: 'ict-equipment__dell-latitude-5540',
+            category: 'ict-equipment', item: 'Dell Latitude 5540', qty: 3, gl: '3112210001',
             party: '1 Inf Bde', sourceRef: 'IV/IT/0826/019'
         }),
         demoStockTxn({
@@ -362,9 +363,23 @@ function demoSeedInventory() {
             date: demoIsoDaysAgo(1), type: 'issue', itemId: 'custom__inv-tablets__samsung-galaxy-tab-s11',
             category: 'inv-tablets', item: 'Samsung Galaxy Tab S11', qty: 1, gl: '3112210001',
             party: 'Dir AIAD visit', sourceRef: 'IV/IT/0826/051'
+        }),
+        demoStockTxn({
+            date: demoIsoDaysAgo(16), type: 'receipt', itemId: 'ict-equipment__canon-imagerunner-c3025i',
+            category: 'inv-printers', item: 'Canon imageRUNNER C3025i', qty: 1, gl: '3112210001',
+            party: 'Canon / ICT Hub', sourceRef: 'RV/IT/0826/002'
+        }),
+        demoStockTxn({
+            date: demoIsoDaysAgo(15), type: 'receipt', itemId: 'ict-equipment__hp-omnibook-x-flip-16',
+            category: 'inv-laptops', item: 'HP OmniBook X Flip 16 AI (Intel Core Ultra 9)', qty: 1, gl: '3112210001',
+            party: 'HP / ICT Hub', sourceRef: 'RV/IT/0826/006'
         })
     ];
     inv.transactions.push(...txns);
+
+    if (typeof applyInventoryRefreshAug2026 === 'function') {
+        applyInventoryRefreshAug2026({ force: true });
+    }
 }
 
 function demoSeedIctAccountability() {

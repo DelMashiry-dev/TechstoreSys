@@ -13,10 +13,11 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from mode_switch import is_localhost, perform_switch
+from python_runtime import runtime_root
 
 HOST = "127.0.0.1"
 PORT = 8765
-ROOT = Path(__file__).resolve().parent
+ROOT = runtime_root()
 
 
 class LauncherHandler(BaseHTTPRequestHandler):

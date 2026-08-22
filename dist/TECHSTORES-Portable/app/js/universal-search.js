@@ -692,6 +692,7 @@ function initUniversalSearch() {
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('[data-universal-search], #universalSearchBtn, #headerSearchBtn');
         if (!btn) return;
+        if (typeof canSeeStoresOpsDashboard === 'function' && !canSeeStoresOpsDashboard()) return;
         e.preventDefault();
         openUniversalSearch();
     });
@@ -699,6 +700,7 @@ function initUniversalSearch() {
     const dashInput = document.getElementById('dashboardUniversalSearchInput');
     if (dashInput) {
         const openFromField = (e) => {
+            if (typeof canSeeStoresOpsDashboard === 'function' && !canSeeStoresOpsDashboard()) return;
             e.preventDefault();
             openUniversalSearch(String(dashInput.value || '').trim());
         };
@@ -714,6 +716,7 @@ function initUniversalSearch() {
         const tag = (e.target && e.target.tagName) || '';
         const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target?.isContentEditable;
         if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 'k') {
+            if (typeof canSeeStoresOpsDashboard === 'function' && !canSeeStoresOpsDashboard()) return;
             e.preventDefault();
             openUniversalSearch();
             return;

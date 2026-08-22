@@ -7,6 +7,31 @@ import shutil
 import sys
 from pathlib import Path
 
+FROZEN_SERVER_EXES = {
+    "server.py": "TECHSTORES.exe",
+    "offline_static_server.py": "TECHSTORES-OFFLINE.exe",
+}
+FROZEN_MODE_EXE = "TECHSTORES-MODE.exe"
+FROZEN_LAUNCHER_EXE = "TECHSTORES-LAUNCHER.exe"
+
+
+def is_frozen() -> bool:
+    return bool(getattr(sys, "frozen", False))
+
+
+def runtime_root() -> Path:
+    if is_frozen():
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent
+
+
+def frozen_server_exe(script_name: str) -> Path | None:
+    name = FROZEN_SERVER_EXES.get(script_name)
+    if not name:
+        return None
+    exe = runtime_root() / name
+    return exe if exe.is_file() else None
+
 
 def python_executable() -> str:
     exe = Path(sys.executable)

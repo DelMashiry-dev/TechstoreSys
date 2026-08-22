@@ -303,11 +303,11 @@ function suggestInventoryLedgerKey(itemName) {
     if (/\b(usb|flash|memory\s*stick|pen\s*drive)\b/.test(lower)) return 'inv-usb';
     if (/\b(external|hdd|hard\s*drive)\b/.test(lower)) return 'inv-external-hdd';
     if (/\b(software|licence|license|windows|office|kaspersky)\b/.test(lower)) return 'inv-softwares';
-    if (/\b(motherboard|ssd|ram|ddr|fuser|roller|spare)\b/.test(lower)) return 'inv-spares';
+    if (/\b(motherboard|ssd|ram|ddr|fuser|roller|spare|ups|battery\s*kits?)\b/.test(lower)) return 'inv-spares';
     if (/\b(maintenance|photocopier|reballing)\b/.test(lower)) return 'inv-maintenance';
     if (/\b(laptop|notebook|elitebook|latitude|thinkpad)\b/.test(lower)) return 'inv-laptops';
     if (/\b(desktop|optiplex|prodesk)\b/.test(lower)) return 'inv-desktops';
-    if (/\b(tablet|ipad|galaxy\s*tab)\b/.test(lower)) return 'inv-tablets';
+    if (/\b(tablets?|ipads?|galaxy\s*tab)\b/.test(lower) || /\btab\s*[sabfe]?\s*\d/i.test(lower)) return 'inv-tablets';
     if (/\b(printer|mfp|laserjet)\b/.test(lower)) return 'inv-printers';
     if (/\b(projector)\b/.test(lower)) return 'inv-projectors';
     if (/\b(smart\s*board|interactive)\b/.test(lower)) return 'inv-smartboards';

@@ -8,7 +8,7 @@ function getModuleLabel(moduleId) {
         'gl-220200002': 'GL 220200002 - Tech Equipment Maintenance',
         'gl-3112210001': 'GL 3112210001 - ICT Equipment',
         'gl-2201900002': 'GL 2201900002 - Spare Parts',
-        'voucher-module': 'Issue Voucher',
+        'voucher-module': 'Issue Voucher / ZNA-Q-1033',
         'stock-take': 'Stock Take — Full Stores Inventory',
         'unit-checks': 'Unit Check Log — ASO Ch 28',
         'financial-year-bids': 'Financial Year Bids',
@@ -224,7 +224,8 @@ const DASH_COLLAPSE_DEFAULTS = {
     'gl-portfolio': true,
     'gl-target-overview': true,
     'inventory-ledgers': true,
-    'inventory-recon': true
+    'inventory-recon': true,
+    'product-stock': false
 };
 
 function getDashCollapseState() {
@@ -886,6 +887,13 @@ function updateGlCollapsedSummary(overviewRows, summaryBudget, summaryCommitted,
     setText('glSumBalance', formatCurrency(summaryBalance));
     setText('glSumUtilPct', `${usedPercent.toFixed(1)}%`);
 
+    const vouchersEl = document.getElementById('glSumVouchers');
+    if (vouchersEl) {
+        vouchersEl.textContent = (summaryVouchers >= 0 ? '+' : '') + formatCurrency(summaryVouchers);
+        vouchersEl.classList.toggle('is-voucher-charge', summaryVouchers > 0);
+        vouchersEl.classList.toggle('is-voucher-credit', summaryVouchers < 0);
+    }
+
     const balEl = document.getElementById('glSumBalance');
     if (balEl) {
         balEl.classList.toggle('buying-power-ok', summaryBalance >= 0);
@@ -915,7 +923,7 @@ function updateGlCollapsedSummary(overviewRows, summaryBudget, summaryCommitted,
                 <button type="button" class="gl-summary-bar-row ${tone}${neg}" role="listitem"
                     data-gl-nav="${target}"
                     data-gl-title="${String(row.name || row.code).replace(/"/g, '&quot;')}"
-                    data-gl-body="${(`Buying power ${formatCurrency(row.balance)} · Target ${formatCurrency(row.budget)} · Committed ${formatCurrency(row.committed)} · ${st.label}`).replace(/"/g, '&quot;')}"
+                    data-gl-body="${(`Buying power ${formatCurrency(row.balance)} · Target ${formatCurrency(row.budget)} · Committed ${formatCurrency(row.committed)} · Vouchers ${(row.vouchers >= 0 ? '+' : '') + formatCurrency(row.vouchers)} · ${st.label}`).replace(/"/g, '&quot;')}"
                     data-target="${target}" title="${title.replace(/"/g, '&quot;')}">
                     <span class="gl-summary-bar-name">${short}</span>
                     <span class="gl-summary-bar-pill" style="--pill-base:${color}">${formatCurrency(row.balance)}</span>
@@ -1326,6 +1334,7 @@ function updateDashboard() {
     );
     renderBudgetOverviewTable(overviewRows);
     renderInventoryDashboard();
+    if (typeof renderProductStockRegister === 'function') renderProductStockRegister();
     renderRecentTransfers();
     if (typeof initDashboardCollapsibles === 'function') initDashboardCollapsibles();
     if (typeof wireGlProcurementUi === 'function') wireGlProcurementUi();

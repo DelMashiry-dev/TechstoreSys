@@ -354,6 +354,8 @@ function initGlTargetMonthControls() {
     monthEl.addEventListener('change', () => {
         setSelectedGlTargetMonth(monthEl.value);
         syncDafMetaFields();
+        if (typeof syncProposalMemoFormFields === 'function') syncProposalMemoFormFields();
+        if (typeof renderTargetProposalBanner === 'function') renderTargetProposalBanner();
         if (typeof updateDashboard === 'function') updateDashboard();
     });
 

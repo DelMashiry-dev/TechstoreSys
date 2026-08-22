@@ -400,7 +400,7 @@ function saveVoucherModule() {
     const voucherType = getVoucherTypeFromModuleData(data);
     const impact = getVoucherImpactByGl();
     const totalImpact = Object.values(impact).reduce((sum, value) => sum + Math.abs(value), 0);
-    const typeLabel = voucherType === 'iv' ? 'Issue Voucher' : 'Receipt Voucher';
+    const typeLabel = voucherType === 'iv' ? 'Issue Voucher / ZNA-Q-1033' : 'Receipt Voucher';
     showToast(`${typeLabel} saved. GL impact: ${formatCurrency(totalImpact)}.`);
 }
 
@@ -423,7 +423,7 @@ function updateVoucherSummary() {
     const voucherType = getVoucherTypeFromModuleData(voucherModule);
     const impact = getVoucherImpactByGl();
     const typeLabel = voucherType === 'iv'
-        ? 'Issue Voucher (IV) — charges GL accounts'
+        ? 'Issue Voucher (IV) / ZNA-Q-1033 — charges GL accounts'
         : 'Receipt Voucher (RV) — credits GL accounts';
 
     summaryEl.classList.remove('voucher-type-iv', 'voucher-type-rv');
@@ -504,7 +504,7 @@ function saveModule(moduleId) {
     saveState();
     updateDashboard();
     updateSystemAlerts();
-    showToast(`${getModuleLabel(moduleId)} saved${dbConnected ? ' to database' : ''} successfully.`);
+    showToast(`${getModuleLabel(moduleId)} saved${dbConnected ? ' to database' : (offlineDurable ? ' (offline copy)' : '')} successfully.`);
 }
 
 function validatePurchaseOrderModule() {

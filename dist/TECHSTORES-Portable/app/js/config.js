@@ -3,6 +3,10 @@ const SESSION_KEY = 'techstores_session_v1';
 const API_BASE = '';
 
 let dbConnected = false;
+let offlineDurable = false;
+let pendingServerSync = false;
+/** online | offline-shell | offline-local | local-only */
+let storageMode = 'local-only';
 let saveTimer = null;
 
 const ROLE_LABELS = {
@@ -78,29 +82,42 @@ function modulesForDeptDesk(deskId, extras = []) {
     return ['dashboard', deskId, 'it-dir-comms', 'unit-requisitions', ...extras, 'process-guides', 'system-help'];
 }
 
-/** Orderly Room — DF / correspondence / routing only (no GL / stock ledgers). */
-const MODULES_ORDERLY = [
-    'dashboard', 'orderly-room', 'it-dir-comms', 'unit-requisitions',
-    'process-guides', 'system-help', 'reports-module'
+/** Orderly Room — removed duplicate; see MODULES_ORDERLY below. */
+
+/** ZNA Q / SVCS forms bundle (storeman + reference). */
+const MODULES_ZNA_Q = [
+    'zna-q-forms-index', 'zna-q-1', 'zna-q-3', 'zna-q-31', 'zna-q-40', 'zna-q-80',
+    'zna-q-178', 'zna-q-982', 'zna-q-985', 'zna-q-987', 'zna-q-998', 'zna-q-1033',
+    'zna-q-1043', 'zna-q-1049', 'zna-q-1157', 'zna-q-1179', 'zna-q-1229', 'zna-q-1571',
+    'zna-q-1680', 'zna-q-1954', 'zna-q-3977', 'zna-svcs-890', 'zna-svcs-1045'
 ];
 
-const MODULES_WORKSHOP = [
-    'dashboard', 'dept-workshop', 'it-dir-comms',
-    'workshop-repairs', 'zna-svcs-1045', 'zna-q-1043',
-    'techstores-equipment-register', 'unit-requisitions', 'process-guides', 'system-help'
-];
-
+/** Storeman — issues, stock take, equipment, loans, ZNA forms, help (no GL ledgers). */
 const MODULES_STOREMAN = [
-    'dashboard', 'it-dir-comms',
-    'voucher-module', 'stock-take', 'delivery-note', 'temporary-loans',
-    'unit-requisitions', 'undelivered-orders',
-    'zna-q-1033', 'zna-svcs-890', 'zna-svcs-1045',
-    'techstores-equipment-register', 'workshop-repairs',
-    'duties-roles', 'process-guides', 'system-help'
+    'dashboard',
+    'voucher-module', 'delivery-note', 'stock-take', 'techstores-equipment-register',
+    'temporary-loans', 'system-help',
+    ...MODULES_ZNA_Q
 ];
 
+/** Workshop IC / 2IC / Senior Technician — repairs register, spec eval, comms only. */
+const MODULES_WORKSHOP = [
+    'dashboard', 'workshop-repairs', 'spec-evaluation', 'it-dir-comms'
+];
+
+/** RP Gate — gate register only (no stores / GL / comms module). */
 const MODULES_RP = [
-    'dashboard', 'gate-register', 'it-dir-comms'
+    'dashboard', 'gate-register'
+];
+
+/** Orderly Room / Admin Officer / Chief Clerk. */
+const MODULES_ORDERLY = [
+    'dashboard', 'orderly-room', 'it-dir-comms'
+];
+
+/** DBA / ITTS / Software Eng / ICT Sec / Sys Admin — comms portal only. */
+const MODULES_COMMS_ONLY = [
+    'dashboard', 'it-dir-comms'
 ];
 
 const MODULES_COMMON = ['dashboard', 'process-guides', 'system-help'];
@@ -116,6 +133,11 @@ function roleOversightViewAll() {
         canReports: true,
         accessMode: 'oversight_view'
     };
+}
+
+/** Access Level 1 — Dir / DD / AQSO2 / TSO / RQ: see everything, cannot alter figures. */
+function roleSuperOversight() {
+    return roleOversightViewAll();
 }
 
 const ROLE_PERMISSIONS = {
@@ -151,11 +173,7 @@ const ROLE_PERMISSIONS = {
         canEdit: false, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: true,
         accessMode: 'oversight_view'
     },
-    rq: {
-        modules: MODULES_RQ,
-        canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: true, canReports: true,
-        accessMode: 'stores_edit'
-    },
+    rq: roleSuperOversight(),
     store_officer: {
         modules: MODULES_STORE_OFFICER,
         canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: true,
@@ -163,7 +181,7 @@ const ROLE_PERMISSIONS = {
     },
     orderly_clerk: {
         modules: MODULES_ORDERLY,
-        canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: true,
+        canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: false,
         accessMode: 'orderly_edit'
     },
     storeman: {
@@ -182,9 +200,9 @@ const ROLE_PERMISSIONS = {
         accessMode: 'workshop_edit'
     },
     oc_sysadmin: {
-        modules: modulesForDeptDesk('dept-sysadmin'),
+        modules: MODULES_COMMS_ONLY,
         canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: false,
-        accessMode: 'dept_edit'
+        accessMode: 'dept_comms'
     },
     oc_workshop: {
         modules: MODULES_WORKSHOP,
@@ -192,29 +210,29 @@ const ROLE_PERMISSIONS = {
         accessMode: 'workshop_edit'
     },
     oc_compengr: {
-        modules: modulesForDeptDesk('dept-compengr'),
+        modules: MODULES_COMMS_ONLY,
         canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: false,
-        accessMode: 'dept_edit'
+        accessMode: 'dept_comms'
     },
     oc_swengr: {
-        modules: modulesForDeptDesk('dept-swengr'),
+        modules: MODULES_COMMS_ONLY,
         canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: false,
-        accessMode: 'dept_edit'
+        accessMode: 'dept_comms'
     },
     oc_ictsec: {
-        modules: modulesForDeptDesk('dept-ictsec'),
+        modules: MODULES_COMMS_ONLY,
         canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: false,
-        accessMode: 'dept_edit'
+        accessMode: 'dept_comms'
     },
     oc_itts: {
-        modules: modulesForDeptDesk('dept-itts'),
+        modules: MODULES_COMMS_ONLY,
         canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: false,
-        accessMode: 'dept_edit'
+        accessMode: 'dept_comms'
     },
     oc_admin: {
-        modules: modulesForDeptDesk('dept-admin', ['orderly-room']),
+        modules: MODULES_ORDERLY,
         canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: false,
-        accessMode: 'dept_edit'
+        accessMode: 'orderly_edit'
     },
     oc_gate: {
         modules: MODULES_RP,
@@ -298,7 +316,21 @@ function resolveLoginUsername(username) {
     const compact = key.replace(/\s+/g, '');
     if (LOGIN_USERNAME_ALIASES[key]) return LOGIN_USERNAME_ALIASES[key];
     if (LOGIN_USERNAME_ALIASES[compact]) return LOGIN_USERNAME_ALIASES[compact];
-    return raw;
+    if (typeof createDefaultUsers === 'function') {
+        const seed = createDefaultUsers().find((u) =>
+            String(u.username || '').toLowerCase() === raw.toLowerCase()
+        );
+        if (seed) return seed.username;
+    }
+    return raw.toLowerCase();
+}
+
+function demoPasswordMatches(storedPassword, enteredPassword) {
+    const stored = String(storedPassword || '');
+    const entered = String(enteredPassword || '').trim();
+    if (!stored || !entered) return false;
+    if (stored === entered) return true;
+    return stored.toLowerCase() === entered.toLowerCase();
 }
 
 function passwordMatchesLogin(username, password) {
