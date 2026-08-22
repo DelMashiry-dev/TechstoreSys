@@ -19,3 +19,7 @@ data/product-web-cache.json
 .DS_Store
 Thumbs.db
 *.swp
+
+# Runtime logs
+mode_switch.log
+**/mode_switch.log
