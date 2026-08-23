@@ -8806,6 +8806,27 @@ tr.req-age-aging td:first-child {
 
 .dash-command-board.is-collapsed .command-panel.alert-panel {
     padding-bottom: 8px;
+    max-height: none;
+    overflow: visible;
+}
+
+/* Collapse must override Mail/WhatsIn body rules (they set display:flex on .command-collapse-body) */
+.dash-command-board.is-collapsed .dash-collapse-body,
+.dash-command-board.is-collapsed .command-collapse-body {
+    display: none !important;
+}
+
+.dash-command-board.is-collapsed #systemAlerts.sa-view-mail,
+.dash-command-board.is-collapsed #systemAlerts.sa-view-whatsapp,
+.dash-command-board.is-collapsed #systemAlerts.sa-view-cards {
+    max-height: none;
+}
+
+.dash-command-board.is-collapsed #systemAlerts .sa-mail,
+.dash-command-board.is-collapsed #systemAlerts .sa-wa {
+    min-height: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
 }
 
 .command-panel-head h3 {

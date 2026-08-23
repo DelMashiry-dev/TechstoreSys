@@ -570,6 +570,21 @@ function postStockTransaction(payload) {
         return null;
     }
 
+    if (typeof validateIctLaptopIssueCustody === 'function') {
+        const custodyErr = validateIctLaptopIssueCustody({
+            type,
+            party: payload.party,
+            itemId,
+            item: itemName,
+            category,
+            allowDuplicateCustody: payload.allowDuplicateCustody
+        });
+        if (custodyErr) {
+            if (!silent) showToast(custodyErr, 'error');
+            return null;
+        }
+    }
+
     const inv = ensureStoresInventory();
     const txn = {
         id: `stk-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -597,6 +612,15 @@ function postStockTransaction(payload) {
         const code = getOrAssignDisplayItemId(itemId, itemName, category);
         txn.displayItemId = code;
     }
+
+    const isLaptopReturn = type === 'receipt' && payload.party && (
+        payload.laptopReturn
+        || /\b(return|returned)\b/i.test(`${payload.description || ''} ${txn.description || ''}`)
+    );
+    if (isLaptopReturn && typeof closeIctCustodyOnLaptopReturn === 'function') {
+        closeIctCustodyOnLaptopReturn(payload.party);
+    }
+
     saveState();
 
     const after = getItemStockSummary(itemId, { mode: 'cumulative' });

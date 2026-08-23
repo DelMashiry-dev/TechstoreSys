@@ -129,9 +129,37 @@ async function attemptLogin(username, password) {
         : String(username || '').trim();
     const pwd = String(password || '').trim();
 
-    if (navigator.onLine !== false && typeof apiRequestWithTimeout === 'function') {
+    if (window.__stateHydratePromise) {
         try {
-            const data = await apiRequestWithTimeout('/api/login', 5000, {
+            await Promise.race([
+                window.__stateHydratePromise,
+                new Promise((resolve) => setTimeout(resolve, 1800))
+            ]);
+        } catch (_) { /* login with local copy */ }
+    }
+
+    let tryOnline = false;
+    if (navigator.onLine !== false && typeof apiRequestWithTimeout === 'function') {
+        if (typeof isStorageModeOnline === 'function' && isStorageModeOnline()) {
+            tryOnline = true;
+        } else if (typeof getPreferredStorageMode === 'function'
+            && getPreferredStorageMode() === 'online') {
+            // Server may have started since page load — one quick check only (not 10s of retries).
+            try {
+                const health = await apiRequestWithTimeout('/api/health', 900);
+                if (health?.database) {
+                    storageMode = 'online';
+                    dbConnected = true;
+                    tryOnline = true;
+                    if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
+                }
+            } catch (_) { /* stay on offline path */ }
+        }
+    }
+
+    if (tryOnline) {
+        try {
+            const data = await apiRequestWithTimeout('/api/login', 3000, {
                 method: 'POST',
                 body: JSON.stringify({
                     username: resolvedUser,
@@ -140,8 +168,11 @@ async function attemptLogin(username, password) {
             });
             dbConnected = true;
             pendingServerSync = false;
-            const stateData = await apiRequestWithTimeout('/api/state', 5000);
-            appState = mergeState(stateData.appState);
+            const needsState = !appState?.users?.length;
+            if (needsState) {
+                const stateData = await apiRequestWithTimeout('/api/state', 3000);
+                appState = mergeState(stateData.appState);
+            }
             if (typeof persistLocalCopy === 'function') {
                 await persistLocalCopy(appState);
             } else {

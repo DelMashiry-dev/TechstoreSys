@@ -422,6 +422,74 @@ function normalizeZaNumber(value) {
     return raw;
 }
 
+/** Match holder names ignoring rank prefix (Maj, Capt, Sgt, …). */
+function normalizeIctHolderKey(name) {
+    return String(name || '').trim().toLowerCase()
+        .replace(/^(maj|capt|lt|wo\d+|sgt|cpl|mr|mrs|ms|dr)\.?\s+/i, '')
+        .replace(/\s+/g, ' ');
+}
+
+function isLaptopIctDesignation(rec) {
+    const blob = `${rec?.designation || ''} ${rec?.description || ''}`.toLowerCase();
+    return /\b(laptop|notebook|elitebook|omnibook|thinkpad|latitude|macbook|surface|zbook)\b/.test(blob);
+}
+
+function isLaptopStockItem(itemId, itemName, category) {
+    const blob = `${itemId || ''} ${itemName || ''} ${category || ''}`.toLowerCase();
+    if (category === 'inv-laptops') return true;
+    return /\b(laptop|notebook|elitebook|omnibook|thinkpad|latitude|macbook|surface|zbook)\b/.test(blob);
+}
+
+/** Active engraved / Q 1033 custody for a person (issued or on loan). */
+function getActiveIctCustodyForHolder(holderName, opts = {}) {
+    const key = normalizeIctHolderKey(holderName);
+    if (!key) return [];
+    const laptopsOnly = opts.laptopsOnly !== false;
+    return ensureIctAccountability().filter((r) => {
+        if (normalizeIctHolderKey(r.holderName) !== key) return false;
+        if (r.assetClass !== 'equipment') return false;
+        if (!['issued', 'on_loan'].includes(r.status)) return false;
+        if (laptopsOnly && !isLaptopIctDesignation(r)) return false;
+        return true;
+    });
+}
+
+function validateIctLaptopIssueCustody(payload) {
+    if (payload.allowDuplicateCustody) return '';
+    const type = payload.type === 'receipt' ? 'receipt' : 'issue';
+    if (type !== 'issue') return '';
+    if (!isLaptopStockItem(payload.itemId, payload.item, payload.category)) return '';
+    const party = String(payload.party || '').trim();
+    if (!party) return '';
+    const active = getActiveIctCustodyForHolder(party, { laptopsOnly: true });
+    if (!active.length) return '';
+    const refs = active.map((r) => r.form1033Ref || r.zaNumber || r.designation).filter(Boolean).join(', ');
+    return `${party} already has an active laptop issue (Q 1033: ${refs || 'on record'}). `
+        + 'Return the initial issue to stores before posting a second Q 1033 issue.';
+}
+
+/** Mark prior laptop custody returned when a return receipt is posted from a holder. */
+function closeIctCustodyOnLaptopReturn(holderName, opts = {}) {
+    const key = normalizeIctHolderKey(holderName);
+    if (!key) return [];
+    const exceptZa = opts.exceptZa ? normalizeZaNumber(opts.exceptZa) : '';
+    const closed = [];
+    ensureIctAccountability().forEach((r) => {
+        if (normalizeIctHolderKey(r.holderName) !== key) return;
+        if (r.assetClass !== 'equipment') return;
+        if (!['issued', 'on_loan'].includes(r.status)) return;
+        if (!isLaptopIctDesignation(r)) return;
+        const za = normalizeZaNumber(r.zaNumber);
+        if (exceptZa && za === exceptZa) return;
+        r.status = 'returned';
+        r.remarks = [r.remarks, 'Returned to stores — cleared for subsequent Q 1033 issue']
+            .filter(Boolean).join(' · ');
+        r.updatedAt = new Date().toISOString();
+        closed.push(r);
+    });
+    return closed;
+}
+
 function looksLikeZaNumber(value) {
     const t = String(value || '').trim();
     return /^za\s*-?\s*\d+\s*$/i.test(t) || /^\d{2,6}$/.test(t);

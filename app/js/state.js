@@ -99,11 +99,58 @@ async function reconnectDatabaseIfOnline() {
             });
         }
         updateDbStatusBadge();
+        if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
         if (synced && typeof showToast === 'function') {
-            showToast('Switched to online mode — synced to techstores.db.', 'success');
+            showToast('Back online — synced to techstores.db.', 'success');
         }
         if (typeof refreshStorageModeModal === 'function') refreshStorageModeModal();
     } catch (_) { /* still offline */ }
+}
+
+let _connectivityLossNotified = false;
+
+/** Runtime fallback when SQLite server is unreachable — keeps Online as preference, no manual toggle. */
+function enterRuntimeOfflineFallback(options = {}) {
+    const wasConnected = dbConnected;
+    dbConnected = false;
+    pendingServerSync = true;
+    if (storageMode === 'online') {
+        storageMode = offlineDurable ? 'offline-local' : storageMode;
+    }
+    updateDbStatusBadge();
+    if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
+    if (typeof syncModeToggleUi === 'function') syncModeToggleUi();
+    const notify = options.notify !== false;
+    if (notify && wasConnected && !_connectivityLossNotified && typeof showToast === 'function') {
+        _connectivityLossNotified = true;
+        showToast(
+            options.message
+                || 'Connection lost — continuing offline. Your work saves locally and will sync when the server is back.',
+            'warning'
+        );
+    }
+}
+
+/** Ping server; auto-fallback to offline copy or reconnect when preferred mode is Online. */
+async function checkDatabaseConnectivity() {
+    if (!appState) return;
+    if (typeof getPreferredStorageMode === 'function' && getPreferredStorageMode() !== 'online') return;
+    if (storageMode === 'offline-shell') return;
+
+    try {
+        const health = await apiRequestWithTimeout('/api/health', 2000);
+        if (health?.database) {
+            _connectivityLossNotified = false;
+            if (!dbConnected || pendingServerSync) {
+                await reconnectDatabaseIfOnline();
+            }
+            return;
+        }
+    } catch (_) { /* server down */ }
+
+    if (dbConnected || storageMode === 'online') {
+        enterRuntimeOfflineFallback();
+    }
 }
 
 function createDefaultState() {
@@ -383,12 +430,13 @@ function stateHasOperationalData(state) {
 }
 
 async function loadStateFromDatabase() {
-    if (typeof initOfflineStore === 'function') {
-        await initOfflineStore();
-    }
-    if (typeof probeStorageMode === 'function') {
-        await probeStorageMode({ fresh: false });
-    }
+    const probePromise = typeof probeStorageMode === 'function'
+        ? probeStorageMode({ fresh: false })
+        : Promise.resolve();
+    const offlinePromise = typeof initOfflineStore === 'function'
+        ? initOfflineStore()
+        : Promise.resolve(true);
+    await Promise.all([probePromise, offlinePromise]);
 
     if (storageMode !== 'online') {
         dbConnected = false;
@@ -401,7 +449,7 @@ async function loadStateFromDatabase() {
     }
 
     try {
-        const data = await apiRequestWithTimeout('/api/state', 5000);
+        const data = await apiRequestWithTimeout('/api/state', 2500);
         dbConnected = true;
         pendingServerSync = false;
         storageMode = 'online';
@@ -419,23 +467,46 @@ async function loadStateFromDatabase() {
             if (typeof warmOfflineModuleCache === 'function') warmOfflineModuleCache();
             return localState;
         }
-        await persistLocalCopy(remote);
+        persistLocalCopy(remote).catch(() => { /* background */ });
         if (typeof warmOfflineModuleCache === 'function') warmOfflineModuleCache();
         return remote;
     } catch (error) {
         console.warn('Database unavailable, using offline storage.', error?.message || error);
         dbConnected = false;
-        if (typeof probeStorageMode === 'function') {
-            await probeStorageMode({ attempts: 1 });
-        }
         const localState = await loadBestLocalState();
         updateDbStatusBadge();
         if (typeof showToast === 'function' && offlineDurable) {
-            showToast('Offline mode — using your saved browser copy. Use the login toggle or START-SYSTEM.bat for online.', 'info');
+            showToast('Server unavailable — using browser copy. Run START-SYSTEM.bat for online mode.', 'info');
         }
         return localState;
     }
 }
+
+let stateHydratePromise = null;
+
+/** Load app state without blocking the login screen (online first, offline fallback). */
+function hydrateAppStateFromDatabase(force = false) {
+    if (!force && stateHydratePromise) return stateHydratePromise;
+    stateHydratePromise = loadStateFromDatabase()
+        .catch((err) => {
+            console.warn('State hydrate failed', err);
+            try {
+                return loadState();
+            } catch (_) {
+                return createDefaultState();
+            }
+        });
+    window.__stateHydratePromise = stateHydratePromise;
+    return stateHydratePromise;
+}
+
+function resetStateHydratePromise() {
+    stateHydratePromise = null;
+    window.__stateHydratePromise = null;
+}
+
+window.hydrateAppStateFromDatabase = hydrateAppStateFromDatabase;
+window.resetStateHydratePromise = resetStateHydratePromise;
 
 function bumpSaveMeta() {
     if (!appState) return;
@@ -490,12 +561,9 @@ function saveState() {
                 return;
             }
             console.error('Failed to save to database', error);
-            dbConnected = false;
-            pendingServerSync = true;
-            updateDbStatusBadge();
-            if (typeof showToast === 'function') {
-                showToast('Database unavailable — saved to offline copy.', 'warning');
-            }
+            enterRuntimeOfflineFallback({
+                message: 'Database unavailable — saved to offline copy. Will sync when the server is back.'
+            });
         }
     }, 250);
 }
@@ -531,9 +599,7 @@ async function saveStateNow() {
             return trySyncStateToServer(true);
         }
         console.error('Failed to save to database', error);
-        dbConnected = false;
-        pendingServerSync = true;
-        updateDbStatusBadge();
+        enterRuntimeOfflineFallback();
         return false;
     }
 }
@@ -580,14 +646,17 @@ function initPersistentDatabaseHooks() {
 
     window.addEventListener('online', () => {
         updateDbStatusBadge();
-        reconnectDatabaseIfOnline();
+        checkDatabaseConnectivity();
     });
     window.addEventListener('offline', () => {
-        dbConnected = false;
-        updateDbStatusBadge();
+        enterRuntimeOfflineFallback({
+            message: 'Network offline — continuing on local copy until connectivity returns.'
+        });
     });
 
     setInterval(() => {
-        reconnectDatabaseIfOnline();
+        checkDatabaseConnectivity();
     }, 15000);
+
+    setTimeout(() => checkDatabaseConnectivity(), 2500);
 }

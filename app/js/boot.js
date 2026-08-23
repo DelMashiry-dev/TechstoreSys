@@ -151,7 +151,7 @@ async function runHeavyBootInit() {
     if (typeof initInventoryLedgersUi === 'function') initInventoryLedgersUi();
     if (typeof buildVoucherInventorySection === 'function') buildVoucherInventorySection();
     if (typeof preloadAllModules === 'function') {
-        await preloadAllModules();
+        preloadAllModules().catch((e) => console.warn('Background module preload', e));
     }
     restoreAllModules();
     if (typeof initFinancialYearBidsImport === 'function') initFinancialYearBidsImport();
@@ -200,62 +200,75 @@ async function runHeavyBootInit() {
 }
 window.runHeavyBootInit = runHeavyBootInit;
 
-document.addEventListener('DOMContentLoaded', async function() {
-    // Attach login first so a later init error cannot block Sign In
-    wireLoginForm();
-    if (typeof initStorageModeUi === 'function') initStorageModeUi();
-    if (typeof probeStorageMode === 'function') {
-        probeStorageMode({ attempts: 2, timeoutMs: 900 }).then(() => {
-            if (typeof updateDbStatusBadge === 'function') updateDbStatusBadge();
-            if (typeof syncModeToggleUi === 'function') syncModeToggleUi();
-            if (typeof autoStartAppServerIfNeeded === 'function') {
-                autoStartAppServerIfNeeded();
-            }
-        }).catch(() => { /* ignore */ });
+async function finalizeBootState(state) {
+    appState = state || appState;
+    if (!appState) {
+        try { appState = loadState(); } catch (_) { appState = createDefaultState(); }
     }
-    if (typeof initPwaInstall === 'function') initPwaInstall();
-    // Sync fallback so a fast Sign In never hits a null appState
+    updateDbStatusBadge();
+    if (typeof initStorageModeUi === 'function') initStorageModeUi();
+    if (!appState.users || !appState.users.length) {
+        appState.users = createDefaultUsers();
+        saveState();
+    } else if (typeof ensureSeedUsersPresent === 'function') {
+        const before = appState.users.length;
+        appState.users = ensureSeedUsersPresent(appState.users);
+        if (appState.users.length !== before) {
+            if (typeof saveStateNow === 'function') await saveStateNow();
+            else saveState();
+        }
+    }
+    if (!Array.isArray(appState.orderlyDailyFile)) {
+        appState.orderlyDailyFile = [];
+    }
+    applyTheme(appState.theme);
+    const bootSession = typeof loadSession === 'function' ? loadSession() : null;
+    if (bootSession) {
+        await runHeavyBootInit();
+    }
+    if (typeof initFieldHelpSystem === 'function') initFieldHelpSystem();
+    if (typeof initStorageModeUi === 'function') initStorageModeUi();
+}
+
+function bootStorageAndState() {
+    if (typeof ensureOnlinePreferredByDefault === 'function') ensureOnlinePreferredByDefault();
+    if (typeof initStorageModeUi === 'function') initStorageModeUi();
+    if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
+
+    const probe = typeof quickProbeStorageMode === 'function'
+        ? quickProbeStorageMode()
+        : (typeof probeStorageMode === 'function'
+            ? probeStorageMode({ attempts: 1, timeoutMs: 650, delayMs: 0 })
+            : Promise.resolve());
+
+    probe.then(() => {
+        if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
+        if (typeof syncModeToggleUi === 'function') syncModeToggleUi();
+        if (typeof updateDbStatusBadge === 'function') updateDbStatusBadge();
+        if (typeof autoStartAppServerIfNeeded === 'function') {
+            autoStartAppServerIfNeeded();
+        }
+    }).catch(() => { /* ignore */ });
+
+    const hydrate = typeof hydrateAppStateFromDatabase === 'function'
+        ? hydrateAppStateFromDatabase()
+        : loadStateFromDatabase();
+
+    hydrate.then((state) => finalizeBootState(state)).catch((bootError) => {
+        console.error('Boot hydrate failed (login still available)', bootError);
+        finalizeBootState(appState);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    wireLoginForm();
     try {
         if (!appState) appState = loadState();
     } catch (_) {
         appState = createDefaultState();
     }
-
-    try {
-        appState = await loadStateFromDatabase();
-        updateDbStatusBadge();
-        if (typeof initStorageModeUi === 'function') initStorageModeUi();
-        if (!appState.users || !appState.users.length) {
-            appState.users = createDefaultUsers();
-            saveState();
-        } else if (typeof ensureSeedUsersPresent === 'function') {
-            const before = appState.users.length;
-            appState.users = ensureSeedUsersPresent(appState.users);
-            if (appState.users.length !== before) {
-                if (typeof saveStateNow === 'function') await saveStateNow();
-                else saveState();
-            }
-        }
-        if (!Array.isArray(appState.orderlyDailyFile)) {
-            appState.orderlyDailyFile = [];
-        }
-        applyTheme(appState.theme);
-        const bootSession = typeof loadSession === 'function' ? loadSession() : null;
-        if (bootSession) {
-            await runHeavyBootInit();
-        }
-        if (typeof initFieldHelpSystem === 'function') initFieldHelpSystem();
-        if (typeof initStorageModeUi === 'function') initStorageModeUi();
-    } catch (bootError) {
-        console.error('Boot init failed (login still available)', bootError);
-        if (bootError && bootError.stack) console.error(bootError.stack);
-        if (!appState) {
-            try { appState = loadState(); } catch (_) { appState = createDefaultState(); }
-        }
-        try { updateDbStatusBadge(); } catch (_) { /* ignore */ }
-        try { if (typeof initFieldHelpSystem === 'function') initFieldHelpSystem(); } catch (_) { /* ignore */ }
-    }
-
+    bootStorageAndState();
+    if (typeof initPwaInstall === 'function') initPwaInstall();
     document.getElementById('logoutBtn')?.addEventListener('click', logoutUser);
 
     if (document.body.dataset.targetNavWired !== '1') {

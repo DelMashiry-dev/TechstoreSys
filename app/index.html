@@ -66,7 +66,7 @@
                 <div class="form-group login-mode-group">
                     <label class="form-label" for="loginStorageModeToggle">Storage mode</label>
                     <div class="login-storage-panel" id="loginStorageRow">
-                        <p class="login-storage-status" id="loginStorageLabel">Checking connection…</p>
+                        <p class="login-storage-status" id="loginStorageLabel">Online — connecting to techstores.db…</p>
                         <div class="storage-mode-toggle-wrap storage-mode-toggle-wrap--login">
                             <span class="storage-mode-toggle-label" data-side="offline">Offline</span>
                             <button type="button" class="storage-mode-toggle" id="loginStorageModeToggle" role="switch"
@@ -76,7 +76,7 @@
                             </button>
                             <span class="storage-mode-toggle-label" data-side="online">Online</span>
                         </div>
-                        <p class="login-mode-hint">Online saves to <strong>techstores.db</strong> · Offline saves in your browser</p>
+                        <p class="login-mode-hint">Default is <strong>Online</strong> (techstores.db). Switch to <strong>Offline</strong> only when the server is unavailable.</p>
                         <p class="login-mode-status" id="loginModeStatus" hidden></p>
                     </div>
                 </div>
@@ -1554,6 +1554,13 @@
         </div>
     </div>
 
+    <script>
+        try {
+            if (!localStorage.getItem('techstoresPreferredMode')) {
+                localStorage.setItem('techstoresPreferredMode', 'online');
+            }
+        } catch (e) { /* ignore */ }
+    </script>
     <script src="js/config.js"></script>
     <script src="js/offline-store.js"></script>
     <script src="js/offline-precache.js"></script>
@@ -1564,11 +1571,11 @@
     <script src="js/it-dir-bids-seed.js"></script>
     <script src="js/product-specs-catalog.js"></script>
     <script src="js/suppliers-seed.js"></script>
-    <script src="js/state.js?v=20260820fastboot"></script>
-    <script src="js/storage-mode.js?v=20260820fastboot"></script>
+    <script src="js/state.js?v=20260823autooffline"></script>
+    <script src="js/storage-mode.js?v=20260823fastboot"></script>
     <script src="js/gl-targets.js"></script>
     <script src="js/monthly-target-proposals.js"></script>
-    <script src="js/auth.js?v=20260820login"></script>
+    <script src="js/auth.js?v=20260823fastboot"></script>
     <script src="js/dept-home.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/module-loader.js"></script>
@@ -1599,6 +1606,7 @@
     <script src="js/unit-checks.js"></script>
     <script src="js/inventory-accountability.js"></script>
     <script src="js/ict-accountability.js"></script>
+    <script src="js/laptop-distribution-aug2026.js"></script>
     <script src="js/ict-distribution.js"></script>
     <script src="js/requisitions.js"></script>
     <script src="js/requisition-procurement.js"></script>
@@ -1643,7 +1651,7 @@
     <script src="js/tables.js"></script>
     <script src="js/ux-improvements.js"></script>
     <script src="js/pwa-install.js"></script>
-    <script src="js/boot.js?v=20260820fastboot"></script>
+    <script src="js/boot.js?v=20260823fastboot"></script>
 
 </body>
 </html>

@@ -7,7 +7,14 @@ const AUTOSTART_INSTALLED_KEY = 'techstoresAutostartInstalled';
 
 function getPreferredStorageMode() {
     const saved = localStorage.getItem(PREFERRED_MODE_KEY);
-    return saved === 'offline' ? 'offline' : 'online';
+    if (saved === 'offline') return 'offline';
+    return 'online';
+}
+
+function ensureOnlinePreferredByDefault() {
+    if (!localStorage.getItem(PREFERRED_MODE_KEY)) {
+        localStorage.setItem(PREFERRED_MODE_KEY, 'online');
+    }
 }
 
 function setPreferredStorageMode(target) {
@@ -22,7 +29,7 @@ async function tryWakeServerViaProtocol(target) {
         iframe.style.display = 'none';
         iframe.src = `techstores-wake:${target === 'offline' ? 'offline' : 'online'}`;
         document.body.appendChild(iframe);
-        await new Promise((resolve) => setTimeout(resolve, 3500));
+        await new Promise((resolve) => setTimeout(resolve, 1200));
         iframe.remove();
     } catch (_) { /* ignore */ }
     return !!(await fetchLauncherHealth(2500));
@@ -249,7 +256,10 @@ function setModeToggleBusy(busy) {
 }
 
 function syncModeToggleUi() {
-    const online = isStorageModeOnline();
+    ensureOnlinePreferredByDefault();
+    const preferOnline = getPreferredStorageMode() === 'online';
+    const onLogin = document.body?.classList.contains('app-locked');
+    const online = isStorageModeOnline() || (onLogin && preferOnline);
     document.querySelectorAll('.storage-mode-toggle').forEach((btn) => {
         btn.setAttribute('aria-checked', online ? 'true' : 'false');
         btn.classList.toggle('is-online', online);
@@ -260,7 +270,38 @@ function syncModeToggleUi() {
         wrap.classList.toggle('is-offline', !online);
     });
     const loginLabel = document.getElementById('loginStorageLabel');
-    if (loginLabel) loginLabel.textContent = getStorageModeLabel();
+    if (loginLabel) updateLoginStorageLabel();
+}
+
+function updateLoginStorageLabel() {
+    const loginLabel = document.getElementById('loginStorageLabel');
+    if (!loginLabel) return;
+    ensureOnlinePreferredByDefault();
+    if (!document.body?.classList.contains('app-locked')) {
+        loginLabel.textContent = getStorageModeLabel();
+        return;
+    }
+    const preferOnline = getPreferredStorageMode() === 'online';
+    if (preferOnline && !isStorageModeOnline()) {
+        loginLabel.textContent = 'Connecting to techstores.db…';
+        return;
+    }
+    if (storageMode === 'online') {
+        loginLabel.textContent = pendingServerSync
+            ? 'Online — connected (sync pending)'
+            : 'Online — connected to techstores.db';
+    } else if (storageMode === 'offline-shell') {
+        loginLabel.textContent = 'Offline shell — browser storage (switch to Online when ready)';
+    } else if (storageMode === 'offline-local') {
+        loginLabel.textContent = 'Offline copy — run START-SYSTEM.bat for online (techstores.db)';
+    } else {
+        loginLabel.textContent = 'Offline copy — run START-SYSTEM.bat for online (techstores.db)';
+    }
+}
+
+/** Fast probe for the login screen — avoids multi-second waits when the server is down. */
+async function quickProbeStorageMode() {
+    return probeStorageMode({ fresh: true, attempts: 1, timeoutMs: 650, delayMs: 0 });
 }
 
 async function waitForModeAfterSwitch(target, options = {}) {
@@ -287,40 +328,38 @@ async function waitForModeAfterSwitch(target, options = {}) {
 }
 
 async function autoStartAppServerIfNeeded() {
+    ensureOnlinePreferredByDefault();
+    if (getPreferredStorageMode() !== 'online') return;
     if (sessionStorage.getItem('techstoresAutoStarting') === '1') return;
     if (sessionStorage.getItem('techstoresAutoStartFailed') === '1') return;
-    await probeStorageMode({ fresh: false, attempts: 2, timeoutMs: 900 });
-    if (storageMode === 'online' || storageMode === 'offline-shell') {
-        sessionStorage.removeItem('techstoresAutoStarting');
-        return;
-    }
-    let launcher = await fetchLauncherHealth(2000);
+    if (isStorageModeOnline()) return;
+
+    let launcher = await fetchLauncherHealth(800);
     if (!launcher?.launcher) {
-        const woke = await tryWakeServerViaProtocol(getPreferredStorageMode());
-        if (woke) launcher = await fetchLauncherHealth(2000);
+        const woke = await tryWakeServerViaProtocol('online');
+        if (woke) launcher = await fetchLauncherHealth(1200);
     }
     if (!launcher?.launcher) return;
 
-    const preferred = getPreferredStorageMode();
     sessionStorage.setItem('techstoresAutoStarting', '1');
     try {
-        if (typeof showToast === 'function') {
-            showToast(
-                preferred === 'online'
-                    ? 'Auto-starting online server…'
-                    : 'Auto-starting offline server…',
-                'info'
-            );
+        if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
+        await postModeSwitch('online');
+        await waitForModeAfterSwitch('online', { maxAttempts: 12 });
+        storageMode = 'online';
+        dbConnected = true;
+        sessionStorage.removeItem('techstoresAutoStarting');
+        if (typeof resetStateHydratePromise === 'function') resetStateHydratePromise();
+        if (typeof hydrateAppStateFromDatabase === 'function') {
+            await hydrateAppStateFromDatabase(true);
         }
-        await postModeSwitch(preferred);
-        await waitForModeAfterSwitch(preferred, { maxAttempts: 25 });
-        location.reload();
+        if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
+        if (typeof syncModeToggleUi === 'function') syncModeToggleUi();
+        if (typeof updateDbStatusBadge === 'function') updateDbStatusBadge();
     } catch (error) {
         sessionStorage.removeItem('techstoresAutoStarting');
         sessionStorage.setItem('techstoresAutoStartFailed', '1');
-        if (typeof showToast === 'function') {
-            showToast(error.message || 'Auto-start failed.', 'warning');
-        }
+        if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
     }
 }
 
@@ -435,6 +474,8 @@ function initStorageModeUi() {
 }
 
 window.probeStorageMode = probeStorageMode;
+window.quickProbeStorageMode = quickProbeStorageMode;
+window.updateLoginStorageLabel = updateLoginStorageLabel;
 window.refreshStorageModeModal = refreshStorageModeModal;
 window.initStorageModeUi = initStorageModeUi;
 window.openStorageModeModal = openStorageModeModal;
@@ -442,3 +483,4 @@ window.switchStorageMode = switchStorageMode;
 window.syncModeToggleUi = syncModeToggleUi;
 window.autoStartAppServerIfNeeded = autoStartAppServerIfNeeded;
 window.setPreferredStorageMode = setPreferredStorageMode;
+window.ensureOnlinePreferredByDefault = ensureOnlinePreferredByDefault;
