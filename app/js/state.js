@@ -118,6 +118,7 @@ function createDefaultState() {
         glBudgets,
         glMonthlyTargets: {},
         glTargetViewMonth: '',
+        glTargetPeriodMode: 'month',
         monthlyTargetProposals: {},
         releaseCuts: [],
         storesInventory: createDefaultStoresInventory(),
@@ -190,6 +191,7 @@ function loadState() {
                 ? parsed.glMonthlyTargets
                 : {},
             glTargetViewMonth: parsed.glTargetViewMonth || '',
+            glTargetPeriodMode: parsed.glTargetPeriodMode || 'month',
             monthlyTargetProposals: (parsed.monthlyTargetProposals && typeof parsed.monthlyTargetProposals === 'object')
                 ? parsed.monthlyTargetProposals
                 : {},
@@ -261,6 +263,7 @@ function mergeState(parsed) {
             ? parsed.glMonthlyTargets
             : {},
         glTargetViewMonth: parsed.glTargetViewMonth || '',
+        glTargetPeriodMode: parsed.glTargetPeriodMode || 'month',
         monthlyTargetProposals: (parsed.monthlyTargetProposals && typeof parsed.monthlyTargetProposals === 'object')
             ? parsed.monthlyTargetProposals
             : {},

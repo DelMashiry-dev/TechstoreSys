@@ -107,6 +107,7 @@ async function ensureModuleLoaded(moduleId) {
         try { restoreModule(moduleId, appState.modules[moduleId]); } catch (e) { console.warn(e); }
     }
     if (typeof applyDateInputConstraints === 'function') applyDateInputConstraints(el);
+    if (typeof enhanceFieldHelp === 'function') enhanceFieldHelp(el);
 
     return el;
 }

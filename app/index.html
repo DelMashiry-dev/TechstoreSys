@@ -650,6 +650,7 @@
                         <div class="storage-mode-toggle-wrap" id="storageModeToggleWrap" title="Switch online / offline"></div>
                         <button type="button" class="db-status-badge db-offline" id="dbStatusBadge" title="Click for storage details">Local Only</button>
                         <button class="glossy-pill-btn theme-toggle" id="themeToggle" type="button" title="Appearance — themes &amp; UI preferences">Appearance</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="fieldHelpToggleBtn" title="Hover help — point at labels and fields for explanations">Field Help</button>
                         <button class="btn btn-ghost btn-sm" id="logoutBtn" type="button">Logout</button>
                     </div>
                 </div>
@@ -657,19 +658,22 @@
             
             <!-- Dashboard Cards -->
             <div id="dashboard" class="content-section">
-                <div class="dashboard-hero">
-                    <div class="dashboard-hero-main">
-                        <div class="dashboard-kicker">IT-DIR DISPENSABLES AND CONTROLLED STORES INVENTORY</div>
-                        <p class="dashboard-hero-sub dashboard-last-login">
-                            <strong id="dashboardLastUpdated">—</strong>
-                        </p>
+                <div class="dashboard-hero dash-collapse dashboard-hero-collapse" data-collapse-key="dashboard-hero">
+                    <button type="button" class="dash-collapse-toggle dashboard-hero-collapse-toggle" aria-expanded="true" title="Collapse dashboard header">
+                        <div class="dash-collapse-titles dashboard-hero-collapse-head">
+                            <div class="dashboard-kicker">IT-DIR DISPENSABLES AND CONTROLLED STORES INVENTORY</div>
+                            <p class="dashboard-hero-sub dashboard-last-login">
+                                <strong id="dashboardLastUpdated">—</strong>
+                            </p>
+                        </div>
+                        <span class="dash-collapse-caret" aria-hidden="true">▾</span>
+                    </button>
+                    <div class="dash-collapse-body dashboard-hero-body">
                         <div class="dashboard-ops-strip">
                             <div class="dashboard-context-row" aria-label="Operations context">
                                 <span class="context-chip">Josiah Magama Tongogara Barracks</span>
                                 <span class="context-chip" id="dashboardSignedInChip">Signed in: —</span>
                                 <button type="button" class="context-chip" id="dashboardDbChip" title="Click to switch online / offline mode">Storage: —</button>
-                                <button type="button" class="context-chip ai-status-chip is-off" id="aiStatusChip"
-                                    title="AI status — click to open assistant">AI: —</button>
                             </div>
                             <div class="dashboard-toolbar" aria-label="Dashboard actions">
                                 <label class="sr-only" for="dashboardUniversalSearchInput">Universal search</label>
@@ -1170,19 +1174,29 @@
                     <div id="dafTargetBanner" class="daf-target-banner" role="status"></div>
                     <div id="targetProposalBanner" class="target-proposal-banner is-empty" role="status"></div>
                     <div class="gl-target-month-bar">
-                        <label class="form-label" for="glTargetMonth">Target month</label>
-                        <input type="month" class="form-control" id="glTargetMonth" title="Month of the DAF vote">
+                        <label class="form-label" for="glTargetPeriodMode">View by</label>
+                        <select class="form-control gl-target-period-mode" id="glTargetPeriodMode" title="Monthly, quarterly, or yearly target &amp; spend view">
+                            <option value="month">Monthly</option>
+                            <option value="quarter">Quarterly</option>
+                            <option value="year">Yearly</option>
+                        </select>
+                        <span id="glTargetMonthWrap" class="gl-target-month-wrap">
+                            <label class="form-label" for="glTargetMonth">Target month</label>
+                            <input type="month" class="form-control" id="glTargetMonth" title="Month of the DAF vote">
+                        </span>
                         <strong id="glTargetMonthLabel">—</strong>
-                        <button type="button" class="btn btn-primary btn-sm" id="btnBuildTargetProposal" title="Aggregate open requisitions into a monthly target proposal">Build from requisitions</button>
-                        <button type="button" class="btn btn-secondary btn-sm" id="btnApplyProposalTargets" title="Copy proposed amounts into DAF Target column">Apply proposal to targets</button>
-                        <button type="button" class="btn btn-ghost btn-sm" id="btnPrintTargetProposal" title="Print IT Dir priority list report">Print priority list</button>
-                        <button type="button" class="btn btn-primary btn-sm" id="btnPrintDafFundMemo" title="Print DAF fund request cover memo (IT/25 format)">Print DAF request memo</button>
-                        <button type="button" class="btn btn-ghost btn-sm" id="btnSeedSeptember2026" title="Load September 2026 IT/25 priority list pack">Sep 2026 pack</button>
-                        <button type="button" class="btn btn-ghost btn-sm" id="btnSeedMonthTargets" title="Optional helper — prefer typing the DAF advice amounts">Seed empty from FY ref</button>
-                        <button type="button" class="btn btn-ghost btn-sm" id="btnClearMonthTargets">Clear month targets</button>
+                        <button type="button" class="btn btn-primary btn-sm gl-target-month-only" id="btnBuildTargetProposal" title="Aggregate open requisitions into a monthly target proposal">Build from requisitions</button>
+                        <button type="button" class="btn btn-secondary btn-sm gl-target-month-only" id="btnApplyProposalTargets" title="Copy proposed amounts into DAF Target column">Apply proposal to targets</button>
+                        <button type="button" class="btn btn-ghost btn-sm gl-target-month-only" id="btnPrintTargetProposal" title="Print IT Dir priority list report">Print priority list</button>
+                        <button type="button" class="btn btn-primary btn-sm gl-target-month-only" id="btnPrintDafFundMemo" title="Print DAF fund request cover memo (IT/25 format)">Print DAF request memo</button>
+                        <button type="button" class="btn btn-ghost btn-sm gl-target-month-only" id="btnSeedSeptember2026" title="Load September 2026 IT/25 priority list pack">Sep 2026 pack</button>
+                        <button type="button" class="btn btn-ghost btn-sm gl-target-month-only" id="btnSeedMonthTargets" title="Optional helper — prefer typing the DAF advice amounts">Seed empty from FY ref</button>
+                        <button type="button" class="btn btn-ghost btn-sm gl-target-month-only" id="btnClearMonthTargets">Clear month targets</button>
                         <a href="#" class="btn btn-secondary btn-sm" data-target="release-cut">Release Cut</a>
                     </div>
-                    <div class="form-row daf-advice-row">
+                    <p id="glTargetPeriodNote" class="gl-target-period-note" hidden></p>
+                    <div id="glTargetPeriodBreakdown" hidden></div>
+                    <div class="form-row daf-advice-row gl-target-month-only">
                         <div class="form-col">
                             <label class="form-label" for="dafTargetRef">DAF advice / vote ref</label>
                             <input type="text" class="form-control" id="dafTargetRef" placeholder="e.g. DAF/IT/JUL26/01" autocomplete="off">
@@ -1196,7 +1210,7 @@
                             <input type="text" class="form-control" id="dafTargetNotes" placeholder="e.g. Only ZOFF voted this month" autocomplete="off">
                         </div>
                     </div>
-                    <details class="daf-memo-panel" open>
+                    <details class="daf-memo-panel gl-target-month-only" open>
                         <summary class="daf-memo-panel-summary">DAF fund request memo (cover letter)</summary>
                         <div class="form-row daf-memo-row">
                             <div class="form-col">

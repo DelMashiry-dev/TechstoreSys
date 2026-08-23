@@ -227,7 +227,8 @@ const DASH_COLLAPSE_DEFAULTS = {
     'gl-target-overview': true,
     'inventory-ledgers': true,
     'inventory-recon': true,
-    'product-stock': false
+    'product-stock': false,
+    'dashboard-hero': false
 };
 
 function getDashCollapseState() {
@@ -312,13 +313,15 @@ function renderBudgetOverviewTable(rows) {
 
     const canEdit = typeof canEditData === 'function' ? canEditData() : true;
     const month = typeof getSelectedGlTargetMonth === 'function' ? getSelectedGlTargetMonth() : '';
+    const periodMode = typeof getGlTargetPeriodMode === 'function' ? getGlTargetPeriodMode() : 'month';
+    const periodEdit = periodMode === 'month';
 
     tbody.innerHTML = rows.map((row) => {
         const status = getBudgetStatus(row.budget, row.balance);
         const funding = row.fundingNote || '';
         const isTotal = row.code === 'ALL';
         const proposed = row.proposed != null ? row.proposed : 0;
-        const targetCell = isTotal || !canEdit
+        const targetCell = isTotal || !canEdit || !periodEdit
             ? formatCurrency(row.budget)
             : `<input type="number" class="form-control gl-target-input" min="0" step="0.01"
                     data-gl-target="${row.code}" value="${row.budget || 0}" title="DAF monthly target / vote for ${row.code}">`;
@@ -1253,20 +1256,31 @@ function updateFormBackButtons() {
 }
 
 function updateDashboard() {
+    const period = typeof getSelectedGlTargetPeriod === 'function'
+        ? getSelectedGlTargetPeriod()
+        : null;
     const month = typeof getSelectedGlTargetMonth === 'function'
         ? setSelectedGlTargetMonth(getSelectedGlTargetMonth())
         : '';
-    const bidByGl = getBidCommittedByGl();
-    const poByGl = typeof getPurchaseOrderCommittedByGlForMonth === 'function'
-        ? getPurchaseOrderCommittedByGlForMonth(month)
-        : getPurchaseOrderCommittedByGl();
-    const dpF1ByGl = getDpF1CommittedByGl();
-    const baseCommittedByGl = typeof getBaseCommittedByGlForMonth === 'function'
-        ? getBaseCommittedByGlForMonth(month)
-        : getBaseCommittedByGl();
-    const voucherByGl = typeof getVoucherImpactByGlForMonth === 'function'
-        ? getVoucherImpactByGlForMonth(month)
-        : getVoucherImpactByGl();
+    const usePeriod = period && period.mode !== 'month';
+
+    const poByGl = usePeriod && typeof getPurchaseOrderCommittedByGlForPeriod === 'function'
+        ? getPurchaseOrderCommittedByGlForPeriod(period)
+        : (typeof getPurchaseOrderCommittedByGlForMonth === 'function'
+            ? getPurchaseOrderCommittedByGlForMonth(month)
+            : getPurchaseOrderCommittedByGl());
+    const bidByGl = usePeriod ? {} : getBidCommittedByGl();
+    const dpF1ByGl = usePeriod ? {} : getDpF1CommittedByGl();
+    const baseCommittedByGl = usePeriod && typeof getBaseCommittedByGlForPeriod === 'function'
+        ? getBaseCommittedByGlForPeriod(period)
+        : (typeof getBaseCommittedByGlForMonth === 'function'
+            ? getBaseCommittedByGlForMonth(month)
+            : getBaseCommittedByGl());
+    const voucherByGl = usePeriod && typeof getVoucherImpactByGlForPeriod === 'function'
+        ? getVoucherImpactByGlForPeriod(period)
+        : (typeof getVoucherImpactByGlForMonth === 'function'
+            ? getVoucherImpactByGlForMonth(month)
+            : getVoucherImpactByGl());
 
     let summaryBudget = 0;
     let summaryCommitted = 0;
@@ -1274,26 +1288,36 @@ function updateDashboard() {
     const overviewRows = [];
     const breakdownTotals = { bids: 0, po: 0, dpF1: 0 };
 
-    Object.keys(GL_ACCOUNTS).forEach((gl) => {
-        breakdownTotals.bids += bidByGl[gl] || 0;
-        breakdownTotals.po += poByGl[gl] || 0;
-        breakdownTotals.dpF1 += dpF1ByGl[gl] || 0;
-    });
+    if (!usePeriod) {
+        Object.keys(GL_ACCOUNTS).forEach((gl) => {
+            breakdownTotals.bids += bidByGl[gl] || 0;
+            breakdownTotals.po += poByGl[gl] || 0;
+            breakdownTotals.dpF1 += dpF1ByGl[gl] || 0;
+        });
+    } else {
+        Object.keys(GL_ACCOUNTS).forEach((gl) => {
+            breakdownTotals.po += poByGl[gl] || 0;
+        });
+    }
 
     document.querySelectorAll('.card[data-gl]').forEach((card) => {
         const gl = card.getAttribute('data-gl');
         if (gl === 'summary') return;
 
-        const budget = typeof getGlMonthlyTarget === 'function'
-            ? getGlMonthlyTarget(gl, month)
-            : (appState.glBudgets[gl] || 0);
+        const budget = usePeriod && typeof getGlPeriodTarget === 'function'
+            ? getGlPeriodTarget(gl, period)
+            : (typeof getGlMonthlyTarget === 'function'
+                ? getGlMonthlyTarget(gl, month)
+                : (appState.glBudgets[gl] || 0));
         const committed = baseCommittedByGl[gl] || 0;
         const vouchers = voucherByGl[gl] || 0;
-        const breakdown = {
-            bids: bidByGl[gl] || 0,
-            po: poByGl[gl] || 0,
-            dpF1: dpF1ByGl[gl] || 0
-        };
+        const breakdown = usePeriod
+            ? { bids: 0, po: poByGl[gl] || 0, dpF1: 0 }
+            : {
+                bids: bidByGl[gl] || 0,
+                po: poByGl[gl] || 0,
+                dpF1: dpF1ByGl[gl] || 0
+            };
 
         const totals = updateGlCard(card, gl, budget, committed, vouchers, breakdown);
         summaryBudget += totals.budget;
@@ -1304,13 +1328,17 @@ function updateDashboard() {
             code: gl,
             name: GL_ACCOUNTS[gl].name,
             target: card.getAttribute('data-target'),
-            proposed: typeof getProposalAmountForGl === 'function' ? getProposalAmountForGl(gl, month) : 0,
+            proposed: usePeriod && typeof getProposalAmountForGlPeriod === 'function'
+                ? getProposalAmountForGlPeriod(gl, period)
+                : (typeof getProposalAmountForGl === 'function' ? getProposalAmountForGl(gl, month) : 0),
             budget: totals.budget,
             committed: totals.committed,
             vouchers: totals.vouchers,
             expended: totals.committed + totals.vouchers,
             balance: totals.balance,
-            fundingNote: typeof getGlFundingNote === 'function' ? getGlFundingNote(gl, month) : ''
+            fundingNote: usePeriod && typeof getGlPeriodFundingNote === 'function'
+                ? getGlPeriodFundingNote(gl, period)
+                : (typeof getGlFundingNote === 'function' ? getGlFundingNote(gl, month) : '')
         });
     });
 
@@ -1318,9 +1346,10 @@ function updateDashboard() {
     if (summaryCard) {
         const summaryBalance = summaryBudget - summaryCommitted - summaryVouchers;
         updateGlCard(summaryCard, 'summary', summaryBudget, summaryCommitted, summaryVouchers, breakdownTotals);
+        const periodLabel = period?.label || (month ? formatYmLabel(month) : 'Financial Year Total');
         overviewRows.push({
             code: 'ALL',
-            name: month ? `Month total · ${typeof formatYmLabel === 'function' ? formatYmLabel(month) : month}` : 'Financial Year Total',
+            name: usePeriod ? `Period total · ${periodLabel}` : (month ? `Month total · ${typeof formatYmLabel === 'function' ? formatYmLabel(month) : month}` : 'Financial Year Total'),
             target: 'financial-year-bids',
             proposed: overviewRows.reduce((s, r) => s + (r.proposed || 0), 0),
             budget: summaryBudget,
@@ -1344,6 +1373,9 @@ function updateDashboard() {
         summaryBudget - summaryCommitted - summaryVouchers
     );
     renderBudgetOverviewTable(overviewRows);
+    if (typeof renderGlTargetPeriodBreakdown === 'function') {
+        renderGlTargetPeriodBreakdown(period);
+    }
     renderInventoryDashboard();
     if (typeof renderProductStockRegister === 'function') renderProductStockRegister();
     renderRecentTransfers();

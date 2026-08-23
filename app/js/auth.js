@@ -385,6 +385,8 @@ function enterApp(user) {
     bootReady.then(() => {
         updateHeaderUser();
         applyAccessControl();
+        if (typeof setFieldHelpMode === 'function') setFieldHelpMode(true, { silent: true });
+        if (typeof enhanceFieldHelp === 'function') enhanceFieldHelp(document);
         if (typeof refreshLastLoggedInDisplay === 'function') refreshLastLoggedInDisplay();
         navigateToModule('dashboard', { clearHistory: true, skipHistory: true });
         if (typeof initCommandBoard === 'function') initCommandBoard();
@@ -422,6 +424,7 @@ async function logoutUser() {
     currentUser = null;
     clearSession();
     document.body.classList.add('app-locked');
+    if (typeof setFieldHelpMode === 'function') setFieldHelpMode(false, { silent: true });
     const idcBtn = document.getElementById('idcSideBtn');
     if (idcBtn) idcBtn.hidden = true;
     document.body.classList.remove(

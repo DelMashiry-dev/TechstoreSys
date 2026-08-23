@@ -243,9 +243,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         const bootSession = typeof loadSession === 'function' ? loadSession() : null;
         if (bootSession) {
             await runHeavyBootInit();
-        } else if (typeof initFieldHelpSystem === 'function') {
-            initFieldHelpSystem();
         }
+        if (typeof initFieldHelpSystem === 'function') initFieldHelpSystem();
         if (typeof initStorageModeUi === 'function') initStorageModeUi();
     } catch (bootError) {
         console.error('Boot init failed (login still available)', bootError);
