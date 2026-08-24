@@ -48,6 +48,7 @@
     "delivery-note",
     "purchase-orders",
     "undelivered-orders",
+    "workshop-receipt-cert",
     "gate-register",
     "techstores-equipment-register",
     "workshop-repairs",

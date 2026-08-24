@@ -64,19 +64,19 @@
                     </div>
                 </div>
                 <div class="form-group login-mode-group">
-                    <label class="form-label" for="loginStorageModeToggle">Storage mode</label>
+                    <label class="form-label" for="loginStorageModeToggle">Data storage</label>
                     <div class="login-storage-panel" id="loginStorageRow">
-                        <p class="login-storage-status" id="loginStorageLabel">Online — connecting to techstores.db…</p>
+                        <p class="login-storage-status" id="loginStorageLabel">Database — connecting to techstores.db…</p>
                         <div class="storage-mode-toggle-wrap storage-mode-toggle-wrap--login">
-                            <span class="storage-mode-toggle-label" data-side="offline">Offline</span>
+                            <span class="storage-mode-toggle-label" data-side="offline">Browser</span>
                             <button type="button" class="storage-mode-toggle" id="loginStorageModeToggle" role="switch"
                                 aria-checked="false"
-                                aria-label="Switch between online SQLite database and offline browser storage">
+                                aria-label="Switch between database (techstores.db) and browser-only storage">
                                 <span class="storage-mode-toggle-track"><span class="storage-mode-toggle-thumb"></span></span>
                             </button>
-                            <span class="storage-mode-toggle-label" data-side="online">Online</span>
+                            <span class="storage-mode-toggle-label" data-side="online">Database</span>
                         </div>
-                        <p class="login-mode-hint">Default is <strong>Online</strong> (techstores.db). Switch to <strong>Offline</strong> only when the server is unavailable.</p>
+                        <p class="login-mode-hint">Default is <strong>Database</strong> (local <strong>techstores.db</strong> — not internet). Use <strong>Browser</strong> only when the server is stopped.</p>
                         <p class="login-mode-status" id="loginModeStatus" hidden></p>
                     </div>
                 </div>
@@ -466,6 +466,10 @@
                     </a>
                     <ul class="submenu">
                         <li>
+                            <a href="#" class="nav-btn" data-target="workshop-receipt-cert">
+                                <img class="nav-ico-img" src="../assets/nav-icons/delivery-note.png" alt="" width="46" height="46" loading="lazy">
+                                <span class="nav-label">Receipt Certification</span>
+                            </a>
                             <a href="#" class="nav-btn" data-target="workshop-repairs">
                                 <img class="nav-ico-img" src="../assets/nav-icons/workshop-repairs.png" alt="" width="46" height="46" loading="lazy">
                                 <span class="nav-label">Workshop Register</span>
@@ -1571,16 +1575,17 @@
     <script src="js/it-dir-bids-seed.js"></script>
     <script src="js/product-specs-catalog.js"></script>
     <script src="js/suppliers-seed.js"></script>
-    <script src="js/state.js?v=20260823autooffline"></script>
-    <script src="js/storage-mode.js?v=20260823fastboot"></script>
+    <script src="js/state.js?v=20260823dblabel"></script>
+    <script src="js/storage-mode.js?v=20260823dblabel"></script>
     <script src="js/gl-targets.js"></script>
     <script src="js/monthly-target-proposals.js"></script>
     <script src="js/auth.js?v=20260823fastboot"></script>
     <script src="js/dept-home.js"></script>
     <script src="js/utils.js"></script>
+    <script src="js/window-chrome.js?v=20260823max"></script>
     <script src="js/module-loader.js"></script>
     <script src="js/search-history.js"></script>
-    <script src="js/universal-search.js"></script>
+    <script src="js/universal-search.js?v=20260824board"></script>
     <script src="js/duties-roles.js"></script>
     <script src="js/it-dir-departments.js"></script>
     <script src="js/it-dir-establishment.js"></script>
@@ -1596,7 +1601,7 @@
     <script src="js/toner-compatibility.js"></script>
     <script src="js/product-web-enrich.js"></script>
     <script src="js/offline-assistant.js"></script>
-    <script src="js/ai-assistant.js?v=20260820b"></script>
+    <script src="js/ai-assistant.js?v=20260823max"></script>
     <script src="js/product-datasheets.js"></script>
     <script src="js/product-stock-register.js"></script>
     <script src="js/physical-stock-count.js"></script>
@@ -1607,6 +1612,7 @@
     <script src="js/inventory-accountability.js"></script>
     <script src="js/ict-accountability.js"></script>
     <script src="js/laptop-distribution-aug2026.js"></script>
+    <script src="js/board-schedule-2023.js"></script>
     <script src="js/ict-distribution.js"></script>
     <script src="js/requisitions.js"></script>
     <script src="js/requisition-procurement.js"></script>
@@ -1616,7 +1622,11 @@
     <script src="js/correspondence-files.js"></script>
     <script src="js/monthly-returns.js"></script>
     <script src="js/undelivered.js"></script>
+    <script src="js/workshop-receipt-cert.js"></script>
+    <script src="js/delivery-note.js"></script>
     <script src="js/temporary-loans.js"></script>
+    <script src="js/stores-query-engine.js?v=20260823max"></script>
+    <script src="js/stores-intelligent-lookup.js?v=20260823lookup"></script>
     <script src="js/rows.js"></script>
     <script src="js/repair-intake.js"></script>
     <script src="js/workshop-stores-request.js"></script>

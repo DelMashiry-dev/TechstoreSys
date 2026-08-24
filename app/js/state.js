@@ -101,7 +101,7 @@ async function reconnectDatabaseIfOnline() {
         updateDbStatusBadge();
         if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
         if (synced && typeof showToast === 'function') {
-            showToast('Back online — synced to techstores.db.', 'success');
+            showToast('Database reconnected — synced to techstores.db.', 'success');
         }
         if (typeof refreshStorageModeModal === 'function') refreshStorageModeModal();
     } catch (_) { /* still offline */ }
@@ -125,7 +125,7 @@ function enterRuntimeOfflineFallback(options = {}) {
         _connectivityLossNotified = true;
         showToast(
             options.message
-                || 'Connection lost — continuing offline. Your work saves locally and will sync when the server is back.',
+                || 'Database server unreachable — saving to browser copy. Will sync when START-SYSTEM.bat is running again.',
             'warning'
         );
     }
@@ -181,6 +181,7 @@ function createDefaultState() {
         correspondenceFiles: [],
         correspondenceHandovers: [],
         undeliveredOrders: createDefaultUndelivered(),
+        workshopReceiptCerts: [],
         dpProcurements: createDefaultDpProcurements(),
         costComparativeSchedules: [],
         unitChecks: [],
@@ -256,6 +257,7 @@ function loadState() {
             correspondenceFiles: Array.isArray(parsed.correspondenceFiles) ? parsed.correspondenceFiles : [],
             correspondenceHandovers: Array.isArray(parsed.correspondenceHandovers) ? parsed.correspondenceHandovers : [],
             undeliveredOrders: Array.isArray(parsed.undeliveredOrders) ? parsed.undeliveredOrders : [],
+            workshopReceiptCerts: Array.isArray(parsed.workshopReceiptCerts) ? parsed.workshopReceiptCerts : [],
             dpProcurements: Array.isArray(parsed.dpProcurements) ? parsed.dpProcurements : [],
             costComparativeSchedules: Array.isArray(parsed.costComparativeSchedules) ? parsed.costComparativeSchedules : [],
             unitChecks: Array.isArray(parsed.unitChecks) ? parsed.unitChecks : [],
@@ -328,6 +330,7 @@ function mergeState(parsed) {
         correspondenceFiles: Array.isArray(parsed.correspondenceFiles) ? parsed.correspondenceFiles : [],
         correspondenceHandovers: Array.isArray(parsed.correspondenceHandovers) ? parsed.correspondenceHandovers : [],
         undeliveredOrders: Array.isArray(parsed.undeliveredOrders) ? parsed.undeliveredOrders : [],
+        workshopReceiptCerts: Array.isArray(parsed.workshopReceiptCerts) ? parsed.workshopReceiptCerts : [],
         dpProcurements: Array.isArray(parsed.dpProcurements) ? parsed.dpProcurements : [],
         costComparativeSchedules: Array.isArray(parsed.costComparativeSchedules) ? parsed.costComparativeSchedules : [],
         unitChecks: Array.isArray(parsed.unitChecks) ? parsed.unitChecks : [],
@@ -383,29 +386,29 @@ function updateDbStatusBadge() {
         badge.textContent = typeof getStorageModeLabel === 'function' ? getStorageModeLabel() : 'Storage';
         if (dbConnected || storageMode === 'online') {
             badge.className = 'db-status-badge db-online';
-            badge.title = 'Online — techstores.db. Click to switch mode.';
+            badge.title = 'Database — techstores.db on this PC (local server). Click to switch mode.';
         } else if (storageMode === 'offline-shell' || offlineDurable) {
             badge.className = 'db-status-badge db-offline-durable';
-            badge.title = 'Offline mode. Click for switch instructions.';
+            badge.title = 'Browser-only storage. Click for switch instructions.';
         } else {
             badge.className = 'db-status-badge db-offline';
-            badge.title = 'Click to set up online or offline mode.';
+            badge.title = 'Click to set up database or browser-only storage.';
         }
     }
     const dbChip = document.getElementById('dashboardDbChip');
     if (dbChip) {
         if (dbConnected || storageMode === 'online') {
             dbChip.textContent = pendingServerSync
-                ? 'Storage: SQLite + pending sync'
-                : 'Storage: Online (techstores.db)';
+                ? 'Storage: Database + pending sync'
+                : 'Storage: Database (techstores.db)';
         } else if (storageMode === 'offline-shell') {
-            dbChip.textContent = 'Storage: Offline shell (browser)';
+            dbChip.textContent = 'Storage: Browser (offline shell)';
         } else if (offlineDurable) {
-            dbChip.textContent = 'Storage: Offline copy (IndexedDB)';
+            dbChip.textContent = 'Storage: Browser copy (IndexedDB)';
         } else {
             dbChip.textContent = 'Storage: Local only';
         }
-        dbChip.title = 'Click to switch online / offline mode';
+        dbChip.title = 'Click to switch database / browser storage';
     }
     if (typeof syncModeToggleUi === 'function') syncModeToggleUi();
 }
@@ -476,7 +479,7 @@ async function loadStateFromDatabase() {
         const localState = await loadBestLocalState();
         updateDbStatusBadge();
         if (typeof showToast === 'function' && offlineDurable) {
-            showToast('Server unavailable — using browser copy. Run START-SYSTEM.bat for online mode.', 'info');
+            showToast('Server unavailable — using browser copy. Run START-SYSTEM.bat for database mode.', 'info');
         }
         return localState;
     }
@@ -562,8 +565,8 @@ function saveState() {
             }
             console.error('Failed to save to database', error);
             enterRuntimeOfflineFallback({
-                message: 'Database unavailable — saved to offline copy. Will sync when the server is back.'
-            });
+            message: 'Database unavailable — saved to browser copy. Will sync when the server is back.'
+        });
         }
     }, 250);
 }
@@ -650,7 +653,7 @@ function initPersistentDatabaseHooks() {
     });
     window.addEventListener('offline', () => {
         enterRuntimeOfflineFallback({
-            message: 'Network offline — continuing on local copy until connectivity returns.'
+            message: 'Network offline — browser copy active. Database mode resumes when the local server responds.'
         });
     });
 

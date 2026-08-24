@@ -50,7 +50,7 @@ const MODULES_STORES_LEDGERS = [
     'gl-2200600002', 'gl-2200600003', 'gl-220200002', 'gl-2201900002', 'gl-3112210001',
     'voucher-module', 'stock-take', 'unit-checks', 'financial-year-bids', 'unit-equipment',
     'ict-accountability', 'ict-distribution', 'temporary-loans', 'monthly-returns', 'undelivered-orders',
-    'delivery-note', 'purchase-orders', 'accommodation-stores',
+    'workshop-receipt-cert', 'delivery-note', 'purchase-orders', 'accommodation-stores',
     'zna-q-982', 'zna-q-178', 'zna-q-1033', 'zna-q-1043', 'zna-q-80', 'zna-svcs-890',
     'zna-q-1179', 'zna-q-987', 'zna-q-3977', 'zna-q-1157', 'zna-q-985', 'zna-q-1',
     'zna-q-998', 'zna-q-1680', 'zna-q-forms-index', 'zna-q-3', 'zna-q-31', 'zna-q-40',
@@ -63,7 +63,7 @@ const MODULES_FULL_OPS = [
     ...MODULES_STORES_LEDGERS,
     'unit-requisitions',
     'spec-evaluation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'zna-svcs-1045',
-    'workshop-repairs', 'gate-register', 'techstores-equipment-register',
+    'workshop-repairs', 'workshop-receipt-cert', 'gate-register', 'techstores-equipment-register',
     'suppliers-contracts', 'duties-roles', 'process-guides', 'system-help', 'reports-module'
 ];
 
@@ -72,7 +72,7 @@ const MODULES_RQ = [
     'dashboard', 'it-dir-comms',
     ...MODULES_STORES_LEDGERS,
     'unit-requisitions', 'spec-evaluation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'zna-svcs-1045',
-    'techstores-equipment-register', 'workshop-repairs',
+    'techstores-equipment-register', 'workshop-repairs', 'workshop-receipt-cert',
     'suppliers-contracts', 'duties-roles', 'process-guides', 'system-help', 'reports-module'
 ];
 
@@ -102,7 +102,7 @@ const MODULES_STOREMAN = [
 
 /** Workshop IC / 2IC / Senior Technician — repairs register, spec eval, comms only. */
 const MODULES_WORKSHOP = [
-    'dashboard', 'workshop-repairs', 'spec-evaluation', 'it-dir-comms'
+    'dashboard', 'workshop-repairs', 'workshop-receipt-cert', 'spec-evaluation', 'it-dir-comms'
 ];
 
 /** RP Gate — gate register only (no stores / GL / comms module). */
@@ -389,7 +389,7 @@ const MODULE_IDS = [
     'zna-q-985', 'zna-q-1', 'zna-q-998', 'zna-q-1680',
     'zna-q-forms-index', 'zna-q-3', 'zna-q-31', 'zna-q-40', 'zna-q-1049', 'zna-q-1229', 'zna-q-1571', 'zna-q-1954',
     'accommodation-stores',
-    'delivery-note', 'purchase-orders', 'workshop-repairs', 'gate-register', 'techstores-equipment-register', 'suppliers-contracts',
+    'delivery-note', 'purchase-orders', 'undelivered-orders', 'workshop-receipt-cert', 'workshop-repairs', 'gate-register', 'techstores-equipment-register', 'suppliers-contracts',
     'orderly-room', 'it-dir-comms', 'duties-roles', 'process-guides', 'system-help', 'reports-module', 'user-management', 'release-cut'
 ];
 

@@ -664,12 +664,18 @@ function scoreIctAccTrackMatch(rec, query) {
         .replace(/[^A-Z0-9]/g, '');
     const name = String(rec.designation || '').trim().toLowerCase();
     const desc = String(rec.description || '').trim().toLowerCase();
+    const holder = String(rec.holderName || '').trim().toLowerCase();
+    const unit = String(rec.unit || '').trim().toLowerCase();
+    const form1033 = String(rec.form1033Ref || '').trim().toLowerCase();
     const compactQ = q.replace(/\s+/g, '');
     const compactZa = za.replace(/\s+/g, '');
 
     if (zaNorm && recZa && zaNorm === recZa) return 100;
     if (za && (za === q || compactZa === compactQ)) return 100;
     if (qSerialKey && serialKey && qSerialKey === serialKey) return 100;
+    if (form1033 && (form1033.includes(q) || form1033.replace(/\s+/g, '').includes(compactQ))) return 95;
+    if (holder && (holder === q || holder.includes(q))) return 92;
+    if (unit && (unit === q || unit.includes(q))) return 88;
     if (za && (za.includes(q) || compactZa.includes(compactQ))) return 90;
     if (trace && (trace === q || trace.includes(q))) return 85;
     if (serial && (serial === q || serial.includes(q) || (qSerialKey && serialKey.includes(qSerialKey)))) return 80;
@@ -1183,6 +1189,65 @@ function getIctAccUnitFilter() {
     return String(document.getElementById('ictAccUnitFilterSelect')?.value || '').trim().toLowerCase();
 }
 
+/** Match holding unit filter — handles IT Dir / IT Directorate / full ZNA names. */
+function ictAccUnitMatches(recordUnit, filterValue) {
+    if (!filterValue) return true;
+    const rec = String(recordUnit || '').trim().toLowerCase();
+    const fil = String(filterValue || '').trim().toLowerCase();
+    if (!rec) return false;
+    if (rec === fil || rec.includes(fil) || fil.includes(rec)) return true;
+
+    const aliasesFor = (val) => {
+        const v = String(val || '').trim().toLowerCase();
+        const set = new Set([v]);
+        const all = typeof flattenZnaUnits === 'function' ? flattenZnaUnits() : [];
+        const hit = all.find((u) =>
+            (u.value || '').toLowerCase() === v
+            || (u.abbr || '').toLowerCase() === v
+            || (u.name || '').toLowerCase() === v
+            || (u.label || '').toLowerCase() === v
+        );
+        if (hit) {
+            [hit.value, hit.abbr, hit.name, hit.label].forEach((x) => {
+                if (x) set.add(String(x).toLowerCase());
+            });
+        }
+        if (/it\s*dir|information technology|it directorate/.test(v)) {
+            set.add('it dir');
+            set.add('it directorate');
+            set.add('information technology directorate');
+        }
+        return set;
+    };
+
+    const recAliases = aliasesFor(rec);
+    const filAliases = aliasesFor(fil);
+    for (const a of recAliases) {
+        if (filAliases.has(a)) return true;
+    }
+    for (const a of recAliases) {
+        for (const b of filAliases) {
+            if (a.length >= 3 && b.length >= 3 && (a.includes(b) || b.includes(a))) return true;
+        }
+    }
+    return false;
+}
+
+/** Item name filter — all words must match (supports plurals: laptops → laptop). */
+function ictAccItemNameMatches(record, itemQuery) {
+    const itemQ = String(itemQuery || '').trim().toLowerCase();
+    if (!itemQ) return true;
+    const nameBlob = `${record.designation || ''} ${record.description || ''} ${record.remarks || ''}`.toLowerCase();
+    const tokens = itemQ.split(/\s+/).filter((t) => t.length >= 2);
+    if (!tokens.length) return nameBlob.includes(itemQ);
+
+    return tokens.every((token) => {
+        if (nameBlob.includes(token)) return true;
+        if (token.endsWith('s') && token.length > 3 && nameBlob.includes(token.slice(0, -1))) return true;
+        return false;
+    });
+}
+
 function populateIctAccUnitFilterSelect() {
     const sel = document.getElementById('ictAccUnitFilterSelect');
     if (!sel) return;
@@ -1219,15 +1284,9 @@ function filterIctAccountabilityRows(rows) {
             if (d == null || d > 90) return false;
         }
 
-        if (itemQ) {
-            const nameBlob = `${r.designation || ''} ${r.description || ''}`.toLowerCase();
-            if (!nameBlob.includes(itemQ)) return false;
-        }
+        if (itemQ && !ictAccItemNameMatches(r, itemQ)) return false;
 
-        if (unitQ) {
-            const unitVal = String(r.unit || '').trim().toLowerCase();
-            if (unitVal !== unitQ) return false;
-        }
+        if (unitQ && !ictAccUnitMatches(r.unit, unitQ)) return false;
 
         if (issueFrom || issueTo) {
             const issueDate = String(r.issueDate || '').trim();
@@ -1329,6 +1388,7 @@ function renderIctAccountabilityTable() {
                 ? 'No records match these filters. Try clearing item name or issue-date filters.'
                 : 'No accountability records yet. Register engraved ICT equipment, traceable expendables, software licences, or spares.'
         }</td></tr>`;
+        if (typeof refreshTableFocusViewIfOpen === 'function') refreshTableFocusViewIfOpen();
         return;
     }
 
@@ -1368,6 +1428,7 @@ function renderIctAccountabilityTable() {
             </tr>
         `;
     }).join('');
+    if (typeof refreshTableFocusViewIfOpen === 'function') refreshTableFocusViewIfOpen();
 }
 
 function clearIctAccForm() {

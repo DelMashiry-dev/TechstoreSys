@@ -15,7 +15,7 @@ const REPORT_TABLE_HEADERS = {
     'spec-eval-table-body': ['Ser', 'Specification Field', 'Required Spec / Value', 'Price Justification / Notes'],
     'dp-f1-table-body': ['Ser', 'Designation', 'Qty', 'Holding Stock', 'Potential Supplier'],
     'zna-q-982-table-body': ['Line', 'Stock', 'Location', 'Vocab/Part', 'Section', 'Designation', 'UOI', 'Required', 'Issued', 'To Follow', 'Pkg', 'Weight', '$', 'c'],
-    'delivery-table-body': ['Date', 'Item', 'Description', 'Qty', 'UoM', 'Product Serial', 'Purchase No.', 'Supplied By', 'Received By', 'Initials'],
+    'delivery-table-body': ['Date', 'Item', 'Description', 'Qty', 'UoM', 'Product Serial', 'Purchase No.', 'Supplied By', 'Received By', 'Initials', 'Workshop cert'],
     'purchase-orders-table-body': ['Date', 'Supplier', 'PO Number', 'Total', 'GL Account', 'Vendor No.', 'Signature'],
     'purchase-orders-lines-body': ['Item (Ser)', 'Material Number', 'Order Qty', 'Unit', 'Description', 'Price Per Unit', 'Net Value'],
     'workshop-repairs-table-body': ['Serial', 'Equipment Type', 'S/N or ZA No.', 'Unit', 'Diagnosis', 'Remarks', 'Date In', 'Received By', 'Date Out', 'SVCS 1045 Ref'],

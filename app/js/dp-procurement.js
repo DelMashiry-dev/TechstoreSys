@@ -610,6 +610,23 @@ function saveDpProcurementFromForm() {
         });
     }
 
+    if (status === 'delivery_verified' && typeof validateWorkshopCertForDeliveryVerified === 'function') {
+        const draftRec = {
+            ...prev,
+            ...data,
+            poNumber: data.poNumber,
+            deliveryNoteRef: data.deliveryNoteRef,
+            awardedSupplier: data.awardedSupplier,
+            itemSummary: data.itemSummary,
+            snapshot: prev.snapshot
+        };
+        const wrcVerifyErr = validateWorkshopCertForDeliveryVerified(draftRec);
+        if (wrcVerifyErr) {
+            showToast(wrcVerifyErr, 'error');
+            return;
+        }
+    }
+
     list[idx] = {
         ...prev,
         ...data,
@@ -809,6 +826,22 @@ function initDpProcurementModule() {
             if (typeof postProcurementDeliveryToStock === 'function') {
                 postProcurementDeliveryToStock(rec);
                 editDpProcurement(id);
+            }
+        });
+    }
+
+    const wrcBtn = document.getElementById('dpProcWorkshopCertBtn');
+    if (wrcBtn && wrcBtn.dataset.bound !== '1') {
+        wrcBtn.dataset.bound = '1';
+        wrcBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('dpProcEditId')?.value;
+            if (!id) {
+                showToast('Select a procurement cycle record first.', 'error');
+                return;
+            }
+            if (typeof createWrcFromDpProcurement === 'function') {
+                createWrcFromDpProcurement(id);
             }
         });
     }

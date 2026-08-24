@@ -1,0 +1,169 @@
+<div id="workshop-receipt-cert" class="form-container">
+    <div class="form-header">
+        <h2 class="form-title">Workshop Receipt Certification — ICT Deliveries</h2>
+        <button class="close-btn">&times;</button>
+    </div>
+
+    <p class="req-intro wrc-intro">
+        <strong>IT Dir Tech Stores workflow:</strong> Before ICT equipment is accepted into stock or sent to
+        <strong>MLG (Masasa Logistics Garrison)</strong> for ZA engraving, the supplier delivery must pass through
+        <strong>IT Dir Workshop</strong> for technical assessment against specification.
+        When the delivery meets spec, complete the official
+        <em>Certification for Receipts of Goods and Services</em> (Group 1 / 2 / 3 / VSD / RSD).
+        The supplier then carries the signed certification together with the <strong>Purchase Order</strong> and
+        <strong>Delivery Note</strong> to MLG to surrender the supply for engraving and/or storage.
+    </p>
+
+    <div class="req-aging-strip wrc-status-strip" aria-label="Certification summary">
+        <div class="req-stat"><span class="req-stat-value" id="wrcStatAwaiting">0</span><span class="req-stat-label">Awaiting assessment</span></div>
+        <div class="req-stat"><span class="req-stat-value" id="wrcStatCertified">0</span><span class="req-stat-label">Certified</span></div>
+        <div class="req-stat"><span class="req-stat-value" id="wrcStatMlg">0</span><span class="req-stat-label">At MLG</span></div>
+        <div class="req-stat"><span class="req-stat-value" id="wrcStatComplete">0</span><span class="req-stat-label">Engraved / closed</span></div>
+    </div>
+
+    <div class="dashboard-panel req-capture-panel">
+        <div class="section-heading section-heading-compact">
+            <h3 id="wrcFormTitle">Capture delivery for workshop assessment</h3>
+        </div>
+        <input type="hidden" id="wrcEditId" value="">
+
+        <div class="form-row">
+            <div class="form-col">
+                <label class="form-label">Inspection serial no.</label>
+                <input type="text" class="form-control" id="wrcInspectionSerial" placeholder="Auto on save">
+            </div>
+            <div class="form-col">
+                <label class="form-label">Delivery date</label>
+                <input type="date" class="form-control" id="wrcDeliveryDate">
+            </div>
+            <div class="form-col">
+                <label class="form-label">Supplier</label>
+                <input type="text" class="form-control" id="wrcSupplier" placeholder="Supplier name">
+            </div>
+            <div class="form-col">
+                <label class="form-label">Purchase order no.</label>
+                <input type="text" class="form-control" id="wrcPoNo" placeholder="PO / DP ref">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-col">
+                <label class="form-label">Delivery note ref</label>
+                <input type="text" class="form-control" id="wrcDnRef" placeholder="D-Note / RV ref">
+            </div>
+            <div class="form-col" style="flex: 1.4;">
+                <label class="form-label">Goods / services (summary)</label>
+                <input type="text" class="form-control" id="wrcItemSummary" placeholder="e.g. Laptops i9 — qty 4">
+            </div>
+            <div class="form-col">
+                <label class="form-label">Qty received</label>
+                <input type="number" class="form-control" id="wrcQty" min="1" step="1" value="1">
+            </div>
+            <div class="form-col">
+                <label class="form-label">Group</label>
+                <select class="form-control" id="wrcGroup"></select>
+            </div>
+        </div>
+
+        <h4 class="q982-section-title">Workshop certifying officer</h4>
+        <div class="form-row">
+            <div class="form-col">
+                <label class="form-label">Force no.</label>
+                <input type="text" class="form-control" id="wrcOfficerNo">
+            </div>
+            <div class="form-col">
+                <label class="form-label">Rank</label>
+                <input type="text" class="form-control" id="wrcOfficerRank">
+            </div>
+            <div class="form-col">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-control" id="wrcOfficerName">
+            </div>
+            <div class="form-col">
+                <label class="form-label">Unit</label>
+                <input type="text" class="form-control" id="wrcOfficerUnit" value="IT Directorate" list="znaUnitDatalist">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-col">
+                <label class="form-label">Trade discipline</label>
+                <select class="form-control" id="wrcTrade"></select>
+            </div>
+            <div class="form-col" style="flex: 2;">
+                <label class="form-label">Field of expertise</label>
+                <input type="text" class="form-control" id="wrcExpertise" placeholder="e.g. ICT equipment / computers">
+            </div>
+        </div>
+
+        <h4 class="q982-section-title">Listed goods / services inspected (spec match)</h4>
+        <div class="module-toolbar wrc-screen-only">
+            <button type="button" class="btn btn-primary btn-sm" id="wrcAddLineBtn">Add line</button>
+        </div>
+        <div class="form-table-wrapper">
+            <table class="wrc-lines-table">
+                <thead>
+                    <tr>
+                        <th style="width:36px">#</th>
+                        <th>Designation / description</th>
+                        <th style="width:70px">Qty</th>
+                        <th style="width:140px">Serial / model ref</th>
+                        <th style="width:80px">Spec OK</th>
+                        <th class="wrc-screen-only" style="width:70px"></th>
+                    </tr>
+                </thead>
+                <tbody id="wrcLinesBody"></tbody>
+            </table>
+        </div>
+
+        <div class="form-row" style="margin-top:12px;">
+            <div class="form-col" style="flex: 2;">
+                <label class="form-label">Assessment / remarks</label>
+                <input type="text" class="form-control" id="wrcRemarks" placeholder="Condition notes, variance, rejection reason">
+            </div>
+            <div class="form-col">
+                <label class="form-label">Certification date</label>
+                <input type="date" class="form-control" id="wrcCertDate">
+            </div>
+        </div>
+
+        <div class="module-actions">
+            <button type="button" class="btn btn-success" id="wrcSaveBtn">Save draft</button>
+            <button type="button" class="btn btn-primary" id="wrcCertifyBtn">Certify — meets spec</button>
+            <button type="button" class="btn btn-ghost" id="wrcClearBtn">Clear</button>
+            <button type="button" class="btn btn-secondary" id="wrcPrintBtn" disabled>Print certification</button>
+        </div>
+    </div>
+
+    <div class="module-toolbar">
+        <input type="search" class="form-control table-search" id="wrcTableSearch" placeholder="Search certifications...">
+        <select class="form-control" id="wrcFilterStatus" style="max-width:200px;">
+            <option value="open">Open (not engraved)</option>
+            <option value="all">All</option>
+            <option value="awaiting_assessment">Awaiting assessment</option>
+            <option value="certified">Certified</option>
+            <option value="at_mlg">At MLG</option>
+            <option value="engraved_complete">Engraved / complete</option>
+            <option value="rejected">Rejected</option>
+        </select>
+    </div>
+
+    <div class="form-table-wrapper">
+        <table class="wrc-register-table">
+            <thead>
+                <tr>
+                    <th>Insp. serial</th>
+                    <th>Supplier</th>
+                    <th>PO</th>
+                    <th>D-Note</th>
+                    <th>Goods</th>
+                    <th>Qty</th>
+                    <th>Status</th>
+                    <th>Cert date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="wrcRegisterBody"></tbody>
+        </table>
+    </div>
+
+    <div id="wrcPrintHost" class="wrc-print-host" hidden aria-hidden="true"></div>
+</div>

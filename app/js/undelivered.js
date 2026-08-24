@@ -426,6 +426,9 @@ function renderUndeliveredTable() {
                             <button type="button" class="btn btn-primary btn-sm" data-und-action="partial" data-und-id="${undEscape(row.id)}">Part Delivered</button>
                             <button type="button" class="btn btn-success btn-sm" data-und-action="deliver" data-und-id="${undEscape(row.id)}">Mark Delivered</button>
                         ` : ''}
+                        ${row.category === 'ICT' && row.status !== 'cancelled' && typeof createWrcFromUndelivered === 'function' ? `
+                            <button type="button" class="btn btn-secondary btn-sm" data-und-action="wrc" data-und-id="${undEscape(row.id)}" title="Open IT Dir Workshop receipt certification">Workshop cert</button>
+                        ` : ''}
                         <button type="button" class="btn btn-danger btn-sm" data-und-action="delete" data-und-id="${undEscape(row.id)}">Delete</button>
                     ` : '—'}
                 </td>
@@ -528,6 +531,7 @@ function initUndeliveredModule() {
             else setUndeliveredStatus(id, 'partial', delivered);
         }
         if (action === 'delete') deleteUndelivered(id);
+        if (action === 'wrc' && typeof createWrcFromUndelivered === 'function') createWrcFromUndelivered(id);
     });
 
     if (typeof bindSearchHistory === 'function') {

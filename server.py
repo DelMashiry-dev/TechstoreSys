@@ -64,6 +64,7 @@ EXTENDED_STATE_KEYS = (
     "correspondenceFiles",
     "correspondenceHandovers",
     "undeliveredOrders",
+    "workshopReceiptCerts",
     "dpProcurements",
     "costComparativeSchedules",
     "unitChecks",

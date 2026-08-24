@@ -6,7 +6,7 @@ let aiAssistantState = {
     busy: false
 };
 
-const AI_ASSISTANT_UI_VERSION = '2';
+const AI_ASSISTANT_UI_VERSION = '5';
 
 function aiApiBase() {
     return typeof API_BASE === 'string' ? API_BASE : '';
@@ -230,26 +230,29 @@ function ensureAiAssistantModal() {
             <header class="ai-assistant-head">
                 <div>
                     <h2 id="aiAssistantTitle">Tech Stores AI Assistant</h2>
-                    <p class="ai-assistant-sub" id="aiAssistantSub">Ask about GL, stock, requisitions, loans, procurement, modules, or ICT trends</p>
+                    <p class="ai-assistant-sub" id="aiAssistantSub">Type a name, unit, ZA number, or item — or ask about stock, requisitions, loans, procurement</p>
                 </div>
-                <button type="button" class="btn btn-ghost btn-sm" data-ai-close aria-label="Close">✕</button>
+                ${typeof winChromeControlsHtml === 'function' ? winChromeControlsHtml('data-ai-close') : '<button type="button" class="btn btn-ghost btn-sm" data-ai-close aria-label="Close">✕</button>'}
             </header>
             <div class="ai-assistant-body">
                 <div class="ai-assistant-messages" id="aiAssistantMessages" aria-live="polite"></div>
                 <div class="ai-assistant-suggestions" id="aiAssistantSuggestions" aria-label="Suggested questions">
+                    <button type="button" class="ai-suggest-chip" data-ai-suggest="List laptops issued this month">Laptops issued</button>
+                    <button type="button" class="ai-suggest-chip" data-ai-suggest="Show issue history for August 2026">Issue history</button>
+                    <button type="button" class="ai-suggest-chip" data-ai-query="stock-issues">Craft query…</button>
                     <button type="button" class="ai-suggest-chip" data-ai-suggest="How many laptops are in stock?">Laptops in stock</button>
                     <button type="button" class="ai-suggest-chip" data-ai-suggest="Temporary loans status">Loans status</button>
                     <button type="button" class="ai-suggest-chip" data-ai-suggest="What is our buying power?">Buying power</button>
-                    <button type="button" class="ai-suggest-chip" data-ai-suggest="ICT equipment trends for 2026">ICT trends 2026</button>
                 </div>
                 <form id="aiAssistantForm" class="ai-assistant-form">
                     <input type="text" class="form-control" id="aiAssistantInput"
-                        placeholder="Ask anything about Tech Stores — stock, requisitions, DP F1, advice…"
+                        placeholder="Name, unit, ZA / item, or ask anything about Tech Stores…"
                         autocomplete="off">
                     <button type="submit" class="btn btn-primary" id="aiAssistantSendBtn">Ask</button>
                 </form>
                 <p class="ai-assistant-foot muted" id="aiAssistantFoot">
-                    Read-only — figures from your dashboard and modules. Industry advice is general guidance, not official policy.
+                    Read-only — figures from your dashboard and modules. Ask for <strong>issue history</strong> or <strong>reports by period</strong> to open the query builder.
+                    <button type="button" class="btn btn-ghost btn-sm ai-craft-query-btn" id="aiCraftQueryBtn">Craft query</button>
                 </p>
             </div>
         </div>
@@ -259,6 +262,9 @@ function ensureAiAssistantModal() {
     modal.querySelectorAll('[data-ai-close]').forEach((el) => {
         el.addEventListener('click', closeAiAssistant);
     });
+    if (typeof bindWinChromeModal === 'function') {
+        bindWinChromeModal(modal, { onClose: closeAiAssistant, closeSelector: '[data-ai-close]' });
+    }
     modal.querySelector('#aiAssistantForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         await submitAiAssistantQuestion();
@@ -270,6 +276,47 @@ function ensureAiAssistantModal() {
             if (input) input.value = q;
             await submitAiAssistantQuestion(q);
         });
+    });
+    modal.querySelectorAll('[data-ai-query]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const templateId = btn.getAttribute('data-ai-query') || 'stock-movements';
+            if (typeof openStoresQueryWizard === 'function') {
+                openStoresQueryWizard({ templateId, hints: {} });
+            }
+        });
+    });
+    modal.querySelector('#aiCraftQueryBtn')?.addEventListener('click', () => {
+        if (typeof openStoresQueryWizard === 'function') openStoresQueryWizard({ templateId: 'stock-movements' });
+    });
+
+    modal.querySelector('#aiAssistantMessages')?.addEventListener('click', async (e) => {
+        const itemBtn = e.target.closest('.ai-lookup-item');
+        if (itemBtn) {
+            const item = typeof getStoresLookupItemById === 'function'
+                ? getStoresLookupItemById(itemBtn.getAttribute('data-lookup-id'))
+                : null;
+            if (item?.action) {
+                closeAiAssistant();
+                await openStoresLookupAction(item.action);
+            }
+            return;
+        }
+        const actionBtn = e.target.closest('.ai-lookup-action');
+        if (actionBtn) {
+            const type = actionBtn.getAttribute('data-action-type');
+            if (type === 'query' && typeof openStoresQueryWizard === 'function') {
+                openStoresQueryWizard({
+                    templateId: 'stock-movements',
+                    hints: { partyContains: actionBtn.getAttribute('data-party') || '' }
+                });
+            } else if (type === 'track') {
+                closeAiAssistant();
+                await openStoresLookupAction({
+                    type: 'track',
+                    trackQuery: actionBtn.getAttribute('data-track') || ''
+                });
+            }
+        }
     });
     return modal;
 }
@@ -284,6 +331,19 @@ function appendAiMessage(text, role = 'assistant') {
     box.scrollTop = box.scrollHeight;
 }
 
+function appendAiLookupMessage(result) {
+    const box = document.getElementById('aiAssistantMessages');
+    if (!box || !result) return;
+    if (typeof indexSilLookupResult === 'function') indexSilLookupResult(result);
+    const div = document.createElement('div');
+    div.className = 'ai-msg ai-msg-assistant ai-msg-lookup';
+    div.innerHTML = typeof renderAiLookupResults === 'function'
+        ? renderAiLookupResults(result)
+        : String(result.summary || '');
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
+
 async function submitAiAssistantQuestion(presetQuestion) {
     const input = document.getElementById('aiAssistantInput');
     const btn = document.getElementById('aiAssistantSendBtn');
@@ -291,6 +351,26 @@ async function submitAiAssistantQuestion(presetQuestion) {
     if (!q) return;
     appendAiMessage(q, 'user');
     if (input && !presetQuestion) input.value = '';
+
+    if (typeof handleStoresQueryFromAssistant === 'function' && handleStoresQueryFromAssistant(q)) {
+        appendAiMessage(
+            'Opening the query builder — set your date range, category, and filters, then click Run query.',
+            'assistant'
+        );
+        return;
+    }
+
+    if (typeof handleStoresLookupFromAssistant === 'function' && handleStoresLookupFromAssistant(q)) {
+        const result = typeof aggregateStoresLookup === 'function' ? aggregateStoresLookup(q) : null;
+        if (result) {
+            appendAiLookupMessage(result);
+            if (!result.totalCount && typeof showToast === 'function') {
+                showToast('No matches — try ZA number, full surname, or Craft query for a date range.', 'info');
+            }
+            return;
+        }
+    }
+
     if (btn) { btn.disabled = true; btn.textContent = 'Thinking…'; }
     try {
         const data = await askStoresAssistant(q);
@@ -316,7 +396,10 @@ function openAiAssistant() {
 
 function closeAiAssistant() {
     const modal = document.getElementById('aiAssistantModal');
-    if (modal) modal.hidden = true;
+    if (modal) {
+        modal.hidden = true;
+        if (typeof resetWinChromeMaximize === 'function') resetWinChromeMaximize(modal);
+    }
     document.body.classList.remove('ai-assistant-open');
 }
 

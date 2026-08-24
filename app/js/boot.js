@@ -166,11 +166,15 @@ async function runHeavyBootInit() {
     if (typeof initMonthlyTargetProposalControls === 'function') initMonthlyTargetProposalControls();
     initSpecEvaluationModule();
     if (typeof initAiAssistant === 'function') initAiAssistant();
+    if (typeof initStoresQueryEngine === 'function') initStoresQueryEngine();
+    if (typeof initWindowChrome === 'function') initWindowChrome();
     if (typeof initRequisitionsModule === 'function') initRequisitionsModule();
     if (typeof initOrderlyRoomModule === 'function') initOrderlyRoomModule();
     if (typeof initCorrespondenceFilesModule === 'function') initCorrespondenceFilesModule();
     if (typeof initMonthlyReturnsModule === 'function') initMonthlyReturnsModule();
     if (typeof initUndeliveredModule === 'function') initUndeliveredModule();
+    if (typeof initWorkshopReceiptCertModule === 'function') initWorkshopReceiptCertModule();
+    if (typeof initDeliveryNoteModule === 'function') initDeliveryNoteModule();
     if (typeof initDpProcurementModule === 'function') initDpProcurementModule();
     if (typeof initUnitEquipmentModule === 'function') initUnitEquipmentModule();
     if (typeof initTemporaryLoansModule === 'function') initTemporaryLoansModule();
