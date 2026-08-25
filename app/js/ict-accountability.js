@@ -650,6 +650,28 @@ function buildZaDossier(zaRaw) {
     };
 }
 
+/** Map natural-language status queries (e.g. "boarded") to ICT register status keys. */
+function matchIctStatusQuery(query) {
+    const q = String(query || '').trim().toLowerCase();
+    if (!q) return null;
+    const rules = [
+        { terms: ['boarded', 'board of survey', 'board schedule', 'surveyed'], statuses: ['boarded', 'condemned'] },
+        { terms: ['condemned', 'condemn', 'for destruction', 'destruction'], statuses: ['condemned', 'boarded'] },
+        { terms: ['backloaded', 'backload', 'back loaded', 'struck off', 'strike off'], statuses: ['backloaded', 'boarded', 'condemned'] },
+        { terms: ['unserviceable', 'u/s', 'us', 'ber', 'beyond repair'], statuses: ['unserviceable'] },
+        { terms: ['disposal', 'strike-off', 'strike off'], statuses: ['backloaded', 'boarded', 'condemned'] },
+        { terms: ['stolen'], statuses: ['stolen'] },
+        { terms: ['in stores', 'mlg stores'], statuses: ['in_stores', 'serviceable'] },
+        { terms: ['issued', 'on issue'], statuses: ['issued'] },
+        { terms: ['on loan', 'loaned'], statuses: ['on_loan'] },
+        { terms: ['serviceable'], statuses: ['serviceable'] }
+    ];
+    for (const rule of rules) {
+        if (rule.terms.some((t) => q === t || q.includes(t))) return rule.statuses;
+    }
+    return null;
+}
+
 function scoreIctAccTrackMatch(rec, query) {
     const q = normalizeIctAccTrackQuery(query);
     if (!q) return 0;
@@ -667,8 +689,16 @@ function scoreIctAccTrackMatch(rec, query) {
     const holder = String(rec.holderName || '').trim().toLowerCase();
     const unit = String(rec.unit || '').trim().toLowerCase();
     const form1033 = String(rec.form1033Ref || '').trim().toLowerCase();
+    const remarks = String(rec.remarks || '').trim().toLowerCase();
+    const boardRef = String(rec.boardRef || '').trim().toLowerCase();
+    const sm = rec.statusMeta || getIctAccStatusMeta(rec);
+    const statusLabel = String(sm.label || '').trim().toLowerCase();
+    const statusKey = sm.key || rec.status || '';
     const compactQ = q.replace(/\s+/g, '');
     const compactZa = za.replace(/\s+/g, '');
+
+    const statusKeys = matchIctStatusQuery(query);
+    if (statusKeys && statusKeys.includes(statusKey)) return 88;
 
     if (zaNorm && recZa && zaNorm === recZa) return 100;
     if (za && (za === q || compactZa === compactQ)) return 100;
@@ -682,7 +712,9 @@ function scoreIctAccTrackMatch(rec, query) {
     if (name === q) return 75;
     if (name.includes(q)) return 70;
     if (desc.includes(q)) return 55;
-    if (`${name} ${desc}`.includes(q)) return 50;
+    if (statusLabel.includes(q)) return 72;
+    if (remarks.includes(q) || boardRef.includes(q)) return 68;
+    if (`${name} ${desc} ${statusLabel} ${remarks}`.includes(q)) return 50;
     return 0;
 }
 

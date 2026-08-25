@@ -18874,7 +18874,7 @@ body.no-stores-ops-dashboard .ai-status-chip {
 .stores-query-modal {
     position: fixed;
     inset: 0;
-    z-index: 14050;
+    z-index: 14200;
     display: flex;
     align-items: center;
     justify-content: center;

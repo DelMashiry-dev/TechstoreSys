@@ -6,7 +6,7 @@ let aiAssistantState = {
     busy: false
 };
 
-const AI_ASSISTANT_UI_VERSION = '5';
+const AI_ASSISTANT_UI_VERSION = '6';
 
 function aiApiBase() {
     return typeof API_BASE === 'string' ? API_BASE : '';
@@ -230,13 +230,14 @@ function ensureAiAssistantModal() {
             <header class="ai-assistant-head">
                 <div>
                     <h2 id="aiAssistantTitle">Tech Stores AI Assistant</h2>
-                    <p class="ai-assistant-sub" id="aiAssistantSub">Type a name, unit, ZA number, or item — or ask about stock, requisitions, loans, procurement</p>
+                    <p class="ai-assistant-sub" id="aiAssistantSub">Type a name, unit, ZA number, or item — or <kbd>/craft</kbd> for the query builder</p>
                 </div>
                 ${typeof winChromeControlsHtml === 'function' ? winChromeControlsHtml('data-ai-close') : '<button type="button" class="btn btn-ghost btn-sm" data-ai-close aria-label="Close">✕</button>'}
             </header>
             <div class="ai-assistant-body">
                 <div class="ai-assistant-messages" id="aiAssistantMessages" aria-live="polite"></div>
                 <div class="ai-assistant-suggestions" id="aiAssistantSuggestions" aria-label="Suggested questions">
+                    <button type="button" class="ai-suggest-chip" data-ai-suggest="boarded">Boarded / condemned</button>
                     <button type="button" class="ai-suggest-chip" data-ai-suggest="List laptops issued this month">Laptops issued</button>
                     <button type="button" class="ai-suggest-chip" data-ai-suggest="Show issue history for August 2026">Issue history</button>
                     <button type="button" class="ai-suggest-chip" data-ai-query="stock-issues">Craft query…</button>
@@ -246,12 +247,12 @@ function ensureAiAssistantModal() {
                 </div>
                 <form id="aiAssistantForm" class="ai-assistant-form">
                     <input type="text" class="form-control" id="aiAssistantInput"
-                        placeholder="Name, unit, ZA / item, or ask anything about Tech Stores…"
+                        placeholder="Name, unit, ZA / item, /craft, or ask anything about Tech Stores…"
                         autocomplete="off">
                     <button type="submit" class="btn btn-primary" id="aiAssistantSendBtn">Ask</button>
                 </form>
                 <p class="ai-assistant-foot muted" id="aiAssistantFoot">
-                    Read-only — figures from your dashboard and modules. Ask for <strong>issue history</strong> or <strong>reports by period</strong> to open the query builder.
+                    Read-only — figures from your dashboard and modules. Type <strong>/craft</strong> or ask for <strong>issue history</strong> / <strong>reports by period</strong>.
                     <button type="button" class="btn btn-ghost btn-sm ai-craft-query-btn" id="aiCraftQueryBtn">Craft query</button>
                 </p>
             </div>
@@ -352,12 +353,19 @@ async function submitAiAssistantQuestion(presetQuestion) {
     appendAiMessage(q, 'user');
     if (input && !presetQuestion) input.value = '';
 
-    if (typeof handleStoresQueryFromAssistant === 'function' && handleStoresQueryFromAssistant(q)) {
-        appendAiMessage(
-            'Opening the query builder — set your date range, category, and filters, then click Run query.',
-            'assistant'
-        );
-        return;
+    if (typeof handleStoresQueryFromAssistant === 'function') {
+        const handled = handleStoresQueryFromAssistant(q);
+        if (handled === 'ran') {
+            appendAiMessage('Query ran — results table opened.', 'assistant');
+            return;
+        }
+        if (handled === 'wizard') {
+            appendAiMessage(
+                'Opening the query builder — set your date range, category, and filters, then click Run query.',
+                'assistant'
+            );
+            return;
+        }
     }
 
     if (typeof handleStoresLookupFromAssistant === 'function' && handleStoresLookupFromAssistant(q)) {

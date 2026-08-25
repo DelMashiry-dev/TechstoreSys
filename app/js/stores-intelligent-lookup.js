@@ -92,6 +92,36 @@ function aggregateStoresLookup(query) {
     const seen = new Set();
 
     // —— ICT custody & assets ——
+    const statusFilter = typeof matchIctStatusQuery === 'function' ? matchIctStatusQuery(q) : null;
+
+    if (statusFilter && typeof getIctAccountabilitySnapshot === 'function') {
+        getIctAccountabilitySnapshot().forEach((rec) => {
+            const sm = rec.statusMeta || (typeof getIctAccStatusMeta === 'function' ? getIctAccStatusMeta(rec) : null);
+            if (!sm || !statusFilter.includes(sm.key)) return;
+            const za = typeof normalizeZaNumber === 'function' ? normalizeZaNumber(rec.zaNumber) : rec.zaNumber;
+            const key = `ict-${rec.id || za || rec.designation}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            const where = typeof describeIctAccWhereabouts === 'function' ? describeIctAccWhereabouts(rec) : null;
+            silPushGroup(groups, 'custody', 'ICT custody & assets', silMakeItem({
+                id: key,
+                badge: sm.label?.includes('Condemned') ? 'Condemned' : (sm.label?.includes('Boarded') ? 'Boarded' : 'Asset'),
+                title: za ? `ZA ${za} — ${rec.designation || 'Equipment'}` : (rec.designation || 'Equipment'),
+                subtitle: where?.primary
+                    ? `${where.primary}${where.secondary ? ` · ${where.secondary}` : ''}`
+                    : sm.label || 'ICT Asset Register',
+                score: 90,
+                action: {
+                    type: 'ict',
+                    moduleId: 'ict-accountability',
+                    trackQuery: za || rec.designation || q,
+                    ictAccId: rec.id || '',
+                    statusFilter: 'backloaded'
+                }
+            }));
+        });
+    }
+
     if (typeof trackAllAccountableItems === 'function') {
         const tracked = trackAllAccountableItems(q);
         (tracked.all || []).forEach((rec) => {
@@ -228,8 +258,12 @@ function aggregateStoresLookup(query) {
     const lookupType = inferStoresLookupType(q);
 
     let summary = `No records matched “${q}”.`;
-    if (totalCount > 0) {
+    if (totalCount > 0 && statusFilter) {
+        summary = `Found ${totalCount} ICT item(s) — ${statusFilter.includes('condemned') || statusFilter.includes('boarded') ? 'boarded / condemned / disposal chain' : 'matching status'}. Click to open.`;
+    } else if (totalCount > 0) {
         summary = `Found ${totalCount} result(s) for “${q}” — click any row to open the record or module.`;
+    } else if (statusFilter) {
+        summary = `No ICT items with status matching “${q}”. Check ICT Asset Register or re-import board schedule data.`;
     }
 
     return {
@@ -317,6 +351,11 @@ async function openStoresLookupAction(action) {
 
     setTimeout(() => {
         if (action.type === 'ict' || action.moduleId === 'ict-accountability') {
+            const filterSel = document.getElementById('ictAccFilter');
+            if (action.statusFilter && filterSel) {
+                filterSel.value = action.statusFilter;
+                if (typeof renderIctAccountabilityTable === 'function') renderIctAccountabilityTable();
+            }
             const input = document.getElementById('ictAccTrackQuery');
             const tq = action.trackQuery || '';
             if (input) input.value = tq;

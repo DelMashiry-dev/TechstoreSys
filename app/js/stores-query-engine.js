@@ -1,6 +1,6 @@
 /* stores-query-engine.js — Craft stores queries (issues, receipts, custody) with params + table results */
 
-const STORES_QUERY_UI_VERSION = '2';
+const STORES_QUERY_UI_VERSION = '3';
 
 const STORES_QUERY_TEMPLATES = {
     'stock-issues': {
@@ -30,6 +30,14 @@ const STORES_QUERY_TEMPLATES = {
         description: 'ZNA ICT Asset Register — who holds equipment, Q 1033 refs, issue dates.',
         moduleId: 'ict-accountability',
         icon: 'ZA'
+    },
+    'boarded-condemned': {
+        id: 'boarded-condemned',
+        label: 'Boarded / condemned assets',
+        description: 'ICT Asset Register — board of survey schedule (ZNA/Q/121), condemned, and disposal chain.',
+        moduleId: 'ict-accountability',
+        icon: '⊘',
+        queryKind: 'ict-custody'
     },
     'temporary-loans': {
         id: 'temporary-loans',
@@ -62,6 +70,39 @@ function sqInPeriod(dateStr, dateFrom, dateTo) {
     if (dateFrom && d < dateFrom) return false;
     if (dateTo && d > dateTo) return false;
     return true;
+}
+
+function sqIctRecordDate(rec) {
+    return rec.issueDate || rec.receivedDate || rec.boardDate
+        || String(rec.updatedAt || rec.createdAt || '').slice(0, 10) || '';
+}
+
+function sqResolveQueryKind(templateId) {
+    const tpl = STORES_QUERY_TEMPLATES[templateId];
+    return tpl?.queryKind || templateId;
+}
+
+function sqIctStatusMatches(rec, status, ictStatuses) {
+    const key = rec.status || '';
+    if (Array.isArray(ictStatuses) && ictStatuses.length) {
+        return ictStatuses.includes(key);
+    }
+    if (!status || status === 'all') return true;
+    return key === status;
+}
+
+function parseStoresQueryStatusHints(question) {
+    if (typeof matchIctStatusQuery !== 'function') return null;
+    const statuses = matchIctStatusQuery(question);
+    if (!statuses?.length) return null;
+    return {
+        ictStatuses: statuses,
+        dateFrom: '',
+        dateTo: '',
+        templateId: /\b(boarded|condemned|survey|disposal|backloaded|destruction)\b/i.test(question)
+            ? 'boarded-condemned'
+            : 'ict-custody'
+    };
 }
 
 function sqMonthIndex(name) {
@@ -166,7 +207,45 @@ function parseStoresQueryItemHints(question) {
 
 /** Detect if a natural-language question should open the query builder. */
 function detectStoresQueryIntent(question) {
-    const q = String(question || '').trim().toLowerCase();
+    const raw = String(question || '').trim();
+    const q = raw.toLowerCase();
+
+    const craftSlash = raw.match(/^\/craft(?:\s+(.*))?$/i);
+    if (craftSlash) {
+        const tail = String(craftSlash[1] || '').trim();
+        const statusHints = tail ? parseStoresQueryStatusHints(tail) : null;
+        if (statusHints) {
+            return {
+                templateId: statusHints.templateId,
+                label: STORES_QUERY_TEMPLATES[statusHints.templateId]?.label || 'Stores query',
+                hints: statusHints,
+                autoRun: true,
+                question: raw
+            };
+        }
+        if (!tail) {
+            const tpl = STORES_QUERY_TEMPLATES['stock-movements'];
+            return {
+                templateId: 'stock-movements',
+                label: tpl?.label || 'Stores query',
+                hints: { dateFrom: '', dateTo: '' },
+                question: raw
+            };
+        }
+        const nested = detectStoresQueryIntent(`craft query ${tail}`);
+        if (nested) return { ...nested, question: raw };
+        const tpl = STORES_QUERY_TEMPLATES['stock-movements'];
+        return {
+            templateId: 'stock-movements',
+            label: tpl?.label || 'Stores query',
+            hints: {
+                ...parseStoresQueryPeriodHints(tail),
+                ...parseStoresQueryItemHints(tail)
+            },
+            question: raw
+        };
+    }
+
     if (q.length < 4) return null;
 
     const wantsTable = /\b(list|show|report|history|historical|register|table|query|find all|give me|export|print|who received|issued out|issued to|movements?)\b/.test(q);
@@ -183,11 +262,16 @@ function detectStoresQueryIntent(question) {
 
     const hints = {
         ...parseStoresQueryPeriodHints(q),
-        ...parseStoresQueryItemHints(q)
+        ...parseStoresQueryItemHints(q),
+        ...(parseStoresQueryStatusHints(q) || {})
     };
 
     let templateId = 'stock-issues';
-    if (/\b(craft|build|run)\s+(a\s+)?query\b/.test(q) && !issueCtx && !receiptCtx) {
+    let autoRun = false;
+    if (hints.ictStatuses?.length) {
+        templateId = hints.templateId || 'boarded-condemned';
+        autoRun = /\b(boarded|condemned|survey|disposal|backloaded)\b/.test(q);
+    } else if (/\b(craft|build|run)\s+(a\s+)?query\b/.test(q) && !issueCtx && !receiptCtx) {
         templateId = 'stock-movements';
     } else if (loanCtx && !issueCtx) {
         templateId = 'temporary-loans';
@@ -206,6 +290,7 @@ function detectStoresQueryIntent(question) {
         templateId,
         label: tpl?.label || 'Stores query',
         hints,
+        autoRun,
         question
     };
 }
@@ -265,45 +350,51 @@ function runStoresQuery(templateId, params = {}) {
         ? getTechStoresPeriodLabel(dateFrom, dateTo)
         : (dateFrom || dateTo ? `${dateFrom || '…'} to ${dateTo || '…'}` : 'All dates');
 
-    if (templateId === 'ict-custody') {
+    if (sqResolveQueryKind(templateId) === 'ict-custody') {
+        const ictStatuses = Array.isArray(params.ictStatuses) && params.ictStatuses.length
+            ? params.ictStatuses
+            : (templateId === 'boarded-condemned' ? ['boarded', 'condemned', 'backloaded'] : null);
         const list = typeof ensureIctAccountability === 'function'
             ? ensureIctAccountability()
             : (appState?.ictAccountability || []);
         const rows = list
             .filter((rec) => {
-                if (status !== 'all' && rec.status !== status) return false;
-                if (!sqInPeriod(rec.issueDate, dateFrom, dateTo)) return false;
+                if (!sqIctStatusMatches(rec, status, ictStatuses)) return false;
+                if (!sqInPeriod(sqIctRecordDate(rec), dateFrom, dateTo)) return false;
                 if (category && rec.inventoryLedger !== category) return false;
-                const hay = `${rec.designation} ${rec.description} ${rec.holderName} ${rec.zaNumber} ${rec.form1033Ref}`.toLowerCase();
+                const hay = `${rec.designation} ${rec.description} ${rec.holderName} ${rec.zaNumber} ${rec.form1033Ref} ${rec.boardRef} ${rec.remarks}`.toLowerCase();
                 if (itemContains && !hay.includes(itemContains)) return false;
                 if (partyContains && !hay.includes(partyContains)) return false;
                 return true;
             })
-            .sort((a, b) => String(b.issueDate || '').localeCompare(String(a.issueDate || '')))
+            .sort((a, b) => String(sqIctRecordDate(b)).localeCompare(String(sqIctRecordDate(a))))
             .map((rec, i) => ({
                 num: i + 1,
-                date: rec.issueDate || '—',
+                date: sqIctRecordDate(rec) || '—',
                 status: rec.status || '—',
                 item: rec.designation || '—',
                 za: rec.zaNumber ? `ZA ${rec.zaNumber}` : '—',
                 form1033: rec.form1033Ref || '—',
-                party: rec.holderName || '—',
+                boardRef: rec.boardRef || '—',
+                party: rec.holderName || rec.unit || '—',
                 unit: rec.unit || '—',
-                remarks: rec.remarks || '—'
+                remarks: (rec.remarks || '').slice(0, 80) || '—'
             }));
 
+        const showBoard = templateId === 'boarded-condemned' || ictStatuses;
         return {
             templateId,
             title: `${tpl.label} — ${periodLabel}`,
             subtitle: `${rows.length} record(s)`,
             columns: [
                 { key: 'num', label: '#' },
-                { key: 'date', label: 'Issue date' },
+                { key: 'date', label: 'Date' },
                 { key: 'status', label: 'Status' },
                 { key: 'item', label: 'Asset' },
                 { key: 'za', label: 'ZA' },
+                ...(showBoard ? [{ key: 'boardRef', label: 'Board ref' }] : []),
                 { key: 'form1033', label: 'Q 1033' },
-                { key: 'party', label: 'Holder' },
+                { key: 'party', label: 'Holder / unit' },
                 { key: 'unit', label: 'Unit' }
             ],
             rows,
@@ -568,12 +659,29 @@ function populateStoresQueryCategorySelect() {
 
 function syncStoresQueryWizardFields() {
     const templateId = document.getElementById('sqTemplateSelect')?.value || 'stock-issues';
-    const isIct = templateId === 'ict-custody';
+    const queryKind = sqResolveQueryKind(templateId);
+    const isIct = queryKind === 'ict-custody';
     const isLoans = templateId === 'temporary-loans';
     const statusWrap = document.getElementById('sqStatusWrap');
     const catWrap = document.getElementById('sqCategoryWrap');
     if (statusWrap) statusWrap.hidden = !(isIct || isLoans);
     if (catWrap) catWrap.hidden = isLoans;
+    const statusSel = document.getElementById('sqStatus');
+    if (statusSel) {
+        if (isIct && typeof ICT_ACC_STATUSES !== 'undefined') {
+            statusSel.innerHTML = '<option value="all">All statuses</option>'
+                + ICT_ACC_STATUSES.map((s) =>
+                    `<option value="${sqEscapeHtml(s.value)}">${sqEscapeHtml(s.label)}</option>`
+                ).join('');
+        } else if (isLoans) {
+            statusSel.innerHTML = `
+                <option value="all">All</option>
+                <option value="issued">Issued / active</option>
+                <option value="returned">Returned</option>`;
+        } else {
+            statusSel.innerHTML = '<option value="all">All</option>';
+        }
+    }
     const sub = document.getElementById('storesQueryWizardSub');
     if (sub) sub.textContent = STORES_QUERY_TEMPLATES[templateId]?.description || '';
 }
@@ -601,8 +709,9 @@ function applyStoresQueryPreset(preset) {
 }
 
 function readStoresQueryWizardParams() {
-    return {
-        templateId: document.getElementById('sqTemplateSelect')?.value || 'stock-issues',
+    const templateId = document.getElementById('sqTemplateSelect')?.value || 'stock-issues';
+    const params = {
+        templateId,
         dateFrom: document.getElementById('sqDateFrom')?.value || '',
         dateTo: document.getElementById('sqDateTo')?.value || '',
         category: document.getElementById('sqCategory')?.value || '',
@@ -610,19 +719,28 @@ function readStoresQueryWizardParams() {
         itemContains: document.getElementById('sqItemContains')?.value?.trim() || '',
         partyContains: document.getElementById('sqPartyContains')?.value?.trim() || ''
     };
+    if (templateId === 'boarded-condemned') {
+        params.ictStatuses = ['boarded', 'condemned', 'backloaded'];
+    }
+    return params;
 }
 
 function fillStoresQueryWizard(options = {}) {
     const templateId = options.templateId || 'stock-issues';
     const hints = options.hints || {};
-    document.getElementById('sqTemplateSelect').value = templateId;
-    document.getElementById('sqDateFrom').value = hints.dateFrom || '';
-    document.getElementById('sqDateTo').value = hints.dateTo || '';
+    const tplSel = document.getElementById('sqTemplateSelect');
+    const fromEl = document.getElementById('sqDateFrom');
+    const toEl = document.getElementById('sqDateTo');
+    if (tplSel) tplSel.value = templateId;
+    if (fromEl) fromEl.value = hints.dateFrom || '';
+    if (toEl) toEl.value = hints.dateTo || '';
     if (hints.category) document.getElementById('sqCategory').value = hints.category;
     if (hints.itemContains) document.getElementById('sqItemContains').value = hints.itemContains;
     if (hints.partyContains) document.getElementById('sqPartyContains').value = hints.partyContains;
     if (hints.status) document.getElementById('sqStatus').value = hints.status;
-    if (!hints.dateFrom && !hints.dateTo) applyStoresQueryPreset('month');
+    if (!hints.dateFrom && !hints.dateTo) {
+        applyStoresQueryPreset(templateId === 'boarded-condemned' || hints.ictStatuses ? 'all' : 'month');
+    }
     syncStoresQueryWizardFields();
 }
 
@@ -635,7 +753,10 @@ function openStoresQueryWizard(options = {}) {
     storesQueryEngineState.lastIntent = { ...options };
     fillStoresQueryWizard(options);
     const modal = document.getElementById('storesQueryWizardModal');
-    if (modal) modal.hidden = false;
+    if (modal) {
+        modal.hidden = false;
+        modal.style.zIndex = '14200';
+    }
     document.body.classList.add('stores-query-open');
 }
 
@@ -655,14 +776,58 @@ function runStoresQueryFromWizard() {
     const btn = document.getElementById('sqRunBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'Running…'; }
     try {
+        if (typeof closeAiAssistant === 'function') closeAiAssistant();
         const result = runStoresQuery(params.templateId, params);
         storesQueryEngineState.lastParams = params;
         storesQueryEngineState.lastResult = result;
+        storesQueryEngineState.lastIntent = { templateId: params.templateId, hints: params };
         closeStoresQueryWizard();
         openStoresQueryResults(result);
+        if (typeof showToast === 'function') {
+            const n = result.rows?.length || 0;
+            showToast(
+                n ? `${result.subtitle}` : 'No records matched — try All dates or Boarded / condemned query type.',
+                n ? 'success' : 'info'
+            );
+        }
+    } catch (err) {
+        console.error('Stores query failed', err);
+        if (typeof showToast === 'function') showToast(err.message || 'Query failed — refresh and try again.', 'error');
     } finally {
         if (btn) { btn.disabled = false; btn.textContent = 'Run query'; }
     }
+}
+
+function executeStoresQueryIntent(intent) {
+    const hints = intent?.hints || {};
+    const params = {
+        templateId: intent.templateId,
+        dateFrom: hints.dateFrom || '',
+        dateTo: hints.dateTo || '',
+        category: hints.category || '',
+        status: hints.status || 'all',
+        ictStatuses: hints.ictStatuses || null,
+        itemContains: hints.itemContains || '',
+        partyContains: hints.partyContains || ''
+    };
+    if (params.templateId === 'boarded-condemned' && !params.ictStatuses) {
+        params.ictStatuses = ['boarded', 'condemned', 'backloaded'];
+    }
+    if (typeof closeAiAssistant === 'function') closeAiAssistant();
+    ensureStoresQueryModals();
+    const result = runStoresQuery(params.templateId, params);
+    storesQueryEngineState.lastParams = params;
+    storesQueryEngineState.lastResult = result;
+    storesQueryEngineState.lastIntent = intent;
+    openStoresQueryResults(result);
+    if (typeof showToast === 'function') {
+        const n = result.rows?.length || 0;
+        showToast(
+            n ? `${result.subtitle}` : 'No records matched — try All dates or re-import board schedule.',
+            n ? 'success' : 'info'
+        );
+    }
+    return result;
 }
 
 function renderStoresQueryResultsTable(result) {
@@ -679,6 +844,7 @@ function renderStoresQueryResultsTable(result) {
 
 function openStoresQueryResults(result) {
     ensureStoresQueryModals();
+    if (typeof closeAiAssistant === 'function') closeAiAssistant();
     storesQueryEngineState.lastResult = result;
     const modal = document.getElementById('storesQueryResultsModal');
     const title = document.getElementById('storesQueryResultsTitle');
@@ -687,7 +853,10 @@ function openStoresQueryResults(result) {
     if (title) title.textContent = result.title || 'Query results';
     if (sub) sub.textContent = result.subtitle || '';
     if (body) body.innerHTML = renderStoresQueryResultsTable(result);
-    if (modal) modal.hidden = false;
+    if (modal) {
+        modal.hidden = false;
+        modal.style.zIndex = '14200';
+    }
     document.body.classList.add('stores-query-open');
 }
 
@@ -776,12 +945,16 @@ async function openStoresQueryInModule() {
     }, 120);
 }
 
-/** Called from AI assistant — returns true if handled as a query request. */
+/** Called from AI assistant — returns 'ran', 'wizard', or false. */
 function handleStoresQueryFromAssistant(question) {
     const intent = detectStoresQueryIntent(question);
     if (!intent) return false;
+    if (intent.autoRun) {
+        executeStoresQueryIntent(intent);
+        return 'ran';
+    }
     openStoresQueryWizard(intent);
-    return true;
+    return 'wizard';
 }
 
 function initStoresQueryEngine() {
