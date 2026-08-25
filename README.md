@@ -106,6 +106,18 @@ techstores.db   (persistent file on disk)
 
 ---
 
+## TechStoreSys V2.0.0.0 (React)
+
+A separate React frontend lives in **`v2/`** — same `techstores.db` and `server.py` API as V1.
+
+1. Start the backend: **`START-SYSTEM.bat`**
+2. Install [Node.js 20+](https://nodejs.org), then run **`START-V2.bat`** (or `cd v2 && npm install && npm run dev`)
+3. Open **http://127.0.0.1:5173/v2/**
+
+See **[v2/README.md](v2/README.md)** for architecture and migration plan.
+
+---
+
 ## More reading
 
 - [ARCHITECTURE.md](ARCHITECTURE.md)
