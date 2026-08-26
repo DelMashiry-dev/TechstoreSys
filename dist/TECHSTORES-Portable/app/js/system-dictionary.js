@@ -144,7 +144,6 @@ const SYSTEM_DICTIONARY_GROUPS = [
             { t: 'Fuel request letter (IT/18)', d: 'Sample RESTRICTED correspondence for standby generator diesel — IT Dir Comms → Load sample.', w: 'it-dir-comms' },
             { t: 'Cards / Mail / WhatsIn', d: 'Three layouts for the same alerts & messages (cards, inbox, chat bubbles).', w: 'Notifications view toggle' },
             { t: 'Universal Search', d: 'Ctrl+K jump to modules, GLs, Q forms — and track issued controlled stores by ZA or Serial Number (location / holder).', w: 'Header' },
-            { t: 'Field Help', d: 'Help mode: point at labels/fields for purpose popups.', w: 'field-help' },
             { t: 'Load demo figures', d: 'Admin/edit-role button to seed experimental FY 2026 Bids-based budgets and sample stock/POs.', w: 'Dashboard toolbar' }
         ]
     },
