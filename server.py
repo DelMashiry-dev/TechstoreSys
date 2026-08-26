@@ -21,7 +21,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlparse, parse_qs
 
-from product_specs_lookup import lookup_product_specs
+from product_specs_lookup import lookup_product_specs, lookup_market_catalog, fetch_rbz_usd_zig_rate
 from ai_services import ai_status, parse_spec_document, answer_stores_question, draft_requisition_justification
 from mode_switch import handle_mode_switch, mode_status_payload, prepare_server_startup
 
@@ -1324,6 +1324,16 @@ class TechStoresHandler(BaseHTTPRequestHandler):
             self._send_json(200, ai_status())
             return
 
+        if path == "/api/exchange-rate":
+            qs = parse_qs(parsed.query or "")
+            force = (qs.get("force") or ["0"])[0] in ("1", "true", "yes")
+            try:
+                result = fetch_rbz_usd_zig_rate(force=force)
+                self._send_json(200, result)
+            except Exception as exc:
+                self._send_json(500, {"ok": False, "error": f"Exchange rate lookup failed: {exc}"})
+            return
+
         if path == "/api/state":
             self._send_json(200, {"ok": True, "appState": load_full_state(), "stats": db_stats()})
             return
@@ -1467,6 +1477,26 @@ class TechStoresHandler(BaseHTTPRequestHandler):
                 self._send_json(status, result)
             except Exception as exc:
                 self._send_json(500, {"ok": False, "error": f"Product lookup failed: {exc}"})
+            return
+
+        if path == "/api/market-catalog":
+            try:
+                payload = self._read_json()
+                query = str(
+                    payload.get("query")
+                    or payload.get("keywords")
+                    or payload.get("brand")
+                    or ""
+                ).strip()
+                category = str(payload.get("category") or "laptop").strip().lower()
+                force = bool(payload.get("force"))
+                result = lookup_market_catalog(query, category=category, force=force)
+                status = 200 if result.get("ok") else 404
+                if result.get("error") and "Enter a brand or keywords" in str(result.get("error")):
+                    status = 400
+                self._send_json(status, result)
+            except Exception as exc:
+                self._send_json(500, {"ok": False, "error": f"Market catalog lookup failed: {exc}"})
             return
 
         if path == "/api/ai/spec-document":

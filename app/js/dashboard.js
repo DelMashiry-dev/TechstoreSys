@@ -23,6 +23,7 @@ function getModuleLabel(moduleId) {
         'daf-fund-request-memo': 'DAF Fund Request Memo',
         'monthly-returns': 'Monthly Returns — Unit ICT Equipment',
         'spec-evaluation': 'Spec/Tech Evaluation',
+        'guide-quotation': 'Rough Guide Quotation',
         'dp-f1-form': 'DP F1 Form',
         'cost-comparative-schedule': 'Cost Comparative Schedule',
         'stores-inventory': 'Stores Inventory',
@@ -1146,6 +1147,9 @@ async function navigateToModule(targetId, options = {}) {
         if (typeof initSpecEvaluationModule === 'function') initSpecEvaluationModule();
         else if (typeof populateSpecSearchFacets === 'function') populateSpecSearchFacets();
     }
+    if (targetId === 'guide-quotation' && typeof initGuideQuotationModule === 'function') {
+        initGuideQuotationModule();
+    }
     if (targetId === 'undelivered-orders' && typeof renderUndeliveredModule === 'function') {
         renderUndeliveredModule();
     }
@@ -1197,6 +1201,9 @@ async function navigateToModule(targetId, options = {}) {
     if (targetId === 'user-management' && canManageUsers()) renderUsersTable();
     if (typeof enhanceFieldHelp === 'function') {
         setTimeout(() => enhanceFieldHelp(document.getElementById(targetId) || document), 50);
+    }
+    if (typeof initHowItWorks === 'function') {
+        setTimeout(() => initHowItWorks(document.getElementById(targetId) || document), 60);
     }
 }
 

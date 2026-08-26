@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "usdToZig": 26.0,
+  "currency": "ZiG",
+  "source": "manual-default",
+  "asOf": "2026-08-26",
+  "referenceUrl": "https://www.rbz.co.zw/index.php/research/markets/exchange-rates",
+  "note": "RBZ site returned bot-protection page; using cached/manual rate.",
+  "cachedAt": 1787732410.9520345,
+  "cached": false
+}
