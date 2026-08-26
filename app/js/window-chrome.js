@@ -59,6 +59,9 @@ function cloneTableHtml(tableSelector) {
     if (!table) return '';
     const clone = table.cloneNode(true);
     clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+    clone.querySelectorAll('tbody tr').forEach((tr) => {
+        tr.style.display = '';
+    });
     return clone.outerHTML;
 }
 
@@ -67,10 +70,40 @@ function refreshTableFocusContent() {
     const modal = document.getElementById('tableFocusModal');
     const body = modal?.querySelector('.table-focus-body');
     if (!body) return;
-    const html = cloneTableHtml(tableFocusState.tableSelector);
-    body.innerHTML = html
-        ? `<div class="form-table-wrapper table-focus-table-wrap">${html}</div>`
-        : '<div class="table-focus-empty">Table not found or empty.</div>';
+    const tableSelector = tableFocusState.tableSelector;
+    const html = cloneTableHtml(tableSelector);
+    const sourceFilters = document.querySelector(`[data-inv-filters-for="${tableSelector}"]`);
+    let filtersHtml = '';
+    if (sourceFilters) {
+        const clone = sourceFilters.cloneNode(true);
+        clone.removeAttribute('data-inv-filters-bound');
+        clone.removeAttribute('data-inv-filters-hint');
+        clone.removeAttribute('data-inv-filters-target');
+        clone.dataset.invFiltersModal = '1';
+        clone.querySelector('[data-table-focus]')?.remove();
+        filtersHtml = clone.outerHTML;
+    }
+    body.innerHTML = filtersHtml
+        ? `${filtersHtml}<div class="form-table-wrapper table-focus-table-wrap">${html}</div>`
+        : (html
+            ? `<div class="form-table-wrapper table-focus-table-wrap">${html}</div>`
+            : '<div class="table-focus-empty">Table not found or empty.</div>');
+    if (sourceFilters && typeof bindInvMovementFilters === 'function') {
+        bindInvMovementFilters(body);
+        const destFilters = body.querySelector('.inv-movement-filters');
+        if (destFilters) {
+            sourceFilters.querySelectorAll('[data-inv-filter]').forEach((src, index) => {
+                const dest = destFilters.querySelectorAll('[data-inv-filter]')[index];
+                if (dest) dest.value = src.value;
+            });
+            const srcSort = sourceFilters.querySelector('[data-inv-sort]');
+            const destSort = destFilters.querySelector('[data-inv-sort]');
+            if (srcSort && destSort) destSort.value = srcSort.value;
+            if (typeof applyInvMovementFiltersFromBar === 'function') {
+                applyInvMovementFiltersFromBar(destFilters);
+            }
+        }
+    }
     const sub = modal.querySelector('#tableFocusSubtitle');
     if (sub && typeof tableFocusState.subtitle === 'function') {
         sub.textContent = tableFocusState.subtitle() || '';

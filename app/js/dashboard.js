@@ -104,6 +104,9 @@ function getPurchaseOrderCommittedByGl() {
     }
 
     poModule.tables['purchase-orders-table-body'].forEach((row) => {
+        if (typeof isPurchaseOrderRegisterRowCancelled === 'function' && isPurchaseOrderRegisterRowCancelled(row)) {
+            return;
+        }
         const cells = row.cells || [];
         const layout = detectPurchaseOrderRowLayout(cells);
         const glCell = layout.gl >= 0 ? cells[layout.gl] : null;
@@ -1201,9 +1204,6 @@ async function navigateToModule(targetId, options = {}) {
     if (targetId === 'user-management' && canManageUsers()) renderUsersTable();
     if (typeof enhanceFieldHelp === 'function') {
         setTimeout(() => enhanceFieldHelp(document.getElementById(targetId) || document), 50);
-    }
-    if (typeof initHowItWorks === 'function') {
-        setTimeout(() => initHowItWorks(document.getElementById(targetId) || document), 60);
     }
 }
 

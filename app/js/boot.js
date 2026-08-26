@@ -107,6 +107,7 @@ function wireLoginForm() {
                 return;
             }
             try {
+                if (typeof ensureRealDpPurchaseOrders === 'function') ensureRealDpPurchaseOrders();
                 restoreAllModules();
                 updateDashboard();
                 updateVoucherSummary();
@@ -143,6 +144,13 @@ async function runHeavyBootInit() {
     if (typeof ensureExampleMidLaptopRequisition === 'function') {
         const ex = ensureExampleMidLaptopRequisition();
         if (ex) {
+            if (typeof saveStateNow === 'function') await saveStateNow();
+            else saveState();
+        }
+    }
+    if (typeof ensureRealDpPurchaseOrders === 'function') {
+        const dpPo = ensureRealDpPurchaseOrders();
+        if (dpPo.added > 0) {
             if (typeof saveStateNow === 'function') await saveStateNow();
             else saveState();
         }

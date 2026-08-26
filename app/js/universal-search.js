@@ -645,14 +645,18 @@ async function activateUniversalResult(el) {
         setTimeout(() => {
             const cat = stockCategory || 'ict-equipment';
             document.querySelector(`#voucherInvTabs .voucher-inv-tab[data-inv-tab="${cat}"]`)?.click();
-            const searchInput = document.querySelector(
-                `input.table-search[data-search-target="voucher-inv-body-${cat}"]`
-            );
-            if (searchInput) {
-                searchInput.value = stockSearch;
-                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-                searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (typeof setInvMovementFilters === 'function') {
+                setInvMovementFilters(cat, { item: stockSearch, description: stockSearch });
+            } else {
+                const itemInput = document.querySelector(
+                    `[data-inv-filters-target="voucher-inv-body-${cat}"] [data-inv-filter="item"]`
+                );
+                if (itemInput) {
+                    itemInput.value = stockSearch;
+                    itemInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
             }
+            document.querySelector(`[data-inv-filters-target="voucher-inv-body-${cat}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 120);
         return;
     }

@@ -375,10 +375,16 @@ async function openStoresLookupAction(action) {
             const cat = action.stockCategory || 'ict-equipment';
             document.querySelector(`#voucherInvTabs .voucher-inv-tab[data-inv-tab="${cat}"]`)?.click();
             document.querySelector('[data-inv-view-btn="cumulative"]')?.click();
-            const input = document.querySelector(`input.table-search[data-search-target="voucher-inv-body-${cat}"]`);
-            if (input && action.stockSearch) {
-                input.value = action.stockSearch;
-                input.dispatchEvent(new Event('input', { bubbles: true }));
+            if (action.stockSearch) {
+                if (typeof setInvMovementFilters === 'function') {
+                    setInvMovementFilters(cat, { item: action.stockSearch, description: action.stockSearch });
+                } else {
+                    const itemInput = document.querySelector(`[data-inv-filters-target="voucher-inv-body-${cat}"] [data-inv-filter="item"]`);
+                    if (itemInput) {
+                        itemInput.value = action.stockSearch;
+                        itemInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
             }
             return;
         }
