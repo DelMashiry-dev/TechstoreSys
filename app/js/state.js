@@ -1,5 +1,157 @@
-/* state.js — app state, API, persistence */
+/* state.js — app state, API, persistence (SQLite when online, IndexedDB offline) */
 let appState = null;
+
+async function apiRequestWithTimeout(path, ms = 5000, options = {}) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+    try {
+        return await apiRequest(path, { ...options, signal: controller.signal });
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+async function persistLocalCopy(state = appState) {
+    if (!state) return;
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (err) {
+        console.warn('localStorage save failed', err);
+    }
+    if (typeof saveOfflineAppState === 'function') {
+        const ok = await saveOfflineAppState(state);
+        if (ok) offlineDurable = true;
+    }
+    if (typeof updateDbStatusBadge === 'function') updateDbStatusBadge();
+}
+
+async function loadBestLocalState() {
+    let parsed = null;
+    if (typeof loadOfflineAppState === 'function') {
+        try {
+            parsed = await loadOfflineAppState();
+        } catch (_) { /* ignore */ }
+    }
+    if (!parsed) {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) parsed = JSON.parse(raw);
+        } catch (_) { /* ignore */ }
+    }
+    return parsed ? mergeState(parsed) : loadState();
+}
+
+async function trySyncStateToServer(force = false) {
+    if (!appState) return false;
+    try {
+        const data = await apiRequest('/api/state', {
+            method: 'PUT',
+            body: JSON.stringify({ appState, force })
+        });
+        dbConnected = true;
+        pendingServerSync = false;
+        if (data?.saveRevision != null) {
+            appState.saveRevision = data.saveRevision;
+        }
+        await persistLocalCopy(appState);
+        updateDbStatusBadge();
+        return true;
+    } catch (error) {
+        if (error.status === 409 && !force) {
+            return trySyncStateToServer(true);
+        }
+        dbConnected = false;
+        pendingServerSync = true;
+        if (typeof queueOfflineSync === 'function') {
+            await queueOfflineSync({ appState, queuedAt: new Date().toISOString() });
+        }
+        updateDbStatusBadge();
+        return false;
+    }
+}
+
+async function reconnectDatabaseIfOnline() {
+    if (!appState) return;
+    if (typeof probeStorageMode === 'function') {
+        await probeStorageMode();
+    }
+    if (storageMode === 'offline-shell') {
+        updateDbStatusBadge();
+        return;
+    }
+    if (dbConnected && !pendingServerSync) return;
+    try {
+        const health = await apiRequestWithTimeout('/api/health', 4000);
+        if (!health?.database) {
+            updateDbStatusBadge();
+            return;
+        }
+        storageMode = 'online';
+        dbConnected = true;
+        const synced = await trySyncStateToServer(true);
+        pendingServerSync = !synced;
+        if (typeof flushOfflineSyncQueue === 'function') {
+            await flushOfflineSyncQueue(async (payload) => {
+                if (payload?.appState) {
+                    appState = mergeState(payload.appState);
+                    await trySyncStateToServer(true);
+                }
+            });
+        }
+        updateDbStatusBadge();
+        if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
+        if (synced && typeof showToast === 'function') {
+            showToast('Database reconnected — synced to techstores.db.', 'success');
+        }
+        if (typeof refreshStorageModeModal === 'function') refreshStorageModeModal();
+    } catch (_) { /* still offline */ }
+}
+
+let _connectivityLossNotified = false;
+
+/** Runtime fallback when SQLite server is unreachable — keeps Online as preference, no manual toggle. */
+function enterRuntimeOfflineFallback(options = {}) {
+    const wasConnected = dbConnected;
+    dbConnected = false;
+    pendingServerSync = true;
+    if (storageMode === 'online') {
+        storageMode = offlineDurable ? 'offline-local' : storageMode;
+    }
+    updateDbStatusBadge();
+    if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
+    if (typeof syncModeToggleUi === 'function') syncModeToggleUi();
+    const notify = options.notify !== false;
+    if (notify && wasConnected && !_connectivityLossNotified && typeof showToast === 'function') {
+        _connectivityLossNotified = true;
+        showToast(
+            options.message
+                || 'Database server unreachable — saving to browser copy. Will sync when START-SYSTEM.bat is running again.',
+            'warning'
+        );
+    }
+}
+
+/** Ping server; auto-fallback to offline copy or reconnect when preferred mode is Online. */
+async function checkDatabaseConnectivity() {
+    if (!appState) return;
+    if (typeof getPreferredStorageMode === 'function' && getPreferredStorageMode() !== 'online') return;
+    if (storageMode === 'offline-shell') return;
+
+    try {
+        const health = await apiRequestWithTimeout('/api/health', 2000);
+        if (health?.database) {
+            _connectivityLossNotified = false;
+            if (!dbConnected || pendingServerSync) {
+                await reconnectDatabaseIfOnline();
+            }
+            return;
+        }
+    } catch (_) { /* server down */ }
+
+    if (dbConnected || storageMode === 'online') {
+        enterRuntimeOfflineFallback();
+    }
+}
 
 function createDefaultState() {
     const glBudgets = {};
@@ -13,6 +165,8 @@ function createDefaultState() {
         glBudgets,
         glMonthlyTargets: {},
         glTargetViewMonth: '',
+        glTargetPeriodMode: 'month',
+        monthlyTargetProposals: {},
         releaseCuts: [],
         storesInventory: createDefaultStoresInventory(),
         customInventoryLedgers: [],
@@ -27,6 +181,7 @@ function createDefaultState() {
         correspondenceFiles: [],
         correspondenceHandovers: [],
         undeliveredOrders: createDefaultUndelivered(),
+        workshopReceiptCerts: [],
         dpProcurements: createDefaultDpProcurements(),
         costComparativeSchedules: [],
         unitChecks: [],
@@ -84,6 +239,10 @@ function loadState() {
                 ? parsed.glMonthlyTargets
                 : {},
             glTargetViewMonth: parsed.glTargetViewMonth || '',
+            glTargetPeriodMode: parsed.glTargetPeriodMode || 'month',
+            monthlyTargetProposals: (parsed.monthlyTargetProposals && typeof parsed.monthlyTargetProposals === 'object')
+                ? parsed.monthlyTargetProposals
+                : {},
             releaseCuts: parsed.releaseCuts || [],
             storesInventory: mergeStoresInventory(parsed.storesInventory),
             customInventoryLedgers: Array.isArray(parsed.customInventoryLedgers) ? parsed.customInventoryLedgers : [],
@@ -98,6 +257,7 @@ function loadState() {
             correspondenceFiles: Array.isArray(parsed.correspondenceFiles) ? parsed.correspondenceFiles : [],
             correspondenceHandovers: Array.isArray(parsed.correspondenceHandovers) ? parsed.correspondenceHandovers : [],
             undeliveredOrders: Array.isArray(parsed.undeliveredOrders) ? parsed.undeliveredOrders : [],
+            workshopReceiptCerts: Array.isArray(parsed.workshopReceiptCerts) ? parsed.workshopReceiptCerts : [],
             dpProcurements: Array.isArray(parsed.dpProcurements) ? parsed.dpProcurements : [],
             costComparativeSchedules: Array.isArray(parsed.costComparativeSchedules) ? parsed.costComparativeSchedules : [],
             unitChecks: Array.isArray(parsed.unitChecks) ? parsed.unitChecks : [],
@@ -152,6 +312,10 @@ function mergeState(parsed) {
             ? parsed.glMonthlyTargets
             : {},
         glTargetViewMonth: parsed.glTargetViewMonth || '',
+        glTargetPeriodMode: parsed.glTargetPeriodMode || 'month',
+        monthlyTargetProposals: (parsed.monthlyTargetProposals && typeof parsed.monthlyTargetProposals === 'object')
+            ? parsed.monthlyTargetProposals
+            : {},
         releaseCuts: parsed.releaseCuts || [],
         storesInventory: mergeStoresInventory(parsed.storesInventory),
         customInventoryLedgers: Array.isArray(parsed.customInventoryLedgers) ? parsed.customInventoryLedgers : [],
@@ -166,6 +330,7 @@ function mergeState(parsed) {
         correspondenceFiles: Array.isArray(parsed.correspondenceFiles) ? parsed.correspondenceFiles : [],
         correspondenceHandovers: Array.isArray(parsed.correspondenceHandovers) ? parsed.correspondenceHandovers : [],
         undeliveredOrders: Array.isArray(parsed.undeliveredOrders) ? parsed.undeliveredOrders : [],
+        workshopReceiptCerts: Array.isArray(parsed.workshopReceiptCerts) ? parsed.workshopReceiptCerts : [],
         dpProcurements: Array.isArray(parsed.dpProcurements) ? parsed.dpProcurements : [],
         costComparativeSchedules: Array.isArray(parsed.costComparativeSchedules) ? parsed.costComparativeSchedules : [],
         unitChecks: Array.isArray(parsed.unitChecks) ? parsed.unitChecks : [],
@@ -210,27 +375,42 @@ async function apiRequest(path, options = {}) {
 }
 
 function updateDbStatusBadge() {
+    if (dbConnected) {
+        storageMode = 'online';
+    } else if (storageMode !== 'offline-shell' && offlineDurable) {
+        storageMode = 'offline-local';
+    }
+
     const badge = document.getElementById('dbStatusBadge');
     if (badge) {
-        if (dbConnected) {
-            badge.textContent = 'Database Connected';
+        badge.textContent = typeof getStorageModeLabel === 'function' ? getStorageModeLabel() : 'Storage';
+        if (dbConnected || storageMode === 'online') {
             badge.className = 'db-status-badge db-online';
-            badge.title = 'Persistent SQLite file: techstores.db (survives shutdown & logout)';
+            badge.title = 'Database — techstores.db on this PC (local server). Click to switch mode.';
+        } else if (storageMode === 'offline-shell' || offlineDurable) {
+            badge.className = 'db-status-badge db-offline-durable';
+            badge.title = 'Browser-only storage. Click for switch instructions.';
         } else {
-            badge.textContent = 'Local Only';
             badge.className = 'db-status-badge db-offline';
-            badge.title = 'Start START-SYSTEM.bat / server.py so data saves to techstores.db';
+            badge.title = 'Click to set up database or browser-only storage.';
         }
     }
     const dbChip = document.getElementById('dashboardDbChip');
     if (dbChip) {
-        dbChip.textContent = dbConnected
-            ? 'Storage: Persistent SQLite (techstores.db)'
-            : 'Storage: Browser only (not durable)';
-        dbChip.title = dbConnected
-            ? 'Data remains after logout, browser close, and PC shutdown'
-            : 'Run START-SYSTEM.bat to enable the durable database';
+        if (dbConnected || storageMode === 'online') {
+            dbChip.textContent = pendingServerSync
+                ? 'Storage: Database + pending sync'
+                : 'Storage: Database (techstores.db)';
+        } else if (storageMode === 'offline-shell') {
+            dbChip.textContent = 'Storage: Browser (offline shell)';
+        } else if (offlineDurable) {
+            dbChip.textContent = 'Storage: Browser copy (IndexedDB)';
+        } else {
+            dbChip.textContent = 'Storage: Local only';
+        }
+        dbChip.title = 'Click to switch database / browser storage';
     }
+    if (typeof syncModeToggleUi === 'function') syncModeToggleUi();
 }
 
 function stateHasOperationalData(state) {
@@ -248,42 +428,88 @@ function stateHasOperationalData(state) {
     const inv = state.storesInventory;
     if (inv && Array.isArray(inv.transactions) && inv.transactions.length > 0) return true;
     if (Object.keys(state.glMonthlyTargets || {}).length > 0) return true;
+    if (Object.keys(state.monthlyTargetProposals || {}).length > 0) return true;
     return false;
 }
 
 async function loadStateFromDatabase() {
+    const probePromise = typeof probeStorageMode === 'function'
+        ? probeStorageMode({ fresh: false })
+        : Promise.resolve();
+    const offlinePromise = typeof initOfflineStore === 'function'
+        ? initOfflineStore()
+        : Promise.resolve(true);
+    await Promise.all([probePromise, offlinePromise]);
+
+    if (storageMode !== 'online') {
+        dbConnected = false;
+        const localState = await loadBestLocalState();
+        updateDbStatusBadge();
+        if (storageMode === 'offline-shell' && typeof showToast === 'function') {
+            showToast('Offline shell — data saves in browser storage.', 'info');
+        }
+        return localState;
+    }
+
     try {
-        const data = await apiRequest('/api/state');
+        const data = await apiRequestWithTimeout('/api/state', 2500);
         dbConnected = true;
+        pendingServerSync = false;
+        storageMode = 'online';
         updateDbStatusBadge();
         const remote = mergeState(data.appState);
-        const localRaw = localStorage.getItem(STORAGE_KEY);
-        if (localRaw) {
-            const local = mergeState(JSON.parse(localRaw));
-            const remoteEmpty = !stateHasOperationalData(remote);
-            const localHasData = stateHasOperationalData(local);
-            if (remoteEmpty && localHasData) {
-                // First-time / empty DB: migrate browser data into SQLite
-                await apiRequest('/api/state', {
-                    method: 'PUT',
-                    body: JSON.stringify({ appState: local, force: true })
-                });
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(local));
-                if (typeof showToast === 'function') {
-                    showToast('Browser data migrated into persistent database (techstores.db).', 'success');
-                }
-                return local;
+        const localState = await loadBestLocalState();
+        const remoteEmpty = !stateHasOperationalData(remote);
+        const localHasData = stateHasOperationalData(localState);
+        if (remoteEmpty && localHasData) {
+            await trySyncStateToServer(true);
+            await persistLocalCopy(localState);
+            if (typeof showToast === 'function') {
+                showToast('Browser data migrated into persistent database (techstores.db).', 'success');
             }
+            if (typeof warmOfflineModuleCache === 'function') warmOfflineModuleCache();
+            return localState;
         }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remote));
+        persistLocalCopy(remote).catch(() => { /* background */ });
+        if (typeof warmOfflineModuleCache === 'function') warmOfflineModuleCache();
         return remote;
     } catch (error) {
-        console.warn('Database unavailable, using local storage.', error);
+        console.warn('Database unavailable, using offline storage.', error?.message || error);
         dbConnected = false;
+        const localState = await loadBestLocalState();
         updateDbStatusBadge();
-        return loadState();
+        if (typeof showToast === 'function' && offlineDurable) {
+            showToast('Server unavailable — using browser copy. Run START-SYSTEM.bat for database mode.', 'info');
+        }
+        return localState;
     }
 }
+
+let stateHydratePromise = null;
+
+/** Load app state without blocking the login screen (online first, offline fallback). */
+function hydrateAppStateFromDatabase(force = false) {
+    if (!force && stateHydratePromise) return stateHydratePromise;
+    stateHydratePromise = loadStateFromDatabase()
+        .catch((err) => {
+            console.warn('State hydrate failed', err);
+            try {
+                return loadState();
+            } catch (_) {
+                return createDefaultState();
+            }
+        });
+    window.__stateHydratePromise = stateHydratePromise;
+    return stateHydratePromise;
+}
+
+function resetStateHydratePromise() {
+    stateHydratePromise = null;
+    window.__stateHydratePromise = null;
+}
+
+window.hydrateAppStateFromDatabase = hydrateAppStateFromDatabase;
+window.resetStateHydratePromise = resetStateHydratePromise;
 
 function bumpSaveMeta() {
     if (!appState) return;
@@ -308,46 +534,39 @@ function saveState() {
         return;
     }
     bumpSaveMeta();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-    if (!dbConnected) return;
+    persistLocalCopy(appState);
+    if (!dbConnected) {
+        pendingServerSync = true;
+        if (typeof queueOfflineSync === 'function') {
+            queueOfflineSync({ appState, queuedAt: new Date().toISOString() });
+        }
+        updateDbStatusBadge();
+        return;
+    }
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(async () => {
         try {
-            const data = await apiRequest('/api/state', {
-                method: 'PUT',
-                body: JSON.stringify({ appState })
-            });
-            if (data?.saveRevision != null) {
-                appState.saveRevision = data.saveRevision;
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-            }
-            if (typeof checkSaveConflictOnLoad === 'function') checkSaveConflictOnLoad();
+            const ok = await trySyncStateToServer(false);
+            if (ok && typeof checkSaveConflictOnLoad === 'function') checkSaveConflictOnLoad();
         } catch (error) {
             if (error.status === 409) {
                 const ok = typeof confirmAction === 'function'
                     ? confirmAction('Another save is newer on the server. Overwrite with your copy?')
                     : window.confirm('Another save is newer on the server. Overwrite with your copy?');
                 if (ok) {
-                    try {
-                        const data = await apiRequest('/api/state', {
-                            method: 'PUT',
-                            body: JSON.stringify({ appState, force: true })
-                        });
-                        if (data?.saveRevision != null) appState.saveRevision = data.saveRevision;
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-                        showToast('Saved (overwrite).', 'success');
-                        return;
-                    } catch (e2) {
-                        console.error('Force save failed', e2);
-                    }
+                    const forced = await trySyncStateToServer(true);
+                    if (forced && typeof showToast === 'function') showToast('Saved (overwrite).', 'success');
+                    return;
                 }
-                showToast('Save skipped — reload to pick up the latest database state.', 'warning');
+                if (typeof showToast === 'function') {
+                    showToast('Save skipped — reload to pick up the latest database state.', 'warning');
+                }
                 return;
             }
             console.error('Failed to save to database', error);
-            dbConnected = false;
-            updateDbStatusBadge();
-            showToast('Database save failed. Data kept in browser only.', 'error');
+            enterRuntimeOfflineFallback({
+            message: 'Database unavailable — saved to browser copy. Will sync when the server is back.'
+        });
         }
     }, 250);
 }
@@ -365,35 +584,25 @@ async function saveStateNow() {
         saveTimer = null;
     }
     bumpSaveMeta();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-    if (!dbConnected) return false;
-    try {
-        const data = await apiRequest('/api/state', {
-            method: 'PUT',
-            body: JSON.stringify({ appState })
-        });
-        if (data?.saveRevision != null) {
-            appState.saveRevision = data.saveRevision;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+    await persistLocalCopy(appState);
+    if (!dbConnected) {
+        pendingServerSync = true;
+        if (typeof queueOfflineSync === 'function') {
+            await queueOfflineSync({ appState, queuedAt: new Date().toISOString() });
         }
-        if (typeof checkSaveConflictOnLoad === 'function') checkSaveConflictOnLoad();
-        return true;
+        updateDbStatusBadge();
+        return false;
+    }
+    try {
+        const ok = await trySyncStateToServer(false);
+        if (ok && typeof checkSaveConflictOnLoad === 'function') checkSaveConflictOnLoad();
+        return ok;
     } catch (error) {
         if (error.status === 409) {
-            try {
-                await apiRequest('/api/state', {
-                    method: 'PUT',
-                    body: JSON.stringify({ appState, force: true })
-                });
-                return true;
-            } catch (e2) {
-                showToast('Save conflict — another user may have saved first. Use Backup, then reload.', 'warning');
-                return false;
-            }
+            return trySyncStateToServer(true);
         }
         console.error('Failed to save to database', error);
-        dbConnected = false;
-        updateDbStatusBadge();
+        enterRuntimeOfflineFallback();
         return false;
     }
 }
@@ -418,8 +627,10 @@ function initPersistentDatabaseHooks() {
             if (!appState) return;
             bumpSaveMeta();
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            if (typeof saveOfflineAppState === 'function') {
+                saveOfflineAppState(appState);
+            }
             if (dbConnected) {
-                // keepalive fetch survives tab close better than a normal await
                 fetch('/api/state', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -436,17 +647,19 @@ function initPersistentDatabaseHooks() {
         }
     });
 
-    // Reconnect if server comes back after going offline
-    setInterval(async () => {
-        if (dbConnected || !appState) return;
-        try {
-            await apiRequest('/api/state');
-            dbConnected = true;
-            updateDbStatusBadge();
-            await saveStateNow();
-            if (typeof showToast === 'function') {
-                showToast('Database reconnected — data syncing to techstores.db.', 'success');
-            }
-        } catch (e) { /* still offline */ }
+    window.addEventListener('online', () => {
+        updateDbStatusBadge();
+        checkDatabaseConnectivity();
+    });
+    window.addEventListener('offline', () => {
+        enterRuntimeOfflineFallback({
+            message: 'Network offline — browser copy active. Database mode resumes when the local server responds.'
+        });
+    });
+
+    setInterval(() => {
+        checkDatabaseConnectivity();
     }, 15000);
+
+    setTimeout(() => checkDatabaseConnectivity(), 2500);
 }

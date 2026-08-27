@@ -422,6 +422,74 @@ function normalizeZaNumber(value) {
     return raw;
 }
 
+/** Match holder names ignoring rank prefix (Maj, Capt, Sgt, …). */
+function normalizeIctHolderKey(name) {
+    return String(name || '').trim().toLowerCase()
+        .replace(/^(maj|capt|lt|wo\d+|sgt|cpl|mr|mrs|ms|dr)\.?\s+/i, '')
+        .replace(/\s+/g, ' ');
+}
+
+function isLaptopIctDesignation(rec) {
+    const blob = `${rec?.designation || ''} ${rec?.description || ''}`.toLowerCase();
+    return /\b(laptop|notebook|elitebook|omnibook|thinkpad|latitude|macbook|surface|zbook)\b/.test(blob);
+}
+
+function isLaptopStockItem(itemId, itemName, category) {
+    const blob = `${itemId || ''} ${itemName || ''} ${category || ''}`.toLowerCase();
+    if (category === 'inv-laptops') return true;
+    return /\b(laptop|notebook|elitebook|omnibook|thinkpad|latitude|macbook|surface|zbook)\b/.test(blob);
+}
+
+/** Active engraved / Q 1033 custody for a person (issued or on loan). */
+function getActiveIctCustodyForHolder(holderName, opts = {}) {
+    const key = normalizeIctHolderKey(holderName);
+    if (!key) return [];
+    const laptopsOnly = opts.laptopsOnly !== false;
+    return ensureIctAccountability().filter((r) => {
+        if (normalizeIctHolderKey(r.holderName) !== key) return false;
+        if (r.assetClass !== 'equipment') return false;
+        if (!['issued', 'on_loan'].includes(r.status)) return false;
+        if (laptopsOnly && !isLaptopIctDesignation(r)) return false;
+        return true;
+    });
+}
+
+function validateIctLaptopIssueCustody(payload) {
+    if (payload.allowDuplicateCustody) return '';
+    const type = payload.type === 'receipt' ? 'receipt' : 'issue';
+    if (type !== 'issue') return '';
+    if (!isLaptopStockItem(payload.itemId, payload.item, payload.category)) return '';
+    const party = String(payload.party || '').trim();
+    if (!party) return '';
+    const active = getActiveIctCustodyForHolder(party, { laptopsOnly: true });
+    if (!active.length) return '';
+    const refs = active.map((r) => r.form1033Ref || r.zaNumber || r.designation).filter(Boolean).join(', ');
+    return `${party} already has an active laptop issue (Q 1033: ${refs || 'on record'}). `
+        + 'Return the initial issue to stores before posting a second Q 1033 issue.';
+}
+
+/** Mark prior laptop custody returned when a return receipt is posted from a holder. */
+function closeIctCustodyOnLaptopReturn(holderName, opts = {}) {
+    const key = normalizeIctHolderKey(holderName);
+    if (!key) return [];
+    const exceptZa = opts.exceptZa ? normalizeZaNumber(opts.exceptZa) : '';
+    const closed = [];
+    ensureIctAccountability().forEach((r) => {
+        if (normalizeIctHolderKey(r.holderName) !== key) return;
+        if (r.assetClass !== 'equipment') return;
+        if (!['issued', 'on_loan'].includes(r.status)) return;
+        if (!isLaptopIctDesignation(r)) return;
+        const za = normalizeZaNumber(r.zaNumber);
+        if (exceptZa && za === exceptZa) return;
+        r.status = 'returned';
+        r.remarks = [r.remarks, 'Returned to stores — cleared for subsequent Q 1033 issue']
+            .filter(Boolean).join(' · ');
+        r.updatedAt = new Date().toISOString();
+        closed.push(r);
+    });
+    return closed;
+}
+
 function looksLikeZaNumber(value) {
     const t = String(value || '').trim();
     return /^za\s*-?\s*\d+\s*$/i.test(t) || /^\d{2,6}$/.test(t);
@@ -582,6 +650,28 @@ function buildZaDossier(zaRaw) {
     };
 }
 
+/** Map natural-language status queries (e.g. "boarded") to ICT register status keys. */
+function matchIctStatusQuery(query) {
+    const q = String(query || '').trim().toLowerCase();
+    if (!q) return null;
+    const rules = [
+        { terms: ['boarded', 'board of survey', 'board schedule', 'surveyed'], statuses: ['boarded', 'condemned'] },
+        { terms: ['condemned', 'condemn', 'for destruction', 'destruction'], statuses: ['condemned', 'boarded'] },
+        { terms: ['backloaded', 'backload', 'back loaded', 'struck off', 'strike off'], statuses: ['backloaded', 'boarded', 'condemned'] },
+        { terms: ['unserviceable', 'u/s', 'us', 'ber', 'beyond repair'], statuses: ['unserviceable'] },
+        { terms: ['disposal', 'strike-off', 'strike off'], statuses: ['backloaded', 'boarded', 'condemned'] },
+        { terms: ['stolen'], statuses: ['stolen'] },
+        { terms: ['in stores', 'mlg stores'], statuses: ['in_stores', 'serviceable'] },
+        { terms: ['issued', 'on issue'], statuses: ['issued'] },
+        { terms: ['on loan', 'loaned'], statuses: ['on_loan'] },
+        { terms: ['serviceable'], statuses: ['serviceable'] }
+    ];
+    for (const rule of rules) {
+        if (rule.terms.some((t) => q === t || q.includes(t))) return rule.statuses;
+    }
+    return null;
+}
+
 function scoreIctAccTrackMatch(rec, query) {
     const q = normalizeIctAccTrackQuery(query);
     if (!q) return 0;
@@ -596,19 +686,35 @@ function scoreIctAccTrackMatch(rec, query) {
         .replace(/[^A-Z0-9]/g, '');
     const name = String(rec.designation || '').trim().toLowerCase();
     const desc = String(rec.description || '').trim().toLowerCase();
+    const holder = String(rec.holderName || '').trim().toLowerCase();
+    const unit = String(rec.unit || '').trim().toLowerCase();
+    const form1033 = String(rec.form1033Ref || '').trim().toLowerCase();
+    const remarks = String(rec.remarks || '').trim().toLowerCase();
+    const boardRef = String(rec.boardRef || '').trim().toLowerCase();
+    const sm = rec.statusMeta || getIctAccStatusMeta(rec);
+    const statusLabel = String(sm.label || '').trim().toLowerCase();
+    const statusKey = sm.key || rec.status || '';
     const compactQ = q.replace(/\s+/g, '');
     const compactZa = za.replace(/\s+/g, '');
+
+    const statusKeys = matchIctStatusQuery(query);
+    if (statusKeys && statusKeys.includes(statusKey)) return 88;
 
     if (zaNorm && recZa && zaNorm === recZa) return 100;
     if (za && (za === q || compactZa === compactQ)) return 100;
     if (qSerialKey && serialKey && qSerialKey === serialKey) return 100;
+    if (form1033 && (form1033.includes(q) || form1033.replace(/\s+/g, '').includes(compactQ))) return 95;
+    if (holder && (holder === q || holder.includes(q))) return 92;
+    if (unit && (unit === q || unit.includes(q))) return 88;
     if (za && (za.includes(q) || compactZa.includes(compactQ))) return 90;
     if (trace && (trace === q || trace.includes(q))) return 85;
     if (serial && (serial === q || serial.includes(q) || (qSerialKey && serialKey.includes(qSerialKey)))) return 80;
     if (name === q) return 75;
     if (name.includes(q)) return 70;
     if (desc.includes(q)) return 55;
-    if (`${name} ${desc}`.includes(q)) return 50;
+    if (statusLabel.includes(q)) return 72;
+    if (remarks.includes(q) || boardRef.includes(q)) return 68;
+    if (`${name} ${desc} ${statusLabel} ${remarks}`.includes(q)) return 50;
     return 0;
 }
 
@@ -1115,6 +1221,65 @@ function getIctAccUnitFilter() {
     return String(document.getElementById('ictAccUnitFilterSelect')?.value || '').trim().toLowerCase();
 }
 
+/** Match holding unit filter — handles IT Dir / IT Directorate / full ZNA names. */
+function ictAccUnitMatches(recordUnit, filterValue) {
+    if (!filterValue) return true;
+    const rec = String(recordUnit || '').trim().toLowerCase();
+    const fil = String(filterValue || '').trim().toLowerCase();
+    if (!rec) return false;
+    if (rec === fil || rec.includes(fil) || fil.includes(rec)) return true;
+
+    const aliasesFor = (val) => {
+        const v = String(val || '').trim().toLowerCase();
+        const set = new Set([v]);
+        const all = typeof flattenZnaUnits === 'function' ? flattenZnaUnits() : [];
+        const hit = all.find((u) =>
+            (u.value || '').toLowerCase() === v
+            || (u.abbr || '').toLowerCase() === v
+            || (u.name || '').toLowerCase() === v
+            || (u.label || '').toLowerCase() === v
+        );
+        if (hit) {
+            [hit.value, hit.abbr, hit.name, hit.label].forEach((x) => {
+                if (x) set.add(String(x).toLowerCase());
+            });
+        }
+        if (/it\s*dir|information technology|it directorate/.test(v)) {
+            set.add('it dir');
+            set.add('it directorate');
+            set.add('information technology directorate');
+        }
+        return set;
+    };
+
+    const recAliases = aliasesFor(rec);
+    const filAliases = aliasesFor(fil);
+    for (const a of recAliases) {
+        if (filAliases.has(a)) return true;
+    }
+    for (const a of recAliases) {
+        for (const b of filAliases) {
+            if (a.length >= 3 && b.length >= 3 && (a.includes(b) || b.includes(a))) return true;
+        }
+    }
+    return false;
+}
+
+/** Item name filter — all words must match (supports plurals: laptops → laptop). */
+function ictAccItemNameMatches(record, itemQuery) {
+    const itemQ = String(itemQuery || '').trim().toLowerCase();
+    if (!itemQ) return true;
+    const nameBlob = `${record.designation || ''} ${record.description || ''} ${record.remarks || ''}`.toLowerCase();
+    const tokens = itemQ.split(/\s+/).filter((t) => t.length >= 2);
+    if (!tokens.length) return nameBlob.includes(itemQ);
+
+    return tokens.every((token) => {
+        if (nameBlob.includes(token)) return true;
+        if (token.endsWith('s') && token.length > 3 && nameBlob.includes(token.slice(0, -1))) return true;
+        return false;
+    });
+}
+
 function populateIctAccUnitFilterSelect() {
     const sel = document.getElementById('ictAccUnitFilterSelect');
     if (!sel) return;
@@ -1151,15 +1316,9 @@ function filterIctAccountabilityRows(rows) {
             if (d == null || d > 90) return false;
         }
 
-        if (itemQ) {
-            const nameBlob = `${r.designation || ''} ${r.description || ''}`.toLowerCase();
-            if (!nameBlob.includes(itemQ)) return false;
-        }
+        if (itemQ && !ictAccItemNameMatches(r, itemQ)) return false;
 
-        if (unitQ) {
-            const unitVal = String(r.unit || '').trim().toLowerCase();
-            if (unitVal !== unitQ) return false;
-        }
+        if (unitQ && !ictAccUnitMatches(r.unit, unitQ)) return false;
 
         if (issueFrom || issueTo) {
             const issueDate = String(r.issueDate || '').trim();
@@ -1261,6 +1420,7 @@ function renderIctAccountabilityTable() {
                 ? 'No records match these filters. Try clearing item name or issue-date filters.'
                 : 'No accountability records yet. Register engraved ICT equipment, traceable expendables, software licences, or spares.'
         }</td></tr>`;
+        if (typeof refreshTableFocusViewIfOpen === 'function') refreshTableFocusViewIfOpen();
         return;
     }
 
@@ -1300,6 +1460,7 @@ function renderIctAccountabilityTable() {
             </tr>
         `;
     }).join('');
+    if (typeof refreshTableFocusViewIfOpen === 'function') refreshTableFocusViewIfOpen();
 }
 
 function clearIctAccForm() {

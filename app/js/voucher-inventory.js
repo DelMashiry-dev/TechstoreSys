@@ -570,6 +570,41 @@ function postStockTransaction(payload) {
         return null;
     }
 
+    if (typeof validateIctLaptopIssueCustody === 'function') {
+        const custodyErr = validateIctLaptopIssueCustody({
+            type,
+            party: payload.party,
+            itemId,
+            item: itemName,
+            category,
+            allowDuplicateCustody: payload.allowDuplicateCustody
+        });
+        if (custodyErr) {
+            if (!silent) showToast(custodyErr, 'error');
+            return null;
+        }
+    }
+
+    if (type === 'receipt' && typeof validateWorkshopCertForIctReceipt === 'function') {
+        const wrcErr = validateWorkshopCertForIctReceipt({
+            type,
+            category,
+            item: itemName,
+            poNumber: payload.poNumber,
+            deliveryNoteRef: payload.deliveryNoteRef,
+            party: payload.party,
+            description: payload.description,
+            wrcId: payload.wrcId,
+            wrcBypass: payload.wrcBypass,
+            laptopReturn: payload.laptopReturn,
+            source: payload.source
+        });
+        if (wrcErr) {
+            if (!silent) showToast(wrcErr, 'error');
+            return null;
+        }
+    }
+
     const inv = ensureStoresInventory();
     const txn = {
         id: `stk-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -597,6 +632,15 @@ function postStockTransaction(payload) {
         const code = getOrAssignDisplayItemId(itemId, itemName, category);
         txn.displayItemId = code;
     }
+
+    const isLaptopReturn = type === 'receipt' && payload.party && (
+        payload.laptopReturn
+        || /\b(return|returned)\b/i.test(`${payload.description || ''} ${txn.description || ''}`)
+    );
+    if (isLaptopReturn && typeof closeIctCustodyOnLaptopReturn === 'function') {
+        closeIctCustodyOnLaptopReturn(payload.party);
+    }
+
     saveState();
 
     const after = getItemStockSummary(itemId, { mode: 'cumulative' });
@@ -1727,7 +1771,7 @@ function updateDaySessionBanner() {
 function buildVoucherInventorySection() {
     const host = document.getElementById('voucherInventorySection');
     if (!host) return;
-    if (host.dataset.built === '1' && host.dataset.invUi === '3') {
+    if (host.dataset.built === '1' && host.dataset.invUi === '5') {
         const tabCount = host.querySelectorAll('.voucher-inv-tab').length;
         if (tabCount === (VOUCHER_INVENTORY_CATEGORIES || []).length) return;
         host.dataset.built = '0';
@@ -1786,12 +1830,16 @@ function buildVoucherInventorySection() {
 
             <h5 class="voucher-inv-subtitle" data-inv-movements-title>Receive / Issue Movements (Daily)</h5>
             <div class="module-toolbar">
-                <input type="search" class="form-control table-search" data-search-target="voucher-inv-body-${cat.key}" placeholder="Search movements...">
+                <input type="search" class="form-control table-search" data-search-target="voucher-inv-body-${cat.key}"
+                    data-search-hint-id="voucher-inv-search-hint-${cat.key}" placeholder="Search movements...">
                 <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
                 <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-table-focus="#voucher-inv-table-${cat.key}"
+                    data-table-focus-title="Receive / Issue Movements — ${invHtmlEscape(cat.label)}" title="Expand table">⛶ Expand</button>
             </div>
-            <div class="form-table-wrapper">
-                <table class="overview-table voucher-inv-table">
+            <p class="table-search-hint" id="voucher-inv-search-hint-${cat.key}" hidden></p>
+            <div class="form-table-wrapper voucher-inv-movements-wrap">
+                <table class="overview-table voucher-inv-table" id="voucher-inv-table-${cat.key}">
                     <thead>
                         <tr>
                             <th>#</th>
@@ -1849,7 +1897,7 @@ function buildVoucherInventorySection() {
         <div class="voucher-inv-panels" id="voucherInvPanels">${panels}</div>
     `;
     host.dataset.built = '1';
-    host.dataset.invUi = '3';
+    host.dataset.invUi = '5';
 
     host.querySelectorAll('.voucher-inv-tab').forEach((tab) => {
         tab.addEventListener('click', () => {
@@ -2056,6 +2104,13 @@ function renderVoucherInventoryTables() {
         };
         setMetric(`[data-inv-received="${cat.key}"]`, summary.received);
         setMetric(`[data-inv-issued="${cat.key}"]`, summary.issued);
+
+        const searchInput = host.querySelector(
+            `input.table-search[data-search-target="voucher-inv-body-${cat.key}"]`
+        );
+        if (searchInput?.value && typeof runTableSearch === 'function') {
+            runTableSearch(searchInput);
+        }
     });
 }
 

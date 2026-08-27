@@ -1,99 +1,136 @@
 <div id="accommodation-stores" class="form-container">
-                <div class="form-header">
-                    <h2 class="form-title">Inventory of Accommodation Stores</h2>
-                    <button class="close-btn">&times;</button>
-                </div>
-                <p class="q982-intro">Room / office accommodation stores inventory. Print and report match the official inventory sheet layout.</p>
-                <div class="acc-stores-form">
-                    <div class="form-row">
-                        <div class="form-col">
-                            <label class="form-label">UNIT</label>
-                            <input type="text" id="accUnit" class="form-control" placeholder="e.g. IT DIR">
-                        </div>
-                        <div class="form-col">
-                            <label class="form-label">Year / Ref</label>
-                            <input type="text" id="accYearRef" class="form-control" placeholder="e.g. 28 2019">
-                        </div>
-                        <div class="form-col">
-                            <label class="form-label">Counter Signature of Unit Store holder</label>
-                            <input type="text" id="accCounterSig" class="form-control">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-col">
-                            <label class="form-label">LOCATION</label>
-                            <input type="text" id="accLocation" class="form-control" placeholder="e.g. SYSTEM ANALYST">
-                        </div>
-                        <div class="form-col">
-                            <label class="form-label">No.</label>
-                            <input type="text" id="accPersonNo" class="form-control">
-                        </div>
-                        <div class="form-col">
-                            <label class="form-label">Rank</label>
-                            <input type="text" id="accRank" class="form-control">
-                        </div>
-                        <div class="form-col">
-                            <label class="form-label">Name</label>
-                            <input type="text" id="accName" class="form-control">
-                        </div>
-                        <div class="form-col">
-                            <label class="form-label">Appt.</label>
-                            <input type="text" id="accAppt" class="form-control">
-                        </div>
-                    </div>
-
-                    <h4 class="q982-section-title">Inventory check columns (DATE / SIG)</h4>
-                    <div class="form-row" id="accCheckHeaders">
-                        <div class="form-col"><label class="form-label">Check 1 — Date</label><input type="date" id="accCheck1Date" class="form-control"></div>
-                        <div class="form-col"><label class="form-label">Check 1 — Sig</label><input type="text" id="accCheck1Sig" class="form-control"></div>
-                        <div class="form-col"><label class="form-label">Check 2 — Date</label><input type="date" id="accCheck2Date" class="form-control"></div>
-                        <div class="form-col"><label class="form-label">Check 2 — Sig</label><input type="text" id="accCheck2Sig" class="form-control"></div>
-                        <div class="form-col"><label class="form-label">Check 3 — Date</label><input type="date" id="accCheck3Date" class="form-control"></div>
-                        <div class="form-col"><label class="form-label">Check 3 — Sig</label><input type="text" id="accCheck3Sig" class="form-control"></div>
-                        <div class="form-col"><label class="form-label">Check 4 — Date</label><input type="date" id="accCheck4Date" class="form-control"></div>
-                        <div class="form-col"><label class="form-label">Check 4 — Sig</label><input type="text" id="accCheck4Sig" class="form-control"></div>
-                    </div>
-
-                    <p class="acc-person-label"><strong>Person in charge of office or room</strong></p>
-                    <div class="module-toolbar acc-screen-only">
-                        <input type="search" class="form-control table-search" data-search-target="accommodation-stores-table-body" placeholder="Search items...">
-                        <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
-                        <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="seedAccommodationStoreItems()">Load Common Items</button>
-                    </div>
-                    <div class="form-table-wrapper acc-table-wrap">
-                        <table class="acc-items-table">
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th>Qty 1</th>
-                                    <th>Qty 2</th>
-                                    <th>Qty 3</th>
-                                    <th>Qty 4</th>
-                                    <th class="acc-screen-only">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="accommodation-stores-table-body"></tbody>
-                        </table>
-                    </div>
-                    <button type="button" class="btn btn-primary acc-screen-only" style="margin: 10px 0;" onclick="addAccommodationStoreRow()">Add Item</button>
-                    <datalist id="accItemSuggestions">
-                        <option value="CHAIRS - TUBULAR"></option>
-                        <option value="TABLE MODULE"></option>
-                        <option value="TABLE - OFFICE"></option>
-                        <option value="SURGE PROTECTOR"></option>
-                        <option value="TRAY - CORRESPONDENCE"></option>
-                        <option value="CPU"></option>
-                        <option value="VDU"></option>
-                        <option value="MOUSE"></option>
-                        <option value="KEYBOARD"></option>
-                        <option value="FILING CABINET"></option>
-                        <option value="WHITEBOARD"></option>
-                        <option value="DESK LAMP"></option>
-                    </datalist>
-                    <p class="acc-note">NOTE: ALTERATION TO THE ABOVE WILL NOT BE MADE WITHOUT THE AUTHORITY OF THE CAMP COMMANDANT WHO WILL COUNTER SIGN ALL ENTRIES / ALTERATIONS.</p>
-                </div>
-                <button class="btn btn-success btn-save-module" style="margin-top: 15px;">Save Form</button>
-                <button class="btn btn-secondary btn-print-module" data-print-target="accommodation-stores" style="margin-top: 15px;">Print Form</button>
-                <button class="btn btn-secondary btn-generate-report" data-report-module="accommodation-stores" style="margin-top: 15px;">Generate Report</button>
+    <div class="form-header">
+        <h2 class="form-title">Inventory of Accommodation Stores</h2>
+        <button class="close-btn">&times;</button>
+    </div>
+    <p class="q982-intro">Room / office accommodation stores inventory. Print and report match the official inventory
+        sheet layout.</p>
+    <div class="acc-stores-form">
+        <div class="acc-meta-grid">
+            <div class="acc-field acc-span-3">
+                <label class="form-label" for="accUnit">UNIT</label>
+                <input type="text" id="accUnit" class="form-control" placeholder="e.g. IT DIR">
             </div>
+            <div class="acc-field acc-span-2">
+                <label class="form-label" for="accYearRef">Year / Ref</label>
+                <input type="text" id="accYearRef" class="form-control" placeholder="e.g. 28 2019">
+            </div>
+            <div class="acc-field acc-span-7">
+                <label class="form-label" for="accCounterSig">Counter Signature of Unit Store holder</label>
+                <input type="text" id="accCounterSig" class="form-control">
+            </div>
+            <div class="acc-field acc-span-4">
+                <label class="form-label" for="accLocation">LOCATION</label>
+                <input type="text" id="accLocation" class="form-control" placeholder="e.g. Block A — Room 101">
+            </div>
+            <div class="acc-field acc-span-1">
+                <label class="form-label" for="accPersonNo">No.</label>
+                <input type="text" id="accPersonNo" class="form-control">
+            </div>
+            <div class="acc-field acc-span-2">
+                <label class="form-label" for="accRank">Rank</label>
+                <input type="text" id="accRank" class="form-control">
+            </div>
+            <div class="acc-field acc-span-3">
+                <label class="form-label" for="accName">Name</label>
+                <input type="text" id="accName" class="form-control">
+            </div>
+            <div class="acc-field acc-span-2">
+                <label class="form-label" for="accAppt">Appt.</label>
+                <input type="text" id="accAppt" class="form-control" placeholder="e.g. SYSTEM ANALYST">
+            </div>
+        </div>
+
+        <h4 class="q982-section-title">Inventory check columns (DATE / SIG)</h4>
+        <div class="acc-check-grid" id="accCheckHeaders">
+            <div class="acc-check-set">
+                <div class="acc-check-field acc-check-date">
+                    <label class="form-label" for="accCheck1Date">Check 1 — Date</label>
+                    <input type="date" id="accCheck1Date" class="form-control">
+                </div>
+                <div class="acc-check-field acc-check-sig">
+                    <label class="form-label" for="accCheck1Sig">Check 1 — Sig</label>
+                    <input type="text" id="accCheck1Sig" class="form-control" maxlength="8">
+                </div>
+            </div>
+            <div class="acc-check-set">
+                <div class="acc-check-field acc-check-date">
+                    <label class="form-label" for="accCheck2Date">Check 2 — Date</label>
+                    <input type="date" id="accCheck2Date" class="form-control">
+                </div>
+                <div class="acc-check-field acc-check-sig">
+                    <label class="form-label" for="accCheck2Sig">Check 2 — Sig</label>
+                    <input type="text" id="accCheck2Sig" class="form-control" maxlength="8">
+                </div>
+            </div>
+            <div class="acc-check-set">
+                <div class="acc-check-field acc-check-date">
+                    <label class="form-label" for="accCheck3Date">Check 3 — Date</label>
+                    <input type="date" id="accCheck3Date" class="form-control">
+                </div>
+                <div class="acc-check-field acc-check-sig">
+                    <label class="form-label" for="accCheck3Sig">Check 3 — Sig</label>
+                    <input type="text" id="accCheck3Sig" class="form-control" maxlength="8">
+                </div>
+            </div>
+            <div class="acc-check-set">
+                <div class="acc-check-field acc-check-date">
+                    <label class="form-label" for="accCheck4Date">Check 4 — Date</label>
+                    <input type="date" id="accCheck4Date" class="form-control">
+                </div>
+                <div class="acc-check-field acc-check-sig">
+                    <label class="form-label" for="accCheck4Sig">Check 4 — Sig</label>
+                    <input type="text" id="accCheck4Sig" class="form-control" maxlength="8">
+                </div>
+            </div>
+        </div>
+
+        <p class="acc-person-label"><strong>Person in charge of office or room</strong></p>
+        <div class="module-toolbar acc-screen-only">
+            <input type="search" class="form-control table-search" data-search-target="accommodation-stores-table-body"
+                placeholder="Search items...">
+            <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+            <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="seedAccommodationStoreItems()">Load Common
+                Items</button>
+        </div>
+        <div class="form-table-wrapper acc-table-wrap">
+            <table class="acc-items-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qty 1</th>
+                        <th>Qty 2</th>
+                        <th>Qty 3</th>
+                        <th>Qty 4</th>
+                        <th class="acc-screen-only">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="accommodation-stores-table-body"></tbody>
+            </table>
+        </div>
+        <button type="button" class="btn btn-primary acc-screen-only" style="margin: 10px 0;"
+            onclick="addAccommodationStoreRow()">Add Item</button>
+        <datalist id="accItemSuggestions">
+            <option value="CHAIRS - TUBULAR"></option>
+            <option value="TABLE MODULE"></option>
+            <option value="TABLE - OFFICE"></option>
+            <option value="SURGE PROTECTOR"></option>
+            <option value="TRAY - CORRESPONDENCE"></option>
+            <option value="CPU"></option>
+            <option value="VDU"></option>
+            <option value="MOUSE"></option>
+            <option value="KEYBOARD"></option>
+            <option value="FILING CABINET"></option>
+            <option value="WHITEBOARD"></option>
+            <option value="DESK LAMP"></option>
+        </datalist>
+        <p class="acc-note">NOTE: ALTERATION TO THE ABOVE WILL NOT BE MADE WITHOUT THE AUTHORITY OF THE CAMP COMMANDANT
+            WHO WILL COUNTER SIGN ALL ENTRIES / ALTERATIONS.</p>
+    </div>
+    <button class="btn btn-success btn-save-module" style="margin-top: 15px;">Save Form</button>
+    <button class="btn btn-secondary btn-print-module" data-print-target="accommodation-stores"
+        style="margin-top: 15px;">Print Form</button>
+    <button class="btn btn-secondary btn-generate-report" data-report-module="accommodation-stores"
+        style="margin-top: 15px;">Generate Report</button>
+</div>

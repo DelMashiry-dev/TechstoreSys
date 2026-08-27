@@ -288,11 +288,11 @@ function suggestVoucherInventoryCategory(itemName) {
     if (/\b(software|licence|license|windows|office|kaspersky|vmware|oracle|sql|devexpress)\b/.test(t)) return 'inv-softwares';
     if (/\b(laptop|notebook)\b/.test(t)) return 'inv-laptops';
     if (/\b(desktop|optiplex)\b/.test(t)) return 'inv-desktops';
-    if (/\b(tablet|ipad)\b/.test(t)) return 'inv-tablets';
+    if (/\b(tablet|ipad|galaxy\s*tab)\b/.test(t) || /\btab\s*[sabfe]?\s*\d/.test(t)) return 'inv-tablets';
     if (/\b(printer|mfp)\b/.test(t)) return 'inv-printers';
     if (/\b(projector)\b/.test(t)) return 'inv-projectors';
     if (/\b(smart\s*board|interactive)\b/.test(t)) return 'inv-smartboards';
-    if (/\b(motherboard|ssd|ram|ddr|fuser|roller|maintenance\s*kit|fan|battery|solder|blower|spare)\b/.test(t)) return 'inv-spares';
+    if (/\b(motherboard|ssd|ram|ddr|fuser|roller|maintenance\s*kit|fan|battery|solder|blower|spare|ups)\b/.test(t)) return 'inv-spares';
     if (/\b(photocopier|reballing|plotter|fire\s*alarm|id\s*card|maintenance)\b/.test(t)) return 'inv-maintenance';
     return null;
 }
@@ -593,6 +593,10 @@ function postStockTransaction(payload) {
         createdAt: new Date().toISOString()
     };
     inv.transactions.push(txn);
+    if (typeof getOrAssignDisplayItemId === 'function') {
+        const code = getOrAssignDisplayItemId(itemId, itemName, category);
+        txn.displayItemId = code;
+    }
     saveState();
 
     const after = getItemStockSummary(itemId, { mode: 'cumulative' });
@@ -609,6 +613,7 @@ function postStockTransaction(payload) {
 
     if (!payload.skipRender) {
         if (typeof renderVoucherInventoryTables === 'function') renderVoucherInventoryTables();
+        if (typeof renderProductStockRegister === 'function') renderProductStockRegister();
         if (typeof updateSystemAlerts === 'function') updateSystemAlerts();
         if (typeof updateDashboard === 'function') updateDashboard();
     }
@@ -1139,9 +1144,9 @@ function openReceiveIssueModal(type) {
     body.innerHTML = `
         <p class="modal-help" id="stockTxnHelpText">
             ${isReceipt
-                ? 'Select an IT Directorate catalog item to receive from a supplier. This increases that item’s stock.'
-                : 'Select an IT Directorate catalog item to issue to a user. This depletes that item’s stock.'}
-            Missing an item? Use <strong>Add new catalog item</strong> below — it is saved for future receive/issue.
+                ? 'Choose or <strong>type</strong> a catalog item to receive from a supplier. This increases that item’s stock.'
+                : 'Choose or <strong>type</strong> a catalog item to issue to a user. This depletes that item’s stock.'}
+            If the name is not in the list, it is saved to this category when you confirm.
         </p>
         <div class="form-row">
             <div class="form-col">
@@ -1149,44 +1154,34 @@ function openReceiveIssueModal(type) {
                 <select class="form-control" id="stockTxnCategory">${buildCategoryOptionsHtml(category)}</select>
             </div>
             <div class="form-col">
-                <label class="form-label">Catalog Item</label>
-                <select class="form-control" id="stockTxnItemId">${buildCatalogItemOptionsHtml(category)}</select>
+                <label class="form-label" for="stockTxnItemName">Catalog Item</label>
+                <input type="text" class="form-control" id="stockTxnItemName" list="stockTxnItemDatalist"
+                    placeholder="Type to search or enter a new item…" autocomplete="off" spellcheck="false">
+                <input type="hidden" id="stockTxnItemId" value="">
+                <datalist id="stockTxnItemDatalist"></datalist>
+                <p class="modal-help stock-txn-item-status" id="stockTxnItemStatus" style="margin:6px 0 0;"></p>
             </div>
         </div>
-        <div class="stock-add-catalog-box">
-            <button type="button" class="btn btn-ghost btn-sm" id="stockTxnToggleAddItem">＋ Add new catalog item</button>
-            <div class="stock-add-catalog-panel" id="stockTxnAddItemPanel" hidden>
-                <label class="form-label" for="stockTxnNewItemName">New item name</label>
+        <div class="stock-add-catalog-box" id="stockTxnNatureBox" hidden>
+            <div class="stock-add-catalog-panel" id="stockTxnAddItemPanel">
                 <div class="form-row">
-                    <div class="form-col" style="flex:1.6;">
-                        <input type="text" class="form-control" id="stockTxnNewItemName"
-                            placeholder="e.g. Cursor AI · Claude · SQL Server · Visual Studio"
-                            autocomplete="off">
-                    </div>
-                    <div class="form-col" id="stockTxnNewItemNatureWrap" style="flex:1.2;" hidden>
-                        <label class="form-label" for="stockTxnNewItemNature">Nature of use</label>
+                    <div class="form-col" id="stockTxnNewItemNatureWrap" style="flex:1.2;">
+                        <label class="form-label" for="stockTxnNewItemNature">Nature of use (new software)</label>
                         <select class="form-control" id="stockTxnNewItemNature">
                             ${typeof buildSoftwareUseNatureOptionsHtml === 'function'
                                 ? buildSoftwareUseNatureOptionsHtml('other')
                                 : '<option value="other">Other Software</option>'}
                         </select>
                     </div>
-                    <div class="form-col" style="flex:0 0 auto; display:flex; align-items:flex-end; gap:6px;">
-                        <button type="button" class="btn btn-primary btn-sm" id="stockTxnSaveNewItem">Save to category</button>
-                    </div>
                 </div>
-                <p class="modal-help" style="margin:6px 0 0;">Saved under the selected Catalog Category (Softwares are grouped by nature of use) and available immediately in the item list.</p>
             </div>
         </div>
         <div class="form-row">
             <div class="form-col">
-                <label class="form-label">Search Catalog</label>
-                <input type="search" class="form-control" id="stockTxnItemSearch" data-search-history="1" data-search-history-key="stock-txn-catalog" placeholder="Type to filter items..." autocomplete="off">
-            </div>
-            <div class="form-col">
                 <label class="form-label" id="stockTxnQtyLabel">Quantity</label>
                 <input type="number" class="form-control" id="stockTxnQty" min="1" step="1" value="1">
             </div>
+            <div class="form-col"></div>
         </div>
         <div class="stock-licence-panel" id="stockTxnLicencePanel" hidden>
             <div class="stock-licence-panel-head">
@@ -1295,7 +1290,7 @@ function openReceiveIssueModal(type) {
             }
             const vendorEl = document.getElementById('stockTxnLicenceVendor');
             if (vendorEl && !vendorEl.value) {
-                const itemName = document.getElementById('stockTxnItemId')?.selectedOptions?.[0]?.textContent || '';
+                const itemName = document.getElementById('stockTxnItemName')?.value || '';
                 if (/claude/i.test(itemName)) vendorEl.value = 'Anthropic';
                 else if (/microsoft|office|365|windows/i.test(itemName)) vendorEl.value = 'Microsoft';
                 else if (/adobe/i.test(itemName)) vendorEl.value = 'Adobe';
@@ -1306,7 +1301,7 @@ function openReceiveIssueModal(type) {
             if (title) title.textContent = 'Receive Stock (Increase Inventory)';
             if (confirmBtn) confirmBtn.textContent = 'Confirm Receive';
             if (help) {
-                help.innerHTML = 'Select an IT Directorate catalog item to receive from a supplier. This increases that item’s stock. Missing an item? Use <strong>Add new catalog item</strong> below — it is saved for future receive/issue.';
+                help.innerHTML = 'Choose or <strong>type</strong> a catalog item to receive. New names are saved to this category on confirm.';
             }
             if (qtyLabel) qtyLabel.textContent = 'Quantity';
             if (partyLabel) partyLabel.textContent = 'Received From / Supplier';
@@ -1315,10 +1310,62 @@ function openReceiveIssueModal(type) {
     };
 
     function hintSoftwareHelp(helpEl) {
-        helpEl.innerHTML = 'Software licences bought online (e.g. Mastercard) are <strong>expended on purchase</strong> — not held as stock on hand. Enter <strong>Licence Day 1</strong>; the system auto-fills the last day from the package (1 month / 1 year) and raises a renewal alert <strong>5 days before</strong> expiry.';
+        helpEl.innerHTML = 'Software licences bought online (e.g. Mastercard) are <strong>expended on purchase</strong> — not held as stock on hand. Enter <strong>Licence Day 1</strong>; the system auto-fills the last day from the package (1 month / 1 year) and raises a renewal alert <strong>5 days before</strong> renewal.';
     }
+
+    const syncTypedCatalogItem = () => {
+        const cat = document.getElementById('stockTxnCategory')?.value || category;
+        const nameEl = document.getElementById('stockTxnItemName');
+        const idEl = document.getElementById('stockTxnItemId');
+        const statusEl = document.getElementById('stockTxnItemStatus');
+        const natureBox = document.getElementById('stockTxnNatureBox');
+        const typed = (nameEl?.value || '').trim();
+        if (!idEl) return null;
+
+        if (!typed) {
+            idEl.value = '';
+            if (statusEl) statusEl.textContent = '';
+            if (natureBox) natureBox.hidden = true;
+            return null;
+        }
+
+        const items = typeof getCatalogItemsForCategory === 'function' ? getCatalogItemsForCategory(cat) : [];
+        const exact = items.find((i) => String(i.name || '').toLowerCase() === typed.toLowerCase());
+        const starts = !exact
+            ? items.find((i) => String(i.name || '').toLowerCase().startsWith(typed.toLowerCase()))
+            : null;
+        const match = exact || (starts && items.filter((i) => String(i.name || '').toLowerCase().startsWith(typed.toLowerCase())).length === 1 ? starts : null);
+
+        if (match) {
+            idEl.value = match.id;
+            if (exact && nameEl && nameEl.value !== match.name) {
+                // keep user typing; only normalize when exact match selected from list
+            }
+            if (statusEl) {
+                statusEl.innerHTML = match.custom
+                    ? `Matched custom item <strong>${invHtmlEscape(match.name)}</strong>`
+                    : `Matched catalog item <strong>${invHtmlEscape(match.name)}</strong>`;
+            }
+            if (natureBox) natureBox.hidden = true;
+            return match;
+        }
+
+        idEl.value = '';
+        const isSoft = typeof isSoftwareCatalogCategory === 'function' && isSoftwareCatalogCategory(cat);
+        if (natureBox) natureBox.hidden = !isSoft;
+        if (isSoft && typeof classifySoftwareUseNature === 'function') {
+            const natureEl = document.getElementById('stockTxnNewItemNature');
+            if (natureEl) natureEl.value = classifySoftwareUseNature(typed);
+        }
+        if (statusEl) {
+            statusEl.innerHTML = `New item — will be saved under this category as <strong>${invHtmlEscape(typed)}</strong>`;
+        }
+        return null;
+    };
+
     const refreshHint = () => {
         const itemId = document.getElementById('stockTxnItemId')?.value;
+        const typed = (document.getElementById('stockTxnItemName')?.value || '').trim();
         const hint = document.getElementById('stockTxnOnHandHint');
         if (!hint) return;
         const cat = document.getElementById('stockTxnCategory')?.value || category;
@@ -1327,13 +1374,15 @@ function openReceiveIssueModal(type) {
             const start = document.getElementById('stockTxnLicenceStart')?.value;
             const expiry = document.getElementById('stockTxnLicenceExpiry')?.value;
             const term = getLicencePackageMeta(document.getElementById('stockTxnLicenceTerm')?.value || '1m');
-            hint.innerHTML = itemId
+            hint.innerHTML = (itemId || typed)
                 ? `Licence will be <strong>expended</strong> (On Hand unchanged). ${invHtmlEscape(term.label)}: <strong>${invHtmlEscape(formatLicenceDateShort(start))}</strong> → <strong>${invHtmlEscape(formatLicenceDateShort(expiry))}</strong>.`
-                : 'Select a software catalogue item, then set Licence Day 1 and package.';
+                : 'Type a software catalogue item, then set Licence Day 1 and package.';
             return;
         }
         if (!itemId) {
-            hint.textContent = 'Select a catalog item to see on-hand quantity.';
+            hint.textContent = typed
+                ? 'New catalog item — on-hand starts from this transaction.'
+                : 'Type or pick a catalog item to see on-hand quantity.';
             return;
         }
         const sum = getItemStockSummary(itemId);
@@ -1342,66 +1391,53 @@ function openReceiveIssueModal(type) {
 
     const refillItems = (preferSelectId) => {
         const cat = document.getElementById('stockTxnCategory')?.value || category;
-        const q = (document.getElementById('stockTxnItemSearch')?.value || '').trim().toLowerCase();
-        const select = document.getElementById('stockTxnItemId');
-        if (!select) return;
+        const list = document.getElementById('stockTxnItemDatalist');
+        const nameEl = document.getElementById('stockTxnItemName');
+        const idEl = document.getElementById('stockTxnItemId');
         let items = typeof getCatalogItemsForCategory === 'function' ? getCatalogItemsForCategory(cat) : [];
-        if (q) items = items.filter((item) => item.name.toLowerCase().includes(q));
-        const prev = preferSelectId || select.value;
-        if (typeof buildCatalogItemSelectOptionsHtml === 'function') {
-            select.innerHTML = buildCatalogItemSelectOptionsHtml(items, prev, cat);
-        } else {
-            select.innerHTML = ['<option value="">— Select catalog item —</option>']
-                .concat(items.map((item) => {
-                    const mark = item.custom ? ' ★' : '';
-                    return `<option value="${invHtmlEscape(item.id)}">${invHtmlEscape(item.name)}${mark}</option>`;
-                }))
-                .join('');
-            if (prev && [...select.options].some((o) => o.value === prev)) select.value = prev;
+        if (list) {
+            list.innerHTML = items.map((item) =>
+                `<option value="${invHtmlEscape(item.name)}"></option>`
+            ).join('');
         }
-        const natureWrap = document.getElementById('stockTxnNewItemNatureWrap');
-        if (natureWrap) {
-            natureWrap.hidden = !(typeof isSoftwareCatalogCategory === 'function' && isSoftwareCatalogCategory(cat));
+        if (preferSelectId && idEl && nameEl) {
+            const hit = items.find((i) => i.id === preferSelectId);
+            if (hit) {
+                idEl.value = hit.id;
+                nameEl.value = hit.name;
+            }
         }
         const meta = (VOUCHER_INVENTORY_CATEGORIES || []).find((c) => c.key === cat);
         const glEl = document.getElementById('stockTxnGl');
         if (glEl && meta?.gl) glEl.value = meta.gl;
+        syncTypedCatalogItem();
         syncSoftwareLicenceUi();
         refreshHint();
     };
 
-    const suggestNatureFromName = () => {
-        const name = document.getElementById('stockTxnNewItemName')?.value || '';
-        const natureEl = document.getElementById('stockTxnNewItemNature');
-        if (!natureEl || typeof classifySoftwareUseNature !== 'function') return;
-        natureEl.value = classifySoftwareUseNature(name);
-    };
-
-    const saveNewCatalogItem = () => {
-        if (typeof requireEditAccess === 'function' && !requireEditAccess()) return;
-        const cat = document.getElementById('stockTxnCategory')?.value || category;
-        const name = document.getElementById('stockTxnNewItemName')?.value || '';
-        const gl = document.getElementById('stockTxnGl')?.value || '';
-        const useNature = document.getElementById('stockTxnNewItemNature')?.value || '';
-        if (typeof addCustomCatalogItem !== 'function') {
-            showToast('Catalog add is not available.', 'error');
-            return;
-        }
-        const created = addCustomCatalogItem({ name, category: cat, gl, useNature });
-        if (!created) return;
-        const search = document.getElementById('stockTxnItemSearch');
-        if (search) search.value = '';
-        const nameEl = document.getElementById('stockTxnNewItemName');
+    body.querySelector('#stockTxnCategory')?.addEventListener('change', () => {
+        const nameEl = document.getElementById('stockTxnItemName');
+        const idEl = document.getElementById('stockTxnItemId');
         if (nameEl) nameEl.value = '';
-        const panel = document.getElementById('stockTxnAddItemPanel');
-        if (panel) panel.hidden = true;
-        refillItems(created.id);
-        document.getElementById('stockTxnQty')?.focus();
-    };
-
-    body.querySelector('#stockTxnCategory')?.addEventListener('change', () => refillItems());
-    body.querySelector('#stockTxnItemSearch')?.addEventListener('input', () => refillItems());
-    body.querySelector('#stockTxnItemId')?.addEventListener('change', () => {
+        if (idEl) idEl.value = '';
+        refillItems();
+    });
+    body.querySelector('#stockTxnItemName')?.addEventListener('input', () => {
+        syncTypedCatalogItem();
+        syncSoftwareLicenceUi();
+        refreshHint();
+        // Suggest vendor from typed software name
+        const vendorEl = document.getElementById('stockTxnLicenceVendor');
+        const itemName = document.getElementById('stockTxnItemName')?.value || '';
+        if (vendorEl && !vendorEl.value) {
+            if (/claude/i.test(itemName)) vendorEl.value = 'Anthropic';
+            else if (/microsoft|office|365|windows/i.test(itemName)) vendorEl.value = 'Microsoft';
+            else if (/adobe/i.test(itemName)) vendorEl.value = 'Adobe';
+            else if (/kaspersky/i.test(itemName)) vendorEl.value = 'Kaspersky';
+        }
+    });
+    body.querySelector('#stockTxnItemName')?.addEventListener('change', () => {
+        syncTypedCatalogItem();
         syncSoftwareLicenceUi();
         refreshHint();
     });
@@ -1418,39 +1454,11 @@ function openReceiveIssueModal(type) {
         refreshHint();
     });
     body.querySelector('#stockTxnLicenceExpiry')?.addEventListener('change', refreshHint);
-    body.querySelector('#stockTxnToggleAddItem')?.addEventListener('click', () => {
-        const panel = document.getElementById('stockTxnAddItemPanel');
-        if (!panel) return;
-        panel.hidden = !panel.hidden;
-        if (!panel.hidden) document.getElementById('stockTxnNewItemName')?.focus();
-    });
-    body.querySelector('#stockTxnSaveNewItem')?.addEventListener('click', saveNewCatalogItem);
-    body.querySelector('#stockTxnNewItemName')?.addEventListener('input', suggestNatureFromName);
-    body.querySelector('#stockTxnNewItemName')?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            saveNewCatalogItem();
-        }
-    });
     refillItems();
     syncSoftwareLicenceUi();
-    if (typeof bindSearchHistory === 'function') {
-        const searchEl = document.getElementById('stockTxnItemSearch');
-        if (searchEl) {
-            bindSearchHistory(searchEl);
-            searchEl.addEventListener('search-history-commit', () => refillItems());
-            searchEl.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (typeof rememberSearchTerm === 'function') rememberSearchTerm(searchEl, searchEl.value);
-                    refillItems();
-                }
-            });
-        }
-    }
 
     openStockTxnModal();
-    setTimeout(() => document.getElementById('stockTxnItemSearch')?.focus(), 50);
+    setTimeout(() => document.getElementById('stockTxnItemName')?.focus(), 50);
 }
 
 function confirmStockTxnModal() {
@@ -1470,10 +1478,36 @@ function confirmStockTxnModal() {
     }
     if (mode !== 'receipt' && mode !== 'issue') return;
 
-    const itemId = document.getElementById('stockTxnItemId')?.value || '';
-    const catalogItem = typeof getCatalogItemById === 'function' ? getCatalogItemById(itemId) : null;
+    let itemId = document.getElementById('stockTxnItemId')?.value || '';
+    let catalogItem = typeof getCatalogItemById === 'function' ? getCatalogItemById(itemId) : null;
+    const typedName = (document.getElementById('stockTxnItemName')?.value || '').trim();
     const category = document.getElementById('stockTxnCategory')?.value || catalogItem?.category || '';
     const gl = document.getElementById('stockTxnGl')?.value || catalogItem?.gl || '';
+
+    if (!itemId && typedName) {
+        if (typeof addCustomCatalogItem !== 'function') {
+            showToast('Select a catalog item from the list.', 'error');
+            document.getElementById('stockTxnItemName')?.focus();
+            return;
+        }
+        const useNature = document.getElementById('stockTxnNewItemNature')?.value || '';
+        const created = addCustomCatalogItem({ name: typedName, category, gl, useNature });
+        if (!created) {
+            document.getElementById('stockTxnItemName')?.focus();
+            return;
+        }
+        itemId = created.id;
+        catalogItem = typeof getCatalogItemById === 'function' ? getCatalogItemById(itemId) : created;
+        const idEl = document.getElementById('stockTxnItemId');
+        if (idEl) idEl.value = itemId;
+    }
+
+    if (!itemId) {
+        showToast('Type or select a catalog item.', 'error');
+        document.getElementById('stockTxnItemName')?.focus();
+        return;
+    }
+
     const isLicencePurchase = mode === 'receipt' && isSoftwareLicenceCategory(category, gl, itemId);
 
     const licenceStart = document.getElementById('stockTxnLicenceStart')?.value || '';
@@ -1513,7 +1547,7 @@ function confirmStockTxnModal() {
         date: getStockModalDate(),
         itemId,
         category,
-        item: catalogItem?.name || '',
+        item: catalogItem?.name || typedName || '',
         description: descParts.join(' · '),
         qty: document.getElementById('stockTxnQty')?.value,
         uom: document.getElementById('stockTxnUom')?.value || 'EA',

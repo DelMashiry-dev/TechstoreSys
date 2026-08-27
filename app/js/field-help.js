@@ -26,6 +26,8 @@ const FIELD_HELP = {
     'indent': { title: 'Indent', body: 'Official written request for stores (e.g. ZNA Q 982). Starts the demand on the Cost Centre Dir.' },
     'aso': { title: 'ASO', body: 'Accounting Standing Orders — Army rules for stores accounting, stock take, losses, retention, etc.' },
     'gl': { title: 'GL (General Ledger)', body: 'Vote / account code used for budgeting and spending.' },
+    'view by': { title: 'View by', body: 'Monthly — one DAF vote month. Quarterly — sums Jan–Mar, Apr–Jun, etc. Yearly — sums all twelve months of the selected year.' },
+    'target month': { title: 'Target month', body: 'Pick the month to view or edit. In Quarterly/Yearly mode, pick any month inside the quarter or year you want to review.' },
     'cost centre': { title: 'Cost centre', body: 'Directorate or unit vote that owns the requirement (e.g. IT Dir).' },
     'rfq': { title: 'RFQ', body: 'Request for Quotations — DP invites suppliers to quote; AIAD may do due diligence.' },
     'dp': { title: 'DP', body: 'Directorate Procurement — executes purchase after authority; issues RFQ / PO / contract.' },
@@ -383,7 +385,7 @@ function ensureFieldHelpPopup() {
             <button type="button" class="fh-popup-close" aria-label="Close help">&times;</button>
         </div>
         <p class="fh-popup-body"></p>
-        <p class="fh-popup-hint">Help mode ON — point at labels, fields or buttons · Esc or click Field Help to turn off</p>`;
+        <p class="fh-popup-hint">Hover any label or field for an explanation · Header “Field Help” turns this off</p>`;
     document.body.appendChild(fieldHelpPopupEl);
     fieldHelpPopupEl.querySelector('.fh-popup-close')?.addEventListener('click', hideFieldHelp);
     return fieldHelpPopupEl;
@@ -448,11 +450,13 @@ function showFieldHelp(anchor, help, { sticky = false } = {}) {
     const popup = ensureFieldHelpPopup();
     popup.querySelector('.fh-popup-title').textContent = help.title || 'Help';
     popup.querySelector('.fh-popup-body').textContent = help.body || '';
+    const hint = popup.querySelector('.fh-popup-hint');
+    if (hint) hint.hidden = !!sticky;
     fieldHelpActiveAnchor = target;
     document.querySelectorAll('.fh-hot.is-active').forEach((n) => n.classList.remove('is-active'));
     if (target.classList) target.classList.add('fh-hot', 'is-active');
     positionFieldHelpPopup(target);
-    popup.dataset.sticky = (sticky || isFieldHelpModeOn()) ? '1' : '0';
+    popup.dataset.sticky = sticky ? '1' : '0';
 }
 
 function hideFieldHelp() {
@@ -490,6 +494,7 @@ function syncFieldHelpUi() {
 
     const { banner, fab } = ensureFieldHelpChrome();
     banner.hidden = !on;
+    if (document.getElementById('fieldHelpToggleBtn')) fab.hidden = true;
     fab.classList.toggle('is-active', on);
     fab.setAttribute('aria-pressed', on ? 'true' : 'false');
     const state = fab.querySelector('.fh-fab-state');
@@ -510,13 +515,15 @@ function setFieldHelpMode(on, { silent = false } = {}) {
         return;
     }
     enhanceFieldHelp(document);
-    const fab = document.getElementById('fieldHelpFab') || document.getElementById('fieldHelpToggleBtn');
-    showFieldHelp(fab || document.body, {
-        title: 'Help mode is ON',
-        body: 'Point at any label, field, text box or button — a popup explains its purpose. Click Field Help again (or press Esc) to turn off.'
-    }, { sticky: true });
-    if (!silent && typeof showToast === 'function') {
-        showToast('Help ON — point at labels and fields for explanations', 'success');
+    if (!silent) {
+        const fab = document.getElementById('fieldHelpFab') || document.getElementById('fieldHelpToggleBtn');
+        showFieldHelp(fab || document.body, {
+            title: 'Hover help is ON',
+            body: 'Point at any label, field, text box or button — a popup explains its purpose. Click Field Help again (or press Esc) to turn off.'
+        }, { sticky: true });
+        if (typeof showToast === 'function') {
+            showToast('Hover help ON — point at labels and fields for explanations', 'success');
+        }
     }
 }
 
@@ -534,22 +541,90 @@ function shouldEnhanceElement(el) {
     return isHelpableElement(el) && el.dataset.fhMarked !== '1';
 }
 
-function enhanceFieldHelp(_root = document) {
-    // Field Help UI removed
+function enhanceFieldHelp(root = document) {
+    if (!isFieldHelpModeOn()) return;
+    const scope = root && root.querySelectorAll ? root : document;
+    scope.querySelectorAll(
+        'label, .form-label, th, [data-help], [data-help-key], input:not([type="hidden"]), select, textarea, button.btn, .btn, .nav-btn'
+    ).forEach((el) => {
+        if (shouldEnhanceElement(el)) markHelpHot(el);
+    });
 }
 
-function onFieldHelpPointerOver() {}
-function onFieldHelpFocusIn() {}
-function onFieldHelpClick() {}
+function onFieldHelpPointerOver(e) {
+    if (!isFieldHelpModeOn() || document.body.classList.contains('app-locked')) return;
+    const el = eventElement(e.target);
+    if (!el || (fieldHelpPopupEl && fieldHelpPopupEl.contains(el))) return;
+
+    const hit = findHelpTargetFromEvent(el);
+    if (!hit) {
+        scheduleHideFieldHelp(120);
+        return;
+    }
+    clearTimeout(fieldHelpHideTimer);
+    clearTimeout(fieldHelpShowTimer);
+    fieldHelpShowTimer = setTimeout(() => {
+        showFieldHelp(hit.el, hit.help, { sticky: false });
+    }, 320);
+}
+
+function onFieldHelpPointerOut(e) {
+    if (!isFieldHelpModeOn()) return;
+    const related = eventElement(e.relatedTarget);
+    const from = eventElement(e.target);
+    if (fieldHelpPopupEl && related && fieldHelpPopupEl.contains(related)) return;
+    if (fieldHelpPopupEl && from && fieldHelpPopupEl.contains(from)) return;
+    if (fieldHelpActiveAnchor && related && (
+        fieldHelpActiveAnchor === related || fieldHelpActiveAnchor.contains(related)
+    )) return;
+    scheduleHideFieldHelp(160);
+}
+
+function onFieldHelpFocusIn(e) {
+    if (!isFieldHelpModeOn() || document.body.classList.contains('app-locked')) return;
+    const el = eventElement(e.target);
+    if (!el) return;
+    const hit = findHelpTargetFromEvent(el);
+    if (!hit) return;
+    clearTimeout(fieldHelpHideTimer);
+    clearTimeout(fieldHelpShowTimer);
+    showFieldHelp(hit.el, hit.help, { sticky: false });
+}
+
+function onFieldHelpKeydown(e) {
+    if (e.key !== 'Escape') return;
+    if (fieldHelpPopupEl && !fieldHelpPopupEl.hidden) {
+        hideFieldHelp();
+        e.preventDefault();
+        return;
+    }
+    if (isFieldHelpModeOn()) setFieldHelpMode(false);
+}
 
 function initFieldHelpSystem() {
-    // Field Help removed — strip leftover toggle / FAB / banner / popup
-    document.getElementById('fieldHelpToggleBtn')?.remove();
-    document.getElementById('fieldHelpFab')?.remove();
-    document.getElementById('fieldHelpModeBanner')?.remove();
-    document.getElementById('fieldHelpPopup')?.remove();
-    document.body.classList.remove('fh-mode-on');
-    fieldHelpModeOn = false;
+    if (document.body.dataset.fieldHelpInit === '1') {
+        syncFieldHelpUi();
+        return;
+    }
+    document.body.dataset.fieldHelpInit = '1';
+
+    const popup = ensureFieldHelpPopup();
+    popup.addEventListener('mouseenter', () => clearTimeout(fieldHelpHideTimer));
+    popup.addEventListener('mouseleave', () => scheduleHideFieldHelp(120));
+    ensureFieldHelpChrome();
+
+    document.getElementById('fieldHelpToggleBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleFieldHelpMode();
+    });
+
+    document.addEventListener('mouseover', onFieldHelpPointerOver, true);
+    document.addEventListener('mouseout', onFieldHelpPointerOut, true);
+    document.addEventListener('focusin', onFieldHelpFocusIn, true);
+    document.addEventListener('keydown', onFieldHelpKeydown);
+
+    const loggedIn = !document.body.classList.contains('app-locked');
+    setFieldHelpMode(loggedIn, { silent: true });
 }
 
 window.enhanceFieldHelp = enhanceFieldHelp;

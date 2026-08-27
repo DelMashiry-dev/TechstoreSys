@@ -112,6 +112,30 @@
                     </div>
                 </div>
 
+                <div class="dashboard-panel spec-doc-upload-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>Upload spec sheet (photo or scan)</h3>
+                    </div>
+                    <p class="spec-doc-upload-hint">
+                        Photograph a printed spec evaluation (e.g. HPE ProLiant DL380) or paste OCR text.
+                        AI extracts fields into the datasheet below — <strong>always review before sign-off</strong>.
+                        Requires <code>OPENAI_API_KEY</code> on the server for photo parsing.
+                    </p>
+                    <div class="spec-doc-upload-row">
+                        <label class="btn btn-secondary btn-sm spec-doc-upload-label">
+                            Choose photo
+                            <input type="file" id="specDocUploadInput" accept="image/*" hidden>
+                        </label>
+                        <span class="spec-doc-upload-or">or paste text</span>
+                    </div>
+                    <textarea class="form-control spec-doc-paste" id="specDocPasteText" rows="3"
+                        placeholder="Paste spec sheet text here (Operating System, Processor, Memory, etc.)"></textarea>
+                    <div class="module-actions" style="margin-top:8px;">
+                        <button type="button" class="btn btn-primary btn-sm" id="specDocPasteBtn">Parse pasted text</button>
+                    </div>
+                    <div id="specDocUploadStatus" class="spec-doc-upload-status" aria-live="polite"></div>
+                </div>
+
                 <div class="form-row">
                     <div class="form-col">
                         <label class="form-label">Evaluation No.</label>
@@ -144,7 +168,7 @@
                             <button type="button" class="btn btn-primary" id="autofillFromItemBtn" title="Fill from local catalog, then online lookup">Auto-fill Specs</button>
                         </div>
                         <datalist id="specProductCatalogHints"></datalist>
-                        <small class="spec-autofill-hint">Uses the local product catalog first, then online search + intelligent extract if needed. Always review specs before procurement.</small>
+                        <small class="spec-autofill-hint">Local catalog first, then online + AI extract. Upload a spec photo above, or set <code>OPENAI_API_KEY</code> on the server for full AI. Always review before procurement.</small>
                     </div>
                     <div class="form-col">
                         <label class="form-label">Preferred Brand / Model (if known)</label>

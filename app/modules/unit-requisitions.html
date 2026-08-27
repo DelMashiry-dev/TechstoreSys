@@ -127,6 +127,18 @@
                             <input type="number" class="form-control" id="reqQty" min="1" step="1" value="1">
                         </div>
                         <div class="form-col">
+                            <label class="form-label">Unit price (est.)</label>
+                            <input type="number" class="form-control" id="reqUnitPrice" min="0" step="0.01" placeholder="For target proposal">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Est. total cost</label>
+                            <input type="number" class="form-control" id="reqEstimatedCost" min="0" step="0.01" placeholder="Qty × unit price">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Target month</label>
+                            <input type="month" class="form-control" id="reqTargetMonth" title="Month this need rolls into DAF target proposal">
+                        </div>
+                        <div class="form-col">
                             <label class="form-label">Priority</label>
                             <select class="form-control" id="reqPriority"></select>
                         </div>
@@ -202,6 +214,8 @@
                                 <th>Unit / Formation</th>
                                 <th>Item / Subject</th>
                                 <th>Qty</th>
+                                <th>Est. cost</th>
+                                <th>Target mo.</th>
                                 <th>Priority</th>
                                 <th>Status</th>
                                 <th>Age</th>

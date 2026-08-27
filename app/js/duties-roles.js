@@ -123,6 +123,46 @@ function renderDutiesLinkList(items, emptyText) {
     }).join('')}</ul>`;
 }
 
+function renderLaptopDutyProfilesGuide() {
+    const profiles = typeof LAPTOP_DUTY_PROFILES !== 'undefined' ? LAPTOP_DUTY_PROFILES : [];
+    const field = profiles.filter((p) => p.group === 'field');
+    const technical = profiles.filter((p) => p.group === 'technical');
+    const admin = profiles.filter((p) => p.group === 'admin');
+    const renderGroup = (title, items) => `
+        <div class="duties-block">
+            <h4>${escapeDutiesHtml(title)}</h4>
+            <ul class="duties-list">${items.map((p) => `
+                <li>
+                    <div class="duties-item-head">
+                        <strong>${escapeDutiesHtml(p.label)}</strong>
+                        <button type="button" class="btn btn-ghost btn-sm" data-duties-open="spec-evaluation">Match in Spec Search</button>
+                    </div>
+                    <p>${escapeDutiesHtml(p.summary)}</p>
+                    <ul class="duties-plain-list">${(p.uses || []).map((u) => `<li>${escapeDutiesHtml(u)}</li>`).join('')}</ul>
+                    <p class="muted">${escapeDutiesHtml(p.deviceHint || '')}</p>
+                </li>`).join('')}
+            </ul>
+        </div>`;
+    return `
+        <article class="duties-guide" data-guide="laptop-duty">
+            <header class="duties-guide-header">
+                <h3>Laptop duty profiles — issue &amp; spec matching</h3>
+                <p class="duties-rank"><strong>Applies to:</strong> Military / ICT laptops issued for operational and technical work</p>
+                <p class="duties-reports"><strong>Used in:</strong> Spec/Tech Evaluation — Intelligent Spec Search</p>
+                <p class="duties-summary">These are the main duty profiles for laptop procurement and issue. Field/tactical uses cover command, UAV/robot control, secure communications, and logistics diagnostics. Technical uses cover Software Engineering, Programming, Machine Learning, Architecture, Graphic Designing, Database Design, and Server Room. Admin/office uses cover Pay Run, Secretariat, and Typing Pool.</p>
+                <div class="duties-values">
+                    <span class="duties-value-chip">Field</span>
+                    <span class="duties-value-chip">Technical</span>
+                    <span class="duties-value-chip">Admin</span>
+                    <span class="duties-value-chip">Spec match</span>
+                </div>
+            </header>
+            ${renderGroup('Field / tactical', field)}
+            ${renderGroup('Technical / IT-DIR', technical)}
+            ${renderGroup('Admin / office', admin)}
+        </article>`;
+}
+
 function renderDutiesGuide(guide) {
     if (!guide) return '';
     const values = (guide.values || []).map((v) => `<span class="duties-value-chip">${escapeDutiesHtml(v)}</span>`).join('');
@@ -152,6 +192,10 @@ function renderDutiesRolesModule() {
     const host = document.getElementById('dutiesRolesContent');
     if (!host) return;
     const tab = document.querySelector('.duties-tab.is-active')?.getAttribute('data-duties-tab') || 'storeman';
+    if (tab === 'laptopDuty') {
+        host.innerHTML = renderLaptopDutyProfilesGuide();
+        return;
+    }
     const guide = DUTIES_ROLES_GUIDES[tab] || DUTIES_ROLES_GUIDES.storeman;
     host.innerHTML = renderDutiesGuide(guide);
 }
@@ -180,8 +224,24 @@ function initDutiesRolesModule() {
 
 function printDutiesRolesGuide() {
     const tab = document.querySelector('.duties-tab.is-active')?.getAttribute('data-duties-tab') || 'storeman';
+    let html;
+    if (tab === 'laptopDuty') {
+        const profiles = typeof LAPTOP_DUTY_PROFILES !== 'undefined' ? LAPTOP_DUTY_PROFILES : [];
+        html = `
+        <div class="duties-print-doc">
+            <h1>Zimbabwe National Army — Tech Stores</h1>
+            <h2>Laptop duty profiles</h2>
+            <p>Main operational uses for laptop issue and spec matching.</p>
+            ${profiles.map((p) => `
+                <h3>${escapeDutiesHtml(p.groupLabel)} — ${escapeDutiesHtml(p.label)}</h3>
+                <p>${escapeDutiesHtml(p.summary)}</p>
+                <ul>${(p.uses || []).map((u) => `<li>${escapeDutiesHtml(u)}</li>`).join('')}</ul>
+                <p>${escapeDutiesHtml(p.deviceHint || '')}</p>
+            `).join('')}
+        </div>`;
+    } else {
     const guide = DUTIES_ROLES_GUIDES[tab] || DUTIES_ROLES_GUIDES.storeman;
-    const html = `
+    html = `
         <div class="duties-print-doc">
             <h1>Zimbabwe National Army — Tech Stores</h1>
             <h2>${escapeDutiesHtml(guide.title)}</h2>
@@ -195,6 +255,7 @@ function printDutiesRolesGuide() {
             ${(guide.personnel || []).length ? `<h3>Personnel specification</h3><ul>${guide.personnel.map((p) => `<li>${escapeDutiesHtml(p)}</li>`).join('')}</ul>` : ''}
             <p class="duties-print-foot">${escapeDutiesHtml((guide.values || []).join(' · '))}</p>
         </div>`;
+    }
     if (typeof runOfficialPrint === 'function') {
         runOfficialPrint(() => {
             const host = typeof ensurePrintHost === 'function'

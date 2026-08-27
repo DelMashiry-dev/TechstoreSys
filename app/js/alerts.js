@@ -237,6 +237,42 @@ function buildWatchAlertSections() {
 
     const sections = [];
 
+    const ym = typeof getSelectedGlTargetMonth === 'function' ? getSelectedGlTargetMonth() : '';
+    const proposal = typeof getMonthlyTargetProposal === 'function' ? getMonthlyTargetProposal(ym) : null;
+    const openReqsForMonth = typeof requisitionsForTargetMonth === 'function'
+        ? requisitionsForTargetMonth(ym, { openOnly: true })
+        : [];
+    const proposalItems = [];
+    if (proposal) {
+        proposalItems.push({
+            type: proposal.status === 'draft' ? 'warning' : 'info',
+            target: 'dashboard',
+            text: `${typeof formatYmLabel === 'function' ? formatYmLabel(ym) : ym} proposal ${proposal.ref || ''} — ${typeof formatCurrency === 'function' ? formatCurrency(proposal.totalRequested || 0) : proposal.totalRequested} ${proposal.currency || 'ZWG'} (${proposal.status || 'draft'})`
+        });
+    }
+    openReqsForMonth.slice(0, 4).forEach((req) => {
+        const inProposal = proposal?.lines?.some((l) => l.requisitionId === req.id);
+        proposalItems.push({
+            type: req.priority === 'urgent' ? 'warning' : 'info',
+            target: 'unit-requisitions',
+            reqId: req.id,
+            text: `${req.reqNo || 'REQ'} · ${req.unit || 'Unit'} — ${req.itemDescription || req.subject}${inProposal ? ' · in target proposal' : ' · not yet in proposal'}`
+        });
+    });
+    sections.push({
+        key: 'monthly-target-proposal',
+        title: 'MONTHLY TARGET PROPOSAL / PRIORITY LIST',
+        count: (proposal ? 1 : 0) + openReqsForMonth.length,
+        target: 'dashboard',
+        tone: proposal?.status === 'draft' ? 'warning' : (openReqsForMonth.length ? 'warning' : 'ok'),
+        summary: proposal
+            ? `${typeof formatYmLabel === 'function' ? formatYmLabel(ym) : ym}: ${proposal.lines?.length || 0} line(s), ${openReqsForMonth.length} open req(s) for this month.`
+            : (openReqsForMonth.length
+                ? `${openReqsForMonth.length} open requisition(s) for ${typeof formatYmLabel === 'function' ? formatYmLabel(ym) : ym} — build a target proposal.`
+                : 'No target proposal for the selected month.'),
+        items: proposalItems.slice(0, 8)
+    });
+
     // Always show — keyed watch items for the TechStores dashboard
     sections.push({
         key: 'pending-at-itdir',
@@ -456,6 +492,9 @@ function updateSystemAlerts() {
     }
     if (typeof getStoresItemDepletionAlerts === 'function') {
         getStoresItemDepletionAlerts().forEach((alert) => alerts.push(alert));
+    }
+    if (typeof getTargetProposalAlerts === 'function') {
+        getTargetProposalAlerts().forEach((alert) => alerts.push(alert));
     }
     // Unit requisitions are covered by PENDING REQUISITIONS (STILL AT IT DIR)
     if (typeof getRequisitionAlerts === 'function') {

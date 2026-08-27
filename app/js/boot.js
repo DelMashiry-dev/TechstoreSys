@@ -125,105 +125,154 @@ function wireLoginForm() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', async function() {
-    // Attach login first so a later init error cannot block Sign In
+async function runHeavyBootInit() {
+    if (window.__techstoresHeavyBootDone) return;
+    window.__techstoresHeavyBootDone = true;
+    if (!appState) return;
+    if (!Array.isArray(appState.orderlyDailyFile)) {
+        appState.orderlyDailyFile = [];
+    }
+    if (typeof applyPhysicalStockCount20260731 === 'function') {
+        const stockResult = applyPhysicalStockCount20260731();
+        if (stockResult.applied) {
+            if (typeof saveStateNow === 'function') await saveStateNow();
+            else saveState();
+            console.info('Physical stock count applied:', stockResult.lines);
+        }
+    }
+    if (typeof ensureExampleMidLaptopRequisition === 'function') {
+        const ex = ensureExampleMidLaptopRequisition();
+        if (ex) {
+            if (typeof saveStateNow === 'function') await saveStateNow();
+            else saveState();
+        }
+    }
+    applyTheme(appState.theme);
+    if (typeof initInventoryLedgersUi === 'function') initInventoryLedgersUi();
+    if (typeof buildVoucherInventorySection === 'function') buildVoucherInventorySection();
+    if (typeof preloadAllModules === 'function') {
+        preloadAllModules().catch((e) => console.warn('Background module preload', e));
+    }
+    restoreAllModules();
+    if (typeof initFinancialYearBidsImport === 'function') initFinancialYearBidsImport();
+    initBidCalculations();
+    initVoucherCalculations();
+    initStockCalculations();
+    initConsumablesStockCalculations();
+    initJobCardCalculations();
+    initTableSearch();
+    initReportsModule();
+    if (typeof initGlTargetMonthControls === 'function') initGlTargetMonthControls();
+    if (typeof initMonthlyTargetProposalControls === 'function') initMonthlyTargetProposalControls();
+    initSpecEvaluationModule();
+    if (typeof initAiAssistant === 'function') initAiAssistant();
+    if (typeof initStoresQueryEngine === 'function') initStoresQueryEngine();
+    if (typeof initWindowChrome === 'function') initWindowChrome();
+    if (typeof initRequisitionsModule === 'function') initRequisitionsModule();
+    if (typeof initOrderlyRoomModule === 'function') initOrderlyRoomModule();
+    if (typeof initCorrespondenceFilesModule === 'function') initCorrespondenceFilesModule();
+    if (typeof initMonthlyReturnsModule === 'function') initMonthlyReturnsModule();
+    if (typeof initUndeliveredModule === 'function') initUndeliveredModule();
+    if (typeof initWorkshopReceiptCertModule === 'function') initWorkshopReceiptCertModule();
+    if (typeof initDeliveryNoteModule === 'function') initDeliveryNoteModule();
+    if (typeof initDpProcurementModule === 'function') initDpProcurementModule();
+    if (typeof initUnitEquipmentModule === 'function') initUnitEquipmentModule();
+    if (typeof initTemporaryLoansModule === 'function') initTemporaryLoansModule();
+    if (typeof initIctAccountabilityModule === 'function') initIctAccountabilityModule();
+    if (typeof initIctDistributionModule === 'function') initIctDistributionModule();
+    if (typeof initStockTakeModule === 'function') initStockTakeModule();
+    if (typeof initSuppliersModule === 'function') initSuppliersModule();
+    if (typeof initRepairIntakeModules === 'function') initRepairIntakeModules();
+    if (typeof ensureRepairIntakeTables === 'function') ensureRepairIntakeTables();
+    if (typeof initWorkshopStoresRequest === 'function') initWorkshopStoresRequest();
+    initFormBackButtons();
+    if (typeof initStockTxnModal === 'function') initStockTxnModal();
+    updateDashboard();
+    updateVoucherSummary();
+    if (typeof renderVoucherInventoryTables === 'function') renderVoucherInventoryTables();
+    updateSystemAlerts();
+    if (typeof initCommandBoard === 'function') initCommandBoard();
+    if (typeof updateCommandBoard === 'function') updateCommandBoard();
+    if (typeof initSystemAlertsClicks === 'function') initSystemAlertsClicks();
+    if (typeof initItDirCommsSideButton === 'function') initItDirCommsSideButton();
+    updateDbStatusBadge();
+    if (typeof precacheAppAssetsForOffline === 'function') {
+        precacheAppAssetsForOffline();
+    }
+    if (typeof initPersistentDatabaseHooks === 'function') initPersistentDatabaseHooks();
+    if (typeof initFieldHelpSystem === 'function') initFieldHelpSystem();
+}
+window.runHeavyBootInit = runHeavyBootInit;
+
+async function finalizeBootState(state) {
+    appState = state || appState;
+    if (!appState) {
+        try { appState = loadState(); } catch (_) { appState = createDefaultState(); }
+    }
+    updateDbStatusBadge();
+    if (typeof initStorageModeUi === 'function') initStorageModeUi();
+    if (!appState.users || !appState.users.length) {
+        appState.users = createDefaultUsers();
+        saveState();
+    } else if (typeof ensureSeedUsersPresent === 'function') {
+        const before = appState.users.length;
+        appState.users = ensureSeedUsersPresent(appState.users);
+        if (appState.users.length !== before) {
+            if (typeof saveStateNow === 'function') await saveStateNow();
+            else saveState();
+        }
+    }
+    if (!Array.isArray(appState.orderlyDailyFile)) {
+        appState.orderlyDailyFile = [];
+    }
+    applyTheme(appState.theme);
+    const bootSession = typeof loadSession === 'function' ? loadSession() : null;
+    if (bootSession) {
+        await runHeavyBootInit();
+    }
+    if (typeof initFieldHelpSystem === 'function') initFieldHelpSystem();
+    if (typeof initStorageModeUi === 'function') initStorageModeUi();
+}
+
+function bootStorageAndState() {
+    if (typeof ensureOnlinePreferredByDefault === 'function') ensureOnlinePreferredByDefault();
+    if (typeof initStorageModeUi === 'function') initStorageModeUi();
+    if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
+
+    const probe = typeof quickProbeStorageMode === 'function'
+        ? quickProbeStorageMode()
+        : (typeof probeStorageMode === 'function'
+            ? probeStorageMode({ attempts: 1, timeoutMs: 650, delayMs: 0 })
+            : Promise.resolve());
+
+    probe.then(() => {
+        if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
+        if (typeof syncModeToggleUi === 'function') syncModeToggleUi();
+        if (typeof updateDbStatusBadge === 'function') updateDbStatusBadge();
+        if (typeof autoStartAppServerIfNeeded === 'function') {
+            autoStartAppServerIfNeeded();
+        }
+    }).catch(() => { /* ignore */ });
+
+    const hydrate = typeof hydrateAppStateFromDatabase === 'function'
+        ? hydrateAppStateFromDatabase()
+        : loadStateFromDatabase();
+
+    hydrate.then((state) => finalizeBootState(state)).catch((bootError) => {
+        console.error('Boot hydrate failed (login still available)', bootError);
+        finalizeBootState(appState);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
     wireLoginForm();
-    if (typeof initPwaInstall === 'function') initPwaInstall();
-    // Sync fallback so a fast Sign In never hits a null appState
     try {
         if (!appState) appState = loadState();
     } catch (_) {
         appState = createDefaultState();
     }
-
-    try {
-        appState = await loadStateFromDatabase();
-        if (!appState.users || !appState.users.length) {
-            appState.users = createDefaultUsers();
-            saveState();
-        } else if (typeof ensureSeedUsersPresent === 'function') {
-            const before = appState.users.length;
-            appState.users = ensureSeedUsersPresent(appState.users);
-            if (appState.users.length !== before) {
-                if (typeof saveStateNow === 'function') await saveStateNow();
-                else saveState();
-            }
-        }
-        if (!Array.isArray(appState.orderlyDailyFile)) {
-            appState.orderlyDailyFile = [];
-        }
-        if (typeof applyPhysicalStockCount20260731 === 'function') {
-            const stockResult = applyPhysicalStockCount20260731();
-            if (stockResult.applied) {
-                if (typeof saveStateNow === 'function') await saveStateNow();
-                else saveState();
-                console.info('Physical stock count applied:', stockResult.lines);
-            }
-        }
-        if (typeof ensureExampleMidLaptopRequisition === 'function') {
-            const ex = ensureExampleMidLaptopRequisition();
-            if (ex) {
-                if (typeof saveStateNow === 'function') await saveStateNow();
-                else saveState();
-            }
-        }
-        applyTheme(appState.theme);
-        if (typeof initInventoryLedgersUi === 'function') initInventoryLedgersUi();
-        if (typeof buildVoucherInventorySection === 'function') buildVoucherInventorySection();
-        // Load standalone module HTML, then restore saved form values
-        if (typeof preloadAllModules === 'function') {
-            await preloadAllModules();
-        }
-        restoreAllModules();
-        if (typeof initFinancialYearBidsImport === 'function') initFinancialYearBidsImport();
-        initBidCalculations();
-        initVoucherCalculations();
-        initStockCalculations();
-        initConsumablesStockCalculations();
-        initJobCardCalculations();
-        initTableSearch();
-        initReportsModule();
-        if (typeof initGlTargetMonthControls === 'function') initGlTargetMonthControls();
-        initSpecEvaluationModule();
-        if (typeof initAiAssistant === 'function') initAiAssistant();
-        if (typeof initRequisitionsModule === 'function') initRequisitionsModule();
-        if (typeof initOrderlyRoomModule === 'function') initOrderlyRoomModule();
-        if (typeof initCorrespondenceFilesModule === 'function') initCorrespondenceFilesModule();
-        if (typeof initMonthlyReturnsModule === 'function') initMonthlyReturnsModule();
-        if (typeof initUndeliveredModule === 'function') initUndeliveredModule();
-        if (typeof initDpProcurementModule === 'function') initDpProcurementModule();
-        if (typeof initUnitEquipmentModule === 'function') initUnitEquipmentModule();
-        if (typeof initTemporaryLoansModule === 'function') initTemporaryLoansModule();
-        if (typeof initIctAccountabilityModule === 'function') initIctAccountabilityModule();
-        if (typeof initIctDistributionModule === 'function') initIctDistributionModule();
-        if (typeof initStockTakeModule === 'function') initStockTakeModule();
-        if (typeof initSuppliersModule === 'function') initSuppliersModule();
-        if (typeof initRepairIntakeModules === 'function') initRepairIntakeModules();
-        if (typeof ensureRepairIntakeTables === 'function') ensureRepairIntakeTables();
-        if (typeof initWorkshopStoresRequest === 'function') initWorkshopStoresRequest();
-        initFormBackButtons();
-        if (typeof initStockTxnModal === 'function') initStockTxnModal();
-        updateDashboard();
-        updateVoucherSummary();
-        if (typeof renderVoucherInventoryTables === 'function') renderVoucherInventoryTables();
-        updateSystemAlerts();
-        if (typeof initCommandBoard === 'function') initCommandBoard();
-        if (typeof updateCommandBoard === 'function') updateCommandBoard();
-        if (typeof initSystemAlertsClicks === 'function') initSystemAlertsClicks();
-        if (typeof initItDirCommsSideButton === 'function') initItDirCommsSideButton();
-        updateDbStatusBadge();
-        if (typeof initPersistentDatabaseHooks === 'function') initPersistentDatabaseHooks();
-        if (typeof initFieldHelpSystem === 'function') initFieldHelpSystem();
-    } catch (bootError) {
-        console.error('Boot init failed (login still available)', bootError);
-        if (bootError && bootError.stack) console.error(bootError.stack);
-        if (!appState) {
-            try { appState = loadState(); } catch (_) { appState = createDefaultState(); }
-        }
-        try { updateDbStatusBadge(); } catch (_) { /* ignore */ }
-        try { if (typeof initFieldHelpSystem === 'function') initFieldHelpSystem(); } catch (_) { /* ignore */ }
-    }
-
+    bootStorageAndState();
+    if (typeof initPwaInstall === 'function') initPwaInstall();
     document.getElementById('logoutBtn')?.addEventListener('click', logoutUser);
 
     if (document.body.dataset.targetNavWired !== '1') {

@@ -1,0 +1,5 @@
+{
+    "python.defaultInterpreterPath": "python",
+    "editor.codeLens": false,
+    "debug.javascript.codelens.npmScripts": "never"
+}

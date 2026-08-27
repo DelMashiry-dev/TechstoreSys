@@ -504,7 +504,7 @@ function saveModule(moduleId) {
     saveState();
     updateDashboard();
     updateSystemAlerts();
-    showToast(`${getModuleLabel(moduleId)} saved${dbConnected ? ' to database' : ''} successfully.`);
+    showToast(`${getModuleLabel(moduleId)} saved${dbConnected ? ' to database' : (offlineDurable ? ' (offline copy)' : '')} successfully.`);
 }
 
 function validatePurchaseOrderModule() {

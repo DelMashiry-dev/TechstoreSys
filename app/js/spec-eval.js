@@ -2,6 +2,7 @@
 
 const SPEC_EVAL_TEMPLATES = {
     laptop: [
+        ['Duty Profile', '', 'Operational use this laptop must support (field, development, AI, design)'],
         ['Processor', 'Intel Core i5/i7 or AMD Ryzen 5/7 (latest gen)', 'Required for office productivity and development workloads'],
         ['RAM', '16 GB DDR4/DDR5 (expandable)', 'Multitasking and future-proofing'],
         ['Storage', '512 GB NVMe SSD minimum', 'Fast boot and application performance'],
@@ -1094,6 +1095,7 @@ function printSpecEvaluationDatasheet() {
 function readSpecSearchCriteria() {
     return {
         productType: document.getElementById('specSearchProductType')?.value || '',
+        dutyProfile: document.getElementById('specSearchDutyProfile')?.value || 'any',
         brand: document.getElementById('specSearchBrand')?.value || 'Any',
         processorType: document.getElementById('specSearchProcessorType')?.value || 'any',
         minProcessorGhz: document.getElementById('specSearchProcessorSpeed')?.value || 'any',
@@ -1102,6 +1104,21 @@ function readSpecSearchCriteria() {
         storageType: document.getElementById('specSearchStorageType')?.value || 'any',
         freeText: document.getElementById('specSearchFreeText')?.value || ''
     };
+}
+
+function updateSpecSearchDutyHint() {
+    const hint = document.getElementById('specSearchDutyHint');
+    if (!hint) return;
+    const profile = typeof getLaptopDutyProfile === 'function'
+        ? getLaptopDutyProfile(document.getElementById('specSearchDutyProfile')?.value)
+        : null;
+    if (!profile) {
+        hint.hidden = true;
+        hint.textContent = '';
+        return;
+    }
+    hint.hidden = false;
+    hint.textContent = `${profile.groupLabel}: ${profile.summary} ${profile.deviceHint || ''}`.trim();
 }
 
 function populateSpecSearchFacets() {
@@ -1171,6 +1188,10 @@ function populateSpecSearchFacets() {
 
     // Fill dropdowns first so a catalog enrich error cannot leave them blank
     fillSelect('specSearchProductType', [{ value: '', label: 'Any product type' }, ...(facets.productTypes || [])]);
+    const dutyOpts = typeof laptopDutyProfileOptions === 'function'
+        ? laptopDutyProfileOptions()
+        : [{ value: 'any', label: 'Any duty profile' }];
+    fillGroupedSelect('specSearchDutyProfile', dutyOpts, 'group');
     fillSelect('specSearchBrand', facets.brands || ['Any']);
     fillProcessorSelect('specSearchProcessorType', facets.processorTypes || [{ value: 'any', label: 'Any processor type' }]);
     fillSelect('specSearchProcessorSpeed', facets.processorSpeeds || [{ value: 'any', label: 'Any processor speed' }]);
@@ -1213,6 +1234,7 @@ function clearSpecSearchCriteria() {
         if (el) el.value = value;
     };
     set('specSearchProductType', '');
+    set('specSearchDutyProfile', 'any');
     set('specSearchBrand', 'Any');
     set('specSearchProcessorType', 'any');
     set('specSearchProcessorSpeed', 'any');
@@ -1225,6 +1247,7 @@ function clearSpecSearchCriteria() {
         body.innerHTML = '<tr><td colspan="9" class="req-empty-row">Set minimum specs above, then Search Matching Products.</td></tr>';
     }
     setSpecSearchStatus('');
+    updateSpecSearchDutyHint();
 }
 
 function renderSpecSearchResults(results) {
@@ -1292,6 +1315,34 @@ function selectSpecSearchResult(index) {
     };
     applyCatalogProductToForm(formProduct, [product.brand, product.model].filter(Boolean).join(' '));
 
+    const duty = typeof getLaptopDutyProfile === 'function'
+        ? getLaptopDutyProfile(document.getElementById('specSearchDutyProfile')?.value)
+        : null;
+    if (duty) {
+        const nameEls = document.querySelectorAll('#spec-eval-table-body .spec-field-name');
+        let dutyRow = Array.from(nameEls).find((el) => /duty\s*profile/i.test(el.value || ''));
+        if (!dutyRow) {
+            addSpecEvalRow('Duty Profile', duty.label, duty.summary);
+            const names = document.querySelectorAll('#spec-eval-table-body .spec-field-name');
+            dutyRow = Array.from(names).find((el) => /duty\s*profile/i.test(el.value || ''));
+        }
+        if (dutyRow) {
+            dutyRow.value = 'Duty Profile';
+            const tr = dutyRow.closest('tr');
+            const val = tr?.querySelector('.spec-field-value');
+            const note = tr?.querySelector('.spec-field-note');
+            if (val) val.value = duty.label;
+            if (note) note.value = duty.summary;
+        }
+        const purposeEl = document.getElementById('specEvalPurpose');
+        if (purposeEl) {
+            const existing = purposeEl.value.trim();
+            const line = `Duty profile: ${duty.label} — ${duty.summary}`;
+            if (!existing) purposeEl.value = line;
+            else if (!/duty profile/i.test(existing)) purposeEl.value = `${line} ${existing}`;
+        }
+    }
+
     const itemEl = document.getElementById('specEvalItemName');
     if (itemEl) itemEl.value = [product.brand, product.model].filter(Boolean).join(' ');
 
@@ -1311,10 +1362,11 @@ function runSpecIntelligentSearch({ online = false } = {}) {
         (criteria.minRamGb && criteria.minRamGb !== 'any') ||
         (criteria.minStorageGb && criteria.minStorageGb !== 'any') ||
         (criteria.storageType && criteria.storageType !== 'any') ||
+        (criteria.dutyProfile && criteria.dutyProfile !== 'any') ||
         keywords;
 
     if (!hasHard) {
-        showToast('Set at least one criterion (product type, brand, processor, RAM, storage, or keywords).', 'error');
+        showToast('Set at least one criterion (duty profile, product type, brand, processor, RAM, storage, or keywords).', 'error');
         return;
     }
 
@@ -1335,7 +1387,11 @@ function runSpecIntelligentSearch({ online = false } = {}) {
 
     renderSpecSearchResults(catalogHits);
     const nearCount = catalogHits.filter((r) => r.source === 'catalog-near' || r.source === 'catalog-suggest').length;
+    const dutyLabel = (criteria.dutyProfile && criteria.dutyProfile !== 'any' && typeof getLaptopDutyProfile === 'function')
+        ? (getLaptopDutyProfile(criteria.dutyProfile)?.label || '')
+        : '';
     const statusLabel = keywords || [
+        dutyLabel,
         criteria.productType,
         criteria.brand !== 'Any' ? criteria.brand : '',
         (criteria.processorType && criteria.processorType !== 'any') ? criteria.processorType : ''
@@ -1427,10 +1483,12 @@ async function enrichSpecSearchOnline(criteria, catalogHits) {
 
 function initSpecIntelligentSearch() {
     populateSpecSearchFacets();
+    updateSpecSearchDutyHint();
 
     document.getElementById('specSearchBtn')?.addEventListener('click', () => runSpecIntelligentSearch({ online: false }));
     document.getElementById('specSearchOnlineBtn')?.addEventListener('click', () => runSpecIntelligentSearch({ online: true }));
     document.getElementById('specSearchClearBtn')?.addEventListener('click', clearSpecSearchCriteria);
+    document.getElementById('specSearchDutyProfile')?.addEventListener('change', updateSpecSearchDutyHint);
 
     document.getElementById('specSearchResultsBody')?.addEventListener('click', (e) => {
         const btn = e.target.closest('[data-spec-pick]');

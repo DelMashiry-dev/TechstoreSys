@@ -20,10 +20,6 @@ data/product-web-cache.json
 Thumbs.db
 *.swp
 
-
-# Python temporary files
-__pycache__/
-*.pyc
-
-# Local TechstoreSys database
-techstores.db
+# Runtime logs
+mode_switch.log
+**/mode_switch.log

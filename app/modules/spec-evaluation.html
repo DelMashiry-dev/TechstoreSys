@@ -6,7 +6,7 @@
 
                 <p class="spec-eval-intro">
                     Prepare technical specifications before procurement. Use <strong>Intelligent Spec Search</strong> to set
-                    minimum requirements (product type, brand, processor, RAM, storage), review ranked options, then pick the
+                    minimum requirements (product type, laptop <strong>duty profile</strong>, brand, processor, RAM, storage), review ranked options, then pick the
                     best match into this datasheet.
                 </p>
 
@@ -15,7 +15,7 @@
                         <h3>Intelligent Spec Search — “I need at least these specs”</h3>
                     </div>
                     <p class="spec-search-hint">
-                        Set product type, brand, processor, RAM and/or storage. Keywords are optional.
+                        Set product type, <strong>duty profile</strong> (for laptops), brand, processor, RAM and/or storage. Keywords are optional.
                         Returns a ranked table of the best options (at least 5 when available). Local catalog is
                         searched first; optionally enrich with online lookup (when the server is running). Pick a
                         row to load the Spec Evaluation datasheet.
@@ -30,6 +30,12 @@
                                 <option value="tablet">Tablet</option>
                                 <option value="printer">Printer</option>
                                 <option value="server">Server</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Duty profile</label>
+                            <select class="form-control" id="specSearchDutyProfile" title="Main operational use for laptop issue">
+                                <option value="any">Any duty profile</option>
                             </select>
                         </div>
                         <div class="form-col">
@@ -51,6 +57,7 @@
                             </select>
                         </div>
                     </div>
+                    <p class="spec-search-duty-hint" id="specSearchDutyHint" hidden></p>
                     <div class="form-row">
                         <div class="form-col">
                             <label class="form-label">RAM</label>

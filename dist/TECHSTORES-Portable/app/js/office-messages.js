@@ -1169,7 +1169,6 @@ function refreshOfficeMessagesUi() {
 
 function initOfficeMessages() {
     wireOfficeMessagesUi();
-    wireNotificationsScrollButtons();
     if (typeof initMailLayout === 'function') initMailLayout();
     setSaTab(saActiveTab || 'alerts');
     updateSaTabBadges(0, 0);
@@ -1200,73 +1199,12 @@ function openUnreadMessagesFromBadge() {
     setTimeout(() => panel?.classList.remove('command-panel-flash'), 1200);
 }
 
-function getNotificationsScrollTarget() {
-    const panel = document.getElementById('systemAlerts');
-    if (!panel) return null;
-    const view = window.saViewMode || 'cards';
-    if (view === 'mail') {
-        return panel.querySelector('.sa-mail-list')
-            || panel.querySelector('.sa-mail-reader')
-            || panel.querySelector('.sa-mail-compose-host');
-    }
-    if (view === 'whatsapp') {
-        return panel.querySelector('.sa-wa-thread')
-            || panel.querySelector('.sa-wa-list');
-    }
-    const tab = window.saActiveTab || saActiveTab || 'alerts';
-    if (tab === 'messages') return document.getElementById('systemMessagesList');
-    if (tab === 'compose') return document.getElementById('systemComposePane');
-    return document.getElementById('systemAlertsList');
-}
-
 function syncNotificationsScrollButtons() {
-    const target = getNotificationsScrollTarget();
-    const up = document.getElementById('saScrollUpBtn');
-    const down = document.getElementById('saScrollDownBtn');
-    const box = document.getElementById('saScrollControls');
-    if (!up || !down) return;
-    if (!target) {
-        if (box) box.hidden = true;
-        return;
-    }
-    if (target.dataset.saScrollSync !== '1') {
-        target.dataset.saScrollSync = '1';
-        target.addEventListener('scroll', syncNotificationsScrollButtons, { passive: true });
-    }
-    const overflow = target.scrollHeight - target.clientHeight > 8;
-    if (box) box.hidden = false;
-    up.disabled = !overflow || target.scrollTop <= 4;
-    down.disabled = !overflow || target.scrollTop + target.clientHeight >= target.scrollHeight - 4;
+    /* Scroll arrow controls removed — native panel scroll only. */
 }
 
-function scrollNotifications(direction) {
-    const target = getNotificationsScrollTarget();
-    if (!target) return;
-    const step = Math.max(120, Math.round(target.clientHeight * 0.75));
-    target.scrollBy({ top: direction === 'up' ? -step : step, behavior: 'smooth' });
-    setTimeout(syncNotificationsScrollButtons, 280);
-}
-
-function wireNotificationsScrollButtons() {
-    const board = document.getElementById('dashCommandBoard') || document.getElementById('systemAlerts');
-    if (!board || board.dataset.saScrollWired === '1') return;
-    board.dataset.saScrollWired = '1';
-    document.getElementById('saScrollUpBtn')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        scrollNotifications('up');
-    });
-    document.getElementById('saScrollDownBtn')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        scrollNotifications('down');
-    });
-    ['systemAlertsList', 'systemMessagesList', 'systemComposePane'].forEach((id) => {
-        document.getElementById(id)?.addEventListener('scroll', syncNotificationsScrollButtons, { passive: true });
-    });
-    board.addEventListener('scroll', syncNotificationsScrollButtons, { passive: true });
-    window.addEventListener('resize', syncNotificationsScrollButtons);
-    setTimeout(syncNotificationsScrollButtons, 80);
+function getNotificationsScrollTarget() {
+    return null;
 }
 
 function wireOfficeMessagesUi() {

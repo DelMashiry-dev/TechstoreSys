@@ -63,6 +63,23 @@
                         </button>
                     </div>
                 </div>
+                <div class="form-group login-mode-group">
+                    <label class="form-label" for="loginStorageModeToggle">Data storage</label>
+                    <div class="login-storage-panel" id="loginStorageRow">
+                        <p class="login-storage-status" id="loginStorageLabel">Database — connecting to techstores.db…</p>
+                        <div class="storage-mode-toggle-wrap storage-mode-toggle-wrap--login">
+                            <span class="storage-mode-toggle-label" data-side="offline">Browser</span>
+                            <button type="button" class="storage-mode-toggle" id="loginStorageModeToggle" role="switch"
+                                aria-checked="false"
+                                aria-label="Switch between database (techstores.db) and browser-only storage">
+                                <span class="storage-mode-toggle-track"><span class="storage-mode-toggle-thumb"></span></span>
+                            </button>
+                            <span class="storage-mode-toggle-label" data-side="online">Database</span>
+                        </div>
+                        <p class="login-mode-hint">Default is <strong>Database</strong> (local <strong>techstores.db</strong> — not internet). Use <strong>Browser</strong> only when the server is stopped.</p>
+                        <p class="login-mode-status" id="loginModeStatus" hidden></p>
+                    </div>
+                </div>
                 <button type="submit" class="btn btn-primary login-submit">Sign In</button>
             </form>
             <div class="login-hint is-collapsed" id="loginHint">
@@ -449,6 +466,10 @@
                     </a>
                     <ul class="submenu">
                         <li>
+                            <a href="#" class="nav-btn" data-target="workshop-receipt-cert">
+                                <img class="nav-ico-img" src="../assets/nav-icons/delivery-note.png" alt="" width="46" height="46" loading="lazy">
+                                <span class="nav-label">Receipt Certification</span>
+                            </a>
                             <a href="#" class="nav-btn" data-target="workshop-repairs">
                                 <img class="nav-ico-img" src="../assets/nav-icons/workshop-repairs.png" alt="" width="46" height="46" loading="lazy">
                                 <span class="nav-label">Workshop Register</span>
@@ -630,8 +651,10 @@
                 <h1>IT-DIR Tech Stores Dashboard</h1>
                 <div class="header-aside">
                     <div class="user-controls">
-                        <span class="db-status-badge db-offline" id="dbStatusBadge" title="Database status">Local Only</span>
+                        <div class="storage-mode-toggle-wrap" id="storageModeToggleWrap" title="Switch online / offline"></div>
+                        <button type="button" class="db-status-badge db-offline" id="dbStatusBadge" title="Click for storage details">Local Only</button>
                         <button class="glossy-pill-btn theme-toggle" id="themeToggle" type="button" title="Appearance — themes &amp; UI preferences">Appearance</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="fieldHelpToggleBtn" title="Hover help — point at labels and fields for explanations">Field Help</button>
                         <button class="btn btn-ghost btn-sm" id="logoutBtn" type="button">Logout</button>
                     </div>
                 </div>
@@ -639,18 +662,22 @@
             
             <!-- Dashboard Cards -->
             <div id="dashboard" class="content-section">
-                <div class="dashboard-hero">
-                    <div class="dashboard-hero-main">
-                        <div class="dashboard-kicker">IT-DIR DISPENSABLES AND CONTROLLED STORES INVENTORY</div>
-                        <p class="dashboard-hero-sub dashboard-last-login">
-                            <strong id="dashboardLastUpdated">—</strong>
-                        </p>
+                <div class="dashboard-hero dash-collapse dashboard-hero-collapse" data-collapse-key="dashboard-hero">
+                    <button type="button" class="dash-collapse-toggle dashboard-hero-collapse-toggle" aria-expanded="true" title="Collapse dashboard header">
+                        <div class="dash-collapse-titles dashboard-hero-collapse-head">
+                            <div class="dashboard-kicker">IT-DIR DISPENSABLES AND CONTROLLED STORES INVENTORY</div>
+                            <p class="dashboard-hero-sub dashboard-last-login">
+                                <strong id="dashboardLastUpdated">—</strong>
+                            </p>
+                        </div>
+                        <span class="dash-collapse-caret" aria-hidden="true">▾</span>
+                    </button>
+                    <div class="dash-collapse-body dashboard-hero-body">
                         <div class="dashboard-ops-strip">
                             <div class="dashboard-context-row" aria-label="Operations context">
                                 <span class="context-chip">Josiah Magama Tongogara Barracks</span>
                                 <span class="context-chip" id="dashboardSignedInChip">Signed in: —</span>
-                                <span class="context-chip" id="dashboardDbChip">Storage: —</span>
-                                <span class="context-chip ai-status-chip is-off" id="aiStatusChip" title="AI status">AI: —</span>
+                                <button type="button" class="context-chip" id="dashboardDbChip" title="Click to switch online / offline mode">Storage: —</button>
                             </div>
                             <div class="dashboard-toolbar" aria-label="Dashboard actions">
                                 <label class="sr-only" for="dashboardUniversalSearchInput">Universal search</label>
@@ -660,7 +687,7 @@
                                 <button class="btn btn-primary btn-sm" id="universalSearchBtn" type="button"
                                     data-universal-search title="Search anything in the system (Ctrl+K)">Universal Search</button>
                                 <button class="btn btn-secondary btn-sm" id="openAiAssistantBtn" type="button"
-                                    title="Ask about buying power, GL balances, inventory (read-only)">AI Assistant</button>
+                                    title="Ask about GL, stock, requisitions, loans, procurement, or ICT trends">AI Assistant</button>
                                 <button class="btn btn-primary btn-sm" id="refreshDashboardBtn" type="button">Refresh</button>
                                 <button class="btn btn-secondary btn-sm" id="btnLoadDemoPack" type="button" title="Fill GL cards, stock ledgers, POs, vouchers, ZA register with realistic demo figures">Load demo figures</button>
                                 <button class="btn btn-primary btn-sm" id="dashboardTrackBtn" type="button"
@@ -1149,15 +1176,31 @@
                     </button>
                     <div class="dash-collapse-body">
                     <div id="dafTargetBanner" class="daf-target-banner" role="status"></div>
+                    <div id="targetProposalBanner" class="target-proposal-banner is-empty" role="status"></div>
                     <div class="gl-target-month-bar">
-                        <label class="form-label" for="glTargetMonth">Target month</label>
-                        <input type="month" class="form-control" id="glTargetMonth" title="Month of the DAF vote">
+                        <label class="form-label" for="glTargetPeriodMode">View by</label>
+                        <select class="form-control gl-target-period-mode" id="glTargetPeriodMode" title="Monthly, quarterly, or yearly target &amp; spend view">
+                            <option value="month">Monthly</option>
+                            <option value="quarter">Quarterly</option>
+                            <option value="year">Yearly</option>
+                        </select>
+                        <span id="glTargetMonthWrap" class="gl-target-month-wrap">
+                            <label class="form-label" for="glTargetMonth">Target month</label>
+                            <input type="month" class="form-control" id="glTargetMonth" title="Month of the DAF vote">
+                        </span>
                         <strong id="glTargetMonthLabel">—</strong>
-                        <button type="button" class="btn btn-ghost btn-sm" id="btnSeedMonthTargets" title="Optional helper — prefer typing the DAF advice amounts">Seed empty from FY ref</button>
-                        <button type="button" class="btn btn-ghost btn-sm" id="btnClearMonthTargets">Clear month targets</button>
+                        <button type="button" class="btn btn-primary btn-sm gl-target-month-only" id="btnBuildTargetProposal" title="Aggregate open requisitions into a monthly target proposal">Build from requisitions</button>
+                        <button type="button" class="btn btn-secondary btn-sm gl-target-month-only" id="btnApplyProposalTargets" title="Copy proposed amounts into DAF Target column">Apply proposal to targets</button>
+                        <button type="button" class="btn btn-ghost btn-sm gl-target-month-only" id="btnPrintTargetProposal" title="Print IT Dir priority list report">Print priority list</button>
+                        <button type="button" class="btn btn-primary btn-sm gl-target-month-only" id="btnPrintDafFundMemo" title="Print DAF fund request cover memo (IT/25 format)">Print DAF request memo</button>
+                        <button type="button" class="btn btn-ghost btn-sm gl-target-month-only" id="btnSeedSeptember2026" title="Load September 2026 IT/25 priority list pack">Sep 2026 pack</button>
+                        <button type="button" class="btn btn-ghost btn-sm gl-target-month-only" id="btnSeedMonthTargets" title="Optional helper — prefer typing the DAF advice amounts">Seed empty from FY ref</button>
+                        <button type="button" class="btn btn-ghost btn-sm gl-target-month-only" id="btnClearMonthTargets">Clear month targets</button>
                         <a href="#" class="btn btn-secondary btn-sm" data-target="release-cut">Release Cut</a>
                     </div>
-                    <div class="form-row daf-advice-row">
+                    <p id="glTargetPeriodNote" class="gl-target-period-note" hidden></p>
+                    <div id="glTargetPeriodBreakdown" hidden></div>
+                    <div class="form-row daf-advice-row gl-target-month-only">
                         <div class="form-col">
                             <label class="form-label" for="dafTargetRef">DAF advice / vote ref</label>
                             <input type="text" class="form-control" id="dafTargetRef" placeholder="e.g. DAF/IT/JUL26/01" autocomplete="off">
@@ -1171,11 +1214,75 @@
                             <input type="text" class="form-control" id="dafTargetNotes" placeholder="e.g. Only ZOFF voted this month" autocomplete="off">
                         </div>
                     </div>
+                    <details class="daf-memo-panel gl-target-month-only" open>
+                        <summary class="daf-memo-panel-summary">DAF fund request memo (cover letter)</summary>
+                        <div class="form-row daf-memo-row">
+                            <div class="form-col">
+                                <label class="form-label" for="proposalMemoRef">Memo ref</label>
+                                <input type="text" class="form-control" id="proposalMemoRef" placeholder="e.g. IT/25" autocomplete="off">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="proposalMemoDate">Memo date</label>
+                                <input type="date" class="form-control" id="proposalMemoDate">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="proposalMemoRecipient">To</label>
+                                <input type="text" class="form-control" id="proposalMemoRecipient" value="See Distribution">
+                            </div>
+                        </div>
+                        <div class="form-row daf-memo-row">
+                            <div class="form-col" style="flex:2;">
+                                <label class="form-label" for="proposalMemoSubject">Subject</label>
+                                <input type="text" class="form-control" id="proposalMemoSubject" placeholder="REQUEST FOR FUNDS FOR … TARGET AS PRIORITY LIST">
+                            </div>
+                        </div>
+                        <div class="form-row daf-memo-row">
+                            <div class="form-col">
+                                <label class="form-label" for="proposalMemoDistAction">Distribution — Action</label>
+                                <input type="text" class="form-control" id="proposalMemoDistAction" value="GS Br">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="proposalMemoDistInfo">Distribution — Information</label>
+                                <input type="text" class="form-control" id="proposalMemoDistInfo" value="DAF, File">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="proposalMemoEnclosure">Enclosure</label>
+                                <input type="text" class="form-control" id="proposalMemoEnclosure" placeholder="IT Dir priority list for …">
+                            </div>
+                        </div>
+                        <div class="form-row daf-memo-row">
+                            <div class="form-col">
+                                <label class="form-label" for="proposalMemoSignName">Signatory name</label>
+                                <input type="text" class="form-control" id="proposalMemoSignName" placeholder="W BARWA">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="proposalMemoSignPostnom">Postnom</label>
+                                <input type="text" class="form-control" id="proposalMemoSignPostnom" placeholder="psc' ZW">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="proposalMemoSignRank">Rank</label>
+                                <input type="text" class="form-control" id="proposalMemoSignRank" placeholder="Maj">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label" for="proposalMemoSignTitle">Title</label>
+                                <input type="text" class="form-control" id="proposalMemoSignTitle" placeholder="for Dir">
+                            </div>
+                        </div>
+                        <div class="form-row daf-memo-row">
+                            <div class="form-col" style="flex:1.4;">
+                                <label class="form-label" for="proposalMemoClosing">Closing line (para 2)</label>
+                                <input type="text" class="form-control" id="proposalMemoClosing" value="Forwarded for your action.">
+                            </div>
+                            <div class="form-col daf-memo-actions">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" class="btn btn-secondary btn-sm" id="btnSaveProposalMemo">Save memo</button>
+                            </div>
+                        </div>
+                    </details>
                     <p class="gl-target-help">
-                        <strong>Buying power</strong> = DAF Target − Expended on that GL for the month.
-                        If a GL has <strong>No DAF vote</strong>, you cannot buy on it until you record a DAF target or
-                        move buying power via <strong>Release Cut</strong> from a funded GL.
-                        Edit the <strong>DAF Target</strong> column to capture the vote amounts.
+                        <strong>Monthly target proposal</strong> rolls open requisitions into a DAF request.
+                        Use <strong>Print DAF request memo</strong> for the IT/25 cover letter (Distribution: GS Br / DAF / File).
+                        <strong>Print priority list</strong> for the enclosure.
                     </p>
                     <div class="module-toolbar">
                         <input type="search" class="form-control table-search" data-search-target="budgetOverviewBody" placeholder="Search GL target overview...">
@@ -1187,6 +1294,7 @@
                             <thead>
                                 <tr>
                                     <th>GL Account</th>
+                                    <th>Proposed</th>
                                     <th>DAF Target</th>
                                     <th>Committed</th>
                                     <th>Vouchers</th>
@@ -1450,22 +1558,35 @@
         </div>
     </div>
 
+    <script>
+        try {
+            if (!localStorage.getItem('techstoresPreferredMode')) {
+                localStorage.setItem('techstoresPreferredMode', 'online');
+            }
+        } catch (e) { /* ignore */ }
+    </script>
     <script src="js/config.js"></script>
+    <script src="js/offline-store.js"></script>
+    <script src="js/offline-precache.js"></script>
     <script src="js/org-profile.js"></script>
     <script src="js/zna-units.js"></script>
     <script src="js/catalog.js"></script>
     <script src="js/inventory-ledgers.js"></script>
     <script src="js/it-dir-bids-seed.js"></script>
     <script src="js/product-specs-catalog.js"></script>
+    <script src="js/laptop-duty-profiles.js"></script>
     <script src="js/suppliers-seed.js"></script>
-    <script src="js/state.js"></script>
+    <script src="js/state.js?v=20260823dblabel"></script>
+    <script src="js/storage-mode.js?v=20260823dblabel"></script>
     <script src="js/gl-targets.js"></script>
-    <script src="js/auth.js"></script>
+    <script src="js/monthly-target-proposals.js"></script>
+    <script src="js/auth.js?v=20260823fastboot"></script>
     <script src="js/dept-home.js"></script>
     <script src="js/utils.js"></script>
+    <script src="js/window-chrome.js?v=20260823max"></script>
     <script src="js/module-loader.js"></script>
     <script src="js/search-history.js"></script>
-    <script src="js/universal-search.js"></script>
+    <script src="js/universal-search.js?v=20260824board"></script>
     <script src="js/duties-roles.js"></script>
     <script src="js/it-dir-departments.js"></script>
     <script src="js/it-dir-establishment.js"></script>
@@ -1480,7 +1601,8 @@
     <script src="js/voucher-inventory.js"></script>
     <script src="js/toner-compatibility.js"></script>
     <script src="js/product-web-enrich.js"></script>
-    <script src="js/ai-assistant.js"></script>
+    <script src="js/offline-assistant.js"></script>
+    <script src="js/ai-assistant.js?v=20260825query"></script>
     <script src="js/product-datasheets.js"></script>
     <script src="js/product-stock-register.js"></script>
     <script src="js/physical-stock-count.js"></script>
@@ -1489,7 +1611,9 @@
     <script src="js/stock-take.js"></script>
     <script src="js/unit-checks.js"></script>
     <script src="js/inventory-accountability.js"></script>
-    <script src="js/ict-accountability.js"></script>
+    <script src="js/ict-accountability.js?v=20260825board"></script>
+    <script src="js/laptop-distribution-aug2026.js"></script>
+    <script src="js/board-schedule-2023.js"></script>
     <script src="js/ict-distribution.js"></script>
     <script src="js/requisitions.js"></script>
     <script src="js/requisition-procurement.js"></script>
@@ -1499,7 +1623,11 @@
     <script src="js/correspondence-files.js"></script>
     <script src="js/monthly-returns.js"></script>
     <script src="js/undelivered.js"></script>
+    <script src="js/workshop-receipt-cert.js"></script>
+    <script src="js/delivery-note.js"></script>
     <script src="js/temporary-loans.js"></script>
+    <script src="js/stores-query-engine.js?v=20260825query"></script>
+    <script src="js/stores-intelligent-lookup.js?v=20260825board"></script>
     <script src="js/rows.js"></script>
     <script src="js/repair-intake.js"></script>
     <script src="js/workshop-stores-request.js"></script>
@@ -1534,7 +1662,7 @@
     <script src="js/tables.js"></script>
     <script src="js/ux-improvements.js"></script>
     <script src="js/pwa-install.js"></script>
-    <script src="js/boot.js"></script>
+    <script src="js/boot.js?v=20260823fastboot"></script>
 
 </body>
 </html>

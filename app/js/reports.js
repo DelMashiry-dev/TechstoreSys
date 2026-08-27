@@ -15,7 +15,7 @@ const REPORT_TABLE_HEADERS = {
     'spec-eval-table-body': ['Ser', 'Specification Field', 'Required Spec / Value', 'Price Justification / Notes'],
     'dp-f1-table-body': ['Ser', 'Designation', 'Qty', 'Holding Stock', 'Potential Supplier'],
     'zna-q-982-table-body': ['Line', 'Stock', 'Location', 'Vocab/Part', 'Section', 'Designation', 'UOI', 'Required', 'Issued', 'To Follow', 'Pkg', 'Weight', '$', 'c'],
-    'delivery-table-body': ['Date', 'Item', 'Description', 'Qty', 'UoM', 'Product Serial', 'Purchase No.', 'Supplied By', 'Received By', 'Initials'],
+    'delivery-table-body': ['Date', 'Item', 'Description', 'Qty', 'UoM', 'Product Serial', 'Purchase No.', 'Supplied By', 'Received By', 'Initials', 'Workshop cert'],
     'purchase-orders-table-body': ['Date', 'Supplier', 'PO Number', 'Total', 'GL Account', 'Vendor No.', 'Signature'],
     'purchase-orders-lines-body': ['Item (Ser)', 'Material Number', 'Order Qty', 'Unit', 'Description', 'Price Per Unit', 'Net Value'],
     'workshop-repairs-table-body': ['Serial', 'Equipment Type', 'S/N or ZA No.', 'Unit', 'Diagnosis', 'Remarks', 'Date In', 'Received By', 'Date Out', 'SVCS 1045 Ref'],
@@ -417,6 +417,21 @@ function buildModuleReportData(moduleId) {
     const { from: dateFrom, to: dateTo } = getReportDateFilters();
 
     if (moduleId === 'dashboard') return buildDashboardReportData();
+    if (moduleId === 'monthly-target-proposal') {
+        return typeof buildMonthlyTargetProposalReportData === 'function'
+            ? buildMonthlyTargetProposalReportData()
+            : { title: 'Monthly Target Proposal', summary: ['Module not loaded.'], fields: [], tables: [] };
+    }
+    if (moduleId === 'daf-fund-request-memo') {
+        return typeof buildDafFundRequestMemoReportData === 'function'
+            ? buildDafFundRequestMemoReportData()
+            : { title: 'DAF Fund Request Memo', summary: ['Module not loaded.'], fields: [], tables: [] };
+    }
+    if (moduleId === 'unit-requisitions') {
+        return typeof buildUnitRequisitionsReportData === 'function'
+            ? buildUnitRequisitionsReportData()
+            : { title: 'Unit Requisitions', summary: ['Module not loaded.'], fields: [], tables: [] };
+    }
     if (moduleId === 'techstores-period') {
         return typeof buildTechStoresPeriodReportData === 'function'
             ? buildTechStoresPeriodReportData(dateFrom, dateTo)
@@ -783,6 +798,9 @@ function renderReportHtml(reportData) {
     if (reportData?.layout === 'techstores-period' && reportData.html) {
         return reportData.html;
     }
+    if (reportData?.layout === 'daf-fund-memo' && reportData.html) {
+        return reportData.html;
+    }
     if (reportData?.layout === 'monthly-returns' && reportData.html) {
         return reportData.html;
     }
@@ -815,10 +833,12 @@ function renderReportHtml(reportData) {
     if (from || to) period = `${from || '…'} to ${to || '…'}`;
 
     let html = `
-        <div class="report-doc-header">
-            <h2>IT-DIR Tech Stores</h2>
+        <div class="report-doc-header ${reportData.layout === 'priority-list' ? 'report-priority-list-header' : ''}">
+            ${reportData.layout === 'priority-list' ? '<div class="report-restricted-mark">RESTRICTED</div>' : ''}
+            <h2>Information Technology Directorate</h2>
             <h3>${escapeHtml(reportData.title)}</h3>
-            <div>Cost Centre: Z04P2SP212</div>
+            <div>Cost Centre: Z04P2SP212 · Josiah Magama Tongogara Barracks</div>
+            ${reportData.layout === 'priority-list' ? '<div class="report-restricted-mark report-restricted-foot">RESTRICTED</div>' : ''}
         </div>
         <div class="report-meta">
             <span><strong>Generated:</strong> ${escapeHtml(generatedAt)}</span>
@@ -874,7 +894,7 @@ function generateModuleReport(moduleId, options = {}) {
         showToast('You do not have access to reports.', 'error');
         return null;
     }
-    if (moduleId !== 'dashboard' && moduleId !== 'techstores-period' && moduleId !== 'stores-inventory' && moduleId !== 'stock-take' && moduleId !== 'monthly-returns' && moduleId !== 'inventory-accountability' && moduleId !== 'ict-accountability' && moduleId !== 'dp-procurement' && !canAccessModule(moduleId) && moduleId !== 'release-cut') {
+    if (moduleId !== 'dashboard' && moduleId !== 'techstores-period' && moduleId !== 'stores-inventory' && moduleId !== 'stock-take' && moduleId !== 'monthly-returns' && moduleId !== 'inventory-accountability' && moduleId !== 'ict-accountability' && moduleId !== 'dp-procurement' && moduleId !== 'monthly-target-proposal' && moduleId !== 'daf-fund-request-memo' && !canAccessModule(moduleId) && moduleId !== 'release-cut') {
         showToast('You do not have access to that module report.', 'error');
         return null;
     }
@@ -926,7 +946,8 @@ function printGeneratedReport() {
         'zna-q-982': 'printing-zna-q-982',
         'zna-q-178': 'printing-zna-q-178',
         'zna-q-1033': 'printing-zna-q-1033',
-        'zna-q-1043': 'printing-zna-q-1043',
+        'priority-list': 'printing-priority-list',
+        'daf-fund-memo': 'printing-daf-fund-memo',
         'zna-q-80': 'printing-zna-q-80',
         'zna-svcs-890': 'printing-zna-svcs-890',
         'zna-q-1179': 'printing-zna-q-1179',

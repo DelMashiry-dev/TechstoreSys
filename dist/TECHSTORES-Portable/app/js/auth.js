@@ -129,40 +129,81 @@ async function attemptLogin(username, password) {
         : String(username || '').trim();
     const pwd = String(password || '').trim();
 
-    if (dbConnected) {
+    if (navigator.onLine !== false && typeof apiRequestWithTimeout === 'function') {
         try {
-            const data = await apiRequest('/api/login', {
+            const data = await apiRequestWithTimeout('/api/login', 5000, {
                 method: 'POST',
                 body: JSON.stringify({
                     username: resolvedUser,
                     password: pwd
                 })
             });
-            // Refresh users/state from DB after login
-            const stateData = await apiRequest('/api/state');
+            dbConnected = true;
+            pendingServerSync = false;
+            const stateData = await apiRequestWithTimeout('/api/state', 5000);
             appState = mergeState(stateData.appState);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            if (typeof persistLocalCopy === 'function') {
+                await persistLocalCopy(appState);
+            } else {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            }
+            if (typeof cacheOfflineLogin === 'function') {
+                await cacheOfflineLogin(data.user.username, pwd, data.user);
+            }
+            updateDbStatusBadge();
             return { ok: true, user: data.user };
         } catch (error) {
-            return { ok: false, message: error.message || 'Invalid username or password.' };
+            if (error.status === 401 || error.status === 403) {
+                return { ok: false, message: error.message || 'Invalid username or password.' };
+            }
+            dbConnected = false;
+            updateDbStatusBadge();
         }
     }
 
-    const users = appState.users || [];
-    const user = users.find((u) =>
-        String(u.username || '').toLowerCase() === String(resolvedUser || '').trim().toLowerCase()
-    );
-    const pwdOk = user && (
-        String(user.password || '') === pwd
-        || (typeof passwordMatchesLogin === 'function' && passwordMatchesLogin(user.username, pwd))
-    );
-    if (!user || !pwdOk) {
+    if (typeof verifyOfflineLogin === 'function') {
+        const cached = await verifyOfflineLogin(resolvedUser, pwd);
+        if (cached) {
+            if (cached.active === false) {
+                return { ok: false, message: 'This account is disabled. Contact an administrator.' };
+            }
+            return { ok: true, user: cached };
+        }
+    }
+
+    const users = appState?.users || [];
+    const userKey = String(resolvedUser || '').trim().toLowerCase();
+    const user = users.find((u) => String(u.username || '').toLowerCase() === userKey);
+    const seed = typeof createDefaultUsers === 'function'
+        ? createDefaultUsers().find((u) => String(u.username || '').toLowerCase() === userKey)
+        : null;
+    if (!user && !seed) {
         return { ok: false, message: 'Invalid username or password.' };
     }
-    if (user.active === false) {
+    const usernameForAliases = (user || seed).username;
+    const pwdOk = (seed && demoPasswordMatches(seed.password, pwd))
+        || (user?.password && demoPasswordMatches(user.password, pwd))
+        || (typeof passwordMatchesLogin === 'function' && passwordMatchesLogin(usernameForAliases, pwd));
+    if (!pwdOk) {
+        return { ok: false, message: 'Invalid username or password.' };
+    }
+    const base = user || seed;
+    if (base.active === false) {
         return { ok: false, message: 'This account is disabled. Contact an administrator.' };
     }
-    return { ok: true, user };
+    const loginUser = {
+        id: base.id,
+        username: base.username,
+        name: base.name || base.username,
+        role: base.role,
+        department: base.department,
+        active: base.active !== false,
+        mustChangePassword: !!base.mustChangePassword
+    };
+    if (typeof cacheOfflineLogin === 'function') {
+        await cacheOfflineLogin(loginUser.username, pwd, loginUser);
+    }
+    return { ok: true, user: loginUser };
 }
 
 function updateHeaderUser() {
@@ -222,6 +263,26 @@ function isGateRegisterRole() {
     return !!(currentUser && (currentUser.role === 'rp' || currentUser.role === 'oc_gate'));
 }
 
+function hasRoleScopedDashboard() {
+    return typeof hasRoleScopedHome === 'function' && hasRoleScopedHome(currentUser?.role);
+}
+
+/** Universal search, notifications, track, demo pack — TechStores staff + super oversight only. */
+function canSeeStoresOpsDashboard() {
+    if (!currentUser) return false;
+    const perms = getRolePermissions(currentUser.role);
+    if (perms.modules.includes('*')) return true;
+    const role = currentUser.role;
+    return role === 'store_officer' || role === 'storeman';
+}
+
+/** Notifications — full panel for TechStores / super oversight; gate-filtered for RP. */
+function canSeeRoleNotifications() {
+    if (!currentUser) return false;
+    if (canSeeStoresOpsDashboard()) return true;
+    return isGateRegisterRole();
+}
+
 function applyAccessControl() {
     const roleClasses = [
         'role-admin', 'role-army_commander', 'role-brig_gs', 'role-brig_as', 'role-brig_qs',
@@ -230,7 +291,8 @@ function applyAccessControl() {
         'role-storeman', 'role-rp', 'role-workshop',
         'role-oc_sysadmin', 'role-oc_workshop', 'role-oc_compengr', 'role-oc_swengr',
         'role-oc_ictsec', 'role-oc_itts', 'role-oc_admin', 'role-oc_gate',
-        'role-viewer', 'access-readonly', 'no-stores-ledgers', 'role-scope-gate'
+        'role-viewer', 'access-readonly', 'no-stores-ledgers', 'role-scope-gate', 'role-scoped-home',
+        'no-stores-ops-dashboard', 'role-gate-notifications'
     ];
     document.body.classList.remove(...roleClasses);
     if (!currentUser) return;
@@ -239,6 +301,9 @@ function applyAccessControl() {
     if (!canEditData()) document.body.classList.add('access-readonly');
     if (!canAccessAnyStoresLedger()) document.body.classList.add('no-stores-ledgers');
     if (isGateRegisterRole()) document.body.classList.add('role-scope-gate');
+    if (hasRoleScopedDashboard()) document.body.classList.add('role-scoped-home');
+    if (!canSeeStoresOpsDashboard()) document.body.classList.add('no-stores-ops-dashboard');
+    if (isGateRegisterRole()) document.body.classList.add('role-gate-notifications');
 
     document.querySelectorAll('.sidebar-menu a[data-target]').forEach((link) => {
         const target = link.getAttribute('data-target');
@@ -280,15 +345,22 @@ function applyAccessControl() {
     });
 
     const rpHome = document.getElementById('rpGateHome');
-    if (rpHome) rpHome.hidden = !isGateRegisterRole();
+    if (rpHome) rpHome.hidden = true;
 
-    const dashKicker = document.querySelector('#dashboard .dashboard-kicker');
-    if (dashKicker) {
-        if (!dashKicker.dataset.defaultText) dashKicker.dataset.defaultText = dashKicker.textContent;
-        if (isGateRegisterRole()) {
-            dashKicker.textContent = 'IT-DIR · RP Gate Control';
+    if (typeof renderRoleScopedHome === 'function') renderRoleScopedHome();
+    else if (isGateRegisterRole()) {
+        const legacy = document.getElementById('rpGateHome');
+        if (legacy) legacy.hidden = false;
+    }
+
+    const notifTitle = document.querySelector('#dashCommandBoard .dash-collapse-titles h3');
+    if (notifTitle) {
+        if (!notifTitle.dataset.defaultText) notifTitle.dataset.defaultText = notifTitle.textContent.trim();
+        if (isGateRegisterRole() && canSeeRoleNotifications()) {
+            notifTitle.textContent = 'Gate notifications';
+            notifTitle.dataset.gateTitle = '1';
         } else {
-            dashKicker.textContent = dashKicker.dataset.defaultText;
+            notifTitle.textContent = notifTitle.dataset.defaultText;
         }
     }
 
@@ -305,27 +377,36 @@ function enterApp(user) {
     currentUser = user;
     saveSession(user);
     document.body.classList.remove('app-locked');
+    sessionStorage.removeItem('techstoresAutoStartFailed');
     if (typeof closePasswordChangeModal === 'function') closePasswordChangeModal();
-    updateHeaderUser();
-    applyAccessControl();
-    if (typeof refreshLastLoggedInDisplay === 'function') refreshLastLoggedInDisplay();
-    navigateToModule('dashboard', { clearHistory: true, skipHistory: true });
-    if (typeof initCommandBoard === 'function') initCommandBoard();
-    updateDashboard();
-    if (typeof updateCommandBoard === 'function') updateCommandBoard();
-    else updateSystemAlerts();
-    if (typeof initItDirCommsSideButton === 'function') initItDirCommsSideButton();
-    if (canManageUsers()) renderUsersTable();
-    const roleLabel = ROLE_LABELS[user.role] || user.role;
-    recordAccessAudit('session_start', `Session open as ${user.username} (${roleLabel}; edit=${canEditData() ? 'yes' : 'no'})`);
-    if (!canEditData()) {
-        showToast(
-            `Welcome, ${user.name || user.username} (${roleLabel}) — VIEW ONLY. You cannot alter quantities or save changes.`,
-            'info'
-        );
-    } else {
-        showToast(`Welcome, ${user.name || user.username} (${roleLabel})`);
-    }
+    const bootReady = typeof runHeavyBootInit === 'function'
+        ? runHeavyBootInit()
+        : Promise.resolve();
+    bootReady.then(() => {
+        updateHeaderUser();
+        applyAccessControl();
+        if (typeof refreshLastLoggedInDisplay === 'function') refreshLastLoggedInDisplay();
+        navigateToModule('dashboard', { clearHistory: true, skipHistory: true });
+        if (typeof initCommandBoard === 'function') initCommandBoard();
+        updateDashboard();
+        if (typeof updateCommandBoard === 'function') updateCommandBoard();
+        else updateSystemAlerts();
+        if (typeof initItDirCommsSideButton === 'function') initItDirCommsSideButton();
+        if (canManageUsers()) renderUsersTable();
+        const roleLabel = ROLE_LABELS[user.role] || user.role;
+        recordAccessAudit('session_start', `Session open as ${user.username} (${roleLabel}; edit=${canEditData() ? 'yes' : 'no'})`);
+        if (!canEditData()) {
+            showToast(
+                `Welcome, ${user.name || user.username} (${roleLabel}) — VIEW ONLY. You cannot alter quantities or save changes.`,
+                'info'
+            );
+        } else {
+            showToast(`Welcome, ${user.name || user.username} (${roleLabel})`);
+        }
+    }).catch((err) => {
+        console.error('Heavy boot failed after login', err);
+        showToast('Some modules may load slowly — refresh if needed.', 'warning');
+    });
 }
 
 async function logoutUser() {
@@ -350,8 +431,15 @@ async function logoutUser() {
         'role-storeman', 'role-rp', 'role-workshop',
         'role-oc_sysadmin', 'role-oc_workshop', 'role-oc_compengr', 'role-oc_swengr',
         'role-oc_ictsec', 'role-oc_itts', 'role-oc_admin', 'role-oc_gate',
-        'role-viewer', 'access-readonly', 'no-stores-ledgers', 'role-scope-gate'
+        'role-viewer', 'access-readonly', 'no-stores-ledgers', 'role-scope-gate', 'role-scoped-home',
+        'no-stores-ops-dashboard', 'role-gate-notifications'
     );
+    if (typeof resetDashboardKicker === 'function') resetDashboardKicker();
+    const notifTitle = document.querySelector('#dashCommandBoard .dash-collapse-titles h3');
+    if (notifTitle?.dataset.gateTitle) {
+        notifTitle.textContent = notifTitle.dataset.defaultText || 'Notifications';
+        delete notifTitle.dataset.gateTitle;
+    }
     updateHeaderUser();
     setLoginError('');
     const form = document.getElementById('loginForm');

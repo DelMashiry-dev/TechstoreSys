@@ -63,6 +63,23 @@
                         </button>
                     </div>
                 </div>
+                <div class="form-group login-mode-group">
+                    <label class="form-label" for="loginStorageModeToggle">Storage mode</label>
+                    <div class="login-storage-panel" id="loginStorageRow">
+                        <p class="login-storage-status" id="loginStorageLabel">Checking connection…</p>
+                        <div class="storage-mode-toggle-wrap storage-mode-toggle-wrap--login">
+                            <span class="storage-mode-toggle-label" data-side="offline">Offline</span>
+                            <button type="button" class="storage-mode-toggle" id="loginStorageModeToggle" role="switch"
+                                aria-checked="false"
+                                aria-label="Switch between online SQLite database and offline browser storage">
+                                <span class="storage-mode-toggle-track"><span class="storage-mode-toggle-thumb"></span></span>
+                            </button>
+                            <span class="storage-mode-toggle-label" data-side="online">Online</span>
+                        </div>
+                        <p class="login-mode-hint">Online saves to <strong>techstores.db</strong> · Offline saves in your browser</p>
+                        <p class="login-mode-status" id="loginModeStatus" hidden></p>
+                    </div>
+                </div>
                 <button type="submit" class="btn btn-primary login-submit">Sign In</button>
             </form>
             <div class="login-hint is-collapsed" id="loginHint">
@@ -84,21 +101,29 @@
                     </button>
                 </div>
                 <div class="login-hint-body" id="loginHintBody" hidden>
-                    Admin (full edit) — <code>admin</code> / <code class="login-pwd" data-pwd="admin123">••••••••</code><br>
-                    Oversight VIEW ONLY (all modules, no quantity changes) — Dir/DD/AQSO2/TSO:
-                    <code>dir</code>, <code>dd</code>, <code>aqso2</code>, <code>tso</code>
-                    (+ <code class="login-pwd" data-pwd="…123">••••</code>)<br>
-                    TechStores edit — RQ: <code>rq</code>/<code class="login-pwd" data-pwd="rq123">••••••</code>
-                    · Storeman: <code>storeman</code>/<code class="login-pwd" data-pwd="storeman123">••••••••••</code><br>
-                    Orderly / RP Gate / Workshop — own modules only (no GL ledgers):
-                    <code>orderly</code>/<code class="login-pwd" data-pwd="orderly123">•••••••••</code>,
-                    <code>rp</code>/<code class="login-pwd" data-pwd="rp123">•••••</code>
-                    (Gate Register + Comms only; also <code>RP Gate</code> / <code class="login-pwd" data-pwd="RPGate123">•••••••••</code>),
-                    <code>workshop</code>/<code class="login-pwd" data-pwd="workshop123">••••••••••</code><br>
+                    <strong>Access Level 1 — Super oversight (view all, no figure changes)</strong><br>
+                    Dir / DD / AQSO2 / TSO / RQ:
+                    <code>dir</code>, <code>dd</code>, <code>aqso2</code>, <code>tso</code>, <code>rq</code>
+                    (<code class="login-pwd" data-pwd="…123">••••</code>)<br>
+                    <strong>Admin (full edit)</strong> — <code>admin</code> / <code class="login-pwd" data-pwd="admin123">••••••••</code><br>
+                    <strong>Access Level 2 — Department roles</strong><br>
+                    Storeman — <code>storeman</code>/<code class="login-pwd" data-pwd="storeman123">••••••••••</code>
+                    (Q 1033, delivery note, stock take, equipment register, loans, ZNA Q forms, help)<br>
+                    Workshop — <code>workshop</code>/<code class="login-pwd" data-pwd="workshop123">••••••••••</code>
+                    (workshop register, spec eval, comms)<br>
+                    RP Gate — <code>rp</code>/<code class="login-pwd" data-pwd="rp123">•••••</code>
+                    or <code>RP Gate</code> (Gate Register only)<br>
+                    Orderly Room — <code>orderly</code>/<code class="login-pwd" data-pwd="orderly123">•••••••••</code>
+                    · Admin AO — <code>ao</code>/<code class="login-pwd" data-pwd="ao123">••••••</code><br>
+                    DBA — <code>dba</code>/<code class="login-pwd" data-pwd="dba123">••••••</code>
+                    · ITTS — <code>itts</code>/<code class="login-pwd" data-pwd="itts123">•••••••</code>
+                    · Software Eng — <code>swengr</code> · Sys Admin — <code>sysadmin</code> · ICT Sec — <code>ictsec</code>
+                    (IT Dir Comms only)<br>
+                    TechStores edit (full ledgers) — Store Officer: <code>store</code>/<code class="login-pwd" data-pwd="store123">••••••••</code><br>
                     Viewer — <code>viewer</code> / <code class="login-pwd" data-pwd="view123">•••••••</code>
                     <hr class="login-hint-rule">
-                    <strong>Access:</strong> non–TechStores roles do not see GL accounts, stock ledgers, or related stores forms.
-                    Oversight (Commander / Brig / Dir / DD / AQSO2 / TSO) can open everything but cannot alter quantities.
+                    Department roles see a tailored dashboard — not GL / stock / target screens.
+                    Level 1 oversight can open everything but cannot alter quantities or save operational data.
                     <hr class="login-hint-rule">
                     <strong>Persistent database:</strong> start with <code>START-SYSTEM.bat</code>
                     so data saves to <code>techstores.db</code> on disk
@@ -244,7 +269,7 @@
                 <li>
                     <a href="#" class="nav-btn" data-target="voucher-module">
                         <img class="nav-ico-img" src="../assets/nav-icons/voucher-module.png" alt="" width="46" height="46" loading="lazy">
-                        <span class="nav-label">Issue Voucher</span>
+                        <span class="nav-label">Issue Voucher / ZNA-Q-1033</span>
                     </a>
                 </li>
                 <li>
@@ -622,7 +647,8 @@
                 <h1>IT-DIR Tech Stores Dashboard</h1>
                 <div class="header-aside">
                     <div class="user-controls">
-                        <span class="db-status-badge db-offline" id="dbStatusBadge" title="Database status">Local Only</span>
+                        <div class="storage-mode-toggle-wrap" id="storageModeToggleWrap" title="Switch online / offline"></div>
+                        <button type="button" class="db-status-badge db-offline" id="dbStatusBadge" title="Click for storage details">Local Only</button>
                         <button class="glossy-pill-btn theme-toggle" id="themeToggle" type="button" title="Appearance — themes &amp; UI preferences">Appearance</button>
                         <button class="btn btn-ghost btn-sm" id="logoutBtn" type="button">Logout</button>
                     </div>
@@ -641,7 +667,9 @@
                             <div class="dashboard-context-row" aria-label="Operations context">
                                 <span class="context-chip">Josiah Magama Tongogara Barracks</span>
                                 <span class="context-chip" id="dashboardSignedInChip">Signed in: —</span>
-                                <span class="context-chip" id="dashboardDbChip">Storage: —</span>
+                                <button type="button" class="context-chip" id="dashboardDbChip" title="Click to switch online / offline mode">Storage: —</button>
+                                <button type="button" class="context-chip ai-status-chip is-off" id="aiStatusChip"
+                                    title="AI status — click to open assistant">AI: —</button>
                             </div>
                             <div class="dashboard-toolbar" aria-label="Dashboard actions">
                                 <label class="sr-only" for="dashboardUniversalSearchInput">Universal search</label>
@@ -650,6 +678,8 @@
                                     autocomplete="off" readonly>
                                 <button class="btn btn-primary btn-sm" id="universalSearchBtn" type="button"
                                     data-universal-search title="Search anything in the system (Ctrl+K)">Universal Search</button>
+                                <button class="btn btn-secondary btn-sm" id="openAiAssistantBtn" type="button"
+                                    title="Ask about GL, stock, requisitions, loans, procurement, or ICT trends">AI Assistant</button>
                                 <button class="btn btn-primary btn-sm" id="refreshDashboardBtn" type="button">Refresh</button>
                                 <button class="btn btn-secondary btn-sm" id="btnLoadDemoPack" type="button" title="Fill GL cards, stock ledgers, POs, vouchers, ZA register with realistic demo figures">Load demo figures</button>
                                 <button class="btn btn-primary btn-sm" id="dashboardTrackBtn" type="button"
@@ -707,27 +737,13 @@
                             <div class="command-panel-body" id="systemAlertsList" role="tabpanel"></div>
                             <div class="command-panel-body sa-pane-hidden" id="systemMessagesList" role="tabpanel" hidden></div>
                             <div class="command-panel-body sa-pane-hidden" id="systemComposePane" role="tabpanel" hidden></div>
-                            <div class="sa-scroll-controls" id="saScrollControls">
-                                <button type="button" class="sa-scroll-btn" id="saScrollUpBtn" title="Scroll up" aria-label="Scroll notifications up">▲</button>
-                                <button type="button" class="sa-scroll-btn sa-scroll-btn-down" id="saScrollDownBtn" title="Scroll down" aria-label="Scroll notifications down">▼</button>
-                            </div>
                         </div>
                     </div>
                 </section>
 
-                <section id="rpGateHome" class="rp-gate-home" hidden aria-label="RP Gate workspace">
-                    <div class="rp-gate-home-card">
-                        <h3>RP Gate — ICT equipment in / out</h3>
-                        <p>
-                            Record ICT equipment entering and leaving the Directorate at the gate.
-                            You do not have access to GL accounts, stock ledgers, or stores vouchers.
-                        </p>
-                        <div class="rp-gate-home-actions">
-                            <button type="button" class="btn btn-primary" data-target="gate-register">Open Gate Register</button>
-                            <button type="button" class="btn btn-secondary" data-target="it-dir-comms">Communications Portal</button>
-                        </div>
-                    </div>
-                </section>
+                <section id="roleScopedHome" class="role-scoped-home" hidden aria-label="Department workspace"></section>
+
+                <section id="rpGateHome" class="rp-gate-home" hidden aria-label="RP Gate workspace (legacy)"></section>
 
                 <section class="inventory-section" aria-label="Inventory ledgers">
                     <div class="dash-collapse inventory-ledgers-collapse" data-collapse-key="inventory-ledgers">
@@ -779,7 +795,26 @@
                         </div>
                         </div>
                     </div>
+
+                    <div class="dashboard-panel product-stock-panel dash-collapse" data-collapse-key="product-stock" id="productStockPanel">
+                        <button type="button" class="dash-collapse-toggle" aria-expanded="true" title="Collapse section">
+                            <div class="dash-collapse-titles">
+                                <h3>List of Inventory</h3>
+                                <span class="inventory-formula">Daily · Weekly · Monthly · Quarterly · Yearly · Item ID from brand and type</span>
+                            </div>
+                            <span class="dash-collapse-caret" aria-hidden="true">▾</span>
+                        </button>
+                        <div class="dash-collapse-body">
+                            <div id="productStockRegister" class="product-stock-register" aria-live="polite"></div>
+                        </div>
+                    </div>
                 </section>
+                <div id="productStockHistoryHost" class="psr-history-host" hidden></div>
+                <div id="productStockZoomHost" class="psr-zoom-host" hidden></div>
+                <div id="productStockHoverZoom" class="psr-hover-zoom" hidden aria-hidden="true">
+                    <img id="productStockHoverZoomImg" alt="">
+                    <span class="psr-hover-zoom-hint">Click for larger view</span>
+                </div>
 
                 <div class="dashboard-main-grid">
                     <div class="dash-collapse dash-collapse-gl" data-collapse-key="gl-portfolio">
@@ -799,6 +834,10 @@
                                 <div class="gl-summary-metric">
                                     <span class="gl-summary-label">Committed</span>
                                     <strong id="glSumCommitted">$0</strong>
+                                </div>
+                                <div class="gl-summary-metric">
+                                    <span class="gl-summary-label">Vouchers</span>
+                                    <strong id="glSumVouchers">$0</strong>
                                 </div>
                                 <div class="gl-summary-metric">
                                     <span class="gl-summary-label">Buying power</span>
@@ -852,6 +891,7 @@
                                     <div class="gl-chart-host" id="glSummaryLineChart" role="img" aria-label="Line chart of utilization by GL"></div>
                                 </div>
                             </div>
+                            <p class="gl-summary-equation">Target = Committed + Vouchers + Buying power</p>
                             <p class="gl-summary-hint">Expand for GL cards · <span id="glSumStatusLine">All on track</span></p>
                         </div>
                         <div class="dash-collapse-body">
@@ -1430,6 +1470,8 @@
     </div>
 
     <script src="js/config.js"></script>
+    <script src="js/offline-store.js"></script>
+    <script src="js/offline-precache.js"></script>
     <script src="js/org-profile.js"></script>
     <script src="js/zna-units.js"></script>
     <script src="js/catalog.js"></script>
@@ -1437,9 +1479,11 @@
     <script src="js/it-dir-bids-seed.js"></script>
     <script src="js/product-specs-catalog.js"></script>
     <script src="js/suppliers-seed.js"></script>
-    <script src="js/state.js"></script>
+    <script src="js/state.js?v=20260820fastboot"></script>
+    <script src="js/storage-mode.js?v=20260820fastboot"></script>
     <script src="js/gl-targets.js"></script>
-    <script src="js/auth.js"></script>
+    <script src="js/auth.js?v=20260820login"></script>
+    <script src="js/dept-home.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/module-loader.js"></script>
     <script src="js/search-history.js"></script>
@@ -1456,7 +1500,14 @@
     <script src="js/inventory.js"></script>
     <script src="js/gl-inventory-view.js"></script>
     <script src="js/voucher-inventory.js"></script>
+    <script src="js/toner-compatibility.js"></script>
+    <script src="js/product-web-enrich.js"></script>
+    <script src="js/offline-assistant.js"></script>
+    <script src="js/ai-assistant.js?v=20260820b"></script>
+    <script src="js/product-datasheets.js"></script>
+    <script src="js/product-stock-register.js"></script>
     <script src="js/physical-stock-count.js"></script>
+    <script src="js/inventory-refresh-2026.js"></script>
     <script src="js/commander-demo-pack.js"></script>
     <script src="js/stock-take.js"></script>
     <script src="js/unit-checks.js"></script>
@@ -1506,7 +1557,7 @@
     <script src="js/tables.js"></script>
     <script src="js/ux-improvements.js"></script>
     <script src="js/pwa-install.js"></script>
-    <script src="js/boot.js"></script>
+    <script src="js/boot.js?v=20260820fastboot"></script>
 
 </body>
 </html>

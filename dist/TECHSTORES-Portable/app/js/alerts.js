@@ -44,6 +44,117 @@ function getPendingRequisitionsAtDp() {
     return mapDpProcAlertRows(ALERT_PENDING_AT_DP_STATUSES);
 }
 
+function isGateAlertsScope() {
+    return typeof isGateRegisterRole === 'function' && isGateRegisterRole();
+}
+
+const GATE_ALERT_DEPARTMENT = 'IT DIR GATE / RP';
+
+/** Equipment still on gate premises (Date In recorded, no Date Out). */
+function getGateRegisterAlerts() {
+    const rows = appState?.modules?.['gate-register']?.tables?.['gate-register-table-body'];
+    if (!Array.isArray(rows)) return [];
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const alerts = [];
+
+    rows.forEach((row) => {
+        const cells = row.cells || [];
+        const dateIn = String(cells[0]?.value || '').slice(0, 10);
+        const equipType = String(cells[1]?.value || 'Equipment').trim();
+        const serialOrZa = String(cells[2]?.value || '').trim();
+        const unit = String(cells[3]?.value || '').trim();
+        const remark = String(cells[5]?.value || '').trim();
+        const dateOut = String(cells[6]?.value || '').slice(0, 10);
+
+        if (!dateIn || dateOut) return;
+
+        const start = new Date(`${dateIn}T00:00:00`);
+        if (Number.isNaN(start.getTime())) return;
+        start.setHours(0, 0, 0, 0);
+        const daysOnSite = Math.max(0, Math.ceil((today - start) / (1000 * 60 * 60 * 24)));
+        const identity = [equipType, serialOrZa].filter(Boolean).join(' · ') || equipType;
+        const unitLabel = unit || 'Unit/Formation';
+
+        alerts.push({
+            type: daysOnSite > 14 ? 'warning' : (daysOnSite > 7 ? 'info' : 'info'),
+            target: 'gate-register',
+            department: GATE_ALERT_DEPARTMENT,
+            focus: serialOrZa || equipType,
+            receivedDate: dateIn,
+            ageDays: daysOnSite,
+            priority: daysOnSite > 14 ? 'high' : 'normal',
+            text: `${identity} — ${unitLabel} on site ${daysOnSite} day(s) (in ${dateIn}${remark ? ` · ${remark}` : ''})`
+        });
+    });
+
+    return alerts.sort((a, b) => (b.ageDays || 0) - (a.ageDays || 0));
+}
+
+function buildGateWatchAlertSections() {
+    const gateItems = getGateRegisterAlerts();
+    const onSite = gateItems.length;
+    const longStay = gateItems.filter((a) => (a.ageDays || 0) > 7).length;
+    const inboxCount = typeof getInboxMessages === 'function'
+        ? getInboxMessages().filter((m) => !isMessageRead(m)).length
+        : 0;
+
+    const sections = [{
+        key: 'gate-on-site',
+        title: 'EQUIPMENT AT GATE (AWAITING RELEASE)',
+        count: onSite,
+        target: 'gate-register',
+        tone: onSite ? (longStay ? 'warning' : 'info') : 'ok',
+        summary: onSite
+            ? `${onSite} item(s) checked in at the gate with no Date Out recorded${longStay ? ` (${longStay} over 7 days)` : ''}.`
+            : 'None — no ICT equipment currently held at the gate.',
+        items: gateItems.slice(0, 12)
+    }];
+
+    if (inboxCount > 0) {
+        sections.push({
+            key: 'gate-messages',
+            title: 'MESSAGES TO GATE / RP',
+            count: inboxCount,
+            target: '',
+            tone: 'warning',
+            summary: `${inboxCount} unread message(s) addressed to Gate / RP — open the Inbox tab.`,
+            items: (typeof getInboxMessages === 'function' ? getInboxMessages() : [])
+                .filter((m) => typeof isMessageRead === 'function' && !isMessageRead(m))
+                .slice(0, 6)
+                .map((m) => ({
+                    type: m.priority === 'urgent' || m.priority === 'critical' ? 'warning' : 'info',
+                    target: '',
+                    department: GATE_ALERT_DEPARTMENT,
+                    text: `${m.subject || 'Office message'} — from ${m.fromName || m.fromOffice || 'Sender'}`,
+                    receivedDate: (m.messageDate || m.createdAt || '').slice(0, 10)
+                }))
+        });
+    }
+
+    return sections;
+}
+
+function alertRelevantToGateUser(alert) {
+    if (!alert) return false;
+    const dept = gateNormKey(alert.department || '');
+    const gateDept = gateNormKey(GATE_ALERT_DEPARTMENT);
+    if (dept && (dept === gateDept || dept.includes('GATE') || dept.includes(' RP'))) return true;
+    if (alert.target === 'gate-register') return true;
+    const text = gateNormKey(alert.text || '');
+    if (text.includes('GATE') || text.includes('SVCS1045') || text.includes('SVCS 1045')) return true;
+    return false;
+}
+
+function gateNormKey(value) {
+    return String(value || '')
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 function getOpenUnitRequisitionsAtItDir() {
     const list = typeof ensureRequisitions === 'function' ? ensureRequisitions() : [];
     const openSet = typeof REQ_OPEN_STATUSES !== 'undefined'
@@ -87,6 +198,8 @@ function mapDpProcWatchItems(rows) {
 }
 
 function buildWatchAlertSections() {
+    if (isGateAlertsScope()) return buildGateWatchAlertSections();
+
     const unitAtItDir = getOpenUnitRequisitionsAtItDir();
     const procAtItDir = getPendingRequisitionsAtItDir();
     const pendingItDirCount = unitAtItDir.length + procAtItDir.length;
@@ -247,6 +360,20 @@ function renderWatchSectionHtml(section) {
 function updateSystemAlerts() {
     const listEl = document.getElementById('systemAlertsList');
     if (!listEl) return 0;
+
+    if (isGateAlertsScope()) {
+        const watchSections = buildGateWatchAlertSections();
+        const gateAlerts = getGateRegisterAlerts();
+        if (typeof renderAlertDesk === 'function') {
+            return renderAlertDesk(watchSections, gateAlerts);
+        }
+        const fallbackWatch = watchSections.map(renderWatchSectionHtml).join('');
+        const otherHtml = gateAlerts.length
+            ? gateAlerts.map(renderAlertItemHtml).join('')
+            : '<div class="alert-item alert-success-item">No equipment currently held at the gate.</div>';
+        listEl.innerHTML = fallbackWatch + otherHtml;
+        return watchSections.reduce((n, s) => n + s.count, 0) + gateAlerts.length;
+    }
 
     const watchSections = buildWatchAlertSections();
     const watchCount = watchSections.reduce((n, s) => n + s.count, 0);

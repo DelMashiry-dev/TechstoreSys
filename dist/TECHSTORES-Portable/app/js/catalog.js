@@ -221,7 +221,7 @@ const STORES_CATALOG_SECTIONS = [
       },
       {
         "id": "consumables-toners__canon-exv54-yellow",
-        "name": "Canon EXV54 yellow"
+        "name": "Canon EXV54 Yellow"
       },
       {
         "id": "consumables-toners__canon-c3025i-waste-toner-cartridges",
@@ -1067,6 +1067,722 @@ const STORES_CATALOG_SECTIONS = [
     "detail": "ICT equipment procured and issued to users",
     "items": [
       {
+        "id": "ict-equipment__hp-omnibook",
+        "name": "HP OmniBook"
+      },
+      {
+        "id": "ict-equipment__hp-omnibook-ultra",
+        "name": "HP OmniBook Ultra"
+      },
+      {
+        "id": "ict-equipment__hp-omnibook-ultra-flip",
+        "name": "HP OmniBook Ultra Flip"
+      },
+      {
+        "id": "ict-equipment__hp-omnibook-x",
+        "name": "HP OmniBook X"
+      },
+      {
+        "id": "ict-equipment__hp-omnibook-x-flip-16",
+        "name": "HP OmniBook X Flip 16 AI (Intel Core Ultra 9)"
+      },
+      {
+        "id": "ict-equipment__hp-omnibook-7",
+        "name": "HP OmniBook 7"
+      },
+      {
+        "id": "ict-equipment__hp-omnibook-5",
+        "name": "HP OmniBook 5"
+      },
+      {
+        "id": "ict-equipment__hp-omnibook-3",
+        "name": "HP OmniBook 3"
+      },
+      {
+        "id": "ict-equipment__hp-elitebook",
+        "name": "HP EliteBook"
+      },
+      {
+        "id": "ict-equipment__hp-elitebook-8-g2i",
+        "name": "HP EliteBook 8 G2i"
+      },
+      {
+        "id": "ict-equipment__hp-elitebook-6-g2i",
+        "name": "HP EliteBook 6 G2i"
+      },
+      {
+        "id": "ict-equipment__hp-elitebook-860-g11",
+        "name": "HP EliteBook 860 G11"
+      },
+      {
+        "id": "ict-equipment__hp-elitebook-840-g11",
+        "name": "HP EliteBook 840 G11"
+      },
+      {
+        "id": "ict-equipment__hp-elitebook-830-g11",
+        "name": "HP EliteBook 830 G11"
+      },
+      {
+        "id": "ict-equipment__hp-elitebook-x360",
+        "name": "HP EliteBook x360"
+      },
+      {
+        "id": "ict-equipment__hp-probook",
+        "name": "HP ProBook"
+      },
+      {
+        "id": "ict-equipment__hp-probook-4-g2i",
+        "name": "HP ProBook 4 G2i"
+      },
+      {
+        "id": "ict-equipment__hp-probook-450-g10",
+        "name": "HP ProBook 450 G10"
+      },
+      {
+        "id": "ict-equipment__hp-probook-440-g11",
+        "name": "HP ProBook 440 G11"
+      },
+      {
+        "id": "ict-equipment__hp-zbook-firefly",
+        "name": "HP ZBook Firefly"
+      },
+      {
+        "id": "ict-equipment__hp-zbook-power",
+        "name": "HP ZBook Power"
+      },
+      {
+        "id": "ict-equipment__hp-zbook-fury",
+        "name": "HP ZBook Fury"
+      },
+      {
+        "id": "ict-equipment__dell-latitude-5550",
+        "name": "Dell Latitude 5550"
+      },
+      {
+        "id": "ict-equipment__dell-latitude-5540",
+        "name": "Dell Latitude 5540"
+      },
+      {
+        "id": "ict-equipment__dell-latitude-5450",
+        "name": "Dell Latitude 5450"
+      },
+      {
+        "id": "ict-equipment__dell-latitude-5440",
+        "name": "Dell Latitude 5440"
+      },
+      {
+        "id": "ict-equipment__dell-latitude-7450",
+        "name": "Dell Latitude 7450"
+      },
+      {
+        "id": "ict-equipment__dell-latitude-7440",
+        "name": "Dell Latitude 7440"
+      },
+      {
+        "id": "ict-equipment__dell-latitude-7350",
+        "name": "Dell Latitude 7350"
+      },
+      {
+        "id": "ict-equipment__dell-latitude-5350",
+        "name": "Dell Latitude 5350"
+      },
+      {
+        "id": "ict-equipment__dell-latitude-3340",
+        "name": "Dell Latitude 3340"
+      },
+      {
+        "id": "ict-equipment__dell-precision-5690",
+        "name": "Dell Precision 5690"
+      },
+      {
+        "id": "ict-equipment__dell-precision-3591",
+        "name": "Dell Precision 3591"
+      },
+      {
+        "id": "ict-equipment__dell-xps-14",
+        "name": "Dell XPS 14"
+      },
+      {
+        "id": "ict-equipment__dell-xps-16",
+        "name": "Dell XPS 16"
+      },
+      {
+        "id": "ict-equipment__dell-vostro-3530",
+        "name": "Dell Vostro 3530"
+      },
+      {
+        "id": "ict-equipment__dell-vostro-3520",
+        "name": "Dell Vostro 3520"
+      },
+      {
+        "id": "ict-equipment__lenovo-thinkpad-t14-gen-5",
+        "name": "Lenovo ThinkPad T14 Gen 5"
+      },
+      {
+        "id": "ict-equipment__lenovo-thinkpad-t16-gen-3",
+        "name": "Lenovo ThinkPad T16 Gen 3"
+      },
+      {
+        "id": "ict-equipment__lenovo-thinkpad-x1-carbon-gen-12",
+        "name": "Lenovo ThinkPad X1 Carbon Gen 12"
+      },
+      {
+        "id": "ict-equipment__lenovo-thinkpad-l14-gen-5",
+        "name": "Lenovo ThinkPad L14 Gen 5"
+      },
+      {
+        "id": "ict-equipment__lenovo-thinkpad-e14-gen-6",
+        "name": "Lenovo ThinkPad E14 Gen 6"
+      },
+      {
+        "id": "ict-equipment__lenovo-thinkpad-p16-gen-2",
+        "name": "Lenovo ThinkPad P16 Gen 2"
+      },
+      {
+        "id": "ict-equipment__lenovo-thinkpad-p14s-gen-5",
+        "name": "Lenovo ThinkPad P14s Gen 5"
+      },
+      {
+        "id": "ict-equipment__lenovo-legion-pro-7i",
+        "name": "Lenovo Legion Pro 7i"
+      },
+      {
+        "id": "ict-equipment__lenovo-yoga-slim-7",
+        "name": "Lenovo Yoga Slim 7"
+      },
+      {
+        "id": "ict-equipment__apple-macbook-pro-14",
+        "name": "Apple MacBook Pro 14"
+      },
+      {
+        "id": "ict-equipment__apple-macbook-pro-16",
+        "name": "Apple MacBook Pro 16"
+      },
+      {
+        "id": "ict-equipment__apple-macbook-air-13",
+        "name": "Apple MacBook Air 13"
+      },
+      {
+        "id": "ict-equipment__apple-macbook-air-15",
+        "name": "Apple MacBook Air 15"
+      },
+      {
+        "id": "ict-equipment__microsoft-surface-laptop-7",
+        "name": "Microsoft Surface Laptop 7"
+      },
+      {
+        "id": "ict-equipment__microsoft-surface-pro-11",
+        "name": "Microsoft Surface Pro 11"
+      },
+      {
+        "id": "ict-equipment__asus-expertbook-b9",
+        "name": "ASUS ExpertBook B9"
+      },
+      {
+        "id": "ict-equipment__asus-vivobook-pro-16",
+        "name": "ASUS Vivobook Pro 16"
+      },
+      {
+        "id": "ict-equipment__acer-travelmate-p6",
+        "name": "Acer TravelMate P6"
+      },
+      {
+        "id": "ict-equipment__hp-elitedesk-800-g9",
+        "name": "HP EliteDesk 800 G9"
+      },
+      {
+        "id": "ict-equipment__hp-elitedesk-805-g9",
+        "name": "HP EliteDesk 805 G9"
+      },
+      {
+        "id": "ict-equipment__hp-prodesk-400-g9",
+        "name": "HP ProDesk 400 G9"
+      },
+      {
+        "id": "ict-equipment__hp-prodesk-405-g8",
+        "name": "HP ProDesk 405 G8"
+      },
+      {
+        "id": "ict-equipment__hp-elite-mini-800-g9",
+        "name": "HP Elite Mini 800 G9"
+      },
+      {
+        "id": "ict-equipment__hp-z2-tower-g9",
+        "name": "HP Z2 Tower G9"
+      },
+      {
+        "id": "ict-equipment__hp-z2-mini-g9",
+        "name": "HP Z2 Mini G9"
+      },
+      {
+        "id": "ict-equipment__hp-omnistudio-x",
+        "name": "HP OmniStudio X"
+      },
+      {
+        "id": "ict-equipment__hp-all-in-one-27",
+        "name": "HP All-in-One 27"
+      },
+      {
+        "id": "ict-equipment__dell-optiplex-7020",
+        "name": "Dell OptiPlex 7020"
+      },
+      {
+        "id": "ict-equipment__dell-optiplex-7020-micro",
+        "name": "Dell OptiPlex 7020 Micro"
+      },
+      {
+        "id": "ict-equipment__dell-optiplex-7020-sff",
+        "name": "Dell OptiPlex 7020 SFF"
+      },
+      {
+        "id": "ict-equipment__dell-optiplex-5420",
+        "name": "Dell OptiPlex 5420"
+      },
+      {
+        "id": "ict-equipment__dell-precision-3680-tower",
+        "name": "Dell Precision 3680 Tower"
+      },
+      {
+        "id": "ict-equipment__dell-precision-3280-compact",
+        "name": "Dell Precision 3280 Compact"
+      },
+      {
+        "id": "ict-equipment__dell-inspiron-27-all-in-one",
+        "name": "Dell Inspiron 27 All-in-One"
+      },
+      {
+        "id": "ict-equipment__lenovo-thinkcentre-m90q-gen-4",
+        "name": "Lenovo ThinkCentre M90q Gen 4"
+      },
+      {
+        "id": "ict-equipment__lenovo-thinkcentre-m70q-gen-4",
+        "name": "Lenovo ThinkCentre M70q Gen 4"
+      },
+      {
+        "id": "ict-equipment__lenovo-thinkcentre-m90a-gen-5-aio",
+        "name": "Lenovo ThinkCentre M90a Gen 5 AIO"
+      },
+      {
+        "id": "ict-equipment__lenovo-thinkstation-p3-tower",
+        "name": "Lenovo ThinkStation P3 Tower"
+      },
+      {
+        "id": "ict-equipment__apple-imac-24",
+        "name": "Apple iMac 24"
+      },
+      {
+        "id": "ict-equipment__apple-mac-mini-m4",
+        "name": "Apple Mac mini M4"
+      },
+      {
+        "id": "ict-equipment__apple-mac-studio",
+        "name": "Apple Mac Studio"
+      },
+      {
+        "id": "ict-equipment__hp-laserjet-pro-4002dn",
+        "name": "HP LaserJet Pro 4002dn"
+      },
+      {
+        "id": "ict-equipment__hp-laserjet-pro-mfp-4102fdw",
+        "name": "HP LaserJet Pro MFP 4102fdw"
+      },
+      {
+        "id": "ict-equipment__hp-laserjet-enterprise-m507dn",
+        "name": "HP LaserJet Enterprise M507dn"
+      },
+      {
+        "id": "ict-equipment__hp-laserjet-enterprise-mfp-m528dn",
+        "name": "HP LaserJet Enterprise MFP M528dn"
+      },
+      {
+        "id": "ict-equipment__hp-color-laserjet-pro-mfp-4302fdw",
+        "name": "HP Color LaserJet Pro MFP 4302fdw"
+      },
+      {
+        "id": "ict-equipment__hp-color-laserjet-enterprise-m554dn",
+        "name": "HP Color LaserJet Enterprise M554dn"
+      },
+      {
+        "id": "ict-equipment__hp-color-laserjet-enterprise-mfp-m578dn",
+        "name": "HP Color LaserJet Enterprise MFP M578dn"
+      },
+      {
+        "id": "ict-equipment__hp-laserjet-enterprise-flow-mfp-m634z",
+        "name": "HP LaserJet Enterprise Flow MFP M634z"
+      },
+      {
+        "id": "ict-equipment__hp-pagewide-enterprise-color-mfp-586dn",
+        "name": "HP PageWide Enterprise Color MFP 586dn"
+      },
+      {
+        "id": "ict-equipment__hp-designjet-t650",
+        "name": "HP DesignJet T650"
+      },
+      {
+        "id": "ict-equipment__hp-designjet-t830",
+        "name": "HP DesignJet T830"
+      },
+      {
+        "id": "ict-equipment__canon-imagerunner-c3025i",
+        "name": "Canon imageRUNNER C3025i"
+      },
+      {
+        "id": "ict-equipment__canon-imagerunner-advance-dx-c3926i",
+        "name": "Canon imageRUNNER ADVANCE DX C3926i"
+      },
+      {
+        "id": "ict-equipment__canon-imagerunner-advance-dx-c5840i",
+        "name": "Canon imageRUNNER ADVANCE DX C5840i"
+      },
+      {
+        "id": "ict-equipment__canon-imagerunner-advance-dx-6980i",
+        "name": "Canon imageRUNNER ADVANCE DX 6980i"
+      },
+      {
+        "id": "ict-equipment__canon-imageclass-mf455dw",
+        "name": "Canon imageCLASS MF455dw"
+      },
+      {
+        "id": "ict-equipment__canon-pixma-g3470",
+        "name": "Canon PIXMA G3470"
+      },
+      {
+        "id": "ict-equipment__epson-ecotank-l3250",
+        "name": "Epson EcoTank L3250"
+      },
+      {
+        "id": "ict-equipment__epson-ecotank-l15150",
+        "name": "Epson EcoTank L15150"
+      },
+      {
+        "id": "ict-equipment__epson-workforce-pro-wf-c5890",
+        "name": "Epson WorkForce Pro WF-C5890"
+      },
+      {
+        "id": "ict-equipment__brother-mfc-l8390cdw",
+        "name": "Brother MFC-L8390CDW"
+      },
+      {
+        "id": "ict-equipment__brother-hl-l6415dw",
+        "name": "Brother HL-L6415DW"
+      },
+      {
+        "id": "ict-equipment__kyocera-taskalfa-2554ci",
+        "name": "Kyocera TASKalfa 2554ci"
+      },
+      {
+        "id": "ict-equipment__kyocera-ecosys-m5526cdw",
+        "name": "Kyocera ECOSYS M5526cdw"
+      },
+      {
+        "id": "ict-equipment__xerox-versalink-c405",
+        "name": "Xerox VersaLink C405"
+      },
+      {
+        "id": "ict-equipment__xerox-altalink-c8155",
+        "name": "Xerox AltaLink C8155"
+      },
+      {
+        "id": "ict-equipment__hpe-proliant-dl380-gen11",
+        "name": "HPE ProLiant DL380 Gen11"
+      },
+      {
+        "id": "ict-equipment__hpe-proliant-dl360-gen11",
+        "name": "HPE ProLiant DL360 Gen11"
+      },
+      {
+        "id": "ict-equipment__hpe-proliant-ml350-gen11",
+        "name": "HPE ProLiant ML350 Gen11"
+      },
+      {
+        "id": "ict-equipment__hpe-proliant-microserver-gen11",
+        "name": "HPE ProLiant MicroServer Gen11"
+      },
+      {
+        "id": "ict-equipment__dell-poweredge-r760",
+        "name": "Dell PowerEdge R760"
+      },
+      {
+        "id": "ict-equipment__dell-poweredge-r750",
+        "name": "Dell PowerEdge R750"
+      },
+      {
+        "id": "ict-equipment__dell-poweredge-r660",
+        "name": "Dell PowerEdge R660"
+      },
+      {
+        "id": "ict-equipment__dell-poweredge-t560",
+        "name": "Dell PowerEdge T560"
+      },
+      {
+        "id": "ict-equipment__dell-poweredge-xr4000",
+        "name": "Dell PowerEdge XR4000"
+      },
+      {
+        "id": "ict-equipment__lenovo-thinksystem-sr650-v3",
+        "name": "Lenovo ThinkSystem SR650 V3"
+      },
+      {
+        "id": "ict-equipment__lenovo-thinksystem-sr630-v3",
+        "name": "Lenovo ThinkSystem SR630 V3"
+      },
+      {
+        "id": "ict-equipment__lenovo-thinksystem-st650-v3",
+        "name": "Lenovo ThinkSystem ST650 V3"
+      },
+      {
+        "id": "ict-equipment__cisco-ucs-c240-m7",
+        "name": "Cisco UCS C240 M7"
+      },
+      {
+        "id": "ict-equipment__cisco-ucs-c220-m7",
+        "name": "Cisco UCS C220 M7"
+      },
+      {
+        "id": "ict-equipment__supermicro-superserver-1029u",
+        "name": "Supermicro SuperServer 1029U"
+      },
+      {
+        "id": "ict-equipment__cisco-isr-4331",
+        "name": "Cisco ISR 4331"
+      },
+      {
+        "id": "ict-equipment__cisco-isr-4431",
+        "name": "Cisco ISR 4431"
+      },
+      {
+        "id": "ict-equipment__cisco-catalyst-8200",
+        "name": "Cisco Catalyst 8200"
+      },
+      {
+        "id": "ict-equipment__cisco-catalyst-8300",
+        "name": "Cisco Catalyst 8300"
+      },
+      {
+        "id": "ict-equipment__cisco-asr-1001-x",
+        "name": "Cisco ASR 1001-X"
+      },
+      {
+        "id": "ict-equipment__cisco-meraki-mx67",
+        "name": "Cisco Meraki MX67"
+      },
+      {
+        "id": "ict-equipment__cisco-meraki-mx75",
+        "name": "Cisco Meraki MX75"
+      },
+      {
+        "id": "ict-equipment__cisco-meraki-mx85",
+        "name": "Cisco Meraki MX85"
+      },
+      {
+        "id": "ict-equipment__mikrotik-ccr2004",
+        "name": "MikroTik CCR2004"
+      },
+      {
+        "id": "ict-equipment__mikrotik-hex-s",
+        "name": "MikroTik hEX S"
+      },
+      {
+        "id": "ict-equipment__ubiquiti-edgerouter-4",
+        "name": "Ubiquiti EdgeRouter 4"
+      },
+      {
+        "id": "ict-equipment__ubiquiti-unifi-dream-machine-pro",
+        "name": "Ubiquiti UniFi Dream Machine Pro"
+      },
+      {
+        "id": "ict-equipment__fortinet-fortigate-60f",
+        "name": "Fortinet FortiGate 60F"
+      },
+      {
+        "id": "ict-equipment__fortinet-fortigate-100f",
+        "name": "Fortinet FortiGate 100F"
+      },
+      {
+        "id": "ict-equipment__fortinet-fortigate-200f",
+        "name": "Fortinet FortiGate 200F"
+      },
+      {
+        "id": "ict-equipment__tp-link-omada-er7206",
+        "name": "TP-Link Omada ER7206"
+      },
+      {
+        "id": "ict-equipment__cisco-catalyst-9105axi",
+        "name": "Cisco Catalyst 9105AXI"
+      },
+      {
+        "id": "ict-equipment__cisco-catalyst-9115axi",
+        "name": "Cisco Catalyst 9115AXI"
+      },
+      {
+        "id": "ict-equipment__cisco-catalyst-9120axi",
+        "name": "Cisco Catalyst 9120AXI"
+      },
+      {
+        "id": "ict-equipment__cisco-catalyst-9130axi",
+        "name": "Cisco Catalyst 9130AXI"
+      },
+      {
+        "id": "ict-equipment__cisco-meraki-mr36",
+        "name": "Cisco Meraki MR36"
+      },
+      {
+        "id": "ict-equipment__cisco-meraki-mr46",
+        "name": "Cisco Meraki MR46"
+      },
+      {
+        "id": "ict-equipment__cisco-meraki-mr56",
+        "name": "Cisco Meraki MR56"
+      },
+      {
+        "id": "ict-equipment__cisco-meraki-mr76-outdoor",
+        "name": "Cisco Meraki MR76 Outdoor"
+      },
+      {
+        "id": "ict-equipment__ubiquiti-unifi-u6-lite",
+        "name": "Ubiquiti UniFi U6 Lite"
+      },
+      {
+        "id": "ict-equipment__ubiquiti-unifi-u6-pro",
+        "name": "Ubiquiti UniFi U6 Pro"
+      },
+      {
+        "id": "ict-equipment__ubiquiti-unifi-u6-enterprise",
+        "name": "Ubiquiti UniFi U6 Enterprise"
+      },
+      {
+        "id": "ict-equipment__ubiquiti-unifi-u7-pro",
+        "name": "Ubiquiti UniFi U7 Pro"
+      },
+      {
+        "id": "ict-equipment__aruba-instant-on-ap22",
+        "name": "Aruba Instant On AP22"
+      },
+      {
+        "id": "ict-equipment__aruba-ap-535",
+        "name": "Aruba AP-535"
+      },
+      {
+        "id": "ict-equipment__aruba-ap-635",
+        "name": "Aruba AP-635"
+      },
+      {
+        "id": "ict-equipment__tp-link-omada-eap670",
+        "name": "TP-Link Omada EAP670"
+      },
+      {
+        "id": "ict-equipment__tp-link-omada-eap650",
+        "name": "TP-Link Omada EAP650"
+      },
+      {
+        "id": "ict-equipment__ruckus-r550",
+        "name": "Ruckus R550"
+      },
+      {
+        "id": "ict-equipment__ruckus-r650",
+        "name": "Ruckus R650"
+      },
+      {
+        "id": "ict-equipment__cisco-catalyst-9200l-24-port",
+        "name": "Cisco Catalyst 9200L 24-Port"
+      },
+      {
+        "id": "ict-equipment__cisco-catalyst-9200l-48-port",
+        "name": "Cisco Catalyst 9200L 48-Port"
+      },
+      {
+        "id": "ict-equipment__cisco-catalyst-9300-24-port",
+        "name": "Cisco Catalyst 9300 24-Port"
+      },
+      {
+        "id": "ict-equipment__cisco-catalyst-9300-48-port",
+        "name": "Cisco Catalyst 9300 48-Port"
+      },
+      {
+        "id": "ict-equipment__cisco-catalyst-1000-24-port",
+        "name": "Cisco Catalyst 1000 24-Port"
+      },
+      {
+        "id": "ict-equipment__cisco-catalyst-1000-48-port",
+        "name": "Cisco Catalyst 1000 48-Port"
+      },
+      {
+        "id": "ict-equipment__cisco-catalyst-2960x-24-port",
+        "name": "Cisco Catalyst 2960X 24-Port"
+      },
+      {
+        "id": "ict-equipment__cisco-catalyst-3850-24-port",
+        "name": "Cisco Catalyst 3850 24-Port"
+      },
+      {
+        "id": "ict-equipment__cisco-catalyst-3850-48-port-poe",
+        "name": "Cisco Catalyst 3850 48-Port PoE"
+      },
+      {
+        "id": "ict-equipment__cisco-cbs350-24-port-poe",
+        "name": "Cisco CBS350 24-Port PoE"
+      },
+      {
+        "id": "ict-equipment__cisco-cbs350-48-port-poe",
+        "name": "Cisco CBS350 48-Port PoE"
+      },
+      {
+        "id": "ict-equipment__cisco-meraki-ms120-24p",
+        "name": "Cisco Meraki MS120-24P"
+      },
+      {
+        "id": "ict-equipment__cisco-meraki-ms210-48fp",
+        "name": "Cisco Meraki MS210-48FP"
+      },
+      {
+        "id": "ict-equipment__cisco-meraki-ms225-24p",
+        "name": "Cisco Meraki MS225-24P"
+      },
+      {
+        "id": "ict-equipment__ubiquiti-unifi-switch-lite-16-poe",
+        "name": "Ubiquiti UniFi Switch Lite 16 PoE"
+      },
+      {
+        "id": "ict-equipment__ubiquiti-unifi-switch-pro-24-poe",
+        "name": "Ubiquiti UniFi Switch Pro 24 PoE"
+      },
+      {
+        "id": "ict-equipment__ubiquiti-unifi-switch-pro-48-poe",
+        "name": "Ubiquiti UniFi Switch Pro 48 PoE"
+      },
+      {
+        "id": "ict-equipment__aruba-instant-on-1930-24g-poe",
+        "name": "Aruba Instant On 1930 24G PoE"
+      },
+      {
+        "id": "ict-equipment__aruba-instant-on-1930-48g-poe",
+        "name": "Aruba Instant On 1930 48G PoE"
+      },
+      {
+        "id": "ict-equipment__aruba-2930f-24g-poe",
+        "name": "Aruba 2930F 24G PoE"
+      },
+      {
+        "id": "ict-equipment__tp-link-omada-sg3428xpp",
+        "name": "TP-Link Omada SG3428XPP"
+      },
+      {
+        "id": "ict-equipment__tp-link-jetstream-tl-sg2428p",
+        "name": "TP-Link JetStream TL-SG2428P"
+      },
+      {
+        "id": "ict-equipment__netgear-gs724tpv2",
+        "name": "Netgear GS724TPv2"
+      },
+      {
+        "id": "ict-equipment__netgear-gs752tpv2",
+        "name": "Netgear GS752TPv2"
+      },
+      {
+        "id": "ict-equipment__mikrotik-crs328-24p-4s",
+        "name": "MikroTik CRS328-24P-4S+"
+      },
+      {
         "id": "ict-equipment__hp-desktop-computers-core-i5",
         "name": "HP Desktop Computers Core i5"
       },
@@ -1566,12 +2282,57 @@ function sortCatalogItemsAlphabetically(items) {
     );
 }
 
+const ICT_EQUIPMENT_SELECT_GROUPS = [
+    { key: 'laptops', label: 'Laptops & Notebooks', re: /\b(laptop|notebook|macbook|omnibook|elitebook|probook|thinkpad|latitude|vostro|xps|zbook|surface\s*laptop|yoga|legion|travelmate|expertbook|vivobook|firefly)\b/i },
+    { key: 'tablets', label: 'Tablets & 2-in-1', re: /\b(tablet|ipad|surface\s*pro|tab\s|galaxy\s*tab)\b/i },
+    { key: 'desktops', label: 'Desktops, Workstations & AIO', re: /\b(desktop|optiplex|elitedesk|prodesk|thinkcentre|thinkstation|precision\s+\d{4}|z2\s|omnistudio|all-?in-?one|imac|mac\s*mini|mac\s*studio|workstation)\b/i },
+    { key: 'printers', label: 'Printers & MFPs', re: /\b(printer|laserjet|pagewide|designjet|imagerunner|imageclass|ecotank|workforce|mfp|photocopier|taskalfa|ecosys|versalink|altalink|pixma|plotter)\b/i },
+    { key: 'servers', label: 'Servers', re: /\b(server|proliant|poweredge|thinksystem|ucs\s*c|superserver|microserver)\b/i },
+    { key: 'routers', label: 'Routers & Firewalls', re: /\b(router|isr\b|asr\b|fortigate|edgerouter|dream\s*machine|meraki\s*mx|asa\s*firewall|firewall)\b/i },
+    { key: 'aps', label: 'Access Points', re: /\b(access\s*point|\bap\b|catalyst\s*91|meraki\s*mr|unifi\s*u6|unifi\s*u7|instant\s*on\s*ap|aruba\s*ap|eap\d|ruckus\s*r)\b/i },
+    { key: 'switches', label: 'Switches', re: /\b(switch|catalyst\s*(1000|2960|3850|9200|9300)|cbs350|meraki\s*ms|unifi\s*switch|instant\s*on\s*1930|2930f|sg\d|jetstream|gs\d|crs\d)\b/i },
+    { key: 'other', label: 'Other ICT Equipment', re: null }
+];
+
+function isIctEquipmentCatalogCategory(categoryKey) {
+    const key = String(categoryKey || '').trim();
+    if (!key) return false;
+    if (key === 'ict-equipment' || key === 'inv-ict' || key === 'ict') return true;
+    if (/ict.?equipment|inv-ict/i.test(key)) return true;
+    const section = getStoresCatalogSections().find((s) => s.key === key);
+    return !!(section && /ict/i.test(section.key || section.label || ''));
+}
+
+function classifyIctEquipmentSelectGroup(nameOrItem) {
+    const t = String(typeof nameOrItem === 'string' ? nameOrItem : (nameOrItem?.name || ''));
+    for (const g of ICT_EQUIPMENT_SELECT_GROUPS) {
+        if (g.key === 'other') continue;
+        if (g.re && g.re.test(t)) return g.key;
+    }
+    return 'other';
+}
+
 /**
- * Group software items by nature of use; each group sorted A–Z.
- * Non-software lists return a single alphabetical group.
+ * Group software items by nature of use; ICT equipment by device type; else A–Z.
  */
 function groupCatalogItemsForSelect(items, categoryKey) {
     const list = items || [];
+
+    if (isIctEquipmentCatalogCategory(categoryKey)) {
+        const buckets = new Map(ICT_EQUIPMENT_SELECT_GROUPS.map((g) => [g.key, []]));
+        list.forEach((item) => {
+            const key = classifyIctEquipmentSelectGroup(item);
+            (buckets.get(key) || buckets.get('other')).push(item);
+        });
+        return ICT_EQUIPMENT_SELECT_GROUPS
+            .map((g) => ({
+                key: g.key,
+                label: g.label,
+                items: sortCatalogItemsAlphabetically(buckets.get(g.key) || [])
+            }))
+            .filter((g) => g.items.length > 0);
+    }
+
     if (!isSoftwareCatalogCategory(categoryKey)) {
         return [{
             key: 'all',
@@ -1751,8 +2512,9 @@ function getCatalogItemById(itemId) {
 }
 
 function getCatalogItemsForCategory(categoryKey) {
-    const section = getStoresCatalogSections().find((s) => s.key === categoryKey);
-    const builtin = section
+    const key = String(categoryKey || '').trim();
+    const section = getStoresCatalogSections().find((s) => s.key === key);
+    let builtin = section
         ? (section.items || []).map((item) => ({
             ...item,
             category: section.key,
@@ -1760,13 +2522,37 @@ function getCatalogItemsForCategory(categoryKey) {
             sectionLabel: section.label
         }))
         : [];
-    const custom = getCustomCatalogItemsForCategory(categoryKey);
+
+    // Inventory ledger tabs (e.g. inv-laptops) — pull matching ICT Equipment models
+    if (!builtin.length && /^inv-/i.test(key)) {
+        const ict = getStoresCatalogSections().find((s) => s.key === 'ict-equipment');
+        const led = typeof getInventoryLedgerByKey === 'function' ? getInventoryLedgerByKey(key) : null;
+        const pool = (ict?.items || []).map((item) => ({
+            ...item,
+            category: key,
+            gl: led?.defaultGl || ict?.gl || '',
+            sectionLabel: led?.fullLabel || led?.label || ict?.label || key
+        }));
+        if (key === 'inv-laptops') {
+            builtin = pool.filter((i) => /\b(laptop|notebook|macbook|omnibook|elitebook|probook|thinkpad|latitude|vostro|xps|zbook|surface\s*laptop|yoga|legion)\b/i.test(i.name));
+        } else if (key === 'inv-desktops') {
+            builtin = pool.filter((i) => /\b(desktop|optiplex|elitedesk|prodesk|thinkcentre|workstation|all-?in-?one|imac|mac\s*mini)\b/i.test(i.name));
+        } else if (key === 'inv-printers') {
+            builtin = pool.filter((i) => /\b(printer|laserjet|mfp|imagerunner|ecotank|designjet|photocopier)\b/i.test(i.name));
+        } else if (key === 'inv-servers' || /server/i.test(key)) {
+            builtin = pool.filter((i) => /\b(server|proliant|poweredge|thinksystem|ucs)\b/i.test(i.name));
+        } else {
+            builtin = pool;
+        }
+    }
+
+    const custom = getCustomCatalogItemsForCategory(key);
     const seen = new Set(builtin.map((i) => i.id));
     custom.forEach((item) => {
         if (!seen.has(item.id)) builtin.push(item);
     });
     const merged = builtin;
-    if (isSoftwareCatalogCategory(categoryKey)) {
+    if (isSoftwareCatalogCategory(key)) {
         return sortCatalogItemsAlphabetically(merged.map(annotateCatalogItemUseNature));
     }
     return sortCatalogItemsAlphabetically(merged);

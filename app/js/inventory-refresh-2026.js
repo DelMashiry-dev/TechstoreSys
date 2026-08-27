@@ -279,3 +279,93 @@ function receiptDl380Gen11Server(opts = {}) {
 }
 
 window.receiptDl380Gen11Server = receiptDl380Gen11Server;
+
+const HP_LAPTOP_RECEIPTS_AUG23_2026 = [
+    {
+        itemId: 'ict-equipment__hp-omnibook-x-flip-16',
+        name: 'HP OmniBook X Flip 16 AI (Intel Core Ultra 9)',
+        qty: 15,
+        sourceRef: 'RV/IT/0823/OMNIBOOK-X-FLIP-U9',
+        description: 'HP OmniBook X Flip Ultra 9 laptops — stores receipt (15 units)'
+    },
+    {
+        itemId: 'ict-equipment__hp-elitebook-840-g11',
+        name: 'HP EliteBook 840 G11',
+        qty: 5,
+        sourceRef: 'RV/IT/0823/ELITEBOOK-I7',
+        description: 'HP EliteBook 840 G11 Core i7 laptops — stores receipt (5 units)'
+    }
+];
+
+/** Receipt HP OmniBook X Flip Ultra 9 (15) and HP EliteBook Core i7 (5). Idempotent. */
+function receiptHpLaptopsAug232026(opts = {}) {
+    if (!appState) return { ok: false, reason: 'no-state' };
+    const force = !!opts.force;
+    const inv = typeof ensureStoresInventory === 'function'
+        ? ensureStoresInventory()
+        : (appState.storesInventory = appState.storesInventory || { openings: {}, transactions: [] });
+    if (!inv.openings) inv.openings = {};
+    if (!Array.isArray(inv.transactions)) inv.transactions = [];
+
+    const today = typeof todayIsoDate === 'function' ? todayIsoDate() : new Date().toISOString().slice(0, 10);
+    const source = 'inventory-receipt-hp-laptops-aug23-2026';
+    const posted = [];
+
+    HP_LAPTOP_RECEIPTS_AUG23_2026.forEach((row) => {
+        const exists = (inv.transactions || []).some((t) =>
+            t.source === source && t.sourceRef === row.sourceRef
+            && t.itemId === row.itemId && t.type === 'receipt'
+        );
+        if (exists && !force) return;
+
+        if (typeof postStockTransaction === 'function') {
+            postStockTransaction({
+                type: 'receipt',
+                itemId: row.itemId,
+                item: row.name,
+                category: 'ict-equipment',
+                gl: '3112210001',
+                qty: row.qty,
+                party: 'ICT procurement — laptop receipt',
+                description: row.description,
+                voucherNo: row.sourceRef,
+                source,
+                sourceRef: row.sourceRef,
+                date: today,
+                silent: true,
+                skipRender: true
+            });
+        } else {
+            inv.transactions.push({
+                id: `stk-hp-${row.itemId.split('__').pop()}-${Date.now()}`,
+                date: today,
+                type: 'receipt',
+                itemId: row.itemId,
+                category: 'ict-equipment',
+                item: row.name,
+                description: row.description,
+                qty: row.qty,
+                uom: 'EA',
+                gl: '3112210001',
+                voucherNo: row.sourceRef,
+                party: 'ICT procurement — laptop receipt',
+                source,
+                sourceRef: row.sourceRef,
+                by: 'Inventory receipt',
+                createdAt: new Date().toISOString()
+            });
+        }
+        posted.push({ itemId: row.itemId, name: row.name, qty: row.qty });
+    });
+
+    if (!posted.length) return { ok: false, reason: 'already', lines: HP_LAPTOP_RECEIPTS_AUG23_2026.length };
+
+    if (typeof saveState === 'function') saveState();
+    if (typeof renderProductStockRegister === 'function') renderProductStockRegister();
+    if (typeof renderVoucherInventoryTables === 'function') renderVoucherInventoryTables();
+    if (typeof updateDashboard === 'function') updateDashboard();
+    return { ok: true, posted, totalQty: posted.reduce((s, r) => s + r.qty, 0) };
+}
+
+window.receiptHpLaptopsAug232026 = receiptHpLaptopsAug232026;
+window.HP_LAPTOP_RECEIPTS_AUG23_2026 = HP_LAPTOP_RECEIPTS_AUG23_2026;

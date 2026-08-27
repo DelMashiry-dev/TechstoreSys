@@ -79,6 +79,7 @@ const SYSTEM_DICTIONARY_GROUPS = [
             { t: 'AIAD Due Diligence Certificate', d: 'Certificate from Army Internal Audit Directorate after reviewing F1, Cost Comparative Schedule, and quotations — not always the cheapest quote.', w: 'dp-procurement · cost-comparative-schedule' },
             { t: 'Winning vendor', d: 'Supplier selected on the Cost Comparative Schedule for value for money; recorded for AIAD and later PO award.', w: 'cost-comparative-schedule' },
             { t: 'Spec / Tech Evaluation', d: 'Write/search specs to support F1 and later evaluate supplier quotes.', w: 'spec-evaluation' },
+            { t: 'Laptop duty profile', d: 'Main operational use for a laptop: field (command, UAV/robot, secure comms, logistics), technical (software engineering, programming, ML, architecture, graphic design, database design, server room), or admin (pay run, secretariat, typing pool). Used in Spec Search and Duties & Roles.', w: 'spec-evaluation · duties-roles' },
             { t: 'DP (Directorate Procurement)', d: 'Processes RFQ/PO/contract after authority.', w: 'dp-procurement' },
             { t: 'AIAD', d: 'Army Internal Audit Directorate — due diligence on quotes (value, not always cheapest).', w: 'DP cycle step 4' },
             { t: 'RFQ', d: 'Request for Quotations.', w: 'DP cycle' },
