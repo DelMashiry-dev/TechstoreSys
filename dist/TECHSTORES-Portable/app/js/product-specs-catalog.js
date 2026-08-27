@@ -111,6 +111,7 @@ const PRODUCT_SPECS_CATALOG = [
             'OmniBook X Flip 16'
         ],
         aliases: ['omnibook x flip', 'omnibook flip 16', 'ultra 9 288v', '288v'],
+        dutyProfiles: ['graphic-design', 'machine-learning', 'software-engineering', 'architecture', 'database-design'],
         specs: [
             ['Device Type', '16\" 2-in-1 AI laptop (flip / convertible)', 'Creative and technical use'],
             ['Processor', 'Intel Core Ultra 9 288V', 'Next-gen AI PC'],
@@ -131,6 +132,7 @@ const PRODUCT_SPECS_CATALOG = [
         category: 'laptop',
         names: ['HP EliteBook 840 G10', 'EliteBook 840 G10'],
         aliases: ['elitebook 840', 'hp 840 g10'],
+        dutyProfiles: ['software-engineering', 'programming', 'database-design', 'server-room', 'secure-comms', 'pay-run', 'secretariat'],
         specs: [
             ['Processor', 'Intel Core i5/i7 (13th Gen) options', 'Enterprise productivity'],
             ['RAM', '16 GB DDR5 (expandable)', 'Multitasking'],
@@ -151,6 +153,7 @@ const PRODUCT_SPECS_CATALOG = [
         category: 'laptop',
         names: ['Panasonic Toughbook 55', 'Toughbook 55', 'TOUGHBOOK 55'],
         aliases: ['toughbook', 'tb55', 'panasonic toughbook'],
+        dutyProfiles: ['command-control', 'drone-robot', 'secure-comms', 'logistics-diagnostics'],
         specs: [
             ['Processor', 'Intel Core i5 / i7 up to 4.7 GHz (boost)', 'Rugged field productivity'],
             ['RAM', '16 GB DDR4 (expandable to 64 GB)', 'Multitasking'],
@@ -171,6 +174,7 @@ const PRODUCT_SPECS_CATALOG = [
         category: 'laptop',
         names: ['Panasonic Toughbook 40', 'Toughbook 40', 'TOUGHBOOK 40'],
         aliases: ['toughbook 40', 'tb40', 'fully rugged laptop'],
+        dutyProfiles: ['command-control', 'drone-robot', 'secure-comms', 'logistics-diagnostics'],
         specs: [
             ['Processor', 'Intel Core i5 / i7 up to 4.4 GHz (boost)', 'Fully rugged workloads'],
             ['RAM', '16–32 GB DDR4', 'Heavy multitasking'],
@@ -190,6 +194,7 @@ const PRODUCT_SPECS_CATALOG = [
         category: 'laptop',
         names: ['Panasonic Toughbook 33', 'Toughbook 33', 'TOUGHBOOK 33'],
         aliases: ['toughbook 33', 'tb33', '2-in-1 rugged'],
+        dutyProfiles: ['command-control', 'drone-robot', 'logistics-diagnostics', 'secure-comms'],
         specs: [
             ['Processor', 'Intel Core i5 / i7 up to 4.2 GHz (boost)', 'Detachable 2-in-1'],
             ['RAM', '16 GB LPDDR4x', 'Office multitasking'],
@@ -208,6 +213,7 @@ const PRODUCT_SPECS_CATALOG = [
         category: 'tablet',
         names: ['Panasonic Toughbook G2', 'Toughbook G2', 'TOUGHBOOK G2'],
         aliases: ['toughbook g2', 'rugged tablet'],
+        dutyProfiles: ['logistics-diagnostics', 'command-control', 'secure-comms'],
         specs: [
             ['Processor', 'Intel Core i5 / i7 up to 4.4 GHz (boost)', 'Rugged tablet'],
             ['RAM', '16 GB', 'Multitasking'],
@@ -225,6 +231,7 @@ const PRODUCT_SPECS_CATALOG = [
         category: 'laptop',
         names: ['Panasonic Toughbook CF-31', 'Toughbook CF-31', 'TOUGHBOOK CF-31'],
         aliases: ['cf-31', 'toughbook 31', 'legacy rugged'],
+        dutyProfiles: ['command-control', 'logistics-diagnostics', 'drone-robot'],
         specs: [
             ['Processor', 'Intel Core i5 up to 3.6 GHz', 'Legacy rugged fleet'],
             ['RAM', '8–16 GB DDR3', 'Confirm configuration'],
@@ -242,6 +249,7 @@ const PRODUCT_SPECS_CATALOG = [
         category: 'laptop',
         names: ['HP ProBook 450 G10', 'ProBook 450 G10'],
         aliases: ['probook 450', 'hp 450 g10'],
+        dutyProfiles: ['typing-pool', 'secretariat', 'pay-run', 'programming'],
         specs: [
             ['Processor', 'Intel Core i5/i7 (13th Gen) options', 'General office workload'],
             ['RAM', '8–16 GB DDR4/DDR5', 'Confirm expandable config'],
@@ -260,6 +268,7 @@ const PRODUCT_SPECS_CATALOG = [
         category: 'laptop',
         names: ['Dell Latitude 5440', 'Latitude 5440'],
         aliases: ['latitude 5440', 'dell 5440'],
+        dutyProfiles: ['programming', 'database-design', 'server-room', 'secretariat', 'pay-run'],
         specs: [
             ['Processor', 'Intel Core i5/i7 (13th Gen) options', 'Business productivity'],
             ['RAM', '16 GB DDR4/DDR5 typical', 'Multitasking'],
@@ -592,6 +601,7 @@ const PRODUCT_SPECS_CATALOG = [
         category: 'laptop',
         names: ['HP EliteBook 860 G10', 'EliteBook 860 G10'],
         aliases: ['elitebook 860', 'hp 860 g10'],
+        dutyProfiles: ['server-room', 'database-design', 'software-engineering', 'pay-run', 'secretariat'],
         specs: [
             ['Processor', 'Intel Core i5/i7 (13th Gen)', 'Enterprise'],
             ['RAM', '16 GB DDR5', 'Multitasking'],
@@ -609,6 +619,7 @@ const PRODUCT_SPECS_CATALOG = [
         category: 'laptop',
         names: ['HP ProBook 440 G10', 'ProBook 440 G10'],
         aliases: ['probook 440', 'hp 440 g10'],
+        dutyProfiles: ['typing-pool', 'secretariat', 'pay-run'],
         specs: [
             ['Processor', 'Intel Core i5 options', 'Office'],
             ['RAM', '8–16 GB', 'Prefer 16 GB'],
@@ -1406,6 +1417,7 @@ function scoreCatalogProductAgainstCriteria(entry, criteria = {}, mode = 'strict
     const minRam = parseInt(criteria.minRamGb, 10) || 0;
     const minStorage = parseInt(criteria.minStorageGb, 10) || 0;
     const storageType = String(criteria.storageType || 'any').trim();
+    const dutyProfile = String(criteria.dutyProfile || 'any').trim();
     const freeText = normalizeProductQuery(criteria.freeText || '');
     const soft = mode === 'strict' ? false : true;
 
@@ -1439,6 +1451,12 @@ function scoreCatalogProductAgainstCriteria(entry, criteria = {}, mode = 'strict
             } else {
                 reasons.push('Partial keyword match');
             }
+        }
+    }
+
+    if (dutyProfile && dutyProfile !== 'any' && typeof dutyProfileAcceptsCatalogCategory === 'function') {
+        if (!dutyProfileAcceptsCatalogCategory(entry, dutyProfile, productType)) {
+            return null;
         }
     }
 
@@ -1549,6 +1567,13 @@ function scoreCatalogProductAgainstCriteria(entry, criteria = {}, mode = 'strict
         }
     }
 
+    if (dutyProfile && dutyProfile !== 'any' && typeof scoreDutyProfileAgainstProduct === 'function') {
+        const duty = scoreDutyProfileAgainstProduct(entry, dutyProfile, mode);
+        if (duty.reject) return null;
+        score += duty.delta || 0;
+        if (duty.reason) reasons.push(duty.reason);
+    }
+
     return {
         product: entry,
         score: Math.max(1, Math.min(99, score)),
@@ -1608,6 +1633,11 @@ function searchCatalogByMinspec(criteria = {}, options = {}) {
         const filler = catalog
             .filter((e) => !seen.has(e.id))
             .filter((e) => {
+                if (criteria.dutyProfile && criteria.dutyProfile !== 'any'
+                    && typeof dutyProfileAcceptsCatalogCategory === 'function'
+                    && !dutyProfileAcceptsCatalogCategory(e, criteria.dutyProfile, criteria.productType)) {
+                    return false;
+                }
                 if (!criteria.productType) return true;
                 if (criteria.productType === 'tablet') {
                     return e.category === 'tablet' || e.category === 'other';
@@ -1655,6 +1685,11 @@ function buildMinspecSearchQuery(criteria = {}) {
     if (criteria.storageType && criteria.storageType !== 'any') {
         const opt = getStorageTypeOption(criteria.storageType);
         bits.push(opt?.label || criteria.storageType);
+    }
+    if (criteria.dutyProfile && criteria.dutyProfile !== 'any') {
+        const duty = typeof getLaptopDutyProfile === 'function' ? getLaptopDutyProfile(criteria.dutyProfile) : null;
+        bits.push(duty?.label || criteria.dutyProfile);
+        bits.push('laptop');
     }
     bits.push('specifications');
     return bits.join(' ').trim();

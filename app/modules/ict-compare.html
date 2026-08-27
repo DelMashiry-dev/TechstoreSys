@@ -1,0 +1,75 @@
+<div id="ict-compare" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Workshop — Head-to-head ICT comparison</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <p class="q982-intro">
+                    Pick the <strong>duty profile</strong>, crawl the web plus the local catalog, then read a ranked
+                    <strong>horizontal bar chart</strong> (outer = best-buy, inner = duty fit) like a review-site FPS chart.
+                    Numbers are duty/price scores, not invented game FPS. Always confirm a formal quote before F1.
+                </p>
+
+                <div class="dashboard-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>1. Purpose &amp; search</h3>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Duty profile</label>
+                            <select class="form-control" id="ictCompareDuty"></select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Equipment type</label>
+                            <select class="form-control" id="ictCompareCategory">
+                                <option value="laptop">Laptop</option>
+                                <option value="desktop">Desktop / workstation</option>
+                                <option value="tablet">Tablet</option>
+                                <option value="printer">Printer / MFP</option>
+                                <option value="server">Server</option>
+                                <option value="all">Any ICT</option>
+                            </select>
+                        </div>
+                        <div class="form-col" style="flex:1.4;">
+                            <label class="form-label">Extra keywords (optional)</label>
+                            <input type="text" class="form-control" id="ictCompareExtra" placeholder="e.g. 32GB, RTX, Toughbook, 14 inch">
+                        </div>
+                    </div>
+                    <p class="spec-search-duty-hint" id="ictCompareDutyHint"></p>
+                    <div class="module-actions">
+                        <button type="button" class="btn btn-primary" id="ictCompareCrawlBtn">Crawl web &amp; rank for this duty</button>
+                        <button type="button" class="btn btn-secondary" id="ictCompareRefreshBtn">Force refresh crawl</button>
+                        <button type="button" class="btn btn-ghost" id="ictCompareClearBtn">Clear comparison</button>
+                    </div>
+                    <div id="ictCompareStatus" class="spec-search-status" aria-live="polite"></div>
+                </div>
+
+                <div class="dashboard-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>2. Candidates — tick 2–4 for head-to-head</h3>
+                    </div>
+                    <div id="ictCompareGrid" class="market-catalog-grid">
+                        <div class="market-catalog-empty">Choose a duty profile and click <strong>Crawl web &amp; rank</strong>.</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>3. Head-to-head</h3>
+                    </div>
+                    <p class="muted" id="ictCompareWinner"></p>
+                    <div class="form-table-wrapper">
+                        <table class="overview-table ict-compare-table">
+                            <thead>
+                                <tr>
+                                    <th>Factor</th>
+                                    <th colspan="4" id="ictCompareHeadRow">Select candidates above</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ictCompareTableBody">
+                                <tr><td colspan="5" class="req-empty-row">Tick at least two listings to compare.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="ictCompareBars" class="ict-compare-bars"></div>
+                </div>
+            </div>

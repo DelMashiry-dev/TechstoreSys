@@ -191,7 +191,7 @@ function renderDutiesGuide(guide) {
 function renderDutiesRolesModule() {
     const host = document.getElementById('dutiesRolesContent');
     if (!host) return;
-    const tab = document.querySelector('.duties-tab.is-active')?.getAttribute('data-duties-tab') || 'storeman';
+    const tab = document.querySelector('.duties-tab.is-active')?.getAttribute('data-duties-tab') || 'laptopDuty';
     if (tab === 'laptopDuty') {
         host.innerHTML = renderLaptopDutyProfilesGuide();
         return;
@@ -223,7 +223,7 @@ function initDutiesRolesModule() {
 }
 
 function printDutiesRolesGuide() {
-    const tab = document.querySelector('.duties-tab.is-active')?.getAttribute('data-duties-tab') || 'storeman';
+    const tab = document.querySelector('.duties-tab.is-active')?.getAttribute('data-duties-tab') || 'laptopDuty';
     let html;
     if (tab === 'laptopDuty') {
         const profiles = typeof LAPTOP_DUTY_PROFILES !== 'undefined' ? LAPTOP_DUTY_PROFILES : [];

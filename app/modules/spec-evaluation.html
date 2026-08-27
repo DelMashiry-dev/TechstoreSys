@@ -5,52 +5,10 @@
                 </div>
 
                 <p class="spec-eval-intro">
-                    Prepare technical specifications before procurement. Use <strong>Intelligent Spec Search</strong> to set
-                    minimum requirements (product type, laptop <strong>duty profile</strong>, brand, processor, RAM, storage), review ranked options, then pick the
-                    best match into this datasheet.
+                    Prepare technical specifications before procurement. Start with a <strong>laptop duty profile</strong>
+                    (command, UAV, software engineering, database design, pay run, typing pool, and the rest), then search matching machines.
+                    The ICT Market Browser below is optional price research — it is not the duty-profile list.
                 </p>
-
-                <div class="dashboard-panel market-catalog-panel" id="marketCatalogPanel">
-                    <div class="section-heading section-heading-compact">
-                        <h3>ICT Market Browser — trends, prices &amp; latest models</h3>
-                    </div>
-                    <p class="market-catalog-hint">
-                        Enter a <strong>brand</strong> (Lenovo, HP, Dell, Apple, ASUS) or <strong>keywords</strong>
-                        (e.g. <em>gaming laptop</em>, <em>architecture workstation</em>, <em>student laptop</em>).
-                        Official manufacturer sites are crawled when a brand is recognised; keyword searches use public web listings.
-                        Benchmark prices show in <strong>USD</strong> and <strong>ZiG</strong> using the
-                        <a href="https://www.rbz.co.zw/index.php/research/markets/exchange-rates" target="_blank" rel="noopener noreferrer">RBZ prevailing bank rate</a>.
-                        Requires <strong>START-SYSTEM</strong> (online).
-                    </p>
-                    <div class="market-catalog-toolbar">
-                        <label class="market-catalog-field market-catalog-field-wide">
-                            <span>Brand or keywords</span>
-                            <input type="text" class="form-control" id="marketCatalogBrand"
-                                placeholder="gaming laptop, architecture workstation, HP EliteBook…" autocomplete="off">
-                        </label>
-                        <label class="market-catalog-field">
-                            <span>Equipment type</span>
-                            <select class="form-control" id="marketCatalogCategory">
-                                <option value="laptop">Laptops</option>
-                                <option value="desktop">Desktops / workstations</option>
-                                <option value="tablet">Tablets</option>
-                                <option value="printer">Printers / MFP</option>
-                                <option value="server">Servers</option>
-                                <option value="all">All ICT types</option>
-                            </select>
-                        </label>
-                        <div class="market-catalog-actions">
-                            <button type="button" class="btn btn-primary" id="marketCatalogBrowseBtn">Browse market</button>
-                            <button type="button" class="btn btn-ghost" id="marketCatalogRefreshBtn" title="Force fresh web crawl">Refresh</button>
-                        </div>
-                    </div>
-                    <div id="marketCatalogStatus" class="market-catalog-status" aria-live="polite"></div>
-                    <div id="marketCatalogBenchmarks" class="market-catalog-benchmarks"></div>
-                    <div id="marketCatalogSeriesFilters" class="market-series-filters" role="group" aria-label="Product lines"></div>
-                    <div id="marketCatalogGrid" class="market-catalog-grid">
-                        <div class="market-catalog-empty">Enter a brand or keywords above and click <strong>Browse market</strong>.</div>
-                    </div>
-                </div>
 
                 <div class="dashboard-panel spec-search-panel">
                     <div class="section-heading section-heading-compact">
@@ -158,6 +116,48 @@
                                 <tr><td colspan="9" class="req-empty-row">Set minimum specs above, then Search Matching Products.</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <div class="dashboard-panel market-catalog-panel" id="marketCatalogPanel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>ICT Market Browser — trends, prices &amp; latest models</h3>
+                    </div>
+                    <p class="market-catalog-hint">
+                        Optional research only. Enter a <strong>brand</strong> (Lenovo, HP, Dell, Apple, ASUS) or <strong>keywords</strong>
+                        (e.g. <em>architecture workstation</em>, <em>student laptop</em>).
+                        Official manufacturer sites are crawled when a brand is recognised; keyword searches use public web listings.
+                        Benchmark prices show in <strong>USD</strong> and <strong>ZiG</strong> using the
+                        <a href="https://www.rbz.co.zw/index.php/research/markets/exchange-rates" target="_blank" rel="noopener noreferrer">RBZ prevailing bank rate</a>.
+                        Requires <strong>START-SYSTEM</strong> (online).
+                    </p>
+                    <div class="market-catalog-toolbar">
+                        <label class="market-catalog-field market-catalog-field-wide">
+                            <span>Brand or keywords</span>
+                            <input type="text" class="form-control" id="marketCatalogBrand"
+                                placeholder="HP EliteBook, architecture workstation…" autocomplete="off">
+                        </label>
+                        <label class="market-catalog-field">
+                            <span>Equipment type</span>
+                            <select class="form-control" id="marketCatalogCategory">
+                                <option value="laptop">Laptops</option>
+                                <option value="desktop">Desktops / workstations</option>
+                                <option value="tablet">Tablets</option>
+                                <option value="printer">Printers / MFP</option>
+                                <option value="server">Servers</option>
+                                <option value="all">All ICT types</option>
+                            </select>
+                        </label>
+                        <div class="market-catalog-actions">
+                            <button type="button" class="btn btn-primary" id="marketCatalogBrowseBtn">Browse market</button>
+                            <button type="button" class="btn btn-ghost" id="marketCatalogRefreshBtn" title="Force fresh web crawl">Refresh</button>
+                        </div>
+                    </div>
+                    <div id="marketCatalogStatus" class="market-catalog-status" aria-live="polite"></div>
+                    <div id="marketCatalogBenchmarks" class="market-catalog-benchmarks"></div>
+                    <div id="marketCatalogSeriesFilters" class="market-series-filters" role="group" aria-label="Product lines"></div>
+                    <div id="marketCatalogGrid" class="market-catalog-grid">
+                        <div class="market-catalog-empty">Enter a brand or keywords above and click <strong>Browse market</strong>.</div>
                     </div>
                 </div>
 

@@ -23,6 +23,7 @@ function getModuleLabel(moduleId) {
         'daf-fund-request-memo': 'DAF Fund Request Memo',
         'monthly-returns': 'Monthly Returns — Unit ICT Equipment',
         'spec-evaluation': 'Spec/Tech Evaluation',
+        'ict-compare': 'Workshop — Head-to-head ICT comparison',
         'guide-quotation': 'Rough Guide Quotation',
         'dp-f1-form': 'DP F1 Form',
         'cost-comparative-schedule': 'Cost Comparative Schedule',
@@ -1149,6 +1150,9 @@ async function navigateToModule(targetId, options = {}) {
     if (targetId === 'spec-evaluation') {
         if (typeof initSpecEvaluationModule === 'function') initSpecEvaluationModule();
         else if (typeof populateSpecSearchFacets === 'function') populateSpecSearchFacets();
+    }
+    if (targetId === 'ict-compare' && typeof initIctCompareModule === 'function') {
+        initIctCompareModule();
     }
     if (targetId === 'guide-quotation' && typeof initGuideQuotationModule === 'function') {
         initGuideQuotationModule();

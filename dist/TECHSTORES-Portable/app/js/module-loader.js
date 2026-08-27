@@ -58,7 +58,7 @@ async function loadModuleHtml(moduleId) {
     }
 
     MODULE_LOAD_PROMISES[moduleId] = (async () => {
-        const url = `modules/${encodeURIComponent(moduleId)}.html`;
+        const url = `modules/${encodeURIComponent(moduleId)}.html?v=20260827h2h3`;
         const res = await fetchAppAsset(url);
         if (!res.ok) throw new Error(`Module HTML not found: ${moduleId} (${res.status})`);
         const html = await res.text();
@@ -107,6 +107,8 @@ async function ensureModuleLoaded(moduleId) {
         try { restoreModule(moduleId, appState.modules[moduleId]); } catch (e) { console.warn(e); }
     }
     if (typeof applyDateInputConstraints === 'function') applyDateInputConstraints(el);
+    if (typeof enhanceFieldHelp === 'function') enhanceFieldHelp(el);
+    if (typeof initHowItWorks === 'function') initHowItWorks(el);
 
     return el;
 }

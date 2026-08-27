@@ -15,7 +15,8 @@ const MODULE_SEARCH_ALIASES = {
     'zna-q-forms-index': 'q forms catalogue annex',
     'suppliers-contracts': 'vendor supplier register G/C/006',
     'delivery-note': 'dn delivery note goods received supplier',
-    'workshop-receipt-cert': 'workshop receipt certification goods services group mlg engraving spec assessment supplier delivery certify ordnance',
+    'workshop-repairs': 'workshop register repairs indent',
+    'ict-compare': 'head to head compare laptop buy purchase duty profile crawl market benchmark FPS workstation rugged',
     'dp-f1-form': 'indent procurement f1',
     'voucher-module': 'issue voucher receipt rv iv stock'
 };

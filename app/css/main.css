@@ -19872,3 +19872,157 @@ body.table-focus-open {
 .dn-wrc-badge { min-width: 120px; }
 .dp-proc-wrc-status { font-size: 0.88rem; margin: 0.35rem 0 0.5rem; font-weight: 600; }
 .dp-proc-wrc-status.is-pending { color: #92400e; }
+
+.ict-compare-pick {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 8px 10px 0;
+    cursor: pointer;
+}
+.ict-fit-bar {
+    height: 10px;
+    background: #f3f4f6;
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 8px 0 4px;
+    box-shadow: inset 0 1px 2px rgba(16, 24, 40, 0.06);
+}
+.ict-fit-bar span {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(180deg, #9b6ef0 0%, #6d28d9 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.ict-compare-bars { margin-top: 14px; display: grid; gap: 8px; }
+.ict-h2h-chart {
+    background: #fff;
+    border: 1px solid #eee8f4;
+    border-radius: 16px;
+    padding: 16px 18px 12px;
+}
+.ict-h2h-chart-head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+.ict-h2h-chart-head strong { font-size: 0.95rem; color: #1d1528; }
+.ict-h2h-chart-head span { font-size: 0.78rem; color: #667085; max-width: 72ch; }
+.ict-h2h-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 0.78rem;
+    color: #475467;
+    margin-bottom: 14px;
+}
+.ict-leg {
+    display: inline-block;
+    width: 28px;
+    height: 12px;
+    border-radius: 99px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+.ict-leg-buy {
+    background: linear-gradient(180deg, #8b5cf6, #5b21b6);
+}
+.ict-leg-fit {
+    background: linear-gradient(180deg, #f3e8ff, #c4b5fd);
+    box-shadow: inset 0 0 0 2px #7c3aed;
+}
+.ict-h2h-row {
+    display: grid;
+    grid-template-columns: minmax(160px, 1.5fr) minmax(180px, 3fr);
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.ict-h2h-meta { min-width: 0; }
+.ict-h2h-meta strong {
+    display: block;
+    font-size: 0.84rem;
+    color: #1d1528;
+    line-height: 1.25;
+}
+.ict-h2h-meta em {
+    display: block;
+    font-style: normal;
+    font-size: 0.72rem;
+    color: #667085;
+    margin-top: 2px;
+}
+.ict-h2h-track {
+    position: relative;
+    height: 38px;
+    background: #f3f4f6;
+    border-radius: 999px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(16, 24, 40, 0.06);
+}
+.ict-h2h-outer {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    min-width: 4.5rem;
+    padding: 5px 7px;
+    box-sizing: border-box;
+    border-radius: 999px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #9b6ef0 0%, #6d28d9 55%, #5b21b6 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.28),
+        inset 0 -3px 6px rgba(46, 16, 101, 0.35);
+}
+.ict-h2h-inner {
+    display: block;
+    height: 100%;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, #e9d5ff 42%, #c4b5fd 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        0 1px 2px rgba(91, 33, 182, 0.12);
+}
+.ict-h2h-inner-label {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: #5b21b6;
+    z-index: 1;
+    pointer-events: none;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.ict-h2h-row.is-winner .ict-h2h-outer {
+    background: linear-gradient(180deg, #fb7185 0%, #e11d48 55%, #be123c 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -3px 6px rgba(136, 19, 55, 0.35);
+}
+.ict-h2h-row.is-winner .ict-h2h-inner {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, #fecdd3 42%, #fda4af 100%);
+}
+.ict-h2h-row.is-winner .ict-h2h-inner-label { color: #9f1239; }
+.ict-h2h-name { font-size: 0.82rem; color: #344054; }
+.ict-h2h-bar {
+    height: 14px;
+    background: #ece8f5;
+    border-radius: 99px;
+    overflow: hidden;
+}
+.ict-h2h-bar span {
+    display: block;
+    height: 100%;
+    background: #5b3d8a;
+}
+.ict-h2h-val { font-weight: 700; font-size: 0.95rem; min-width: 2.2rem; text-align: right; }
+.ict-compare-table th { vertical-align: bottom; }
