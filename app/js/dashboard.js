@@ -23,6 +23,7 @@ function getModuleLabel(moduleId) {
         'daf-fund-request-memo': 'DAF Fund Request Memo',
         'monthly-returns': 'Monthly Returns — Unit ICT Equipment',
         'spec-evaluation': 'Spec/Tech Evaluation',
+        'guide-quotation': 'Rough Guide Quotation',
         'dp-f1-form': 'DP F1 Form',
         'cost-comparative-schedule': 'Cost Comparative Schedule',
         'stores-inventory': 'Stores Inventory',
@@ -103,6 +104,9 @@ function getPurchaseOrderCommittedByGl() {
     }
 
     poModule.tables['purchase-orders-table-body'].forEach((row) => {
+        if (typeof isPurchaseOrderRegisterRowCancelled === 'function' && isPurchaseOrderRegisterRowCancelled(row)) {
+            return;
+        }
         const cells = row.cells || [];
         const layout = detectPurchaseOrderRowLayout(cells);
         const glCell = layout.gl >= 0 ? cells[layout.gl] : null;
@@ -1145,6 +1149,9 @@ async function navigateToModule(targetId, options = {}) {
     if (targetId === 'spec-evaluation') {
         if (typeof initSpecEvaluationModule === 'function') initSpecEvaluationModule();
         else if (typeof populateSpecSearchFacets === 'function') populateSpecSearchFacets();
+    }
+    if (targetId === 'guide-quotation' && typeof initGuideQuotationModule === 'function') {
+        initGuideQuotationModule();
     }
     if (targetId === 'undelivered-orders' && typeof renderUndeliveredModule === 'function') {
         renderUndeliveredModule();

@@ -927,10 +927,14 @@ async function openStoresQueryInModule() {
             document.querySelector(`#voucherInvTabs .voucher-inv-tab[data-inv-tab="${cat}"]`)?.click();
             const filter = result.openFilter || params?.partyContains || params?.itemContains || '';
             if (filter) {
-                const input = document.querySelector(`input.table-search[data-search-target="voucher-inv-body-${cat}"]`);
-                if (input) {
-                    input.value = filter;
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                if (typeof setInvMovementFilters === 'function') {
+                    setInvMovementFilters(cat, { item: filter, description: filter });
+                } else {
+                    const input = document.querySelector(`[data-inv-filters-target="voucher-inv-body-${cat}"] [data-inv-filter="item"]`);
+                    if (input) {
+                        input.value = filter;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
                 }
             }
             document.querySelector('[data-inv-view-btn="cumulative"]')?.click();

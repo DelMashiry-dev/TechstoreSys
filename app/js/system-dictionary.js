@@ -80,6 +80,7 @@ const SYSTEM_DICTIONARY_GROUPS = [
             { t: 'Winning vendor', d: 'Supplier selected on the Cost Comparative Schedule for value for money; recorded for AIAD and later PO award.', w: 'cost-comparative-schedule' },
             { t: 'Spec / Tech Evaluation', d: 'Write/search specs to support F1 and later evaluate supplier quotes.', w: 'spec-evaluation' },
             { t: 'Laptop duty profile', d: 'Main operational use for a laptop: field (command, UAV/robot, secure comms, logistics), technical (software engineering, programming, ML, architecture, graphic design, database design, server room), or admin (pay run, secretariat, typing pool). Used in Spec Search and Duties & Roles.', w: 'spec-evaluation · duties-roles' },
+            { t: 'Rough Guide Quotation', d: 'Draft indicative budget quotes using prevailing market USD/ZiG prices at RBZ rate — for planning before formal RFQ.', w: 'guide-quotation' },
             { t: 'DP (Directorate Procurement)', d: 'Processes RFQ/PO/contract after authority.', w: 'dp-procurement' },
             { t: 'AIAD', d: 'Army Internal Audit Directorate — due diligence on quotes (value, not always cheapest).', w: 'DP cycle step 4' },
             { t: 'RFQ', d: 'Request for Quotations.', w: 'DP cycle' },
@@ -145,7 +146,6 @@ const SYSTEM_DICTIONARY_GROUPS = [
             { t: 'Fuel request letter (IT/18)', d: 'Sample RESTRICTED correspondence for standby generator diesel — IT Dir Comms → Load sample.', w: 'it-dir-comms' },
             { t: 'Cards / Mail / WhatsIn', d: 'Three layouts for the same alerts & messages (cards, inbox, chat bubbles).', w: 'Notifications view toggle' },
             { t: 'Universal Search', d: 'Ctrl+K jump to modules, GLs, Q forms — and track issued controlled stores by ZA or Serial Number (location / holder).', w: 'Header' },
-            { t: 'Field Help', d: 'Help mode: point at labels/fields for purpose popups.', w: 'field-help' },
             { t: 'Load demo figures', d: 'Admin/edit-role button to seed experimental FY 2026 Bids-based budgets and sample stock/POs.', w: 'Dashboard toolbar' }
         ]
     },
@@ -228,6 +228,8 @@ const DICT_NAV_ALIASES = {
     'cost-comparative-schedule': 'cost-comparative-schedule',
     'cost comparative': 'cost-comparative-schedule',
     'spec-evaluation': 'spec-evaluation',
+    'guide-quotation': 'guide-quotation',
+    'guide quotation': 'guide-quotation',
     'delivery-note': 'delivery-note',
     'temporary-loans': 'temporary-loans',
     'temporary loans': 'temporary-loans',
@@ -277,7 +279,7 @@ const DICT_NAV_ALIASES = {
 const DICT_KNOWN_MODULES = new Set([
     'dashboard', 'voucher-module', 'stock-take', 'unit-checks', 'financial-year-bids',
     'release-cut', 'dp-f1-form', 'dp-procurement', 'purchase-orders', 'undelivered-orders',
-    'unit-requisitions', 'orderly-room', 'spec-evaluation', 'delivery-note', 'temporary-loans',
+    'unit-requisitions', 'orderly-room', 'spec-evaluation', 'guide-quotation', 'delivery-note', 'temporary-loans',
     'ict-accountability', 'ict-distribution', 'gate-register', 'techstores-equipment-register',
     'workshop-repairs', 'suppliers-contracts', 'it-dir-comms', 'process-guides', 'system-help',
     'duties-roles', 'user-management', 'reports-module', 'zna-q-forms-index', 'cost-comparative-schedule',

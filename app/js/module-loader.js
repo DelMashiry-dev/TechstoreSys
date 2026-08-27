@@ -108,6 +108,7 @@ async function ensureModuleLoaded(moduleId) {
     }
     if (typeof applyDateInputConstraints === 'function') applyDateInputConstraints(el);
     if (typeof enhanceFieldHelp === 'function') enhanceFieldHelp(el);
+    if (typeof initHowItWorks === 'function') initHowItWorks(el);
 
     return el;
 }

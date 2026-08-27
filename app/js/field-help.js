@@ -66,8 +66,7 @@ const FIELD_HELP = {
     'received date': { title: 'Received Date', body: 'Date the equipment or form was received.' },
     'universal search': { title: 'Universal Search', body: 'Jump to modules, GLs, Q forms — and track issued controlled stores by ZA number or Serial Number (printer, laptop, desktop, projector, tablet, router, AP). Shortcut: Ctrl+K.' },
     'learning centre': { title: 'Learning Centre', body: 'Charts and explanations for procurement, suppliers, IT Dir organogram / establishment, multi-unit notes and system structure.' },
-    'system help': { title: 'System Help', body: 'Standing guidance: ASO Ch 25 retention, backups, and how to use Alerts / Orderly Room / Field Help.' },
-    'field help': { title: 'Field Help', body: 'Click to turn Help mode ON. Then point at any label, field, text box or button to see its purpose. Click again to turn Help mode OFF.' },
+    'system help': { title: 'System Help', body: 'Standing guidance: ASO Ch 25 retention, backups, and how to use Alerts and Orderly Room.' },
     'gate register': { title: 'Gate Register', body: 'Regimental Police book equipment in/out at the gate before it reaches TechStores for repair / upgrade work. Does not change inventory.' },
     'equipment register': { title: 'TechStores Equipment Register', body: 'Storeman custody book for repair intake. Does not affect TechStores equipment inventory on charge.' },
     'workshop register': { title: 'IT Workshop Register', body: 'Workshop booking for diagnosis and repair / upgrade / antivirus work. Every line needs ZNA SVCS 1045.' },
@@ -208,7 +207,6 @@ function synthesizeFieldHelp(el, label) {
         if (/add|new|create|\+/.test(low)) return { title, body: `Button — adds a new line or record.${inModule}` };
         if (/delete|remove|clear/.test(low)) return { title, body: `Button — removes or clears the selected item. Confirm if asked.${inModule}` };
         if (/edit|update/.test(low)) return { title, body: `Button — opens or applies edits for this record.${inModule}` };
-        if (/field help/.test(low)) return { title: 'Field Help', body: 'Toggle Help mode on or off. When ON, point at labels, fields and buttons to see their purpose.' };
         if (el.hasAttribute('data-target') || el.classList.contains('nav-btn')) {
             return { title, body: `Navigation — opens the “${title}” module or screen.${inModule}` };
         }
@@ -298,11 +296,7 @@ function eventElement(target) {
 function resolveHelpForElement(el) {
     if (!el || el.nodeType !== 1) return null;
     if (FIELD_HELP_SKIP.has(el.tagName)) return null;
-    if (el.id === 'fieldHelpToggleBtn' || el.id === 'fieldHelpFab') {
-        return FIELD_HELP['field help'];
-    }
-    if (el.closest('.fh-popup, #fieldHelpModeBanner')) return null;
-    if (el.closest('#fieldHelpFab, #fieldHelpToggleBtn')) return null;
+    if (el.closest('.fh-popup')) return null;
     if (el.type === 'hidden') return null;
 
     const explicit = el.getAttribute('data-help');
@@ -345,7 +339,6 @@ function isHelpableElement(el) {
     if (FIELD_HELP_SKIP.has(el.tagName)) return false;
     if (el.type === 'hidden') return false;
     if (el.getAttribute('aria-hidden') === 'true') return false;
-    if (el.id === 'fieldHelpToggleBtn' || el.id === 'fieldHelpFab') return true;
 
     // Never capture sidebar label spans — parent <a> handles nav
     if (el.closest('.sidebar-menu') && (el.classList.contains('nav-label') || el.classList.contains('nav-ico') || el.classList.contains('nav-caret') || el.classList.contains('gl-nav-text'))) {
@@ -385,43 +378,16 @@ function ensureFieldHelpPopup() {
             <button type="button" class="fh-popup-close" aria-label="Close help">&times;</button>
         </div>
         <p class="fh-popup-body"></p>
-        <p class="fh-popup-hint">Hover any label or field for an explanation · Header “Field Help” turns this off</p>`;
+        <p class="fh-popup-hint">Hover any label or field for an explanation · Esc closes this popup</p>`;
     document.body.appendChild(fieldHelpPopupEl);
     fieldHelpPopupEl.querySelector('.fh-popup-close')?.addEventListener('click', hideFieldHelp);
     return fieldHelpPopupEl;
 }
 
-function ensureFieldHelpChrome() {
-    let banner = document.getElementById('fieldHelpModeBanner');
-    if (!banner) {
-        banner = document.createElement('div');
-        banner.id = 'fieldHelpModeBanner';
-        banner.className = 'fh-mode-banner';
-        banner.hidden = true;
-        banner.innerHTML = `
-            <span><strong>Help mode ON</strong> — point at any label, field, text box or button to see its purpose (especially Q &amp; SVCS forms).</span>
-            <button type="button" class="btn btn-ghost btn-sm" id="fieldHelpBannerOffBtn">Turn off</button>`;
-        document.body.appendChild(banner);
-        banner.querySelector('#fieldHelpBannerOffBtn')?.addEventListener('click', () => setFieldHelpMode(false));
-    }
-
-    let fab = document.getElementById('fieldHelpFab');
-    if (!fab) {
-        fab = document.createElement('button');
-        fab.id = 'fieldHelpFab';
-        fab.type = 'button';
-        fab.className = 'fh-fab';
-        fab.title = 'Field Help — click to turn help popups ON';
-        fab.setAttribute('aria-pressed', 'false');
-        fab.innerHTML = '<span class="fh-fab-label">Field Help</span><span class="fh-fab-state">OFF</span>';
-        document.body.appendChild(fab);
-        fab.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setFieldHelpMode(!isFieldHelpModeOn());
-        });
-    }
-    return { banner, fab };
+function stripFieldHelpChrome() {
+    document.getElementById('fieldHelpToggleBtn')?.remove();
+    document.getElementById('fieldHelpFab')?.remove();
+    document.getElementById('fieldHelpModeBanner')?.remove();
 }
 
 function positionFieldHelpPopup(anchor) {
@@ -481,50 +447,17 @@ function syncFieldHelpUi() {
     const on = isFieldHelpModeOn();
     document.body.classList.toggle('fh-mode-on', on);
     document.body.classList.toggle('fh-mode-off', !on);
-
-    const headerBtn = document.getElementById('fieldHelpToggleBtn');
-    if (headerBtn) {
-        headerBtn.classList.toggle('is-active', on);
-        headerBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-        headerBtn.title = on
-            ? 'Help mode ON — click to turn off popups'
-            : 'Help mode OFF — click to show popups when you point at fields';
-        headerBtn.textContent = on ? 'Field Help · ON' : 'Field Help';
-    }
-
-    const { banner, fab } = ensureFieldHelpChrome();
-    banner.hidden = !on;
-    if (document.getElementById('fieldHelpToggleBtn')) fab.hidden = true;
-    fab.classList.toggle('is-active', on);
-    fab.setAttribute('aria-pressed', on ? 'true' : 'false');
-    const state = fab.querySelector('.fh-fab-state');
-    if (state) state.textContent = on ? 'ON' : 'OFF';
-    fab.title = on
-        ? 'Help mode ON — click to turn off'
-        : 'Help mode OFF — click to turn on; then point at any field';
+    stripFieldHelpChrome();
 }
 
-function setFieldHelpMode(on, { silent = false } = {}) {
+function setFieldHelpMode(on, { silent: _silent = false } = {}) {
     fieldHelpModeOn = !!on;
     syncFieldHelpUi();
     if (!fieldHelpModeOn) {
         hideFieldHelp();
-        if (!silent && typeof showToast === 'function') {
-            showToast('Help OFF — click Field Help again when you need popups', 'info');
-        }
         return;
     }
     enhanceFieldHelp(document);
-    if (!silent) {
-        const fab = document.getElementById('fieldHelpFab') || document.getElementById('fieldHelpToggleBtn');
-        showFieldHelp(fab || document.body, {
-            title: 'Hover help is ON',
-            body: 'Point at any label, field, text box or button — a popup explains its purpose. Click Field Help again (or press Esc) to turn off.'
-        }, { sticky: true });
-        if (typeof showToast === 'function') {
-            showToast('Hover help ON — point at labels and fields for explanations', 'success');
-        }
-    }
 }
 
 function toggleFieldHelpMode() {
@@ -596,9 +529,7 @@ function onFieldHelpKeydown(e) {
     if (fieldHelpPopupEl && !fieldHelpPopupEl.hidden) {
         hideFieldHelp();
         e.preventDefault();
-        return;
     }
-    if (isFieldHelpModeOn()) setFieldHelpMode(false);
 }
 
 function initFieldHelpSystem() {
@@ -611,12 +542,7 @@ function initFieldHelpSystem() {
     const popup = ensureFieldHelpPopup();
     popup.addEventListener('mouseenter', () => clearTimeout(fieldHelpHideTimer));
     popup.addEventListener('mouseleave', () => scheduleHideFieldHelp(120));
-    ensureFieldHelpChrome();
-
-    document.getElementById('fieldHelpToggleBtn')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        toggleFieldHelpMode();
-    });
+    stripFieldHelpChrome();
 
     document.addEventListener('mouseover', onFieldHelpPointerOver, true);
     document.addEventListener('mouseout', onFieldHelpPointerOut, true);

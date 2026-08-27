@@ -1590,6 +1590,7 @@ function initSpecEvaluationModule() {
     populateSpecProductCatalogHints();
     initSpecIntelligentSearch();
     initSpecSheetPreviewControls();
+    if (typeof initMarketCatalogPanel === 'function') initMarketCatalogPanel();
 
     if (!document.getElementById('specEvalDate')?.value) {
         const dateEl = document.getElementById('specEvalDate');

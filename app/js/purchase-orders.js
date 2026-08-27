@@ -285,6 +285,24 @@ function syncPurchaseOrderSupplierPickFromName() {
     }
 }
 
+function reloadRealDpPurchaseOrders({ force = false } = {}) {
+    if (typeof requireEditAccess === 'function' && !requireEditAccess()) return;
+    if (typeof ensureRealDpPurchaseOrders !== 'function') return;
+    const result = ensureRealDpPurchaseOrders({ force });
+    if (typeof restoreModule === 'function' && appState?.modules?.['purchase-orders']) {
+        restoreModule('purchase-orders', appState.modules['purchase-orders']);
+    }
+    if (typeof saveState === 'function') saveState();
+    if (typeof updateDashboard === 'function') updateDashboard();
+    if (typeof showToast === 'function') {
+        const msg = result.added
+            ? `Loaded ${result.added} real DP purchase order(s) into register (${result.total} total).`
+            : `IT DIR DP register already has all ${REAL_DP_PURCHASE_ORDERS?.length || 0} purchase orders.`;
+        showToast(msg);
+    }
+    return result;
+}
+
 function bindPurchaseOrderModule() {
     const container = document.getElementById('purchase-orders');
     if (!container) return;
@@ -292,9 +310,30 @@ function bindPurchaseOrderModule() {
     document.querySelectorAll('#purchase-orders-lines-body tr').forEach(attachPurchaseOrderLineRow);
     refreshPurchaseOrderSupplierOptions();
     updatePurchaseOrderDocumentTotal();
+    markRealDpPurchaseOrderRegisterRows();
 
     if (container.dataset.poBound === '1') return;
     container.dataset.poBound = '1';
+
+    document.getElementById('purchase-orders-table-body')?.addEventListener('click', (event) => {
+        if (event.target.closest('button')) return;
+        const tr = event.target.closest('tr');
+        if (!tr) return;
+        const poNo = tr.querySelector('td:nth-child(3) input')?.value?.trim();
+        if (!poNo || typeof loadRealDpPurchaseOrderIntoForm !== 'function') return;
+        if (!findRealDpPurchaseOrder?.(poNo)) return;
+        loadRealDpPurchaseOrderIntoForm(poNo);
+        tr.classList.add('po-register-row-active');
+        tr.parentElement?.querySelectorAll('tr.po-register-row-active').forEach((row) => {
+            if (row !== tr) row.classList.remove('po-register-row-active');
+        });
+    });
+
+    document.getElementById('poLoadRealDpBtn')?.addEventListener('click', () => reloadRealDpPurchaseOrders());
+    document.getElementById('poReloadRealDpBtn')?.addEventListener('click', () => {
+        if (!window.confirm('Reload all scanned IT DIR DP purchase orders into the register? Existing matching PO rows will be replaced.')) return;
+        reloadRealDpPurchaseOrders({ force: true });
+    });
 
     container.addEventListener('input', (event) => {
         if (event.target.matches('#poCurrency, #poGl, #poSupplierName, #poNumber, #poDate')) {
@@ -472,9 +511,22 @@ function printPurchaseOrderOfficialForm() {
     window.print();
 }
 
+function markRealDpPurchaseOrderRegisterRows() {
+    document.querySelectorAll('#purchase-orders-table-body tr').forEach((tr) => {
+        const poNo = tr.querySelector('td:nth-child(3) input')?.value?.trim();
+        const isReal = poNo && typeof findRealDpPurchaseOrder === 'function' && findRealDpPurchaseOrder(poNo);
+        tr.classList.toggle('po-register-row-real-dp', Boolean(isReal));
+        const sig = tr.querySelector('td:nth-child(7) input')?.value || '';
+        tr.classList.toggle('po-register-row-cancelled', /cancelled/i.test(sig));
+        if (isReal) tr.title = 'Real IT DIR DP purchase order — click to load document';
+    });
+}
+
 function initPurchaseOrderModuleDefaults() {
+    if (typeof ensureRealDpPurchaseOrders === 'function') ensureRealDpPurchaseOrders();
     bindPurchaseOrderModule();
     refreshPurchaseOrderSupplierOptions();
+    markRealDpPurchaseOrderRegisterRows();
     const dateEl = document.getElementById('poDate');
     if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
     const vendorEl = document.getElementById('poVendorNo');

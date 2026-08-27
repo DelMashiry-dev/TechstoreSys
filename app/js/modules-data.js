@@ -518,12 +518,14 @@ function validatePurchaseOrderModule() {
         const gl = tr.querySelector('.po-gl')?.value || '';
         const poNo = tr.querySelector('td:nth-child(3) input')?.value?.trim() || '';
         const supplier = tr.querySelector('td:nth-child(2) input')?.value?.trim() || '';
+        const signature = tr.querySelector('td:nth-child(7) input')?.value?.trim() || '';
+        const cancelled = /cancelled/i.test(signature);
 
         if (amount > 0 || poNo || supplier) {
             hasData = true;
             if (!gl) return `Register row ${i + 1}: Select a GL account for the purchase order.`;
-            if (amount <= 0) return `Register row ${i + 1}: Enter a purchase order amount.`;
-            grouped[gl] = (grouped[gl] || 0) + amount;
+            if (!cancelled && amount <= 0) return `Register row ${i + 1}: Enter a purchase order amount.`;
+            if (!cancelled) grouped[gl] = (grouped[gl] || 0) + amount;
         }
     }
 

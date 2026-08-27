@@ -8,14 +8,14 @@ $launchers = @(
     @{
         Bat = Join-Path $root 'START-SYSTEM.bat'
         Ico = Join-Path $root 'assets\database.ico'
-        LinkName = 'START-SYSTEM.lnk'
-        Description = 'Start Tech Stores database server (techstores.db)'
+        LinkNames = @('START-SYSTEM.lnk', 'TechStoreSys Online.lnk')
+        Description = 'IT-DIR Tech Stores — Online database mode (techstores.db on port 8080)'
     },
     @{
         Bat = Join-Path $root 'START-OFFLINE.bat'
         Ico = Join-Path $root 'assets\techstores.ico'
-        LinkName = 'START-OFFLINE.lnk'
-        Description = 'Start Tech Stores offline shell (browser IndexedDB)'
+        LinkNames = @('START-OFFLINE.lnk', 'TechStoreSys Offline.lnk')
+        Description = 'IT-DIR Tech Stores — Offline browser mode (IndexedDB)'
     }
 )
 
@@ -42,15 +42,17 @@ foreach ($launcher in $launchers) {
         continue
     }
     if (-not (Test-Path $launcher.Ico)) {
-        throw "Missing icon for $($launcher.LinkName): $($launcher.Ico)"
+        throw "Missing icon for $($launcher.LinkNames[0]): $($launcher.Ico)"
     }
 
-    $paths = @(
-        (Join-Path $root $launcher.LinkName),
-        (Join-Path $desktop $launcher.LinkName)
-    )
-    foreach ($path in $paths) {
-        Set-LauncherShortcut -Path $path -Bat $launcher.Bat -Ico $launcher.Ico -Description $launcher.Description
+    foreach ($linkName in $launcher.LinkNames) {
+        $paths = @(
+            (Join-Path $root $linkName),
+            (Join-Path $desktop $linkName)
+        )
+        foreach ($path in $paths) {
+            Set-LauncherShortcut -Path $path -Bat $launcher.Bat -Ico $launcher.Ico -Description $launcher.Description
+        }
     }
 
     $batFull = [IO.Path]::GetFullPath($launcher.Bat)

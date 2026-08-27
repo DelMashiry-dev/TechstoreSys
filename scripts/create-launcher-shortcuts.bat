@@ -5,8 +5,8 @@ set "ROOT=%CD%"
 
 echo.
 echo Building icons and updating Tech Stores launcher shortcuts...
-echo   START-SYSTEM  — database icon (techstores.db)
-echo   START-OFFLINE — Tech Stores app icon (browser storage)
+echo   START-SYSTEM / TechStoreSys Online  — database icon (techstores.db)
+echo   START-OFFLINE / TechStoreSys Offline — Tech Stores app icon
 echo.
 
 call "%ROOT%\scripts\resolve-python.cmd" "%ROOT%\scripts\build-database-icon.py"
@@ -32,8 +32,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\create-launc
 
 echo.
 echo Done.
-echo   %ROOT%\START-SYSTEM.lnk
-echo   %ROOT%\START-OFFLINE.lnk
-echo   Desktop copies created / updated (including old .bat shortcuts).
+echo   TechStoreSys Online.lnk  (same as START-SYSTEM — online DB)
+echo   TechStoreSys Offline.lnk
+echo   Desktop copies created / updated.
 echo.
 pause
