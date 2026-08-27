@@ -169,6 +169,9 @@ function initUiPreferences() {
     document.getElementById('uiPrefsCloseBtn')?.addEventListener('click', closeUiPreferences);
     document.getElementById('uiPrefsBackdrop')?.addEventListener('click', closeUiPreferences);
     document.getElementById('uiPrefsDoneBtn')?.addEventListener('click', closeUiPreferences);
+    document.getElementById('uiPrefsResetNavOrder')?.addEventListener('click', () => {
+        if (typeof resetNavMenuOrder === 'function') resetNavMenuOrder();
+    });
 
     document.getElementById('uiPrefsModal')?.addEventListener('click', (e) => {
         const themeId = e.target.closest('[data-theme-id]')?.getAttribute('data-theme-id');

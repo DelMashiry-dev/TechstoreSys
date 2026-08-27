@@ -1053,10 +1053,31 @@ body.role-scope-gate .dashboard-hero-main h2 {
 .sidebar-menu {
     list-style: none;
     padding: 12px 10px 0;
+    user-select: none;
+    touch-action: pan-y;
 }
 
 .sidebar-menu li {
     margin: 4px 0;
+}
+
+.sidebar-menu a.nav-btn,
+.sidebar-menu a.gl-nav-btn {
+    cursor: grab;
+}
+
+.sidebar-menu li.nav-dragging {
+    opacity: 0.42;
+}
+
+.sidebar-menu li.nav-dragging a.nav-btn,
+.sidebar-menu li.nav-dragging a.gl-nav-btn,
+body.nav-reordering {
+    cursor: grabbing;
+}
+
+body.nav-reordering .sidebar-menu a.nav-btn:hover {
+    transform: none;
 }
 
 .sidebar-menu a.nav-btn {
@@ -5307,6 +5328,8 @@ body.printing-accommodation-stores .accommodation-stores-print-host.print-target
     background: transparent;
     flex-shrink: 0;
     display: block;
+    -webkit-user-drag: none;
+    pointer-events: none;
     /* Standalone emblem depth (like the metallic gear) */
     filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 6px rgba(120, 180, 255, 0.18));
 }
@@ -7208,6 +7231,26 @@ tr.pl-status-qs-row td:first-child {
     font-size: 0.75rem;
     font-weight: 800;
     text-align: center;
+    white-space: nowrap;
+}
+
+.req-cell-stock {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.req-stock-in { color: #157347; font-weight: 800; }
+.req-stock-in.is-full { color: #0f5132; }
+.req-stock-out { color: #b42318; font-weight: 800; }
+.req-stock-ok,
+.req-stock-zero,
+.req-stock-unk { color: #98a2b3; font-weight: 700; }
+.req-stock-of { font-weight: 600; color: #667085; font-size: 0.75rem; }
+
+.req-intray-panel .module-toolbar {
+    flex-wrap: wrap;
+    margin-bottom: 10px;
 }
 
 .req-age-new {
@@ -7406,6 +7449,42 @@ tr.req-age-aging td:first-child {
 @media (max-width: 900px) {
     .req-aging-strip {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.sd-aging-strip {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.sd-lines-table input.form-control,
+.sd-lines-table select.form-control {
+    min-width: 0;
+    width: 100%;
+    padding: 4px 6px;
+    font-size: 0.8rem;
+}
+
+.sd-lines-table td {
+    vertical-align: middle;
+}
+
+.sd-supplier-table td:nth-child(3),
+.sd-supplier-table td:nth-child(4) {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.sd-actions {
+    white-space: nowrap;
+}
+
+.sd-actions .btn {
+    margin: 2px 2px 2px 0;
+}
+
+@media (max-width: 900px) {
+    .sd-aging-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -14939,6 +15018,10 @@ body.density-compact .header {
     color: #667085;
 }
 
+.ui-prefs-section .ui-prefs-sub {
+    margin: 0 0 12px;
+}
+
 .ui-theme-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -19957,7 +20040,73 @@ body.table-focus-open {
 .dp-proc-wrc-status { font-size: 0.88rem; margin: 0.35rem 0 0.5rem; font-weight: 600; }
 .dp-proc-wrc-status.is-pending { color: #92400e; }
 
-.ict-compare-pick {
+.ict-compare-history-wrap {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #eef0f4;
+}
+.ict-compare-history-lead {
+    margin: 0 0 8px;
+    font-size: 0.82rem;
+}
+.ict-compare-history {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+.ict-compare-history-empty {
+    color: #667085;
+    font-size: 0.84rem;
+    padding: 8px 2px;
+}
+.ict-compare-history-item {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    background: #f8fafc;
+    border: 1px solid #e6ebf0;
+    border-radius: 12px;
+}
+.ict-hist-recall {
+    flex: 1;
+    text-align: left;
+    border: 0;
+    background: transparent;
+    padding: 9px 12px;
+    cursor: pointer;
+    border-radius: 12px;
+}
+.ict-hist-recall strong {
+    display: block;
+    color: #1d2939;
+    font-size: 0.88rem;
+}
+.ict-hist-recall span {
+    display: block;
+    margin-top: 2px;
+    color: #667085;
+    font-size: 0.75rem;
+}
+.ict-hist-recall:hover {
+    background: rgba(27, 94, 59, 0.06);
+}
+.ict-hist-del {
+    width: 36px;
+    border: 0;
+    background: transparent;
+    color: #98a2b3;
+    font-size: 1.2rem;
+    cursor: pointer;
+    border-radius: 0 12px 12px 0;
+}
+.ict-hist-del:hover {
+    color: #b42318;
+    background: #fee4e2;
+}
     display: flex;
     align-items: center;
     gap: 6px;

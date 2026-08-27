@@ -119,6 +119,68 @@ function getRequisitionAgeBucket(ageDays, status) {
     return { key: 'overdue', label: 'Overdue (8d+)', className: 'req-age-overdue' };
 }
 
+function formatReqDateIn(iso) {
+    const d = parseIsoDateOnly(iso);
+    if (!d) return '—';
+    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function getRequisitionStockSplit(req) {
+    const qtyNeeded = Math.max(1, Number(req?.qty) || 1);
+    const lookup = typeof lookupRequisitionStock === 'function' ? lookupRequisitionStock(req) : null;
+    const known = !!(lookup && lookup.ok && lookup.name);
+    const onHand = Number(lookup?.onHand) || 0;
+    const inQty = known ? Math.min(onHand, qtyNeeded) : 0;
+    const outQty = known ? Math.max(0, qtyNeeded - onHand) : qtyNeeded;
+    return {
+        qtyNeeded,
+        onHand,
+        inQty,
+        outQty,
+        known,
+        sufficient: known && onHand >= qtyNeeded
+    };
+}
+
+function getRequisitionAgeDisplay(req) {
+    const age = getRequisitionAgeDays(req);
+    const bucket = getRequisitionAgeBucket(age, req.status);
+    if (req.status === 'issued') {
+        return { age, bucket, text: `${age}d · satisfied`, title: 'Days from date in until issued / closed' };
+    }
+    if (req.status === 'cancelled') {
+        return { age, bucket, text: `${age}d · cancelled`, title: 'Days from date in until cancelled' };
+    }
+    if (req.status === 'part_issued') {
+        return { age, bucket, text: `${age}d · not fully satisfied`, title: 'Still in tray — remaining quantity not yet issued or bought' };
+    }
+    if (req.status === 'in_progress') {
+        return { age, bucket, text: `${age}d · in tray`, title: 'Responded but not yet satisfied' };
+    }
+    return { age, bucket, text: `${age}d · in tray`, title: 'Days in in-tray — not yet responded to or satisfied' };
+}
+
+function reqStockInCell(split) {
+    if (!split.known) {
+        return '<span class="req-stock-unk" title="Item not matched on the inventory catalog">—</span>';
+    }
+    if (split.inQty <= 0) {
+        return '<span class="req-stock-zero">0</span>';
+    }
+    const cls = split.sufficient ? 'req-stock-in is-full' : 'req-stock-in';
+    return `<span class="${cls}" title="On hand ${split.onHand}">${split.inQty}</span><small class="req-stock-of"> / ${split.qtyNeeded}</small>`;
+}
+
+function reqStockOutCell(split) {
+    if (!split.known) {
+        return `<span class="req-stock-out" title="Not found in catalog — treat as shortfall">${split.outQty}</span>`;
+    }
+    if (split.outQty <= 0) {
+        return '<span class="req-stock-ok">0</span>';
+    }
+    return `<span class="req-stock-out" title="Shortfall against quantity requested">${split.outQty}</span>`;
+}
+
 function getRequisitionCategoryOptions() {
     const fromCatalog = (typeof VOUCHER_INVENTORY_CATEGORIES !== 'undefined' ? VOUCHER_INVENTORY_CATEGORIES : [])
         .map((c) => ({ value: c.key, label: c.label }));
@@ -291,7 +353,7 @@ function clearRequisitionForm() {
     set('reqItDirStampDate', todayIsoLocal());
     renderRequisitionMinuteSheet(createBlankMinuteSheet());
     const title = document.getElementById('reqFormTitle');
-    if (title) title.textContent = 'Capture Loose Minute / Requisition';
+    if (title) title.textContent = 'Book in a requisition';
     const saveBtn = document.getElementById('reqSaveBtn');
     if (saveBtn) saveBtn.textContent = 'Save Requisition';
 }
@@ -521,7 +583,7 @@ function editRequisition(id) {
         return;
     }
     fillRequisitionForm(req);
-    document.getElementById('unit-requisitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('reqCapturePanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     document.getElementById('reqUnit')?.focus();
 }
 
@@ -565,7 +627,8 @@ function getRequisitionFilterState() {
     return {
         q: (document.getElementById('reqTableSearch')?.value || '').trim().toLowerCase(),
         status: document.getElementById('reqFilterStatus')?.value || 'open',
-        age: document.getElementById('reqFilterAge')?.value || 'all'
+        age: document.getElementById('reqFilterAge')?.value || 'all',
+        stock: document.getElementById('reqFilterStock')?.value || 'all'
     };
 }
 
@@ -580,6 +643,12 @@ function requisitionMatchesFilters(req, filters) {
         return false;
     }
     if (filters.age !== 'all' && bucket !== filters.age) return false;
+
+    if (filters.stock === 'in' || filters.stock === 'out') {
+        const split = getRequisitionStockSplit(req);
+        if (filters.stock === 'in' && !split.sufficient) return false;
+        if (filters.stock === 'out' && split.outQty <= 0) return false;
+    }
 
     if (!filters.q) return true;
     const hay = [
@@ -628,45 +697,44 @@ function renderRequisitionsTable() {
             const aOpen = REQ_OPEN_STATUSES.has(a.status) ? 1 : 0;
             const bOpen = REQ_OPEN_STATUSES.has(b.status) ? 1 : 0;
             if (aOpen !== bOpen) return bOpen - aOpen;
+            const da = String(a.receivedDate || a.createdAt || '');
+            const db = String(b.receivedDate || b.createdAt || '');
+            if (db !== da) return db.localeCompare(da);
             return getRequisitionAgeDays(b) - getRequisitionAgeDays(a);
         });
 
     if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="12" class="req-empty-row">No requisitions match this filter. Capture unit/formation requests above.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="req-empty-row">No requisitions in this view. Book one in below, or widen the filters.</td></tr>';
         return;
     }
 
     tbody.innerHTML = rows.map((req) => {
-        const age = getRequisitionAgeDays(req);
-        const bucket = getRequisitionAgeBucket(age, req.status);
+        const ageView = getRequisitionAgeDisplay(req);
+        const split = getRequisitionStockSplit(req);
         const canEdit = typeof canEditData === 'function' ? canEditData() : true;
         const item = getRequisitionItemCell(req);
         const unitLabel = (typeof resolveZnaUnitLabel === 'function' ? resolveZnaUnitLabel(req.unit) : req.unit) || '—';
         const open = REQ_OPEN_STATUSES.has(req.status);
-        const est = Number(req.estimatedCost) || (Number(req.unitPrice) && req.qty ? Number(req.unitPrice) * Number(req.qty) : 0);
-        const ym = req.targetMonth || String(req.receivedDate || '').slice(0, 7) || '—';
-        const proposal = typeof getMonthlyTargetProposal === 'function' ? getMonthlyTargetProposal(ym) : null;
-        const inProposal = proposal?.lines?.some((l) => l.requisitionId === req.id);
+        const qty = Math.max(1, Number(req.qty) || 1);
         return `
-            <tr class="${bucket.className}" data-req-id="${reqEscape(req.id)}">
-                <td class="req-cell-date">${reqEscape(req.receivedDate || '—')}</td>
-                <td class="req-cell-ref"><strong>${reqEscape(req.reqNo || '—')}</strong></td>
+            <tr class="${ageView.bucket.className}" data-req-id="${reqEscape(req.id)}">
+                <td class="req-cell-date">
+                    <strong>${reqEscape(formatReqDateIn(req.receivedDate))}</strong>
+                    <div class="req-item-meta">${reqEscape(req.reqNo || '—')}</div>
+                </td>
                 <td class="req-cell-unit" title="${reqEscape(unitLabel)}">${reqEscape(unitLabel)}</td>
                 <td class="req-cell-item">
                     <div class="req-item-primary">${reqEscape(item.primary)}</div>
+                    <div class="req-item-meta">Qty ${reqEscape(qty)}${req.priority === 'urgent' ? ' · URGENT' : ''}</div>
                     ${item.secondary ? `<div class="req-item-meta">${reqEscape(item.secondary)}</div>` : ''}
-                    ${item.refLine ? `<div class="req-item-meta">${reqEscape(item.refLine)}</div>` : ''}
-                    <div class="req-item-meta">${reqEscape(getRequisitionCategoryLabel(req.category))}</div>
                     ${typeof fulfillmentBadgeHtml === 'function' ? fulfillmentBadgeHtml(req) : ''}
-                    ${inProposal ? '<span class="req-proposal-badge">In target proposal</span>' : ''}
                 </td>
-                <td class="req-cell-qty">${reqEscape(req.qty || 0)}</td>
-                <td class="req-cell-cost">${est > 0 ? reqEscape(typeof formatCurrency === 'function' ? formatCurrency(est) : est) : '—'}</td>
-                <td class="req-cell-month">${reqEscape(ym)}</td>
-                <td><span class="req-priority req-priority-${reqEscape(req.priority || 'normal')}">${reqEscape((req.priority || 'normal').toUpperCase())}</span></td>
-                <td><span class="req-status-badge req-status-${reqEscape(req.status || 'received')}">${reqEscape(getRequisitionStatusLabel(req.status))}</span></td>
-                <td><span class="req-age-badge ${bucket.className}" title="${reqEscape(bucket.label)}">${age}d</span></td>
-                <td class="req-cell-by">${reqEscape(req.requestedBy || '—')}</td>
+                <td class="req-cell-stock">${reqStockInCell(split)}</td>
+                <td class="req-cell-stock">${reqStockOutCell(split)}</td>
+                <td>
+                    <span class="req-age-badge ${ageView.bucket.className}" title="${reqEscape(ageView.title)}">${reqEscape(ageView.text)}</span>
+                    <div class="req-item-meta">${reqEscape(getRequisitionStatusLabel(req.status))}</div>
+                </td>
                 <td class="req-actions-cell">
                     ${canEdit ? `
                         <div class="req-action-bar" role="group" aria-label="Requisition actions">
@@ -776,6 +844,7 @@ function initRequisitionsModule() {
 
     document.getElementById('reqFilterStatus')?.addEventListener('change', renderRequisitionsTable);
     document.getElementById('reqFilterAge')?.addEventListener('change', renderRequisitionsTable);
+    document.getElementById('reqFilterStock')?.addEventListener('change', renderRequisitionsTable);
     document.getElementById('reqTableSearch')?.addEventListener('input', renderRequisitionsTable);
     document.getElementById('reqTableSearch')?.addEventListener('search-history-commit', renderRequisitionsTable);
     moduleEl.querySelector('.btn-table-search')?.addEventListener('click', renderRequisitionsTable);
@@ -901,40 +970,40 @@ function buildUnitRequisitionsReportData() {
             return getRequisitionAgeDays(b) - getRequisitionAgeDays(a);
         })
         .map((req) => {
-            const est = Number(req.estimatedCost) || (Number(req.unitPrice) && req.qty ? Number(req.unitPrice) * Number(req.qty) : 0);
-            const gl = typeof resolveGlForRequisition === 'function' ? resolveGlForRequisition(req) : '—';
+            const split = typeof getRequisitionStockSplit === 'function' ? getRequisitionStockSplit(req) : null;
+            const ageView = typeof getRequisitionAgeDisplay === 'function'
+                ? getRequisitionAgeDisplay(req)
+                : { text: `${getRequisitionAgeDays(req)}d` };
             return [
-                req.reqNo || '',
                 req.receivedDate || '',
                 req.unit || '',
                 req.itemDescription || req.subject || '',
-                req.qty || '',
-                est ? formatCurrency(est) : '',
-                gl,
-                req.targetMonth || String(req.receivedDate || '').slice(0, 7),
-                (req.priority || 'normal').toUpperCase(),
-                getRequisitionStatusLabel(req.status),
-                `${getRequisitionAgeDays(req)}d`
+                split ? (split.known ? String(split.inQty) : '—') : (req.qty || ''),
+                split ? String(split.outQty) : '',
+                ageView.text,
+                getRequisitionStatusLabel(req.status)
             ];
         });
     return {
-        title: 'Unit Requisitions — Priority List (Open)',
+        title: 'Requisitions — In-tray',
         summary: [
-            `Open requisitions: ${rows.length}`,
-            'Sorted urgent first, then by age.',
-            'Use Monthly Target Proposal on the dashboard to roll needs into a DAF target request.'
+            `Listed: ${rows.length}`,
+            'Date in, unit, items, in-stock / out-of-stock, and age (days in tray until satisfied).'
         ],
         fields: [],
         tables: [{
             tbodyId: 'unit-requisitions-priority',
-            title: 'Open unit / formation requisitions',
-            headers: ['Req No', 'Received', 'Unit', 'Item', 'Qty', 'Est. cost', 'GL', 'Target month', 'Priority', 'Status', 'Age'],
+            title: 'Requisitions in-tray',
+            headers: ['Date in', 'Unit', 'Item(s) requested', 'In-stock', 'Out-of-stock', 'Age', 'Status'],
             rows
         }]
     };
 }
 
 window.buildUnitRequisitionsReportData = buildUnitRequisitionsReportData;
+window.getRequisitionStockSplit = getRequisitionStockSplit;
+window.getRequisitionAgeDisplay = getRequisitionAgeDisplay;
+window.formatReqDateIn = formatReqDateIn;
 window.ensureExampleMidLaptopRequisition = ensureExampleMidLaptopRequisition;
 window.createBlankMinuteSheet = createBlankMinuteSheet;
 window.REQ_MINUTE_SHEET_APPTS = REQ_MINUTE_SHEET_APPTS;

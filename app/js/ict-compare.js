@@ -1,10 +1,14 @@
 /* ict-compare.js — Workshop head-to-head ICT buy comparison by duty profile */
 
+const ICT_COMPARE_HISTORY_MAX = 20;
+const ICT_COMPARE_HISTORY_ITEMS_MAX = 28;
+
 const ictCompareState = {
     items: [],
     selected: new Set(),
     dutyKey: '',
     category: 'laptop',
+    extra: '',
     lastResult: null
 };
 
@@ -19,6 +23,7 @@ function ictCmpEsc(v) {
 function fillIctCompareDutySelect() {
     const el = document.getElementById('ictCompareDuty');
     if (!el || typeof laptopDutyProfileOptions !== 'function') return;
+    const keep = el.value || ictCompareState.dutyKey;
     const opts = laptopDutyProfileOptions().filter((o) => o.value !== 'any');
     const groups = {};
     const order = [];
@@ -35,6 +40,7 @@ function fillIctCompareDutySelect() {
             `<option value="${ictCmpEsc(o.value)}">${ictCmpEsc(o.label)}</option>`
         )).join('')}</optgroup>`
     )).join('');
+    if (keep && [...el.options].some((o) => o.value === keep)) el.value = keep;
 }
 
 function updateIctCompareDutyHint() {
@@ -50,6 +56,7 @@ function updateIctCompareDutyHint() {
     }
     hint.hidden = false;
     hint.textContent = `${profile.groupLabel}: ${profile.summary} ${profile.deviceHint || ''}`.trim();
+    syncIctCompareCrawlButton();
 }
 
 function ictCompareDutyScore(row, profile) {
@@ -135,6 +142,7 @@ function renderIctCompareGrid() {
             } else {
                 ictCompareState.selected.delete(id);
             }
+            patchIctCompareHistorySelection();
             renderIctCompareTable();
         });
     });
@@ -275,6 +283,208 @@ function setIctCompareStatus(msg, kind = '') {
     el.className = `spec-search-status${kind ? ` is-${kind}` : ''}`;
 }
 
+function ictCompareHistoryKey(dutyKey, category, extra) {
+    return `${String(dutyKey || '').trim()}::${String(category || 'laptop').trim()}::${String(extra || '').trim().toLowerCase()}`;
+}
+
+function currentIctCompareSearchKey() {
+    const duty = document.getElementById('ictCompareDuty')?.value || ictCompareState.dutyKey || '';
+    const category = document.getElementById('ictCompareCategory')?.value || ictCompareState.category || 'laptop';
+    const extra = String(document.getElementById('ictCompareExtra')?.value || ictCompareState.extra || '').trim();
+    return ictCompareHistoryKey(duty, category, extra);
+}
+
+function ensureIctCompareHistory() {
+    if (typeof appState === 'undefined' || !appState) return [];
+    if (!Array.isArray(appState.ictCompareHistory)) appState.ictCompareHistory = [];
+    return appState.ictCompareHistory;
+}
+
+function slimIctCompareItem(row) {
+    if (!row || typeof row !== 'object') return null;
+    return {
+        id: row.id || '',
+        title: row.title || '',
+        subtitle: row.subtitle || '',
+        series: row.series || '',
+        url: row.url || '',
+        priceText: row.priceText || '',
+        priceDisplay: row.priceDisplay || '',
+        price: Number.isFinite(Number(row.price)) ? Number(row.price) : null,
+        snippet: row.snippet || '',
+        imageUrl: row.imageUrl || '',
+        source: row.source || 'web',
+        isNew: !!row.isNew
+    };
+}
+
+function findIctCompareHistory(key) {
+    const list = ensureIctCompareHistory();
+    return list.find((row) => row && row.key === key) || null;
+}
+
+function ictCompareWhen(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return String(iso);
+    return d.toLocaleString(undefined, {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function persistIctCompareHistory({ query, crawled, cached } = {}) {
+    if (typeof appState === 'undefined' || !appState) return;
+    const dutyKey = ictCompareState.dutyKey;
+    const category = ictCompareState.category || 'laptop';
+    const extra = String(ictCompareState.extra || '').trim();
+    if (!dutyKey) return;
+    const key = ictCompareHistoryKey(dutyKey, category, extra);
+    const profile = typeof getLaptopDutyProfile === 'function' ? getLaptopDutyProfile(dutyKey) : null;
+    const items = ictCompareState.items
+        .map(slimIctCompareItem)
+        .filter((row) => row && row.id)
+        .slice(0, ICT_COMPARE_HISTORY_ITEMS_MAX);
+    if (!items.length) return;
+    const entry = {
+        id: `h2h-${Date.now()}`,
+        key,
+        dutyKey,
+        dutyLabel: profile?.label || dutyKey,
+        category,
+        extra,
+        query: query || '',
+        crawledAt: new Date().toISOString(),
+        crawled: crawled !== false,
+        cached: !!cached,
+        selectedIds: [...ictCompareState.selected],
+        items
+    };
+    const next = [entry, ...ensureIctCompareHistory().filter((row) => row && row.key !== key)]
+        .slice(0, ICT_COMPARE_HISTORY_MAX);
+    appState.ictCompareHistory = next;
+    if (typeof saveState === 'function') saveState();
+    renderIctCompareHistory();
+    syncIctCompareCrawlButton();
+}
+
+function patchIctCompareHistorySelection() {
+    const key = ictCompareHistoryKey(
+        ictCompareState.dutyKey,
+        ictCompareState.category,
+        ictCompareState.extra
+    );
+    const hit = findIctCompareHistory(key);
+    if (!hit) return;
+    hit.selectedIds = [...ictCompareState.selected];
+    if (typeof saveState === 'function') saveState();
+}
+
+function syncIctCompareCrawlButton() {
+    const btn = document.getElementById('ictCompareCrawlBtn');
+    if (!btn || btn.disabled) return;
+    const hit = findIctCompareHistory(currentIctCompareSearchKey());
+    btn.textContent = hit
+        ? 'Recall saved ranking'
+        : 'Crawl web & rank for this duty';
+}
+
+function categoryLabelForHistory(category) {
+    const map = {
+        laptop: 'Laptop',
+        desktop: 'Desktop / workstation',
+        tablet: 'Tablet',
+        printer: 'Printer / MFP',
+        server: 'Server',
+        all: 'Any ICT'
+    };
+    return map[category] || category || 'Laptop';
+}
+
+function renderIctCompareHistory() {
+    const list = document.getElementById('ictCompareHistoryList');
+    if (!list) return;
+    const rows = ensureIctCompareHistory();
+    if (!rows.length) {
+        list.innerHTML = '<li class="ict-compare-history-empty">No saved searches yet. Crawl once and it will appear here.</li>';
+        return;
+    }
+    list.innerHTML = rows.map((row) => {
+        const extra = row.extra ? ` · ${ictCmpEsc(row.extra)}` : '';
+        const n = Array.isArray(row.items) ? row.items.length : 0;
+        const when = ictCompareWhen(row.crawledAt);
+        const source = row.crawled ? (row.cached ? 'cached crawl' : 'web crawl') : 'recalled';
+        return `<li class="ict-compare-history-item">
+            <button type="button" class="ict-hist-recall" data-hist-id="${ictCmpEsc(row.id)}">
+                <strong>${ictCmpEsc(row.dutyLabel || row.dutyKey)}</strong>
+                <span>${ictCmpEsc(categoryLabelForHistory(row.category))}${extra} · ${n} candidate(s) · ${ictCmpEsc(when)} · ${source}</span>
+            </button>
+            <button type="button" class="ict-hist-del" data-hist-del="${ictCmpEsc(row.id)}" aria-label="Remove saved search">&times;</button>
+        </li>`;
+    }).join('');
+}
+
+function applyIctCompareHistoryEntry(entry, { note } = {}) {
+    if (!entry) return false;
+    const dutyEl = document.getElementById('ictCompareDuty');
+    const catEl = document.getElementById('ictCompareCategory');
+    const extraEl = document.getElementById('ictCompareExtra');
+    if (dutyEl && entry.dutyKey) dutyEl.value = entry.dutyKey;
+    if (catEl && entry.category) catEl.value = entry.category;
+    if (extraEl) extraEl.value = entry.extra || '';
+
+    ictCompareState.dutyKey = entry.dutyKey || '';
+    ictCompareState.category = entry.category || 'laptop';
+    ictCompareState.extra = entry.extra || '';
+    ictCompareState.items = (entry.items || []).map(slimIctCompareItem).filter(Boolean);
+    const selected = Array.isArray(entry.selectedIds) ? entry.selectedIds.filter(Boolean) : [];
+    ictCompareState.selected = new Set(
+        selected.length
+            ? selected
+            : ictCompareState.items.slice(0, 4).map((r) => r.id).filter(Boolean)
+    );
+    ictCompareState.lastResult = { cached: true, fromHistory: true };
+
+    updateIctCompareDutyHint();
+    renderIctCompareGrid();
+    renderIctCompareTable();
+    renderIctCompareHistory();
+    syncIctCompareCrawlButton();
+
+    const n = ictCompareState.items.length;
+    const when = ictCompareWhen(entry.crawledAt);
+    setIctCompareStatus(
+        note
+            || `${n} candidate(s) recalled for ${entry.dutyLabel || entry.dutyKey}${when ? ` (saved ${when})` : ''}. Not crawled — use Force refresh crawl for new web results.`,
+        n ? 'ok' : 'warn'
+    );
+    return true;
+}
+
+function deleteIctCompareHistory(id) {
+    if (typeof appState === 'undefined' || !appState) return;
+    appState.ictCompareHistory = ensureIctCompareHistory().filter((row) => row && row.id !== id);
+    if (typeof saveState === 'function') saveState();
+    renderIctCompareHistory();
+    syncIctCompareCrawlButton();
+}
+
+function clearIctCompareHistory() {
+    const go = typeof confirmAction === 'function'
+        ? confirmAction('Clear all saved head-to-head searches? This does not delete the local product catalog.')
+        : window.confirm('Clear all saved head-to-head searches?');
+    if (!go) return;
+    if (typeof appState !== 'undefined' && appState) {
+        appState.ictCompareHistory = [];
+        if (typeof saveState === 'function') saveState();
+    }
+    renderIctCompareHistory();
+    syncIctCompareCrawlButton();
+    if (typeof showToast === 'function') showToast('Head-to-head search history cleared.', 'info');
+}
+
 async function runIctCompareCrawl({ force = false } = {}) {
     const profile = typeof getLaptopDutyProfile === 'function'
         ? getLaptopDutyProfile(document.getElementById('ictCompareDuty')?.value)
@@ -289,10 +499,24 @@ async function runIctCompareCrawl({ force = false } = {}) {
         ? dutyProfileWebQuery(profile, category)
         : `${profile.label} laptop`;
     const query = extra ? `${base} ${extra}` : base;
+    const historyKey = ictCompareHistoryKey(profile.key, category, extra);
+
+    if (!force) {
+        const saved = findIctCompareHistory(historyKey);
+        if (saved && Array.isArray(saved.items) && saved.items.length) {
+            applyIctCompareHistoryEntry(saved);
+            return;
+        }
+    }
 
     ictCompareState.dutyKey = profile.key;
     ictCompareState.category = category;
+    ictCompareState.extra = extra;
     ictCompareState.selected = new Set();
+
+    if (typeof rememberSearchTerm === 'function' && extra) {
+        rememberSearchTerm('ictCompareExtra', extra);
+    }
 
     const local = typeof mergeLocalCatalogForQuery === 'function'
         ? mergeLocalCatalogForQuery(query, category === 'all' ? 'laptop' : category)
@@ -310,6 +534,17 @@ async function runIctCompareCrawl({ force = false } = {}) {
             webItems = result.items || [];
         }
     } catch (err) {
+        const saved = findIctCompareHistory(historyKey);
+        if (saved && Array.isArray(saved.items) && saved.items.length) {
+            applyIctCompareHistoryEntry(saved, {
+                note: `${err.message || 'Web crawl failed'} — showing last saved ranking instead.`
+            });
+            if (btn) {
+                btn.disabled = false;
+                syncIctCompareCrawlButton();
+            }
+            return;
+        }
         setIctCompareStatus(err.message || 'Web crawl failed — showing local catalog only.', 'warn');
     }
 
@@ -327,6 +562,11 @@ async function runIctCompareCrawl({ force = false } = {}) {
     );
 
     ictCompareState.lastResult = result;
+    persistIctCompareHistory({
+        query,
+        crawled: true,
+        cached: !!result?.cached
+    });
     renderIctCompareGrid();
     renderIctCompareTable();
 
@@ -334,11 +574,14 @@ async function runIctCompareCrawl({ force = false } = {}) {
     const picked = ictCompareState.selected.size;
     setIctCompareStatus(
         n
-            ? `${n} candidate(s) ranked for ${profile.label}. Top ${picked} selected for the ranked bar chart.${result?.cached ? ' (cached crawl)' : ''}`
+            ? `${n} candidate(s) ranked for ${profile.label}. Top ${picked} selected for the ranked bar chart.${result?.cached ? ' (server cache — not a new web crawl)' : ' Saved to previous searches.'}`
             : 'No candidates. Check START-SYSTEM is running for web crawl, or widen keywords.',
         n ? 'ok' : 'warn'
     );
-    if (btn) { btn.disabled = false; btn.textContent = 'Crawl web & rank for this duty'; }
+    if (btn) {
+        btn.disabled = false;
+        syncIctCompareCrawlButton();
+    }
 }
 
 function initIctCompareModule() {
@@ -346,9 +589,19 @@ function initIctCompareModule() {
     if (!root) return;
     fillIctCompareDutySelect();
     updateIctCompareDutyHint();
-    if (root.dataset.inited === '1') return;
+    renderIctCompareHistory();
+    if (root.dataset.inited === '1') {
+        if (!ictCompareState.items.length) {
+            const latest = ensureIctCompareHistory()[0];
+            if (latest) applyIctCompareHistoryEntry(latest);
+        }
+        syncIctCompareCrawlButton();
+        return;
+    }
     root.dataset.inited = '1';
     document.getElementById('ictCompareDuty')?.addEventListener('change', updateIctCompareDutyHint);
+    document.getElementById('ictCompareCategory')?.addEventListener('change', syncIctCompareCrawlButton);
+    document.getElementById('ictCompareExtra')?.addEventListener('input', syncIctCompareCrawlButton);
     document.getElementById('ictCompareCrawlBtn')?.addEventListener('click', () => runIctCompareCrawl({ force: false }));
     document.getElementById('ictCompareRefreshBtn')?.addEventListener('click', () => runIctCompareCrawl({ force: true }));
     document.getElementById('ictCompareClearBtn')?.addEventListener('click', () => {
@@ -356,8 +609,23 @@ function initIctCompareModule() {
         ictCompareState.selected = new Set();
         renderIctCompareGrid();
         renderIctCompareTable();
-        setIctCompareStatus('');
+        setIctCompareStatus('Comparison cleared. Previous searches are still saved below.');
     });
+    document.getElementById('ictCompareClearHistoryBtn')?.addEventListener('click', clearIctCompareHistory);
+    document.getElementById('ictCompareHistoryList')?.addEventListener('click', (e) => {
+        const del = e.target.closest('[data-hist-del]');
+        if (del) {
+            deleteIctCompareHistory(del.getAttribute('data-hist-del'));
+            return;
+        }
+        const recall = e.target.closest('[data-hist-recall]');
+        if (!recall) return;
+        const id = recall.getAttribute('data-hist-id');
+        const entry = ensureIctCompareHistory().find((row) => row && row.id === id);
+        if (entry) applyIctCompareHistoryEntry(entry);
+    });
+    const latest = ensureIctCompareHistory()[0];
+    if (latest) applyIctCompareHistoryEntry(latest);
 }
 
 window.initIctCompareModule = initIctCompareModule;

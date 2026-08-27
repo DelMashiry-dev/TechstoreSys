@@ -182,6 +182,8 @@ function createDefaultState() {
         correspondenceFiles: [],
         correspondenceHandovers: [],
         undeliveredOrders: createDefaultUndelivered(),
+        supplierDebts: [],
+        supplierDebtSeedRev: 0,
         workshopReceiptCerts: [],
         dpProcurements: createDefaultDpProcurements(),
         costComparativeSchedules: [],
@@ -189,12 +191,27 @@ function createDefaultState() {
         unitNews: [],
         alertDesk: { seq: 0, meta: {}, reads: {} },
         officeMessages: [],
+        ictCompareHistory: [],
+        navMenuOrder: {},
         saveRevision: 0,
         savedAt: '',
         savedBy: '',
         modules: {},
         users: createDefaultUsers()
     };
+}
+
+function mergeNavMenuOrder(parsed) {
+    const incoming = parsed && parsed.navMenuOrder;
+    if (incoming && typeof incoming === 'object' && !Array.isArray(incoming)) {
+        return incoming;
+    }
+    if (appState && appState.navMenuOrder
+        && typeof appState.navMenuOrder === 'object'
+        && !Array.isArray(appState.navMenuOrder)) {
+        return appState.navMenuOrder;
+    }
+    return {};
 }
 
 function createDefaultRequisitions() {
@@ -259,6 +276,8 @@ function loadState() {
             correspondenceFiles: Array.isArray(parsed.correspondenceFiles) ? parsed.correspondenceFiles : [],
             correspondenceHandovers: Array.isArray(parsed.correspondenceHandovers) ? parsed.correspondenceHandovers : [],
             undeliveredOrders: Array.isArray(parsed.undeliveredOrders) ? parsed.undeliveredOrders : [],
+            supplierDebts: Array.isArray(parsed.supplierDebts) ? parsed.supplierDebts : [],
+            supplierDebtSeedRev: Number(parsed.supplierDebtSeedRev) || 0,
             workshopReceiptCerts: Array.isArray(parsed.workshopReceiptCerts) ? parsed.workshopReceiptCerts : [],
             dpProcurements: Array.isArray(parsed.dpProcurements) ? parsed.dpProcurements : [],
             costComparativeSchedules: Array.isArray(parsed.costComparativeSchedules) ? parsed.costComparativeSchedules : [],
@@ -272,6 +291,8 @@ function loadState() {
                 }
                 : { seq: 0, meta: {}, reads: {} },
             officeMessages: Array.isArray(parsed.officeMessages) ? parsed.officeMessages : [],
+            ictCompareHistory: Array.isArray(parsed.ictCompareHistory) ? parsed.ictCompareHistory : [],
+            navMenuOrder: mergeNavMenuOrder(parsed),
             saveRevision: Number(parsed.saveRevision) || 0,
             savedAt: parsed.savedAt || '',
             savedBy: parsed.savedBy || '',
@@ -333,6 +354,8 @@ function mergeState(parsed) {
         correspondenceFiles: Array.isArray(parsed.correspondenceFiles) ? parsed.correspondenceFiles : [],
         correspondenceHandovers: Array.isArray(parsed.correspondenceHandovers) ? parsed.correspondenceHandovers : [],
         undeliveredOrders: Array.isArray(parsed.undeliveredOrders) ? parsed.undeliveredOrders : [],
+        supplierDebts: Array.isArray(parsed.supplierDebts) ? parsed.supplierDebts : [],
+        supplierDebtSeedRev: Number(parsed.supplierDebtSeedRev) || 0,
         workshopReceiptCerts: Array.isArray(parsed.workshopReceiptCerts) ? parsed.workshopReceiptCerts : [],
         dpProcurements: Array.isArray(parsed.dpProcurements) ? parsed.dpProcurements : [],
         costComparativeSchedules: Array.isArray(parsed.costComparativeSchedules) ? parsed.costComparativeSchedules : [],
@@ -346,6 +369,8 @@ function mergeState(parsed) {
             }
             : { seq: 0, meta: {}, reads: {} },
         officeMessages: Array.isArray(parsed.officeMessages) ? parsed.officeMessages : [],
+        ictCompareHistory: Array.isArray(parsed.ictCompareHistory) ? parsed.ictCompareHistory : [],
+        navMenuOrder: mergeNavMenuOrder(parsed),
         saveRevision: Number(parsed.saveRevision) || 0,
         savedAt: parsed.savedAt || '',
         savedBy: parsed.savedBy || '',
@@ -423,6 +448,7 @@ function stateHasOperationalData(state) {
     if ((state.stockTakes || []).length > 0) return true;
     if ((state.requisitions || []).length > 0) return true;
     if ((state.undeliveredOrders || []).length > 0) return true;
+    if ((state.supplierDebts || []).length > 0) return true;
     if ((state.dpProcurements || []).length > 0) return true;
     if ((state.unitChecks || []).length > 0) return true;
     if ((state.monthlyReturns || []).length > 0) return true;

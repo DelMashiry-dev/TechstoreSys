@@ -4,9 +4,10 @@
                     <button class="close-btn">&times;</button>
                 </div>
                 <p class="q982-intro">
-                    Pick the <strong>duty profile</strong>, crawl the web plus the local catalog, then read a ranked
-                    <strong>horizontal bar chart</strong> (outer = best-buy, inner = duty fit) like a review-site FPS chart.
-                    Numbers are duty/price scores, not invented game FPS. Always confirm a formal quote before F1.
+                    Pick the <strong>duty profile</strong>, then crawl once. Later visits <strong>recall that search</strong>
+                    from history (no new web crawl) unless you use <strong>Force refresh crawl</strong>.
+                    Ranked <strong>horizontal bar chart</strong>: outer = best-buy, inner = duty fit.
+                    Numbers are duty/price scores, not game FPS. Always confirm a formal quote before F1.
                 </p>
 
                 <div class="dashboard-panel">
@@ -41,6 +42,14 @@
                         <button type="button" class="btn btn-ghost" id="ictCompareClearBtn">Clear comparison</button>
                     </div>
                     <div id="ictCompareStatus" class="spec-search-status" aria-live="polite"></div>
+                    <div class="ict-compare-history-wrap">
+                        <div class="section-heading section-heading-compact">
+                            <h3>Previous searches</h3>
+                            <button type="button" class="btn btn-ghost btn-sm" id="ictCompareClearHistoryBtn">Clear history</button>
+                        </div>
+                        <p class="muted ict-compare-history-lead">Saved rankings are reused instead of crawling. Click a row to restore it.</p>
+                        <ul id="ictCompareHistoryList" class="ict-compare-history"></ul>
+                    </div>
                 </div>
 
                 <div class="dashboard-panel">
@@ -48,7 +57,7 @@
                         <h3>2. Candidates — tick 2–4 for head-to-head</h3>
                     </div>
                     <div id="ictCompareGrid" class="market-catalog-grid">
-                        <div class="market-catalog-empty">Choose a duty profile and click <strong>Crawl web &amp; rank</strong>.</div>
+                        <div class="market-catalog-empty">Choose a duty profile and click <strong>Crawl web &amp; rank</strong>, or pick a previous search.</div>
                     </div>
                 </div>
 

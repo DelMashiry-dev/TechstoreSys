@@ -441,6 +441,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="#" class="nav-btn" data-target="supplier-debts" title="Goods received, not yet paid — age of debt and chase DAF">
+                        <img class="nav-ico-img" src="../assets/nav-icons/suppliers-contracts.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Supplier Debts</span>
+                    </a>
+                </li>
+                <li>
                     <a href="#" class="nav-btn" data-target="unit-checks">
                         <img class="nav-ico-img" src="../assets/nav-icons/unit-checks.png" alt="" width="46" height="46" loading="lazy">
                         <span class="nav-label">Unit Check Log</span>
@@ -453,9 +459,9 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="nav-btn" data-target="unit-requisitions">
+                    <a href="#" class="nav-btn" data-target="unit-requisitions" title="Requisitions in-tray — incoming unit / formation requests">
                         <img class="nav-ico-img" src="../assets/nav-icons/unit-requisitions.png" alt="" width="46" height="46" loading="lazy">
-                        <span class="nav-label">Unit Requisitions</span>
+                        <span class="nav-label">Requisitions</span>
                     </a>
                 </li>
                 <li class="nav-admin-only">
@@ -1500,6 +1506,11 @@
                 <h3>Density</h3>
                 <div id="uiDensityCards" class="ui-density-grid"></div>
             </section>
+            <section class="ui-prefs-section">
+                <h3>Sidebar menu</h3>
+                <p class="ui-prefs-sub">Drag buttons in the left menu to change their order. On a touch screen, press and hold a button, then drag. New modules added later appear at the bottom of that group.</p>
+                <button type="button" class="btn btn-secondary" id="uiPrefsResetNavOrder">Reset menu order</button>
+            </section>
             <div class="ui-prefs-foot">
                 <button type="button" class="btn btn-primary" id="uiPrefsDoneBtn">Done</button>
             </div>
@@ -1584,6 +1595,7 @@
     <script src="js/org-profile.js"></script>
     <script src="js/zna-units.js"></script>
     <script src="js/catalog.js"></script>
+    <script src="js/ict-spares-accessories.js?v=20260827spa"></script>
     <script src="js/inventory-ledgers.js"></script>
     <script src="js/it-dir-bids-seed.js"></script>
     <script src="js/product-specs-catalog.js"></script>
@@ -1608,6 +1620,7 @@
     <script src="js/system-dictionary.js"></script>
     <script src="js/field-help.js"></script>
     <script src="js/ui-preferences.js"></script>
+    <script src="js/nav-reorder.js?v=20260827nav"></script>
     <script src="js/modules-data.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/inventory.js"></script>
@@ -1629,7 +1642,7 @@
     <script src="js/laptop-distribution-aug2026.js"></script>
     <script src="js/board-schedule-2023.js"></script>
     <script src="js/ict-distribution.js"></script>
-    <script src="js/requisitions.js"></script>
+    <script src="js/requisitions.js?v=20260827tray"></script>
     <script src="js/requisition-procurement.js"></script>
     <script src="js/dept-desk.js"></script>
     <script src="js/orderly-room.js"></script>
@@ -1637,6 +1650,7 @@
     <script src="js/correspondence-files.js"></script>
     <script src="js/monthly-returns.js"></script>
     <script src="js/undelivered.js"></script>
+    <script src="js/supplier-debts.js?v=20260827debt"></script>
     <script src="js/workshop-receipt-cert.js"></script>
     <script src="js/delivery-note.js"></script>
     <script src="js/temporary-loans.js"></script>
@@ -1648,7 +1662,7 @@
     <script src="js/workshop-stores-request.js"></script>
     <script src="js/bids-import.js"></script>
     <script src="js/market-catalog.js?v=20260826kw"></script>
-    <script src="js/ict-compare.js?v=20260827glass"></script>
+    <script src="js/ict-compare.js?v=20260827hist"></script>
     <script src="js/real-dp-purchase-orders.js?v=20260826dp"></script>
     <script src="js/zimbabwe-po-benchmarks.js?v=20260826po2"></script>
     <script src="js/guide-quotation.js?v=20260826gq2"></script>

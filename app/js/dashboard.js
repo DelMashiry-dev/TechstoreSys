@@ -19,7 +19,7 @@ function getModuleLabel(moduleId) {
         'permanent-loans': 'Permanent Loans — Laptops & iPads',
         'orderly-room': 'Orderly Room — DF & Correspondence Files',
         'it-dir-comms': 'IT Directorate — Communications Portal',
-        'unit-requisitions': 'Unit / Formation Requisitions',
+        'unit-requisitions': 'Requisitions — In-tray',
         'monthly-target-proposal': 'IT Dir Monthly Target / Priority List',
         'daf-fund-request-memo': 'DAF Fund Request Memo',
         'monthly-returns': 'Monthly Returns — Unit ICT Equipment',
@@ -58,6 +58,7 @@ function getModuleLabel(moduleId) {
         'delivery-note': 'Delivery Note',
         'purchase-orders': 'Purchase Orders',
         'undelivered-orders': 'Undelivered Items',
+        'supplier-debts': 'Supplier Debts — Non-paid goods received',
         'workshop-repairs': 'Workshop Register',
         'gate-register': 'Gate Register (RP)',
         'techstores-equipment-register': 'TechStores Equipment Register',
@@ -1106,8 +1107,9 @@ async function navigateToModule(targetId, options = {}) {
         if (typeof initUnitChecksModule === 'function') initUnitChecksModule();
         if (typeof renderUnitChecksModule === 'function') renderUnitChecksModule();
     }
-    if (targetId === 'unit-requisitions' && typeof renderRequisitionsModule === 'function') {
-        renderRequisitionsModule();
+    if (targetId === 'unit-requisitions') {
+        if (typeof initRequisitionsModule === 'function') initRequisitionsModule();
+        if (typeof renderRequisitionsModule === 'function') renderRequisitionsModule();
     }
     if (typeof GL_MODULE_CODE !== 'undefined' && GL_MODULE_CODE[targetId] && typeof injectGlModuleProcurementButtons === 'function') {
         injectGlModuleProcurementButtons();
@@ -1163,6 +1165,10 @@ async function navigateToModule(targetId, options = {}) {
     }
     if (targetId === 'undelivered-orders' && typeof renderUndeliveredModule === 'function') {
         renderUndeliveredModule();
+    }
+    if (targetId === 'supplier-debts') {
+        if (typeof initSupplierDebtsModule === 'function') initSupplierDebtsModule();
+        if (typeof renderSupplierDebtsModule === 'function') renderSupplierDebtsModule();
     }
     if (targetId === 'zna-q-forms-index' && typeof renderZnaQFormsIndex === 'function') {
         renderZnaQFormsIndex();

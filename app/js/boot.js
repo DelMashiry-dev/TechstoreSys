@@ -189,6 +189,7 @@ async function runHeavyBootInit() {
     if (typeof initCorrespondenceFilesModule === 'function') initCorrespondenceFilesModule();
     if (typeof initMonthlyReturnsModule === 'function') initMonthlyReturnsModule();
     if (typeof initUndeliveredModule === 'function') initUndeliveredModule();
+    if (typeof initSupplierDebtsModule === 'function') initSupplierDebtsModule();
     if (typeof initWorkshopReceiptCertModule === 'function') initWorkshopReceiptCertModule();
     if (typeof initDeliveryNoteModule === 'function') initDeliveryNoteModule();
     if (typeof initDpProcurementModule === 'function') initDpProcurementModule();
@@ -218,6 +219,7 @@ async function runHeavyBootInit() {
     }
     if (typeof initPersistentDatabaseHooks === 'function') initPersistentDatabaseHooks();
     if (typeof initFieldHelpSystem === 'function') initFieldHelpSystem();
+    if (typeof initNavReorder === 'function') initNavReorder();
 }
 window.runHeavyBootInit = runHeavyBootInit;
 
@@ -243,6 +245,7 @@ async function finalizeBootState(state) {
         appState.orderlyDailyFile = [];
     }
     applyTheme(appState.theme);
+    if (typeof initNavReorder === 'function') initNavReorder();
     const bootSession = typeof loadSession === 'function' ? loadSession() : null;
     if (bootSession) {
         await runHeavyBootInit();
