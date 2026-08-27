@@ -156,7 +156,7 @@ function aggregateStoresLookup(query) {
         ? ensureStoresInventory()
         : (appState?.storesInventory || null);
     (inv?.transactions || []).forEach((txn) => {
-        const hay = `${txn.party} ${txn.item} ${txn.voucherNo} ${txn.description} ${txn.by} ${txn.category}`;
+        const hay = `${txn.party} ${txn.appointment} ${txn.item} ${txn.voucherNo} ${txn.description} ${txn.by} ${txn.category}`;
         const score = silScoreText(hay, q);
         if (score < 55) return;
         const key = `stk-${txn.id}`;

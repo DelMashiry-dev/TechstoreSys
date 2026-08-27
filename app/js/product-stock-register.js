@@ -1209,7 +1209,7 @@ function renderProductStockHistoryModal(itemId) {
                                     <td>${psrEscape(when)}</td>
                                     <td><span class="psr-action ${isIn ? 'is-in' : 'is-out'}">${action}</span></td>
                                     <td>${psrEscape(String(t.qty ?? ''))}</td>
-                                    <td>${psrEscape(t.party || '—')}</td>
+                                    <td>${psrEscape([t.party, t.appointment].filter(Boolean).join(' · ') || '—')}</td>
                                     <td>${psrEscape(t.by || '—')}</td>
                                     <td><small>${psrEscape(refs)}</small></td>
                                 </tr>`;

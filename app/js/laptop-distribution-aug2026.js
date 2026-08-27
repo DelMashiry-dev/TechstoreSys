@@ -7,7 +7,7 @@
 
 const LAPTOP_DIST_AUG2026_KEY = 'laptopDistributionAug2026';
 const LAPTOP_DIST_SOURCE = 'laptop-distribution-aug2026';
-const LAPTOP_DIST_IV_REV = 2;
+const LAPTOP_DIST_IV_REV = 3;
 const LAPTOP_DIST_CUSTOM_OMNI_ID = 'custom__inv-laptops__hp-omnibook-xflip-intel-core-ultra-9';
 
 const LAPTOP_DIST_CATALOG = {
@@ -128,6 +128,9 @@ function laptopDistEnsureTxn(inv, payload) {
     if (existing) {
         if (serial && !existing.serialOrZa) existing.serialOrZa = serial;
         if (payload.voucherNo && !existing.voucherNo) existing.voucherNo = payload.voucherNo;
+        if (payload.appointment && existing.appointment !== payload.appointment) {
+            existing.appointment = payload.appointment;
+        }
         if (payload.item) existing.item = payload.item;
         if (payload.description) existing.description = payload.description;
         return { txn: existing, created: false };
@@ -146,6 +149,7 @@ function laptopDistEnsureTxn(inv, payload) {
         serialOrZa: serial,
         voucherNo: payload.voucherNo || '',
         party: payload.party || '',
+        appointment: (payload.appointment || '').trim(),
         source: payload.source || LAPTOP_DIST_SOURCE,
         sourceRef: payload.sourceRef || '',
         by: 'Laptop distribution import',
@@ -428,6 +432,7 @@ function applyLaptopDistributionAug2026(opts = {}) {
             qty: 1,
             serialOrZa: laptopDistZa(row.za),
             party: row.holder,
+            appointment: row.person.appointment || '',
             description: `Q 1033/${row.za} — ${row.person.appointment} — ${row.cat.name}`,
             voucherNo: laptopDistIvNo(row.iso, row.za),
             source: LAPTOP_DIST_SOURCE,

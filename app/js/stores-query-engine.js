@@ -512,7 +512,7 @@ function runStoresQuery(templateId, params = {}) {
             if (wantReceipt && !wantIssue && txn.type !== 'receipt') return false;
             if (!sqInPeriod(txn.date, dateFrom, dateTo)) return false;
             if (!sqTxnMatchesCategory(txn, category)) return false;
-            const hay = `${txn.item} ${txn.description} ${txn.party} ${txn.voucherNo} ${txn.by}`.toLowerCase();
+            const hay = `${txn.item} ${txn.description} ${txn.party} ${txn.appointment} ${txn.voucherNo} ${txn.by}`.toLowerCase();
             if (itemContains && !hay.includes(itemContains)) return false;
             if (partyContains && !hay.includes(partyContains)) return false;
             return true;
@@ -526,6 +526,7 @@ function runStoresQuery(templateId, params = {}) {
             qty: txn.qty ?? 1,
             voucher: txn.voucherNo || '—',
             party: txn.party || '—',
+            appointment: txn.appointment || '—',
             by: txn.by || '—',
             category: txn.category || '—'
         }));
@@ -541,7 +542,8 @@ function runStoresQuery(templateId, params = {}) {
             { key: 'item', label: 'Item' },
             { key: 'qty', label: 'Qty' },
             { key: 'voucher', label: 'RV/IV No.' },
-            { key: 'party', label: 'Party' },
+            { key: 'party', label: 'Issued To / From' },
+            { key: 'appointment', label: 'Appointment' },
             { key: 'by', label: 'By' }
         ],
         rows,

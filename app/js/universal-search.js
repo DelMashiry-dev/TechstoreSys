@@ -219,7 +219,7 @@ function collectStockMovementSearchEntries(add) {
             title: `${isIssue ? 'Issue' : 'Receive'} — ${party || item || voucher}`,
             subtitle: [txn.date, voucher, item].filter(Boolean).join(' · '),
             haystack: [
-                party, voucher, item, txn.description, txn.by, txn.type,
+                party, voucher, item, txn.description, txn.appointment, txn.by, txn.type,
                 txn.source, txn.sourceRef, txn.gl,
                 isIssue ? 'issue issued to personnel' : 'receive receipt'
             ].filter(Boolean).join(' ').toLowerCase(),

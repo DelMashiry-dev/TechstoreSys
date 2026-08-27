@@ -8,7 +8,7 @@ const REPORT_TABLE_HEADERS = {
     'gl-220200002-table-body': ['Serial', 'Item', 'Description', 'Qty', 'Unit', 'Price/Unit', 'Amount'],
     'gl-2201900002-table-body': ['Date', 'Consignor / Consignee', 'Receipts', 'Issues', 'Stock', 'Voucher / QM Signature', 'Number and Name'],
     'gl-3112210001-table-body': ['Date', 'Consignor / Consignee', 'Receipts', 'Issues', 'Stock', 'Voucher / QM Signature', 'Number and Name'],
-    'voucher-table-body': ['Date', 'Item Category', 'Item', 'Description', 'Qty', 'UoM', 'GL Account', 'Unit Cost', 'Line Total', 'RV/IV No.', 'Purchase No.', 'Supplied By', 'Issued To', 'Initials'],
+    'voucher-table-body': ['Date', 'Item Category', 'Item', 'Description', 'Qty', 'UoM', 'GL Account', 'Unit Cost', 'Line Total', 'RV/IV No.', 'Purchase No.', 'Supplied By', 'Issued To', 'Appointment', 'Initials'],
     'bids-table-body': ['Serial', 'Item', 'Cost Centre', 'GL A/C', 'Description', 'Qty', 'Unit Cost', 'Total Cost'],
     'unit-equipment-table-body': ['Ser', 'Item Name', 'ZA Number', 'Description', 'Holding Unit', 'Location'],
     'loans-table-body': ['Date Loaned', 'ZA Number', 'Item', 'Description', 'Qty', 'UoM', 'Issued To', 'Force No.', 'Unit / Formation / Dir', 'Expected Return', 'Date Returned', 'Issued By', 'Issuer Initials'],
@@ -243,7 +243,7 @@ function buildStoresInventoryReportData(dateFrom, dateTo) {
         });
     });
 
-    const movementHeaders = ['Date', 'Type', 'Source', 'Category', 'Item', 'Qty', 'UoM', 'GL', 'RV/IV / DN', 'PO / Cycle', 'Party', 'By', 'Description'];
+    const movementHeaders = ['Date', 'Type', 'Source', 'Category', 'Item', 'Qty', 'UoM', 'GL', 'RV/IV / DN', 'PO / Cycle', 'Party', 'Appointment', 'By', 'Description'];
     const movements = (appState.storesInventory?.transactions || []).filter((txn) => {
         const d = txn.date || '';
         if (dateFrom && d < dateFrom) return false;
@@ -265,6 +265,7 @@ function buildStoresInventoryReportData(dateFrom, dateTo) {
             txn.deliveryNoteRef || txn.voucherNo || '',
             [txn.poNumber, txn.dpRef].filter(Boolean).join(' / ') || txn.sourceRef || '',
             txn.party || '',
+            txn.appointment || '',
             txn.by || '',
             txn.description || ''
         ];

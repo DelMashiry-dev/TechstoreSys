@@ -366,15 +366,18 @@ const GL_ACCOUNTS = {
 const VOUCHER_ROW_LAYOUT = {
     hasCategory: {
         category: 1, item: 2, desc: 3, qty: 4, uom: 5, gl: 6,
-        unitCost: 7, lineTotal: 8, rvIv: 9, purchase: 10, supplied: 11, issued: 12, initials: 13
+        unitCost: 7, lineTotal: 8, rvIv: 9, purchase: 10, supplied: 11, issued: 12,
+        appointment: 13, initials: 14
     },
     hasGl: {
         category: -1, item: 1, desc: 2, qty: 3, uom: 4, gl: 5,
-        unitCost: 6, lineTotal: 7, rvIv: 8, purchase: 9, supplied: 10, issued: 11, initials: 12
+        unitCost: 6, lineTotal: 7, rvIv: 8, purchase: 9, supplied: 10, issued: 11,
+        appointment: 12, initials: 13
     },
     legacy: {
         category: -1, item: 1, desc: 2, qty: 3, uom: 4, gl: -1,
-        unitCost: -1, lineTotal: -1, rvIv: 5, purchase: 6, supplied: 7, issued: 8, initials: 9
+        unitCost: -1, lineTotal: -1, rvIv: 5, purchase: 6, supplied: 7, issued: 8,
+        appointment: -1, initials: 9
     }
 };
 

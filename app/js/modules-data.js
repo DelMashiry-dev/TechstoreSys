@@ -172,36 +172,52 @@ function migratePurchaseOrderLineRowData(rowData) {
 function migrateVoucherRowData(rowData) {
     const cells = rowData.cells || [];
     const defaultGl = document.getElementById('voucherDefaultGl')?.value || '2200600002';
+    const appointmentCell = {
+        tag: 'input',
+        type: 'text',
+        value: '',
+        className: 'form-control voucher-appointment',
+        placeholder: 'e.g. TSO, OC DBA'
+    };
+
+    const insertAppointment = (list, issuedIndex) => {
+        if (list.length > issuedIndex + 1 && list.length >= 15) return list;
+        const out = list.slice();
+        out.splice(issuedIndex + 1, 0, { ...appointmentCell });
+        return out;
+    };
 
     // Already has item-category select at index 1
     if (cells.length >= 13 && cells[1]?.tag === 'select' && cells[6]?.tag === 'select') {
-        return rowData;
+        if (cells.length >= 15) return rowData;
+        return { ...rowData, cells: insertAppointment(cells, 12) };
     }
 
-    // Current hasGl layout (GL at index 5) → insert category after date
+    // Current hasGl layout (GL at index 5) → insert category after date, then appointment
     if (cells.length >= 12 && cells[5]?.tag === 'select' && GL_ACCOUNTS[cells[5]?.value]) {
-        return {
-            ...rowData,
-            cells: [
-                cells[0] || { tag: 'input', type: 'date', value: '' },
-                { tag: 'select', value: 'consumables-toners', className: 'form-control voucher-item-category' },
-                cells[1] || { tag: 'input', type: 'text', value: '', className: 'form-control voucher-item-name' },
-                cells[2] || { tag: 'input', type: 'text', value: '' },
-                cells[3] || { tag: 'input', type: 'number', value: '' },
-                cells[4] || { tag: 'input', type: 'text', value: '' },
-                cells[5],
-                cells[6] || { tag: 'input', type: 'number', value: '' },
-                cells[7] || { tag: 'input', type: 'number', value: '' },
-                cells[8] || { tag: 'input', type: 'text', value: '' },
-                cells[9] || { tag: 'input', type: 'text', value: '' },
-                cells[10] || { tag: 'input', type: 'text', value: '' },
-                cells[11] || { tag: 'input', type: 'text', value: '' },
-                cells[12] || { tag: 'input', type: 'text', value: '' }
-            ]
-        };
+        const migrated = [
+            cells[0] || { tag: 'input', type: 'date', value: '' },
+            { tag: 'select', value: 'consumables-toners', className: 'form-control voucher-item-category' },
+            cells[1] || { tag: 'input', type: 'text', value: '', className: 'form-control voucher-item-name' },
+            cells[2] || { tag: 'input', type: 'text', value: '' },
+            cells[3] || { tag: 'input', type: 'number', value: '' },
+            cells[4] || { tag: 'input', type: 'text', value: '' },
+            cells[5],
+            cells[6] || { tag: 'input', type: 'number', value: '' },
+            cells[7] || { tag: 'input', type: 'number', value: '' },
+            cells[8] || { tag: 'input', type: 'text', value: '' },
+            cells[9] || { tag: 'input', type: 'text', value: '' },
+            cells[10] || { tag: 'input', type: 'text', value: '' },
+            cells[11] || { tag: 'input', type: 'text', value: '' },
+            cells[12] || { tag: 'input', type: 'text', value: '' }
+        ];
+        return { ...rowData, cells: insertAppointment(migrated, 12) };
     }
 
-    if (cells.length >= 12) return rowData;
+    if (cells.length >= 15) return rowData;
+    if (cells.length >= 12) {
+        return { ...rowData, cells: insertAppointment(cells, Math.min(12, cells.length - 1)) };
+    }
 
     return {
         ...rowData,
@@ -219,6 +235,7 @@ function migrateVoucherRowData(rowData) {
             cells[6] || { tag: 'input', type: 'text', value: '' },
             cells[7] || { tag: 'input', type: 'text', value: '' },
             cells[8] || { tag: 'input', type: 'text', value: '' },
+            { ...appointmentCell },
             cells[9] || { tag: 'input', type: 'text', value: '' }
         ]
     };

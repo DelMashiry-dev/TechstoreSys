@@ -16,7 +16,7 @@ from server import load_full_state, save_full_state  # noqa: E402
 
 SOURCE = "laptop-distribution-aug2026"
 KEY = "laptopDistributionAug2026"
-IV_REV = 2
+IV_REV = 3
 CUSTOM_OMNI_ID = "custom__inv-laptops__hp-omnibook-xflip-intel-core-ultra-9"
 
 CATALOG = {
@@ -152,6 +152,9 @@ def ensure_txn(transactions: list, payload: dict) -> tuple[dict, bool]:
             existing["item"] = payload["item"]
         if payload.get("description"):
             existing["description"] = payload["description"]
+        appt = str(payload.get("appointment") or "").strip()
+        if appt and existing.get("appointment") != appt:
+            existing["appointment"] = appt
         return existing, False
     txn = {
         "id": f"stk-ld-{int(datetime.now().timestamp() * 1000)}-{len(transactions)}",
@@ -167,6 +170,7 @@ def ensure_txn(transactions: list, payload: dict) -> tuple[dict, bool]:
         "serialOrZa": serial,
         "voucherNo": payload.get("voucherNo", ""),
         "party": payload.get("party", ""),
+        "appointment": str(payload.get("appointment") or "").strip(),
         "source": SOURCE,
         "sourceRef": payload["sourceRef"],
         "by": "Laptop distribution import",
@@ -437,6 +441,7 @@ def main() -> int:
                 "qty": 1,
                 "serialOrZa": za_key(row["za"]),
                 "party": row["holder"],
+                "appointment": row["person"].get("appointment") or "",
                 "description": f"Q 1033/{row['za']} — {row['person']['appointment']} — {row['cat']['name']}",
                 "voucherNo": iv_no(row["iso"], row["za"]),
                 "sourceRef": f"{row['za']}-issue",

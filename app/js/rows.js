@@ -47,9 +47,20 @@ function buildJobCardRow() {
 
 function buildVoucherRow() {
     const defaultGl = document.getElementById('voucherDefaultGl')?.value || '2200600002';
+    const catSelect = typeof buildVoucherCategorySelectHtml === 'function'
+        ? buildVoucherCategorySelectHtml('ict-equipment')
+        : `<select class="form-control voucher-item-category">
+            <option value="consumables-toners">Toners &amp; Ink</option>
+            <option value="consumables-media">Storage Media</option>
+            <option value="spares-parts">Parts / Spares</option>
+            <option value="maintenance-equipment">Maint. Equipment</option>
+            <option value="software-licences">Software</option>
+            <option value="ict-equipment" selected>ICT Equipment</option>
+        </select>`;
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td><input type="date" class="form-control voucher-date" data-date-rule="not-future" data-date-label="Voucher date"></td>
+        <td>${catSelect}</td>
         <td><input type="text" class="form-control voucher-item-name" placeholder="Item name"></td>
         <td><input type="text" class="form-control" placeholder="Description"></td>
         <td><input type="number" class="form-control voucher-qty" min="0" step="1"></td>
@@ -57,10 +68,11 @@ function buildVoucherRow() {
         <td>${buildGlSelectHtml('voucher-gl', defaultGl)}</td>
         <td><input type="number" class="form-control voucher-unit-cost" min="0" step="0.01"></td>
         <td><input type="number" class="form-control voucher-line-total" readonly></td>
+        <td><input type="text" class="form-control" placeholder="IV / RV No."></td>
         <td><input type="text" class="form-control"></td>
         <td><input type="text" class="form-control"></td>
-        <td><input type="text" class="form-control"></td>
-        <td><input type="text" class="form-control"></td>
+        <td><input type="text" class="form-control" placeholder="Name"></td>
+        <td><input type="text" class="form-control voucher-appointment" placeholder="e.g. TSO, OC DBA"></td>
         <td><input type="text" class="form-control"></td>
         <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>
     `;
