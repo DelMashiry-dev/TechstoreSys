@@ -174,6 +174,7 @@ function createDefaultState() {
         stockTakes: [],
         monthlyReturns: [],
         ictAccountability: [],
+        permanentLoans: [],
         ictDistributionLists: [],
         ictDistributionActiveId: '',
         requisitions: createDefaultRequisitions(),
@@ -250,6 +251,7 @@ function loadState() {
             stockTakes: Array.isArray(parsed.stockTakes) ? parsed.stockTakes : [],
             monthlyReturns: Array.isArray(parsed.monthlyReturns) ? parsed.monthlyReturns : [],
             ictAccountability: Array.isArray(parsed.ictAccountability) ? parsed.ictAccountability : [],
+            permanentLoans: Array.isArray(parsed.permanentLoans) ? parsed.permanentLoans : [],
             ictDistributionLists: Array.isArray(parsed.ictDistributionLists) ? parsed.ictDistributionLists : [],
             ictDistributionActiveId: parsed.ictDistributionActiveId || '',
             requisitions: Array.isArray(parsed.requisitions) ? parsed.requisitions : [],
@@ -323,6 +325,7 @@ function mergeState(parsed) {
         stockTakes: Array.isArray(parsed.stockTakes) ? parsed.stockTakes : [],
         monthlyReturns: Array.isArray(parsed.monthlyReturns) ? parsed.monthlyReturns : [],
         ictAccountability: Array.isArray(parsed.ictAccountability) ? parsed.ictAccountability : [],
+        permanentLoans: Array.isArray(parsed.permanentLoans) ? parsed.permanentLoans : [],
         ictDistributionLists: Array.isArray(parsed.ictDistributionLists) ? parsed.ictDistributionLists : [],
         ictDistributionActiveId: parsed.ictDistributionActiveId || '',
         requisitions: Array.isArray(parsed.requisitions) ? parsed.requisitions : [],
@@ -424,6 +427,7 @@ function stateHasOperationalData(state) {
     if ((state.unitChecks || []).length > 0) return true;
     if ((state.monthlyReturns || []).length > 0) return true;
     if ((state.ictAccountability || []).length > 0) return true;
+    if ((state.permanentLoans || []).length > 0) return true;
     if ((state.ictDistributionLists || []).length > 0) return true;
     const inv = state.storesInventory;
     if (inv && Array.isArray(inv.transactions) && inv.transactions.length > 0) return true;

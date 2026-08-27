@@ -141,6 +141,14 @@ async function runHeavyBootInit() {
             console.info('Physical stock count applied:', stockResult.lines);
         }
     }
+    if (typeof applyLaptopDistributionAug2026 === 'function') {
+        const laptopIv = applyLaptopDistributionAug2026();
+        if (laptopIv?.ok && (laptopIv.issues || laptopIv.receipts || laptopIv.patched)) {
+            if (typeof saveStateNow === 'function') await saveStateNow();
+            else saveState();
+            console.info('Laptop distribution IVs applied:', laptopIv);
+        }
+    }
     if (typeof ensureExampleMidLaptopRequisition === 'function') {
         const ex = ensureExampleMidLaptopRequisition();
         if (ex) {
@@ -186,6 +194,7 @@ async function runHeavyBootInit() {
     if (typeof initDpProcurementModule === 'function') initDpProcurementModule();
     if (typeof initUnitEquipmentModule === 'function') initUnitEquipmentModule();
     if (typeof initTemporaryLoansModule === 'function') initTemporaryLoansModule();
+    if (typeof initPermanentLoansModule === 'function') initPermanentLoansModule();
     if (typeof initIctAccountabilityModule === 'function') initIctAccountabilityModule();
     if (typeof initIctDistributionModule === 'function') initIctDistributionModule();
     if (typeof initStockTakeModule === 'function') initStockTakeModule();
@@ -286,10 +295,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.body.dataset.targetNavWired !== '1') {
         document.body.dataset.targetNavWired = '1';
         document.addEventListener('click', (e) => {
-            const target = e.target.closest('[data-target-nav]')?.getAttribute('data-target-nav');
+            const btn = e.target.closest('[data-target-nav]');
+            const target = btn?.getAttribute('data-target-nav');
             if (!target || typeof navigateToModule !== 'function') return;
             e.preventDefault();
-            navigateToModule(target);
+            const pgTab = btn.getAttribute('data-pg-tab');
+            navigateToModule(target, pgTab ? { pgTab } : {});
         });
     }
 

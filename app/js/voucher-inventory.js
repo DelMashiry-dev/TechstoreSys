@@ -1099,6 +1099,7 @@ function postStockTransaction(payload) {
         serialOrZa,
         voucherNo: (payload.voucherNo || '').trim(),
         party: (payload.party || '').trim(),
+        appointment: (payload.appointment || '').trim(),
         source: (payload.source || 'manual').trim(),
         sourceRef: (payload.sourceRef || '').trim(),
         dpRef: (payload.dpRef || '').trim(),
@@ -1780,7 +1781,11 @@ function openReceiveIssueModal(type) {
         </div>
         <div class="form-group">
             <label class="form-label" id="stockTxnPartyLabel">${isReceipt ? 'Received From / Supplier' : 'Issued To'}</label>
-            <input type="text" class="form-control" id="stockTxnParty" placeholder="${isReceipt ? 'Supplier / consignor' : 'Unit / person'}">
+            <input type="text" class="form-control" id="stockTxnParty" placeholder="${isReceipt ? 'Supplier / consignor' : 'Rank and name'}">
+        </div>
+        <div class="form-group" id="stockTxnAppointmentBox" ${isReceipt ? 'hidden' : ''}>
+            <label class="form-label">Appointment</label>
+            <input type="text" class="form-control" id="stockTxnAppointment" placeholder="Appointment of person issued / signing (e.g. TSO, OC DBA)">
         </div>
         <div class="stock-onhand-hint" id="stockTxnOnHandHint">Select a catalog item to see on-hand quantity.</div>
     `;
@@ -1810,6 +1815,7 @@ function openReceiveIssueModal(type) {
         const qtyLabel = document.getElementById('stockTxnQtyLabel');
         const partyLabel = document.getElementById('stockTxnPartyLabel');
         const party = document.getElementById('stockTxnParty');
+        const apptBox = document.getElementById('stockTxnAppointmentBox');
         if (isSw) {
             if (title) title.textContent = 'Purchase Software Licence (Expended)';
             if (confirmBtn) confirmBtn.textContent = 'Confirm Licence Purchase';
@@ -1821,6 +1827,7 @@ function openReceiveIssueModal(type) {
             if (party && !party.placeholder.includes('Anthropic')) {
                 party.placeholder = 'Online vendor / account';
             }
+            if (apptBox) apptBox.hidden = true;
             const vendorEl = document.getElementById('stockTxnLicenceVendor');
             if (vendorEl && !vendorEl.value) {
                 const itemName = document.getElementById('stockTxnItemName')?.value || '';
@@ -1839,6 +1846,9 @@ function openReceiveIssueModal(type) {
             if (qtyLabel) qtyLabel.textContent = 'Quantity';
             if (partyLabel) partyLabel.textContent = 'Received From / Supplier';
             if (party) party.placeholder = 'Supplier / consignor';
+            if (apptBox) apptBox.hidden = true;
+        } else {
+            if (apptBox) apptBox.hidden = false;
         }
         syncStockTxnSerialUi();
     };
@@ -2116,6 +2126,7 @@ function confirmStockTxnModal() {
         gl,
         voucherNo: document.getElementById('stockTxnVoucherNo')?.value || '',
         party: licenceVendor || party,
+        appointment: document.getElementById('stockTxnAppointment')?.value || '',
         serialOrZa,
         licenceTerm: isLicencePurchase ? licenceTerm : '',
         licenceStart: isLicencePurchase ? licenceStart : '',
@@ -2364,7 +2375,8 @@ function buildVoucherInventorySection() {
                             <th>UoM</th>
                             <th>GL</th>
                             <th>RV/IV No.</th>
-                            <th>Party</th>
+                            <th>Issued To / From</th>
+                            <th>Appointment</th>
                             <th>By</th>
                         </tr>
                     </thead>
@@ -2587,7 +2599,7 @@ function renderVoucherInventoryTables() {
         if (tbody) {
             const rows = summary.transactions;
             if (!rows.length) {
-                tbody.innerHTML = `<tr class="empty-inv-row"><td colspan="12">No receive/issue movements yet for ${invHtmlEscape(cat.label)}${mode === 'daily' ? ` on ${invHtmlEscape(focusDate)}` : ''}.</td></tr>`;
+                tbody.innerHTML = `<tr class="empty-inv-row"><td colspan="13">No receive/issue movements yet for ${invHtmlEscape(cat.label)}${mode === 'daily' ? ` on ${invHtmlEscape(focusDate)}` : ''}.</td></tr>`;
             } else {
                 tbody.innerHTML = rows.map((txn, idx) => {
                     const isReceipt = txn.type === 'receipt';
@@ -2603,6 +2615,7 @@ function renderVoucherInventoryTables() {
                             data-inv-serial="${invAttrEscape(txn.serialOrZa || '')}"
                             data-inv-desc="${invAttrEscape(txn.description || '')}"
                             data-inv-party="${invAttrEscape(txn.party || '')}"
+                            data-inv-appointment="${invAttrEscape(txn.appointment || '')}"
                             data-inv-voucher="${invAttrEscape(txn.voucherNo || '')}"
                             data-inv-qty="${Number(txn.qty) || 0}"
                             data-inv-by="${invAttrEscape(txn.by || '')}">
@@ -2617,6 +2630,7 @@ function renderVoucherInventoryTables() {
                             <td>${invHtmlEscape(txn.gl || '—')}</td>
                             <td>${invHtmlEscape(txn.voucherNo || '—')}</td>
                             <td>${invHtmlEscape(txn.party || '—')}</td>
+                            <td>${invHtmlEscape(txn.appointment || '—')}</td>
                             <td>${invHtmlEscape(txn.by || '—')}</td>
                         </tr>
                     `;

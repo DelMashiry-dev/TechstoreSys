@@ -35,6 +35,16 @@ def main() -> int:
     inv = state.setdefault("storesInventory", {"openings": {}, "transactions": []})
     inv.setdefault("openings", {})
     txns = inv.setdefault("transactions", [])
+    dist = inv.get("laptopDistributionAug2026") or {}
+    if dist.get("applied") and int(dist.get("ivRev") or 0) >= 2:
+        print("SKIP: laptop distribution IVs already allocated unit receipts with ZA numbers.")
+        return 0
+    if any(
+        t.get("source") == "laptop-distribution-aug2026" and t.get("type") == "issue"
+        for t in txns
+    ):
+        print("SKIP: laptop distribution IVs already posted.")
+        return 0
     before = len(txns)
     added = []
 

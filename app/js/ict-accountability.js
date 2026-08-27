@@ -18,6 +18,7 @@ const ICT_ACC_STATUSES = [
     { value: 'in_stores', label: 'In stores (MLG / IT Dir)', group: 'Custody', className: 'ict-acc-status-ok' },
     { value: 'issued', label: 'Issued to holding unit', group: 'Custody', className: 'ict-acc-status-issued' },
     { value: 'on_loan', label: 'On temporary loan', group: 'Custody', className: 'ict-acc-status-monitor' },
+    { value: 'on_perm_loan', label: 'On permanent loan (laptop / iPad)', group: 'Custody', className: 'ict-acc-status-issued' },
     { value: 'returned', label: 'Returned', group: 'Custody', className: 'ict-acc-status-ok' },
     // Serviceability (printers / laptops / desktops)
     { value: 'serviceable', label: 'Serviceable (S)', group: 'Serviceability', className: 'ict-acc-status-ok' },
@@ -29,6 +30,7 @@ const ICT_ACC_STATUSES = [
     { value: 'stolen', label: 'Stolen (accounted)', group: 'Losses', className: 'ict-acc-status-critical' },
     { value: 'destroyed_natural', label: 'Destroyed by natural causes', group: 'Losses', className: 'ict-acc-status-critical' },
     { value: 'written_off', label: 'Written off (legacy)', group: 'Losses', className: 'ict-acc-status-neutral' },
+    { value: 'personal_item', label: 'Struck off — personal item (Comd/34)', group: 'Disposal / strike-off', className: 'ict-acc-status-ok' },
     // Software
     { value: 'expired', label: 'Licence expired', group: 'Software', className: 'ict-acc-status-critical' }
 ];
@@ -49,7 +51,7 @@ const ICT_ACC_STRUCK_OFF = [
 ];
 
 const ICT_ACC_CLOSED_STATUSES = new Set([
-    'backloaded', 'boarded', 'condemned', 'stolen', 'destroyed_natural', 'written_off'
+    'backloaded', 'boarded', 'condemned', 'stolen', 'destroyed_natural', 'written_off', 'personal_item'
 ]);
 
 const ICT_ACC_LOSS_STATUSES = new Set(['stolen', 'destroyed_natural']);
@@ -373,7 +375,7 @@ function getIctAccountabilityStats(rows) {
         expendable: list.filter((r) => r.assetClass === 'expendable').length,
         software: list.filter((r) => r.assetClass === 'software').length,
         spare: list.filter((r) => r.assetClass === 'spare').length,
-        issued: list.filter((r) => r.status === 'issued' || r.status === 'on_loan' || r.status === 'serviceable').length,
+        issued: list.filter((r) => r.status === 'issued' || r.status === 'on_loan' || r.status === 'on_perm_loan' || r.status === 'serviceable').length,
         unserviceable: list.filter((r) => r.status === 'unserviceable').length,
         backloaded: list.filter((r) => r.status === 'backloaded' || r.status === 'boarded' || r.status === 'condemned').length,
         losses: list.filter((r) => r.status === 'stolen' || r.status === 'destroyed_natural').length,
@@ -566,9 +568,19 @@ function collectLoanRowsForZaLookup() {
     return pool;
 }
 
+function collectPermanentLoanRowsForZaLookup() {
+    const pool = [];
+    if (typeof collectPermanentLoanRows === 'function') {
+        collectPermanentLoanRows().forEach((loan) => pool.push(loan));
+    } else if (Array.isArray(appState?.permanentLoans)) {
+        appState.permanentLoans.forEach((loan) => pool.push(loan));
+    }
+    return pool;
+}
+
 /**
  * Full dossier for a ZA number — unique ID lookup across Asset Register,
- * Unit Equipment, and Temporary Loans.
+ * Unit Equipment, Temporary Loans, and Permanent Loans.
  */
 function buildZaDossier(zaRaw) {
     const za = normalizeZaNumber(zaRaw);
@@ -581,8 +593,13 @@ function buildZaDossier(zaRaw) {
         .filter((r) => normalizeZaNumber(r.zaNumber) === za);
     const loans = collectLoanRowsForZaLookup()
         .filter((r) => normalizeZaNumber(r.zaNumber) === za);
+    const permLoans = collectPermanentLoanRowsForZaLookup()
+        .filter((r) => normalizeZaNumber(r.zaNumber) === za);
     const activeLoan = loans.find((l) => !l.dateReturned && l.status?.key !== 'returned' && l.status?.key !== 'returned_late')
         || loans.find((l) => !l.dateReturned)
+        || null;
+    const activePerm = permLoans.find((l) => l.status?.active)
+        || permLoans[0]
         || null;
 
     const ue = unitEquipment[0] || null;
@@ -590,9 +607,10 @@ function buildZaDossier(zaRaw) {
     if (register) sources.push('Asset Register');
     if (ue) sources.push('Unit Equipment');
     if (loans.length) sources.push('Temporary Loans');
+    if (permLoans.length) sources.push('Permanent Loans');
 
     if (!sources.length) {
-        return { found: false, za, sources: [], register: null, unitEquipment: [], loans: [] };
+        return { found: false, za, sources: [], register: null, unitEquipment: [], loans: [], permLoans: [] };
     }
 
     const unitLabel = (u) => {
@@ -603,20 +621,23 @@ function buildZaDossier(zaRaw) {
     const merged = {
         id: register?.id || `za-dossier-${za}`,
         assetClass: register?.assetClass || 'equipment',
-        designation: register?.designation || ue?.item || activeLoan?.item || za,
-        description: register?.description || ue?.description || activeLoan?.description || '',
+        designation: register?.designation || ue?.item || activePerm?.item || activeLoan?.item || za,
+        description: register?.description || ue?.description || activePerm?.description || activeLoan?.description || '',
         zaNumber: za,
-        serialNo: register?.serialNo || '',
-        qty: register?.qty || Number(activeLoan?.qty) || 1,
-        status: register?.status || (activeLoan && !activeLoan.dateReturned ? 'on_loan' : (ue?.holdingUnit ? 'issued' : 'in_stores')),
-        holderName: register?.holderName || activeLoan?.issuedTo || '',
-        forceNo: register?.forceNo || activeLoan?.forceNo || '',
-        unit: register?.unit || ue?.holdingUnit || activeLoan?.unit || '',
+        serialNo: register?.serialNo || activePerm?.serialNo || '',
+        qty: register?.qty || Number(activePerm?.qty) || Number(activeLoan?.qty) || 1,
+        status: register?.status
+            || (activePerm && activePerm.status?.key === 'personal' ? 'personal_item'
+                : (activePerm && activePerm.status?.active ? 'on_perm_loan'
+                    : (activeLoan && !activeLoan.dateReturned ? 'on_loan' : (ue?.holdingUnit ? 'issued' : 'in_stores')))),
+        holderName: register?.holderName || activePerm?.issuedTo || activeLoan?.issuedTo || '',
+        forceNo: register?.forceNo || activePerm?.forceNo || activeLoan?.forceNo || '',
+        unit: register?.unit || ue?.holdingUnit || activePerm?.unit || activeLoan?.unit || '',
         purchaseDate: register?.purchaseDate || '',
         receivedDate: register?.receivedDate || '',
-        issueDate: register?.issueDate || activeLoan?.loanDate || '',
+        issueDate: register?.issueDate || activePerm?.issueDate || activeLoan?.loanDate || '',
         expiryDate: register?.expiryDate || '',
-        form1033Ref: register?.form1033Ref || '',
+        form1033Ref: register?.form1033Ref || activePerm?.voucherNo || '',
         form982Ref: register?.form982Ref || '',
         form1045Ref: register?.form1045Ref || '',
         boardRef: register?.boardRef || '',
@@ -627,6 +648,7 @@ function buildZaDossier(zaRaw) {
         engraved: register ? !!register.engraved : true,
         itDirLocation: ue?.location || '',
         activeLoan,
+        activePerm,
         onAssetRegister: !!register,
         onUnitEquipment: !!ue
     };
@@ -641,7 +663,9 @@ function buildZaDossier(zaRaw) {
         register,
         unitEquipment,
         loans,
+        permLoans,
         activeLoan,
+        activePerm,
         record: { ...merged, statusMeta: sm },
         where,
         unitLabel: unitLabel(merged.unit),
@@ -891,9 +915,13 @@ function renderZaDossierHtml(dossier) {
     const sm = r.statusMeta || getIctAccStatusMeta(r);
     const where = dossier.where || describeIctAccWhereabouts(r);
     const loan = dossier.activeLoan;
+    const perm = dossier.activePerm;
     const loanUnit = loan?.unit && typeof resolveZnaUnitLabel === 'function'
         ? (resolveZnaUnitLabel(loan.unit) || loan.unit)
         : (loan?.unit || '');
+    const permUnit = perm?.unit && typeof resolveZnaUnitLabel === 'function'
+        ? (resolveZnaUnitLabel(perm.unit) || perm.unit)
+        : (perm?.unit || '');
     const holderLine = [r.holderName, r.forceNo ? `(${r.forceNo})` : ''].filter(Boolean).join(' ') || '—';
 
     return `
@@ -935,6 +963,13 @@ function renderZaDossierHtml(dossier) {
                 ` : ''}
                 ${r.remarks ? `<div class="ict-acc-za-dossier-span"><span>Remarks</span><strong>${ictAccEscape(r.remarks)}</strong></div>` : ''}
             </div>
+            ${perm ? `
+            <div class="ict-acc-za-dossier-loan">
+                <strong>Permanent loan (Comd/34)</strong>
+                <span>To ${ictAccEscape([perm.rank, perm.issuedTo].filter(Boolean).join(' ') || '—')}${permUnit ? ` · ${ictAccEscape(permUnit)}` : ''}</span>
+                <span>Issued ${ictAccEscape(ictAccFormatDate(perm.issueDate) || '—')} · ${ictAccEscape(perm.status?.label || 'On permanent loan')}</span>
+            </div>
+            ` : ''}
             ${loan ? `
             <div class="ict-acc-za-dossier-loan">
                 <strong>Active temporary loan</strong>

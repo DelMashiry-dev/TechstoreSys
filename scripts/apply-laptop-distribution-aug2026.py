@@ -1,4 +1,8 @@
-"""Apply IT Dir laptop distribution (14 Aug 2026) from LAP-TOPS.docx."""
+"""Apply IT Dir laptop distribution IVs (14 Aug 2026) from LAP-TOPS.docx.
+
+Source document is not stored. Posts Q 1033 issue vouchers with ZA numbers.
+Splits the unserialized 14 Aug OmniBook batch into unit receipts, then issues.
+"""
 from __future__ import annotations
 
 import sys
@@ -12,6 +16,8 @@ from server import load_full_state, save_full_state  # noqa: E402
 
 SOURCE = "laptop-distribution-aug2026"
 KEY = "laptopDistributionAug2026"
+IV_REV = 3
+CUSTOM_OMNI_ID = "custom__inv-laptops__hp-omnibook-xflip-intel-core-ultra-9"
 
 CATALOG = {
     "omnibook": {
@@ -75,9 +81,52 @@ def holder_label(person: dict) -> str:
     return f"{person['rank']} {person['name']}".strip()
 
 
-def txn_exists(transactions: list, source_ref: str, txn_type: str) -> bool:
+def za_key(za: str) -> str:
+    raw = str(za or "").strip().upper().replace(" ", "")
+    if not raw:
+        return ""
+    if raw.startswith("ZA"):
+        return raw.replace("ZA-", "ZA")
+    return f"ZA{raw}"
+
+
+def yymm(iso: str) -> str:
+    if len(iso) >= 7 and iso[4] == "-":
+        return f"{iso[5:7]}{iso[2:4]}"
+    return "0826"
+
+
+def iv_no(iso: str, za: str) -> str:
+    return f"IV/IT/{yymm(iso)}/{za}"
+
+
+def rv_no(iso: str, za: str, kind: str) -> str:
+    if kind == "ret":
+        return f"RV/IT/{yymm(iso)}/RET-{za}"
+    return f"RV/IT/{yymm(iso)}/ZA-{za}"
+
+
+def norm_serial(value: str) -> str:
+    return za_key(value) if value else ""
+
+
+def find_txn(transactions: list, source_ref: str, txn_type: str):
+    return next(
+        (
+            t
+            for t in transactions
+            if t.get("source") == SOURCE and t.get("sourceRef") == source_ref and t.get("type") == txn_type
+        ),
+        None,
+    )
+
+
+def serial_receipt_exists(transactions: list, serial: str) -> bool:
+    key = norm_serial(serial)
+    if not key:
+        return False
     return any(
-        t.get("source") == SOURCE and t.get("sourceRef") == source_ref and t.get("type") == txn_type
+        t.get("type") == "receipt" and norm_serial(t.get("serialOrZa") or "") == key
         for t in transactions
     )
 
@@ -91,27 +140,193 @@ def upsert_ict(records: list, partial: dict) -> None:
     records.insert(0, partial)
 
 
-def post_stock(transactions: list, payload: dict) -> None:
-    transactions.append(
-        {
-            "id": f"stk-ld-{int(datetime.now().timestamp() * 1000)}-{len(transactions)}",
-            "date": payload["date"],
-            "type": payload["type"],
-            "itemId": payload["itemId"],
+def ensure_txn(transactions: list, payload: dict) -> tuple[dict, bool]:
+    existing = find_txn(transactions, payload["sourceRef"], payload["type"])
+    serial = norm_serial(payload.get("serialOrZa") or "")
+    if existing:
+        if serial and not existing.get("serialOrZa"):
+            existing["serialOrZa"] = serial
+        if payload.get("voucherNo") and not existing.get("voucherNo"):
+            existing["voucherNo"] = payload["voucherNo"]
+        if payload.get("item"):
+            existing["item"] = payload["item"]
+        if payload.get("description"):
+            existing["description"] = payload["description"]
+        appt = str(payload.get("appointment") or "").strip()
+        if appt and existing.get("appointment") != appt:
+            existing["appointment"] = appt
+        return existing, False
+    txn = {
+        "id": f"stk-ld-{int(datetime.now().timestamp() * 1000)}-{len(transactions)}",
+        "date": payload["date"],
+        "type": payload["type"],
+        "itemId": payload["itemId"],
+        "category": payload.get("category") or "ict-equipment",
+        "item": payload["item"],
+        "description": payload.get("description", ""),
+        "qty": int(payload.get("qty") or 1),
+        "uom": "EA",
+        "gl": payload.get("gl") or "3112210001",
+        "serialOrZa": serial,
+        "voucherNo": payload.get("voucherNo", ""),
+        "party": payload.get("party", ""),
+        "appointment": str(payload.get("appointment") or "").strip(),
+        "source": SOURCE,
+        "sourceRef": payload["sourceRef"],
+        "by": "Laptop distribution import",
+        "createdAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+    }
+    transactions.append(txn)
+    return txn, True
+
+
+def find_bulk_receipt(transactions: list):
+    candidates = []
+    for t in transactions:
+        if t.get("type") != "receipt":
+            continue
+        if t.get("source") == SOURCE:
+            continue
+        if norm_serial(t.get("serialOrZa") or ""):
+            continue
+        qty = float(t.get("qty") or 0)
+        if qty <= 1:
+            continue
+        blob = f"{t.get('itemId', '')} {t.get('item', '')}".lower()
+        if t.get("itemId") == CUSTOM_OMNI_ID or "omnibook" in blob:
+            candidates.append(t)
+    candidates.sort(key=lambda t: float(t.get("qty") or 0), reverse=True)
+    return candidates[0] if candidates else None
+
+
+def collect_aug_issues() -> list[dict]:
+    rows = []
+    for person in PERSONNEL:
+        holder = holder_label(person)
+        issues = sorted(person["issues"], key=lambda x: parse_date(x["date"]))
+        for idx, issue in enumerate(issues):
+            iso = parse_date(issue["date"])
+            if not (iso >= "2026-08-01" and issue.get("model") and issue.get("za")):
+                continue
+            cat = CATALOG.get(issue["model"], CATALOG["legacy"])
+            rows.append(
+                {
+                    "person": person,
+                    "holder": holder,
+                    "issue": issue,
+                    "idx": idx,
+                    "iso": iso,
+                    "za": str(issue["za"]).strip(),
+                    "cat": cat,
+                    "prev": issues[idx - 1] if idx > 0 else None,
+                }
+            )
+    rows.sort(key=lambda r: (r["iso"], r["za"]))
+    return rows
+
+
+def allocate_unit_receipts(txns: list, aug_rows: list, summary: dict) -> dict:
+    item_by_za: dict[str, dict] = {}
+    bulk = find_bulk_receipt(txns)
+    if bulk and float(bulk.get("qty") or 0) >= len(aug_rows):
+        remain_qty = int(float(bulk["qty"]) - len(aug_rows))
+        batch_item_id = bulk["itemId"]
+        batch_item_name = bulk.get("item") or CATALOG["omnibook"]["name"]
+        batch_date = bulk.get("date") or "2026-08-14"
+        batch_cat = bulk.get("category") or "inv-laptops"
+        for i, row in enumerate(aug_rows):
+            serial = za_key(row["za"])
+            item_by_za[row["za"]] = {
+                "itemId": batch_item_id,
+                "item": row["cat"]["name"],
+                "category": batch_cat,
+            }
+            if serial_receipt_exists(txns, serial):
+                continue
+            if i == 0:
+                bulk["qty"] = 1
+                bulk["serialOrZa"] = serial
+                bulk["voucherNo"] = bulk.get("voucherNo") or rv_no(row["iso"], row["za"], "recv")
+                bulk["item"] = row["cat"]["name"]
+                extra = f"Allocated ZA{row['za']} — {row['holder']} (Q 1033/{row['za']})"
+                prev = (bulk.get("description") or "").strip()
+                bulk["description"] = f"{prev} — {extra}" if prev else extra
+                summary["receipts"] += 1
+                summary["convertedBulk"] = True
+                print(f"CONVERT BATCH: {serial} -> {row['holder']}")
+                continue
+            _, created = ensure_txn(
+                txns,
+                {
+                    "type": "receipt",
+                    "date": batch_date,
+                    "itemId": batch_item_id,
+                    "item": row["cat"]["name"],
+                    "category": batch_cat,
+                    "gl": "3112210001",
+                    "qty": 1,
+                    "serialOrZa": serial,
+                    "party": bulk.get("party") or "ICT procurement — laptop receipt",
+                    "description": f"Unit receipt from 14 Aug batch — ZA{row['za']} for {row['holder']}",
+                    "voucherNo": rv_no(row["iso"], row["za"], "recv"),
+                    "sourceRef": f"{row['za']}-recv",
+                },
+            )
+            if created:
+                summary["receipts"] += 1
+                print(f"RECV: {serial} {row['cat']['name']} for {row['holder']}")
+        if remain_qty > 0 and not serial_receipt_exists(txns, "STORES-OMNI-REMAIN-1"):
+            ensure_txn(
+                txns,
+                {
+                    "type": "receipt",
+                    "date": batch_date,
+                    "itemId": batch_item_id,
+                    "item": batch_item_name,
+                    "category": batch_cat,
+                    "gl": "3112210001",
+                    "qty": 1,
+                    "serialOrZa": "STORES-OMNI-REMAIN-1",
+                    "party": bulk.get("party") or "ICT procurement — laptop receipt",
+                    "description": "Unallocated unit from 14 Aug OmniBook batch (still in stores)",
+                    "voucherNo": "RV/IT/0826/OMNI-REMAIN",
+                    "sourceRef": "omni-remain-1",
+                },
+            )
+            summary["receipts"] += 1
+            print("RECV: STORES-OMNI-REMAIN-1 (unallocated)")
+        return item_by_za
+
+    for row in aug_rows:
+        serial = za_key(row["za"])
+        item_by_za[row["za"]] = {
+            "itemId": row["cat"]["itemId"],
+            "item": row["cat"]["name"],
             "category": "ict-equipment",
-            "item": payload["item"],
-            "description": payload.get("description", ""),
-            "qty": 1,
-            "uom": "EA",
-            "gl": "3112210001",
-            "voucherNo": payload.get("voucherNo", ""),
-            "party": payload.get("party", ""),
-            "source": SOURCE,
-            "sourceRef": payload["sourceRef"],
-            "by": "Laptop distribution import",
-            "createdAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
         }
-    )
+        if serial_receipt_exists(txns, serial):
+            continue
+        _, created = ensure_txn(
+            txns,
+            {
+                "type": "receipt",
+                "date": day_before(row["iso"]),
+                "itemId": row["cat"]["itemId"],
+                "item": row["cat"]["name"],
+                "category": "ict-equipment",
+                "gl": "3112210001",
+                "qty": 1,
+                "serialOrZa": serial,
+                "party": "ICT procurement — laptop receipt",
+                "description": f"Stores receipt ZA{row['za']} before Q 1033 issue to {row['holder']}",
+                "voucherNo": rv_no(row["iso"], row["za"], "recv"),
+                "sourceRef": f"{row['za']}-recv",
+            },
+        )
+        if created:
+            summary["receipts"] += 1
+            print(f"RECV: {serial} {row['cat']['name']} for {row['holder']}")
+    return item_by_za
 
 
 def main() -> int:
@@ -124,21 +339,32 @@ def main() -> int:
         ict = []
         state["ictAccountability"] = ict
 
-    summary = {"ict": 0, "returns": 0, "issues": 0}
+    already = inv.get(KEY) or {}
+    if already.get("applied") and int(already.get("ivRev") or 0) >= IV_REV:
+        print("Already applied (ivRev >= 2). Use force by deleting storesInventory.laptopDistributionAug2026.")
+        print(already)
+        return 0
+
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    summary = {
+        "ict": 0,
+        "receipts": 0,
+        "returns": 0,
+        "issues": 0,
+        "holdersActive": 0,
+        "convertedBulk": False,
+    }
 
     for person in PERSONNEL:
         holder = holder_label(person)
         slug = person["name"].replace(" ", "-").lower()
         issues = sorted(person["issues"], key=lambda x: parse_date(x["date"]))
-
         for idx, issue in enumerate(issues):
             iso = parse_date(issue["date"])
             is_last = idx == len(issues) - 1
-            is_aug2026 = iso >= "2026-08-01" and issue.get("model")
             status = "issued" if is_last else "returned"
             cat = CATALOG.get(issue.get("model", "legacy"), CATALOG["legacy"])
             rec_id = f"icta-ld-{slug}-{issue.get('za') or idx}"
-
             upsert_ict(
                 ict,
                 {
@@ -160,66 +386,88 @@ def main() -> int:
                         if status == "returned"
                         else "Distribution of laptops to IT Dir personnel — 14 Aug 2026"
                     ),
-                    "createdAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
-                    "updatedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+                    "createdAt": now,
+                    "updatedAt": now,
                 },
             )
             summary["ict"] += 1
+            if is_last:
+                summary["holdersActive"] += 1
 
-            if not is_aug2026:
-                continue
+    aug_rows = collect_aug_issues()
+    item_by_za = allocate_unit_receipts(txns, aug_rows, summary)
+    returned_za: set[str] = set()
 
-            za = issue["za"]
-            return_ref = f"{za}-return"
-            issue_ref = f"{za}-issue"
-
-            if idx > 0 and not txn_exists(txns, return_ref, "receipt"):
-                post_stock(
-                    txns,
-                    {
-                        "type": "receipt",
-                        "date": day_before(iso),
-                        "itemId": CATALOG["legacy"]["itemId"],
-                        "item": CATALOG["legacy"]["name"],
-                        "party": holder,
-                        "description": f"Return of initial/previous laptop before Q 1033/{za} — {person['name']}",
-                        "voucherNo": f"RV/IT/0826/RET-{za}",
-                        "sourceRef": return_ref,
-                    },
-                )
+    for row in aug_rows:
+        prev = row["prev"] or {}
+        prev_za = str(prev.get("za") or "").strip()
+        if prev_za and prev_za not in returned_za:
+            returned_za.add(prev_za)
+            _, created = ensure_txn(
+                txns,
+                {
+                    "type": "receipt",
+                    "date": day_before(row["iso"]),
+                    "itemId": CATALOG["legacy"]["itemId"],
+                    "item": CATALOG["legacy"]["name"],
+                    "category": "ict-equipment",
+                    "gl": "3112210001",
+                    "qty": 1,
+                    "serialOrZa": za_key(prev_za),
+                    "party": row["holder"],
+                    "description": f"Return of previous laptop ZA{prev_za} before Q 1033/{row['za']} — {row['person']['name']}",
+                    "voucherNo": rv_no(row["iso"], prev_za, "ret"),
+                    "sourceRef": f"{prev_za}-return",
+                },
+            )
+            if created:
                 summary["returns"] += 1
-                print(f"RETURN: {holder} before Q1033/{za}")
+                print(f"RETURN: {row['holder']} ZA{prev_za}")
 
-            if not txn_exists(txns, issue_ref, "issue"):
-                post_stock(
-                    txns,
-                    {
-                        "type": "issue",
-                        "date": iso,
-                        "itemId": cat["itemId"],
-                        "item": cat["name"],
-                        "party": holder,
-                        "description": f"Q 1033/{za} — {person['appointment']}",
-                        "voucherNo": f"IV/IT/0826/{za}",
-                        "sourceRef": issue_ref,
-                    },
-                )
-                summary["issues"] += 1
-                print(f"ISSUE: {holder} Q1033/{za} — {cat['name']}")
+        stock = item_by_za.get(row["za"]) or {
+            "itemId": row["cat"]["itemId"],
+            "item": row["cat"]["name"],
+            "category": "ict-equipment",
+        }
+        _, created = ensure_txn(
+            txns,
+            {
+                "type": "issue",
+                "date": row["iso"],
+                "itemId": stock["itemId"],
+                "item": stock["item"],
+                "category": stock.get("category") or "ict-equipment",
+                "gl": "3112210001",
+                "qty": 1,
+                "serialOrZa": za_key(row["za"]),
+                "party": row["holder"],
+                "appointment": row["person"].get("appointment") or "",
+                "description": f"Q 1033/{row['za']} — {row['person']['appointment']} — {row['cat']['name']}",
+                "voucherNo": iv_no(row["iso"], row["za"]),
+                "sourceRef": f"{row['za']}-issue",
+            },
+        )
+        if created:
+            summary["issues"] += 1
+            print(f"IV: {iv_no(row['iso'], row['za'])}  {za_key(row['za'])}  {row['holder']}  {row['cat']['name']}")
 
     inv[KEY] = {
         "applied": True,
-        "appliedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+        "ivRev": IV_REV,
+        "appliedAt": now,
         "title": "Distribution of laptops to IT Dir personnel as at 14 August 2026",
         "personnel": len(PERSONNEL),
         **summary,
     }
 
     state["saveRevision"] = int(state.get("saveRevision") or 0) + 1
-    state["savedAt"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    state["savedAt"] = now
     state["savedBy"] = "Laptop distribution import"
     save_full_state(state, force=True)
-    print(f"Done: {summary['ict']} ICT records, {summary['returns']} returns, {summary['issues']} issues")
+    print(
+        f"Done: {summary['ict']} ICT records, {summary['receipts']} receipts, "
+        f"{summary['returns']} returns, {summary['issues']} IVs"
+    )
     return 0
 
 

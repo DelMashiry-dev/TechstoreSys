@@ -573,6 +573,18 @@ def glyph_loan(img):
     line(d, [(cx + 45, cy + 18), (cx + 45, cy + 30), (cx + 54, cy + 34)], 5)
 
 
+def glyph_permanent_loan(img):
+    d, *_ = gdraw(img)
+    cx, cy = cxcy(img)
+    rect(d, (cx - 52, cy - 38, cx + 38, cy + 18), fill=None, outline=INK, w=7, rad=8)
+    line(d, [(cx - 52, cy + 4), (cx + 38, cy + 4)], 6)
+    rect(d, (cx - 22, cy + 18, cx + 8, cy + 28), fill=INK, outline=None, w=0, rad=2)
+    line(d, [(cx - 38, cy + 42), (cx + 48, cy + 42)], 7)
+    line(d, [(cx - 38, cy + 42), (cx - 48, cy + 58)], 6)
+    line(d, [(cx + 48, cy + 42), (cx + 58, cy + 58)], 6)
+    line(d, [(cx + 18, cy - 18), (cx + 30, cy - 6), (cx + 52, cy - 32)], 6)
+
+
 def glyph_undelivered(img):
     d, *_ = gdraw(img)
     cx, cy = cxcy(img)
@@ -692,6 +704,7 @@ SPECS = [
     ("suppliers-contracts", "wine", glyph_handshake),
     ("system-help", "steel", glyph_help_book),
     ("temporary-loans", "orange", glyph_loan),
+    ("permanent-loans", "green", glyph_permanent_loan),
     ("undelivered-orders", "red", glyph_undelivered),
     ("unit-checks", "slate", glyph_unit_check),
     ("unit-equipment", "steel", glyph_desk),

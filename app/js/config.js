@@ -49,7 +49,7 @@ const MODULES_DEPT_DESKS = [
 const MODULES_STORES_LEDGERS = [
     'gl-2200600002', 'gl-2200600003', 'gl-220200002', 'gl-2201900002', 'gl-3112210001',
     'voucher-module', 'stock-take', 'unit-checks', 'financial-year-bids', 'unit-equipment',
-    'ict-accountability', 'ict-distribution', 'temporary-loans', 'monthly-returns', 'undelivered-orders',
+    'ict-accountability', 'ict-distribution', 'temporary-loans', 'permanent-loans', 'monthly-returns', 'undelivered-orders',
     'workshop-receipt-cert', 'delivery-note', 'purchase-orders', 'accommodation-stores',
     'zna-q-982', 'zna-q-178', 'zna-q-1033', 'zna-q-1043', 'zna-q-80', 'zna-svcs-890',
     'zna-q-1179', 'zna-q-987', 'zna-q-3977', 'zna-q-1157', 'zna-q-985', 'zna-q-1',
@@ -96,7 +96,7 @@ const MODULES_ZNA_Q = [
 const MODULES_STOREMAN = [
     'dashboard',
     'voucher-module', 'delivery-note', 'stock-take', 'techstores-equipment-register',
-    'temporary-loans', 'system-help',
+    'temporary-loans', 'permanent-loans', 'system-help',
     ...MODULES_ZNA_Q
 ];
 
@@ -366,15 +366,18 @@ const GL_ACCOUNTS = {
 const VOUCHER_ROW_LAYOUT = {
     hasCategory: {
         category: 1, item: 2, desc: 3, qty: 4, uom: 5, gl: 6,
-        unitCost: 7, lineTotal: 8, rvIv: 9, purchase: 10, supplied: 11, issued: 12, initials: 13
+        unitCost: 7, lineTotal: 8, rvIv: 9, purchase: 10, supplied: 11, issued: 12,
+        appointment: 13, initials: 14
     },
     hasGl: {
         category: -1, item: 1, desc: 2, qty: 3, uom: 4, gl: 5,
-        unitCost: 6, lineTotal: 7, rvIv: 8, purchase: 9, supplied: 10, issued: 11, initials: 12
+        unitCost: 6, lineTotal: 7, rvIv: 8, purchase: 9, supplied: 10, issued: 11,
+        appointment: 12, initials: 13
     },
     legacy: {
         category: -1, item: 1, desc: 2, qty: 3, uom: 4, gl: -1,
-        unitCost: -1, lineTotal: -1, rvIv: 5, purchase: 6, supplied: 7, issued: 8, initials: 9
+        unitCost: -1, lineTotal: -1, rvIv: 5, purchase: 6, supplied: 7, issued: 8,
+        appointment: -1, initials: 9
     }
 };
 
@@ -382,7 +385,7 @@ const VOUCHER_ROW_LAYOUT = {
 
 const MODULE_IDS = [
     'gl-2200600002', 'gl-2200600003', 'gl-220200002', 'gl-2201900002', 'gl-3112210001',
-    'voucher-module', 'stock-take', 'unit-checks', 'financial-year-bids', 'unit-equipment', 'ict-accountability', 'ict-distribution', 'temporary-loans',
+    'voucher-module', 'stock-take', 'unit-checks', 'financial-year-bids', 'unit-equipment', 'ict-accountability', 'ict-distribution', 'temporary-loans', 'permanent-loans',
     'monthly-returns',
     'spec-evaluation', 'ict-compare', 'guide-quotation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'zna-q-982', 'zna-q-178', 'zna-q-1033', 'zna-q-1043',
     'zna-q-80', 'zna-svcs-890', 'zna-q-1179', 'zna-q-987', 'zna-q-3977', 'zna-svcs-1045', 'zna-q-1157',

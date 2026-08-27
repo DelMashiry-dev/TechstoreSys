@@ -1,0 +1,266 @@
+<div id="permanent-loans" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Permanent Loans — Laptops &amp; iPads</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="loan-intro">
+                    <span class="aso-ref" title="Army HQ policy">Comd/34 · 06 Nov 15</span>
+                    Laptops and iPads are issued on a <strong>permanent loan</strong> (not the 14-day temporary loan).
+                    Eligible: <strong>Lieutenant Colonels and above</strong> holding command or staff appointments,
+                    and <strong>Grade Two Staff Officers</strong> at Formations and Army HQ.
+                    Training gadgets stay with the training institution / Training Branch.
+                    After <strong>3 years</strong> from date of issue, IT Dir writes to <strong>QS Br</strong> for
+                    <strong>Masasa</strong> to scratch the ZA-NO and strike the item off the Master Ledger;
+                    then MID and IT Dir specialists erase military information before write-off as a personal item.
+                    Officers retiring <strong>within 3 years</strong> of issue must return the gadget.
+                    Those not issued have <strong>no claim</strong> on exit.
+                    Refs: Comd/34 (06 Nov 15) · AS(PLANS)/34 · IT/17 (15 Aug 18) · QM IT DIR 17 Mar 20.
+                </p>
+
+                <div class="loan-aging-strip pl-aging-strip" aria-label="Permanent loans summary">
+                    <button type="button" class="loan-stat pl-stat-filter" data-pl-filter="serving" title="Currently on permanent loan">
+                        <span class="loan-stat-value" id="plStatServing">0</span>
+                        <span class="loan-stat-label">On permanent loan</span>
+                    </button>
+                    <button type="button" class="loan-stat pl-stat-filter" data-pl-filter="due_3yr" title="3-year clock due or strike-off in progress">
+                        <span class="loan-stat-value" id="plStatDue">0</span>
+                        <span class="loan-stat-label">3-year / strike-off</span>
+                    </button>
+                    <button type="button" class="loan-stat pl-stat-filter loan-stat-danger" data-pl-filter="retire_return" title="Must return — retiring within 3 years">
+                        <span class="loan-stat-value" id="plStatReturn">0</span>
+                        <span class="loan-stat-label">Return on retirement</span>
+                    </button>
+                    <button type="button" class="loan-stat pl-stat-filter" data-pl-filter="personal" title="Struck off — personal item">
+                        <span class="loan-stat-value" id="plStatPersonal">0</span>
+                        <span class="loan-stat-label">Personal / struck off</span>
+                    </button>
+                </div>
+
+                <div class="module-toolbar">
+                    <input type="search" class="form-control table-search" id="plSearchInput" data-search-history-key="permanent-loans" data-search-history="1" placeholder="Search ZA no., officer, item, unit...">
+                    <select class="form-control" id="plStatusFilter" title="Filter by status" style="max-width:240px;">
+                        <option value="active">Currently held</option>
+                        <option value="serving">On permanent loan</option>
+                        <option value="due_3yr">3-year / strike-off</option>
+                        <option value="retire_return">Return on retirement</option>
+                        <option value="personal">Personal / struck off</option>
+                        <option value="training">Training retained</option>
+                        <option value="returned">Returned to stores</option>
+                        <option value="all">All records</option>
+                    </select>
+                    <button type="button" class="btn btn-primary btn-sm" id="plSearchBtn">Search</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="plClearBtn">Clear</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="plViewModeBtn">View register</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="plEditModeBtn">Issue / Edit</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="plNewBtn">New issue</button>
+                </div>
+
+                <div id="plViewPanel">
+                    <div class="form-table-wrapper">
+                        <table class="overview-table loan-view-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:48px;">Ser</th>
+                                    <th>ZA No.</th>
+                                    <th>Item</th>
+                                    <th>Issued To</th>
+                                    <th>Unit / Formation / Dir</th>
+                                    <th>Issued</th>
+                                    <th>3-year date</th>
+                                    <th>Status</th>
+                                    <th>Eligibility</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="pl-view-body">
+                                <tr><td colspan="10" class="req-empty-row">No permanent loans recorded yet.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="module-actions" style="margin-top: 15px;">
+                        <button type="button" class="btn btn-secondary btn-generate-report" data-report-module="permanent-loans">Generate Report</button>
+                        <button type="button" class="btn btn-ghost" data-target-nav="process-guides" data-pg-tab="permloan">Open procedure (Learning Centre)</button>
+                        <button type="button" class="btn btn-ghost" data-target-nav="temporary-loans">Temporary Loans (14-day)</button>
+                    </div>
+                </div>
+
+                <div id="plEditPanel" hidden>
+                    <div class="section-heading section-heading-compact">
+                        <h3 id="plFormTitle">Issue laptop / iPad on permanent loan</h3>
+                    </div>
+                    <input type="hidden" id="plRecordId" value="">
+                    <p class="pl-hint" id="plThreeYearDisplay">3-year date: enter date of issue.</p>
+                    <div id="plEligBanner" class="pl-banner" hidden></div>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Date of issue</label>
+                            <input type="date" class="form-control" id="plIssueDate">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Category</label>
+                            <select class="form-control" id="plCategory"></select>
+                        </div>
+                        <div class="form-col" style="flex:1.4;">
+                            <label class="form-label">Item / model</label>
+                            <input type="text" class="form-control" id="plItem" placeholder="e.g. HP EliteBook 840 G11">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Qty</label>
+                            <input type="number" class="form-control" id="plQty" min="1" value="1">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">ZA number</label>
+                            <input type="text" class="form-control" id="plZaNumber" placeholder="e.g. ZA820">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">S/N (manufacturer)</label>
+                            <input type="text" class="form-control" id="plSerialNo">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Engraved?</label>
+                            <select class="form-control" id="plEngraved">
+                                <option value="yes">Yes (ZA)</option>
+                                <option value="no">No — paperwork to engrave</option>
+                            </select>
+                        </div>
+                        <div class="form-col" style="flex:1.4;">
+                            <label class="form-label">Description</label>
+                            <input type="text" class="form-control" id="plDescription" placeholder="Make / spec">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Rank</label>
+                            <select class="form-control" id="plRank"></select>
+                        </div>
+                        <div class="form-col" style="flex:1.3;">
+                            <label class="form-label">Issued to (name)</label>
+                            <input type="text" class="form-control" id="plIssuedTo" placeholder="Name">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Force No.</label>
+                            <input type="text" class="form-control" id="plForceNo">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Appointment</label>
+                            <input type="text" class="form-control" id="plAppointment" placeholder="CO / GSO2 / staff">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col" style="flex:1.5;">
+                            <label class="form-label">Eligibility (Comd/34)</label>
+                            <select class="form-control" id="plEligibility"></select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Purpose</label>
+                            <select class="form-control" id="plPurpose">
+                                <option value="individual">Individual (permanent T/loan)</option>
+                                <option value="training">Training institution / Branch</option>
+                            </select>
+                        </div>
+                        <div class="form-col" style="flex:1.3;">
+                            <label class="form-label">Unit / Formation / Dir</label>
+                            <select class="form-control loan-unit zna-unit-select" id="plUnit">
+                                <option value="">— Select unit / formation —</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Still serving?</label>
+                            <select class="form-control" id="plServing">
+                                <option value="yes">Yes — serving</option>
+                                <option value="no">No — separating / retired</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Retirement / exit date</label>
+                            <input type="date" class="form-control" id="plRetirementDate">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Issue voucher (Q 1033)</label>
+                            <input type="text" class="form-control" id="plVoucherNo" placeholder="Q 1033 / loan voucher">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Issued by (QM)</label>
+                            <input type="text" class="form-control" id="plIssuedBy">
+                        </div>
+                    </div>
+
+                    <h4 class="pl-steps-title">Procedure (QM IT DIR · 17 Mar 2020)</h4>
+                    <ol class="pl-steps">
+                        <li>
+                            <label class="pl-step-check"><input type="checkbox" id="plStep_engrave"> 1. Engrave ZA-NO if not engraved</label>
+                            <input type="date" class="form-control pl-step-date" id="plStepDate_engrave" title="Date engraved">
+                            <input type="text" class="form-control" id="plStepNote_engrave" placeholder="Note">
+                        </li>
+                        <li>
+                            <label class="pl-step-check"><input type="checkbox" id="plStep_issue"> 2. Permanent T/loan by QM (serving; replaces 7-day renewal)</label>
+                            <input type="date" class="form-control pl-step-date" id="plStepDate_issue" title="Date issued">
+                            <input type="text" class="form-control" id="plStepNote_issue" placeholder="Note">
+                        </li>
+                        <li>
+                            <label class="pl-step-check"><input type="checkbox" id="plStep_retire_trigger"> 3. Retirement / 3-year trigger</label>
+                            <input type="date" class="form-control pl-step-date" id="plStepDate_retire_trigger">
+                            <input type="text" class="form-control" id="plStepNote_retire_trigger" placeholder="Note">
+                        </li>
+                        <li>
+                            <label class="pl-step-check"><input type="checkbox" id="plStep_qs_letter"> 4. IT Dir letter to QS Br — Masasa clear ZA-NO</label>
+                            <input type="date" class="form-control pl-step-date" id="plStepDate_qs_letter">
+                            <input type="text" class="form-control" id="plStepNote_qs_letter" placeholder="Letter ref">
+                        </li>
+                        <li>
+                            <label class="pl-step-check"><input type="checkbox" id="plStep_mid_wipe"> 5. MID + IT Dir specialist erase military information</label>
+                            <input type="date" class="form-control pl-step-date" id="plStepDate_mid_wipe">
+                            <input type="text" class="form-control" id="plStepNote_mid_wipe" placeholder="Cleared by">
+                        </li>
+                        <li>
+                            <label class="pl-step-check"><input type="checkbox" id="plStep_write_off"> 6. Write-off authority issued</label>
+                            <input type="date" class="form-control pl-step-date" id="plStepDate_write_off">
+                            <input type="text" class="form-control" id="plStepNote_write_off" placeholder="Authority ref">
+                        </li>
+                    </ol>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">QS Br / letter ref</label>
+                            <input type="text" class="form-control" id="plQsLetterRef" placeholder="IT/34 …">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Masasa ZA-NO cleared</label>
+                            <input type="date" class="form-control" id="plMasasaDate">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Write-off authority</label>
+                            <input type="text" class="form-control" id="plWriteOffAuth" placeholder="Q 1 / authority">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Outcome</label>
+                            <select class="form-control" id="plOutcome">
+                                <option value="">— Still on charge / in process —</option>
+                                <option value="personal">Personal item (struck off ledger)</option>
+                                <option value="returned">Returned to stores</option>
+                                <option value="training_held">Training — retained by institution</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col" style="flex:1;">
+                            <label class="form-label">Remarks</label>
+                            <input type="text" class="form-control" id="plRemarks" placeholder="Security, MID, or other notes">
+                        </div>
+                    </div>
+
+                    <div class="module-actions" style="margin-top: 15px;">
+                        <button type="button" class="btn btn-success" id="plSaveBtn">Save permanent loan</button>
+                        <button type="button" class="btn btn-secondary" id="plQsLetterBtn">Compose letter to QS Br</button>
+                        <button type="button" class="btn btn-ghost" data-target-nav="zna-q-1">Open Q 1 write-off</button>
+                        <button type="button" class="btn btn-ghost" id="plDeleteBtn">Delete</button>
+                        <button type="button" class="btn btn-secondary btn-generate-report" data-report-module="permanent-loans">Generate Report</button>
+                    </div>
+                </div>
+            </div>

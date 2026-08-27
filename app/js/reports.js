@@ -8,7 +8,7 @@ const REPORT_TABLE_HEADERS = {
     'gl-220200002-table-body': ['Serial', 'Item', 'Description', 'Qty', 'Unit', 'Price/Unit', 'Amount'],
     'gl-2201900002-table-body': ['Date', 'Consignor / Consignee', 'Receipts', 'Issues', 'Stock', 'Voucher / QM Signature', 'Number and Name'],
     'gl-3112210001-table-body': ['Date', 'Consignor / Consignee', 'Receipts', 'Issues', 'Stock', 'Voucher / QM Signature', 'Number and Name'],
-    'voucher-table-body': ['Date', 'Item Category', 'Item', 'Description', 'Qty', 'UoM', 'GL Account', 'Unit Cost', 'Line Total', 'RV/IV No.', 'Purchase No.', 'Supplied By', 'Issued To', 'Initials'],
+    'voucher-table-body': ['Date', 'Item Category', 'Item', 'Description', 'Qty', 'UoM', 'GL Account', 'Unit Cost', 'Line Total', 'RV/IV No.', 'Purchase No.', 'Supplied By', 'Issued To', 'Appointment', 'Initials'],
     'bids-table-body': ['Serial', 'Item', 'Cost Centre', 'GL A/C', 'Description', 'Qty', 'Unit Cost', 'Total Cost'],
     'unit-equipment-table-body': ['Ser', 'Item Name', 'ZA Number', 'Description', 'Holding Unit', 'Location'],
     'loans-table-body': ['Date Loaned', 'ZA Number', 'Item', 'Description', 'Qty', 'UoM', 'Issued To', 'Force No.', 'Unit / Formation / Dir', 'Expected Return', 'Date Returned', 'Issued By', 'Issuer Initials'],
@@ -243,7 +243,7 @@ function buildStoresInventoryReportData(dateFrom, dateTo) {
         });
     });
 
-    const movementHeaders = ['Date', 'Type', 'Source', 'Category', 'Item', 'Qty', 'UoM', 'GL', 'RV/IV / DN', 'PO / Cycle', 'Party', 'By', 'Description'];
+    const movementHeaders = ['Date', 'Type', 'Source', 'Category', 'Item', 'Qty', 'UoM', 'GL', 'RV/IV / DN', 'PO / Cycle', 'Party', 'Appointment', 'By', 'Description'];
     const movements = (appState.storesInventory?.transactions || []).filter((txn) => {
         const d = txn.date || '';
         if (dateFrom && d < dateFrom) return false;
@@ -265,6 +265,7 @@ function buildStoresInventoryReportData(dateFrom, dateTo) {
             txn.deliveryNoteRef || txn.voucherNo || '',
             [txn.poNumber, txn.dpRef].filter(Boolean).join(' / ') || txn.sourceRef || '',
             txn.party || '',
+            txn.appointment || '',
             txn.by || '',
             txn.description || ''
         ];
@@ -413,6 +414,58 @@ function buildIctAccountabilityReportData(dateFrom, dateTo) {
     };
 }
 
+function buildPermanentLoansReportData(dateFrom, dateTo) {
+    const inPeriod = (iso) => {
+        if (!iso) return !dateFrom && !dateTo;
+        if (dateFrom && iso < dateFrom) return false;
+        if (dateTo && iso > dateTo) return false;
+        return true;
+    };
+    const rows = (typeof collectPermanentLoanRows === 'function' ? collectPermanentLoanRows() : [])
+        .filter((rec) => inPeriod(rec.issueDate))
+        .map((rec) => [
+            rec.zaNumber || '',
+            rec.item || (typeof plCategoryLabel === 'function' ? plCategoryLabel(rec.category) : rec.category),
+            rec.issueDate || '',
+            [rec.rank, rec.issuedTo].filter(Boolean).join(' '),
+            rec.forceNo || '',
+            (typeof plUnitLabel === 'function' ? plUnitLabel(rec.unit) : rec.unit) || '',
+            rec.status?.threeYearIso || '',
+            rec.status?.label || '',
+            (typeof plEligibilityLabel === 'function' ? plEligibilityLabel(rec.eligibility) : rec.eligibility) || ''
+        ]);
+    const summaryStats = typeof getPermanentLoansSummary === 'function'
+        ? getPermanentLoansSummary()
+        : { serving: 0, due3yr: 0, retireReturn: 0, personal: 0, total: rows.length };
+
+    return {
+        title: 'Permanent Loans — Laptops & iPads',
+        summary: [
+            `Records in period: ${rows.length} (register total ${summaryStats.total || rows.length})`,
+            `On permanent loan (serving): ${summaryStats.serving || 0}`,
+            `3-year / strike-off in progress: ${summaryStats.due3yr || 0}`,
+            `Return on retirement (< 3 years): ${summaryStats.retireReturn || 0}`,
+            `Personal / struck off: ${summaryStats.personal || 0}`,
+            'Policy: Comd/34 (06 Nov 15) · AS(PLANS)/34 · QM IT DIR 17 Mar 20'
+        ],
+        fields: [
+            { label: 'Directorate', value: 'Information Technology Directorate' },
+            { label: 'File', value: 'IT/34 — Computer policy instruction and directives' }
+        ],
+        tables: [
+            {
+                tbodyId: 'permanent-loans-report',
+                title: 'Permanent loan register',
+                headers: [
+                    'ZA No.', 'Item', 'Date of issue', 'Issued to', 'Force No.',
+                    'Unit', '3-year date', 'Status', 'Eligibility'
+                ],
+                rows
+            }
+        ]
+    };
+}
+
 function buildModuleReportData(moduleId) {
     const { from: dateFrom, to: dateTo } = getReportDateFilters();
 
@@ -451,6 +504,7 @@ function buildModuleReportData(moduleId) {
     }
     if (moduleId === 'inventory-accountability') return buildInventoryAccountabilityReportData(dateFrom, dateTo);
     if (moduleId === 'ict-accountability') return buildIctAccountabilityReportData(dateFrom, dateTo);
+    if (moduleId === 'permanent-loans') return buildPermanentLoansReportData(dateFrom, dateTo);
     if (moduleId === 'dp-procurement') {
         const rows = (typeof ensureDpProcurements === 'function' ? ensureDpProcurements() : [])
             .map((r) => {

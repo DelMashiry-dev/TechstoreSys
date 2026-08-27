@@ -4,6 +4,7 @@ const MR_REMARK_CODES = [
     { value: 'SVC', label: 'SVC — Serviceable' },
     { value: 'UNSVC', label: 'UN SVC — Unserviceable' },
     { value: 'T/LOAN', label: 'T/LOAN — Temporary loan' },
+    { value: 'P/LOAN', label: 'P/LOAN — Permanent loan (laptop / iPad)' },
     { value: 'OTHER', label: 'Other (see remarks)' }
 ];
 
@@ -597,7 +598,7 @@ function buildMonthlyReturnOfficialHtml(rec) {
 
         <div class="mr-class">RESTRICTED</div>
         <h2 class="mr-title">${mrEscape(unitTitle)} MONTHLY COMPUTER EQUIPMENT RETURN AS AT ${mrEscape(period)}</h2>
-        <p class="mr-lead">INFORMATION AND TECHNOLOGY EQUIPMENT RETURN — grouped by category. Remarks: SVC = Serviceable · UNSVC = Unserviceable · T/LOAN = Temporary loan.</p>
+        <p class="mr-lead">INFORMATION AND TECHNOLOGY EQUIPMENT RETURN — grouped by category. Remarks: SVC = Serviceable · UNSVC = Unserviceable · T/LOAN = Temporary loan · P/LOAN = Permanent loan.</p>
 
         ${equipmentTables || '<p>No equipment lines.</p>'}
         ${miscHtml}

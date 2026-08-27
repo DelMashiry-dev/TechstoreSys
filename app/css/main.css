@@ -6948,6 +6948,90 @@ tr.loan-status-due-soon-row td:first-child {
     }
 }
 
+.pl-hint {
+    margin: 0 0 10px;
+    color: #475467;
+    font-size: 0.9rem;
+}
+
+.pl-banner {
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #eef4ff;
+    border: 1px solid #c7d7fe;
+    color: #3538cd;
+    font-size: 0.9rem;
+}
+
+.pl-banner-warn {
+    background: #fff8e1;
+    border-color: #fde68a;
+    color: #8a6d00;
+}
+
+.pl-banner-danger {
+    background: #fef3f2;
+    border-color: #fecdca;
+    color: #b42318;
+}
+
+.pl-steps-title {
+    margin: 18px 0 8px;
+    font-size: 0.95rem;
+}
+
+.pl-steps {
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+}
+
+.pl-steps li {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) 140px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.pl-step-check {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    font-size: 0.88rem;
+}
+
+.pl-step-date {
+    max-width: 140px;
+}
+
+.pl-status-serving { background: #e8f5e9; color: #1b5e20; }
+.pl-status-soon { background: #fff8e1; color: #8a6d00; }
+.pl-status-due { background: #fff3e0; color: #b54708; }
+.pl-status-qs { background: #eef4ff; color: #3538cd; }
+.pl-status-return { background: #fdecea; color: #b42318; }
+.pl-status-personal { background: #e8f5e9; color: #0f5132; }
+.pl-status-returned { background: #eef2f6; color: #475467; }
+.pl-status-training { background: #e0f2fe; color: #075985; }
+.pl-status-ineligible { background: #fdecea; color: #b42318; }
+
+tr.pl-status-return-row td:first-child,
+tr.pl-status-due-row td:first-child {
+    box-shadow: inset 3px 0 0 #b42318;
+}
+
+tr.pl-status-soon-row td:first-child,
+tr.pl-status-qs-row td:first-child {
+    box-shadow: inset 3px 0 0 #b54708;
+}
+
+@media (max-width: 900px) {
+    .pl-steps li {
+        grid-template-columns: 1fr;
+    }
+}
+
 .ue-location-pill {
     display: inline-block;
     padding: 3px 8px;

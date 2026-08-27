@@ -18,7 +18,9 @@ const MODULE_SEARCH_ALIASES = {
     'workshop-repairs': 'workshop register repairs indent',
     'ict-compare': 'head to head compare laptop buy purchase duty profile crawl market benchmark FPS workstation rugged',
     'dp-f1-form': 'indent procurement f1',
-    'voucher-module': 'issue voucher receipt rv iv stock'
+    'voucher-module': 'issue voucher receipt rv iv stock',
+    'temporary-loans': 'temporary loan za controlled stores 14 day',
+    'permanent-loans': 'permanent loan laptop ipad comd/34 masasa za-no three year qs br mid wipe write-off'
 };
 
 function looksLikeControlledIdQuery(query) {
@@ -170,6 +172,30 @@ function collectControlledStoreSearchEntries(add) {
             }, { moduleId: 'temporary-loans', scoreBoost: 6 });
         });
     }
+
+    if (typeof collectPermanentLoanRows === 'function') {
+        collectPermanentLoanRows().forEach((loan) => {
+            if (loan.status?.key === 'returned' || loan.status?.key === 'personal') return;
+            const za = typeof normalizeZaNumber === 'function'
+                ? normalizeZaNumber(loan.zaNumber)
+                : String(loan.zaNumber || '').trim().toUpperCase();
+            if (za && seenZa.has(za)) return;
+            if (za) seenZa.add(za);
+            pushAsset({
+                id: `perm-loan-${za || loan.id || loan.item}`,
+                assetClass: 'equipment',
+                designation: loan.item || za || 'Permanent loan',
+                description: loan.description || '',
+                zaNumber: za,
+                serialNo: loan.serialNo || '',
+                holderName: loan.issuedTo || '',
+                forceNo: loan.forceNo || '',
+                unit: loan.unit || '',
+                status: 'on_perm_loan',
+                engraved: !!za
+            }, { moduleId: 'permanent-loans', scoreBoost: 7 });
+        });
+    }
 }
 
 /** Receive/issue stock movements — searchable by issued-to name, voucher no., item. */
@@ -194,7 +220,7 @@ function collectStockMovementSearchEntries(add) {
             title: `${isIssue ? 'Issue' : 'Receive'} — ${party || item || voucher}`,
             subtitle: [txn.date, voucher, item].filter(Boolean).join(' · '),
             haystack: [
-                party, voucher, item, txn.description, txn.by, txn.type,
+                party, voucher, item, txn.description, txn.appointment, txn.by, txn.type,
                 txn.source, txn.sourceRef, txn.gl,
                 isIssue ? 'issue issued to personnel' : 'receive receipt'
             ].filter(Boolean).join(' ').toLowerCase(),
@@ -634,7 +660,7 @@ async function activateUniversalResult(el) {
     if (!moduleId || typeof navigateToModule !== 'function') return;
 
     let targetModule = moduleId;
-    if (trackQuery && (moduleId === 'ict-accountability' || moduleId === 'temporary-loans')) {
+    if (trackQuery && (moduleId === 'ict-accountability' || moduleId === 'temporary-loans' || moduleId === 'permanent-loans')) {
         if (typeof canAccessModule === 'function' && canAccessModule('ict-accountability')) {
             targetModule = 'ict-accountability';
         }

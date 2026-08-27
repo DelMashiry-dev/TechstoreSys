@@ -101,6 +101,21 @@ function buildStoresAssistantContext() {
         } catch (_) { /* optional */ }
     }
 
+    let permanentLoans = null;
+    if (typeof collectPermanentLoanRows === 'function' && typeof getPermanentLoansSummary === 'function') {
+        try {
+            const rows = collectPermanentLoanRows();
+            const summary = getPermanentLoansSummary(rows);
+            permanentLoans = {
+                summary,
+                active: rows.filter((l) => l.status?.active).slice(0, 8).map((l) => {
+                    const id = l.zaNumber || l.item || 'item';
+                    return `${id} → ${l.issuedTo || '—'} (${l.status?.label || 'permanent loan'})`;
+                })
+            };
+        } catch (_) { /* optional */ }
+    }
+
     let requisitions = null;
     if (typeof ensureRequisitions === 'function') {
         try {
@@ -138,6 +153,7 @@ function buildStoresAssistantContext() {
             ...linesByType
         },
         temporaryLoans,
+        permanentLoans,
         requisitions,
         alerts,
         user: appState?.currentUser?.username || '',
@@ -243,6 +259,7 @@ function ensureAiAssistantModal() {
                     <button type="button" class="ai-suggest-chip" data-ai-query="stock-issues">Craft query…</button>
                     <button type="button" class="ai-suggest-chip" data-ai-suggest="How many laptops are in stock?">Laptops in stock</button>
                     <button type="button" class="ai-suggest-chip" data-ai-suggest="Temporary loans status">Loans status</button>
+                    <button type="button" class="ai-suggest-chip" data-ai-suggest="Permanent loans 3-year due">Permanent loans</button>
                     <button type="button" class="ai-suggest-chip" data-ai-suggest="What is our buying power?">Buying power</button>
                 </div>
                 <form id="aiAssistantForm" class="ai-assistant-form">

@@ -457,6 +457,10 @@ function updateSystemAlerts() {
         });
     }
 
+    if (typeof getPermanentLoanAlerts === 'function') {
+        getPermanentLoanAlerts().forEach((alert) => alerts.push(alert));
+    }
+
     const suppliers = appState.modules['suppliers-contracts'];
     if (suppliers?.tables?.['suppliers-table-body']) {
         suppliers.tables['suppliers-table-body'].forEach((row) => {
@@ -573,6 +577,9 @@ function initSystemAlertsClicks() {
                 row?.classList.add('alert-flash-row');
                 setTimeout(() => row?.classList.remove('alert-flash-row'), 2500);
             }, 80);
+        }
+        if (loanId && target === 'permanent-loans' && typeof openPermanentLoanRecord === 'function') {
+            setTimeout(() => openPermanentLoanRecord(loanId), 80);
         }
         if (focus) {
             setTimeout(() => {

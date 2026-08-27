@@ -27,6 +27,7 @@ function offlineAnswer(question, context) {
     const stock = ctx.stockByType || {};
     const inv = ctx.inventorySummary || {};
     const loans = ctx.temporaryLoans || {};
+    const perm = ctx.permanentLoans || {};
     const reqs = ctx.requisitions || {};
 
     if (any(q, ['trend', 'trends', '2025', '2026', 'recommend', 'advice', 'modern', 'upgrade'])) {
@@ -63,6 +64,15 @@ function offlineAnswer(question, context) {
                 return { ok: true, answer: 'No servers on hand in the register. Trend: HPE ProLiant Gen11 / Dell PowerEdge 16G for new procurement.', ai: false, readOnly: true, offline: true };
             }
         }
+    }
+
+    if (any(q, ['permanent loan', 'permanent loans', 'comd/34', 'comd 34', 'ipad', 'i-pad'])) {
+        const summary = perm.summary || {};
+        return {
+            ok: true,
+            answer: `Permanent loans (Comd/34): ${summary.serving || 0} on loan, ${summary.due3yr || 0} at 3-year / strike-off, ${summary.retireReturn || 0} to return on retirement, ${summary.personal || 0} personal / struck off. Open sidebar → Permanent Loans.`,
+            ai: false, readOnly: true, offline: true
+        };
     }
 
     if (any(q, ['loan', 'loans', 'temporary', 'overstayed'])) {

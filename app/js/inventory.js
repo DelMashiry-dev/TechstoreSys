@@ -288,7 +288,7 @@ function initInventorySummaryClicks() {
 }
 
 function openInventoryFromDashboard(targetKey) {
-    if (targetKey === 'ict-accountability' || targetKey === 'temporary-loans' || targetKey === 'unit-equipment' || targetKey === 'zna-q-1033') {
+    if (targetKey === 'ict-accountability' || targetKey === 'temporary-loans' || targetKey === 'permanent-loans' || targetKey === 'unit-equipment' || targetKey === 'zna-q-1033') {
         if (typeof navigateToModule === 'function') navigateToModule(targetKey);
         return;
     }
@@ -357,6 +357,7 @@ function getDashboardFloatCards(snapshot) {
         'maintenance',
         'ict-accountability',
         'temporary-loans',
+        'permanent-loans',
         'unit-equipment',
         'zna-q-1033'
     ];
@@ -388,6 +389,23 @@ function getDashboardFloatCards(snapshot) {
                 { label: 'Max', value: '14 days' },
                 { label: 'Action', value: 'View' }
             ]
+        },
+        'permanent-loans': {
+            key: 'permanent-loans',
+            label: 'Permanent Loans',
+            detail: 'Laptops / iPads · Comd/34 · 3-year clock then Masasa scratch-off',
+            eyebrow: 'Comd/34',
+            metrics: (() => {
+                const s = typeof getPermanentLoansSummary === 'function'
+                    ? getPermanentLoansSummary()
+                    : { serving: 0, due3yr: 0, retireReturn: 0, personal: 0 };
+                return [
+                    { label: 'Serving', value: String(s.serving || 0) },
+                    { label: '3-year', value: String(s.due3yr || 0), className: s.due3yr ? 'inv-issued' : '' },
+                    { label: 'Return', value: String(s.retireReturn || 0), className: s.retireReturn ? 'inv-issued' : '' },
+                    { label: 'Personal', value: String(s.personal || 0) }
+                ];
+            })()
         },
         'unit-equipment': {
             key: 'unit-equipment',

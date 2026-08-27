@@ -396,6 +396,7 @@ function buildInventoryAccountabilityReportData(dateFrom, dateTo) {
         t.item || '',
         String(t.qty ?? ''),
         t.party || '',
+        t.appointment || '',
         t.by || ''
     ]);
 
@@ -438,7 +439,7 @@ function buildInventoryAccountabilityReportData(dateFrom, dateTo) {
             {
                 tbodyId: 'acct-movements',
                 title: 'Stock movements (procure / receive / issue trail)',
-                headers: ['Date', 'Movement', 'Source', 'Cycle/Req Ref', 'PO', 'DN / Voucher', 'Item', 'Qty', 'Party', 'By'],
+                headers: ['Date', 'Movement', 'Source', 'Cycle/Req Ref', 'PO', 'DN / Voucher', 'Item', 'Qty', 'Party', 'Appointment', 'By'],
                 rows: movementRows
             }
         ]
