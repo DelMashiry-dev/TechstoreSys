@@ -20,10 +20,40 @@ const IT_DIR_CORRESPONDENCE_SAMPLES = [
         body: `1. The Directorate is kindly requesting for forty (40) litres of diesel for refueling of IT Dir Standby Generator Serial number W9246A/001. The Generator was last refueled in May and the fuel is now low.
 
 2. Your usual support is greatly appreciated.`
+    },
+    {
+        id: 'perm-loan-qs-masasa',
+        label: 'Permanent loan — QS Br / Masasa ZA-NO strike-off (IT/34)',
+        fileRef: 'IT/34',
+        fileTitle: 'COMPUTER POLICY INSTRUCTION AND DIRECTIVES',
+        memoType: 'correspondence',
+        priority: 'normal',
+        subject: 'REQUEST TO STRIKE OFF ZA NUMBER — PERMANENT LOAN LAPTOP / IPAD',
+        location: 'Army HQ Camp',
+        signName: 'for Dir',
+        signRank: '',
+        signAppt: 'IT Dir',
+        body: `1. Reference is made to Army HQ letter Comd/34 dated 06 Nov 15 (policy on the issue of laptops and iPads to individuals on a permanent loan basis) and Army HQ AS(PLANS)/34 on scratch-off of ZNA serial numbers after three (03) years.
+
+2. The undermentioned officer has completed three (03) years from date of issue of the laptop / iPad. IT Dir therefore requests QS Br to instruct Masasa Base Workshops to scratch off the ZNA serial number from the item and strike the computer equipment off the Master Ledger.
+
+    Rank / Name:
+    Force No.:
+    Appointment / Unit:
+    Item:
+    ZA-NO:
+    Date of issue:
+
+3. Thereafter the individual may retain the gadget as a personal item, subject to MID and IT Dir specialists erasing all information of a military nature (Comd/34 para 2c).
+
+4. Your usual support is greatly appreciated.`
     }
 ];
 
 function getCorrespondenceSample(id) {
+    if (id && typeof window !== 'undefined' && window._corrDraftSample?.id === id) {
+        return window._corrDraftSample;
+    }
     return IT_DIR_CORRESPONDENCE_SAMPLES.find((s) => s.id === id) || null;
 }
 
@@ -117,7 +147,9 @@ function printCorrespondenceSample(sampleId, options = {}) {
 }
 
 function applyCorrespondenceSampleToIdc(sampleId) {
-    const sample = getCorrespondenceSample(sampleId);
+    const sample = (sampleId && typeof sampleId === 'object')
+        ? sampleId
+        : getCorrespondenceSample(sampleId);
     if (!sample) return false;
 
     const memoType = document.getElementById('idcMemoType');
@@ -157,8 +189,9 @@ RESTRICTED`;
     const printBtn = document.getElementById('idcPrintLetterBtn');
     if (printBtn) {
         printBtn.hidden = false;
-        printBtn.dataset.corrSample = sampleId;
+        printBtn.dataset.corrSample = sample.id || (typeof sampleId === 'string' ? sampleId : '');
     }
+    if (sample.id) window._corrDraftSample = sample;
     return true;
 }
 

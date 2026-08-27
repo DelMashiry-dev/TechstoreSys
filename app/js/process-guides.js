@@ -571,6 +571,77 @@ function renderOrderlyRoomGuide() {
         </article>`;
 }
 
+function renderPermanentLoanGuide() {
+    const steps = [
+        { n: 1, title: 'Engrave ZA-NO', detail: 'Make the necessary paperwork to engrave the laptop ZA-NO if it is not already engraved at Masasa / MLG (Master Ledger).' },
+        { n: 2, title: 'Issue on permanent T/loan', detail: 'Member is issued the laptop on permanent temporary loan by his QM. Permanent T/loan replaces the 7-day renewal. Permanent loan is issued only to members who are still serving.' },
+        { n: 3, title: 'On retiring / 3-year trigger', detail: 'Comd/34: retiring within 3 years of issue — return the gadget. After 3 years, the officer approaches IT Dir to start strike-off (AS(PLANS)/34).' },
+        { n: 4, title: 'IT Dir letter to QS Br', detail: 'IT Directorate writes to QS Br to instruct Masasa Base Workshops to scratch off the ZA-NO serial number and strike the item off the Master Ledger.' },
+        { n: 5, title: 'MID and IT Dir wipe', detail: 'MID and IT Dir specialists ensure all information of a military nature is erased from the gadget (Comd/34 para 2c).' },
+        { n: 6, title: 'Write-off authority', detail: 'Authority for write-off is issued. The individual may then retain the laptop / iPad as a personal item. Training gadgets stay with the institution / Training Branch.' }
+    ];
+    const stepRows = steps.map((s) => `
+        <li class="pg-hd-step">
+            <span class="pg-hd-num" aria-hidden="true">${s.n}</span>
+            <div class="pg-hd-step-body">
+                <h4>${escapePg(s.title)}</h4>
+                <p>${escapePg(s.detail)}</p>
+            </div>
+        </li>`).join('');
+
+    return `
+        <article class="pg-article pg-article-wide">
+            <header class="pg-header">
+                <h3>Permanent loan of laptops and iPads</h3>
+                <p>Working procedure for TechStores — eligibility, 3-year clock, Masasa strike-off, MID wipe, write-off</p>
+                <p class="pg-note">
+                    Laptops and iPads have a useful life of about 3–5 years and become obsolete on charge.
+                    They are therefore issued on a <strong>permanent loan</strong> instead of a short temporary loan,
+                    without compromising security.
+                </p>
+            </header>
+            <section class="pg-hd-poster" aria-label="Permanent loan procedure">
+                <header class="pg-hd-head">
+                    <div class="pg-hd-titles">
+                        <p class="pg-hd-kicker">Zimbabwe National Army · IT Directorate · TechStores</p>
+                        <h3>Procedure on issuing laptops and iPads on permanent loan</h3>
+                        <p class="pg-hd-tagline">Eligible officers · 3-year clock · Masasa scratch-off · MID wipe · write-off</p>
+                    </div>
+                </header>
+                <div class="pg-hd-panel" style="margin: 0 0 16px;">
+                    <h4>Who may be issued (Comd/34 para 2)</h4>
+                    <ul>
+                        <li>Lieutenant Colonels and above holding <strong>command or staff</strong> appointments</li>
+                        <li><strong>Grade Two Staff Officers</strong> at Formations and Army HQ</li>
+                        <li>Training issues stay with the <strong>training institution / Training Branch</strong></li>
+                        <li>Retiring within <strong>3 years</strong> of issue — <strong>not eligible</strong>; return the gadget</li>
+                        <li>Those not issued have <strong>no right to claim</strong> a gadget on exit</li>
+                    </ul>
+                </div>
+                <ol class="pg-hd-steps">${stepRows}</ol>
+                <footer class="pg-hd-foot">
+                    <p>Permanent T/loan replaces the 7-day renewal. After 3 years the item may become a personal item once ZA-NO is struck off the Master Ledger.</p>
+                </footer>
+            </section>
+            <p class="pg-links">Related modules:
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="permanent-loans">Permanent Loans register</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="temporary-loans">Temporary Loans (14-day)</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="ict-accountability">ICT Asset Register</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="zna-q-1">Q 1 Write-off</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="it-dir-comms">Compose QS Br letter</button>
+            </p>
+        </article>`;
+}
+
+function openProcessGuideTab(tabId) {
+    const root = document.getElementById('process-guides');
+    if (!root || !tabId) return;
+    const btn = root.querySelector(`.pg-tab[data-pg-tab="${tabId}"]`);
+    root.querySelectorAll('.pg-tab').forEach((b) => b.classList.remove('is-active'));
+    (btn || root.querySelector('.pg-tab'))?.classList.add('is-active');
+    renderProcessGuidesContent();
+}
+
 function renderProcessGuidesContent() {
     const host = document.getElementById('processGuidesContent');
     if (!host) return;
@@ -578,6 +649,7 @@ function renderProcessGuidesContent() {
     if (tab === 'cycle') host.innerHTML = renderProcurementCycleGuide();
     else if (tab === 'orderly') host.innerHTML = renderOrderlyRoomGuide();
     else if (tab === 'repair') host.innerHTML = renderRepairIntakeGuide();
+    else if (tab === 'permloan') host.innerHTML = renderPermanentLoanGuide();
     else if (tab === 'suppliers') host.innerHTML = renderSupplierEvaluationGuide();
     else if (tab === 'multiunit') host.innerHTML = renderMultiUnitGuide();
     else if (tab === 'organogram') host.innerHTML = renderItDirOrganogramGuide();

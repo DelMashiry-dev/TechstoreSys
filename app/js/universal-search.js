@@ -17,7 +17,9 @@ const MODULE_SEARCH_ALIASES = {
     'delivery-note': 'dn delivery note goods received supplier',
     'workshop-receipt-cert': 'workshop receipt certification goods services group mlg engraving spec assessment supplier delivery certify ordnance',
     'dp-f1-form': 'indent procurement f1',
-    'voucher-module': 'issue voucher receipt rv iv stock'
+    'voucher-module': 'issue voucher receipt rv iv stock',
+    'temporary-loans': 'temporary loan za controlled stores 14 day',
+    'permanent-loans': 'permanent loan laptop ipad comd/34 masasa za-no three year qs br mid wipe write-off'
 };
 
 function looksLikeControlledIdQuery(query) {
@@ -167,6 +169,30 @@ function collectControlledStoreSearchEntries(add) {
                 status: 'on_loan',
                 engraved: !!za
             }, { moduleId: 'temporary-loans', scoreBoost: 6 });
+        });
+    }
+
+    if (typeof collectPermanentLoanRows === 'function') {
+        collectPermanentLoanRows().forEach((loan) => {
+            if (loan.status?.key === 'returned' || loan.status?.key === 'personal') return;
+            const za = typeof normalizeZaNumber === 'function'
+                ? normalizeZaNumber(loan.zaNumber)
+                : String(loan.zaNumber || '').trim().toUpperCase();
+            if (za && seenZa.has(za)) return;
+            if (za) seenZa.add(za);
+            pushAsset({
+                id: `perm-loan-${za || loan.id || loan.item}`,
+                assetClass: 'equipment',
+                designation: loan.item || za || 'Permanent loan',
+                description: loan.description || '',
+                zaNumber: za,
+                serialNo: loan.serialNo || '',
+                holderName: loan.issuedTo || '',
+                forceNo: loan.forceNo || '',
+                unit: loan.unit || '',
+                status: 'on_perm_loan',
+                engraved: !!za
+            }, { moduleId: 'permanent-loans', scoreBoost: 7 });
         });
     }
 }
@@ -633,7 +659,7 @@ async function activateUniversalResult(el) {
     if (!moduleId || typeof navigateToModule !== 'function') return;
 
     let targetModule = moduleId;
-    if (trackQuery && (moduleId === 'ict-accountability' || moduleId === 'temporary-loans')) {
+    if (trackQuery && (moduleId === 'ict-accountability' || moduleId === 'temporary-loans' || moduleId === 'permanent-loans')) {
         if (typeof canAccessModule === 'function' && canAccessModule('ict-accountability')) {
             targetModule = 'ict-accountability';
         }

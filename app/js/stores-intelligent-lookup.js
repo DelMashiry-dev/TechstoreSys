@@ -201,6 +201,28 @@ function aggregateStoresLookup(query) {
         }));
     });
 
+    const permRows = typeof collectPermanentLoanRows === 'function' ? collectPermanentLoanRows() : [];
+    permRows.forEach((loan) => {
+        const hay = `${loan.issuedTo} ${loan.item} ${loan.zaNumber} ${loan.unit} ${loan.description} ${loan.rank}`;
+        const score = silScoreText(hay, q);
+        if (score < 55) return;
+        const key = `perm-loan-${loan.id || loan.zaNumber}-${loan.issueDate}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        silPushGroup(groups, 'perm-loans', 'Permanent loans', silMakeItem({
+            id: key,
+            badge: 'P/Loan',
+            title: `${loan.item || loan.zaNumber || 'Permanent loan'}`,
+            subtitle: [loan.issueDate, loan.issuedTo, loan.status?.label].filter(Boolean).join(' · '),
+            score,
+            action: {
+                type: 'module',
+                moduleId: 'permanent-loans',
+                trackQuery: loan.zaNumber || loan.issuedTo || q
+            }
+        }));
+    });
+
     // —— Requisitions ——
     const reqs = typeof ensureRequisitions === 'function' ? ensureRequisitions() : (appState?.requisitions || []);
     reqs.forEach((req) => {

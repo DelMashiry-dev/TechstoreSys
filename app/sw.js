@@ -1,5 +1,5 @@
 /* Tech Stores service worker — offline app shell + cached modules after first visit. */
-const CACHE = 'techstores-offline-v4';
+const CACHE = 'techstores-offline-v5';
 const SHELL = [
   './index.html',
   './css/main.css',

@@ -45,6 +45,13 @@ const STORES_QUERY_TEMPLATES = {
         description: 'Short-term loan register — active, returned, or overdue in a period.',
         moduleId: 'temporary-loans',
         icon: '⏱'
+    },
+    'permanent-loans': {
+        id: 'permanent-loans',
+        label: 'Permanent loans (laptops / iPads)',
+        description: 'Comd/34 permanent loan register — serving, 3-year due, return on retirement, or personal.',
+        moduleId: 'permanent-loans',
+        icon: '💻'
     }
 };
 
@@ -253,6 +260,7 @@ function detectStoresQueryIntent(question) {
     const receiptCtx = /\b(receiv(e|ed|ing)|rv\/|deliver(y|ed)|goods in)\b/.test(q);
     const custodyCtx = /\b(custody|holder|asset register|ict register|who has|engraved|za number)\b/.test(q);
     const loanCtx = /\b(loan|borrow|temporary|overstayed|due back)\b/.test(q);
+    const permLoanCtx = /\b(permanent loan|comd\/?34|i-?pad|ipad)\b/.test(q);
     const movementCtx = /\b(movement|transaction|stock txn)\b/.test(q);
     const periodCtx = /\b(period|between|from|to|month|year|quarter|august|202[0-9]|this month|last month)\b/.test(q);
 
@@ -273,6 +281,8 @@ function detectStoresQueryIntent(question) {
         autoRun = /\b(boarded|condemned|survey|disposal|backloaded)\b/.test(q);
     } else if (/\b(craft|build|run)\s+(a\s+)?query\b/.test(q) && !issueCtx && !receiptCtx) {
         templateId = 'stock-movements';
+    } else if (permLoanCtx && !issueCtx) {
+        templateId = 'permanent-loans';
     } else if (loanCtx && !issueCtx) {
         templateId = 'temporary-loans';
     } else if (custodyCtx && !issueCtx && !receiptCtx) {
@@ -441,6 +451,51 @@ function runStoresQuery(templateId, params = {}) {
                 { key: 'party', label: 'Issued to' },
                 { key: 'unit', label: 'Unit' },
                 { key: 'due', label: 'Due' }
+            ],
+            rows,
+            moduleId: tpl.moduleId,
+            openFilter: partyContains || itemContains
+        };
+    }
+
+    if (templateId === 'permanent-loans') {
+        const loanRows = typeof collectPermanentLoanRows === 'function' ? collectPermanentLoanRows() : [];
+        const rows = loanRows
+            .filter((loan) => {
+                const d = loan.issueDate || '';
+                if (!sqInPeriod(d, dateFrom, dateTo)) return false;
+                if (status === 'issued' && !loan.status?.active) return false;
+                if (status === 'returned' && loan.status?.key !== 'returned' && loan.status?.key !== 'personal') return false;
+                const hay = `${loan.item} ${loan.zaNumber} ${loan.issuedTo} ${loan.unit} ${loan.description} ${loan.rank}`.toLowerCase();
+                if (itemContains && !hay.includes(itemContains)) return false;
+                if (partyContains && !hay.includes(partyContains)) return false;
+                return true;
+            })
+            .sort((a, b) => String(b.issueDate || '').localeCompare(String(a.issueDate || '')))
+            .map((loan, i) => ({
+                num: i + 1,
+                date: loan.issueDate || '—',
+                status: loan.status?.label || '—',
+                item: loan.item || '—',
+                za: loan.zaNumber || '—',
+                party: [loan.rank, loan.issuedTo].filter(Boolean).join(' ') || '—',
+                unit: loan.unit || '—',
+                due: loan.status?.threeYearIso || '—'
+            }));
+
+        return {
+            templateId,
+            title: `${tpl.label} — ${periodLabel}`,
+            subtitle: `${rows.length} permanent loan(s)`,
+            columns: [
+                { key: 'num', label: '#' },
+                { key: 'date', label: 'Issued' },
+                { key: 'status', label: 'Status' },
+                { key: 'item', label: 'Item' },
+                { key: 'za', label: 'ZA' },
+                { key: 'party', label: 'Issued to' },
+                { key: 'unit', label: 'Unit' },
+                { key: 'due', label: '3-year date' }
             ],
             rows,
             moduleId: tpl.moduleId,
@@ -661,7 +716,7 @@ function syncStoresQueryWizardFields() {
     const templateId = document.getElementById('sqTemplateSelect')?.value || 'stock-issues';
     const queryKind = sqResolveQueryKind(templateId);
     const isIct = queryKind === 'ict-custody';
-    const isLoans = templateId === 'temporary-loans';
+    const isLoans = templateId === 'temporary-loans' || templateId === 'permanent-loans';
     const statusWrap = document.getElementById('sqStatusWrap');
     const catWrap = document.getElementById('sqCategoryWrap');
     if (statusWrap) statusWrap.hidden = !(isIct || isLoans);

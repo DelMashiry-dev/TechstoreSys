@@ -100,7 +100,7 @@ function defaultDepartmentForAlert(alert) {
     if (t === 'undelivered-orders' || t === 'purchase-orders') return 'DP';
     if (t === 'workshop-repairs' || t === 'zna-svcs-1045') return 'IT ENGINEERING SUPPORT DEPT (WORKSHOP)';
     if (t === 'gate-register') return 'IT DIR GATE / RP';
-    if (t === 'temporary-loans' || t === 'voucher-module' || t === 'stock-take') return 'IT DIR TECHSTORES OFFICE';
+    if (t === 'temporary-loans' || t === 'permanent-loans' || t === 'voucher-module' || t === 'stock-take') return 'IT DIR TECHSTORES OFFICE';
     if (t === 'suppliers-contracts') return 'DP';
     return 'IT DIR TECHSTORES OFFICE';
 }

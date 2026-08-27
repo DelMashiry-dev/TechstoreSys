@@ -16,6 +16,7 @@ function getModuleLabel(moduleId) {
         'ict-accountability': 'ZNA ICT Asset Register',
         'ict-distribution': 'ICT Equipment Distribution Lists',
         'temporary-loans': 'Temporary Loans — Controlled Stores',
+        'permanent-loans': 'Permanent Loans — Laptops & iPads',
         'orderly-room': 'Orderly Room — DF & Correspondence Files',
         'it-dir-comms': 'IT Directorate — Communications Portal',
         'unit-requisitions': 'Unit / Formation Requisitions',
@@ -1138,6 +1139,9 @@ async function navigateToModule(targetId, options = {}) {
         setTemporaryLoansMode('view');
         renderTemporaryLoansView();
     }
+    if (targetId === 'permanent-loans' && typeof initPermanentLoansModule === 'function') {
+        initPermanentLoansModule();
+    }
     if (targetId === 'ict-accountability' && typeof renderIctAccountabilityTable === 'function') {
         if (typeof initIctAccountabilityModule === 'function') initIctAccountabilityModule();
         renderIctAccountabilityTable();
@@ -1165,7 +1169,11 @@ async function navigateToModule(targetId, options = {}) {
     }
     if (targetId === 'process-guides') {
         if (typeof initProcessGuidesModule === 'function') initProcessGuidesModule();
-        if (typeof renderProcessGuidesContent === 'function') renderProcessGuidesContent();
+        if (options.pgTab && typeof openProcessGuideTab === 'function') {
+            openProcessGuideTab(options.pgTab);
+        } else if (typeof renderProcessGuidesContent === 'function') {
+            renderProcessGuidesContent();
+        }
     }
     if (targetId === 'system-help') {
         if (typeof initRetentionReminder === 'function') initRetentionReminder();

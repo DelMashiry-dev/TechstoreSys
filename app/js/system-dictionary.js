@@ -60,6 +60,10 @@ const SYSTEM_DICTIONARY_GROUPS = [
             { t: 'Stock Take', d: 'Full stores physical count vs system across families; can push surplus to Q 1033 and deficit to Q 998.', w: 'stock-take' },
             { t: 'Unit Check Log', d: 'ASO Ch 28 unit checks recording.', w: 'unit-checks' },
             { t: 'Temporary Loans', d: 'Controlled stores loaned out (max 14 days) with due / overstayed tracking.', w: 'temporary-loans' },
+            { t: 'Permanent Loans', d: 'Laptops and iPads issued on permanent loan under Comd/34 to Lt Col and above (command/staff) and Grade Two Staff Officers at Formations / Army HQ. After 3 years: IT Dir → QS Br → Masasa scratch ZA-NO → MID wipe → write-off as personal item.', w: 'permanent-loans' },
+            { t: 'Comd/34', d: 'Army HQ policy (06 Nov 2015) on issuing laptops and iPads to individuals on a permanent loan basis.', w: 'permanent-loans' },
+            { t: 'Permanent T/loan', d: 'QM issue that replaces the 7-day renewal; only while the member is still serving (QM IT DIR 17 Mar 2020).', w: 'permanent-loans' },
+            { t: 'AS(PLANS)/34', d: 'After 3 years from date of issue, IT Dir writes to QS Br for Masasa to scratch the ZA-NO and strike the item off the Master Ledger so the officer may retain it as a personal item.', w: 'permanent-loans' },
             { t: 'MLG Master Ledger', d: 'Masasa Logistics Garrison master ledger options used when striking off ICT assets.', w: 'ICT Asset Register' }
         ]
     },
@@ -194,6 +198,7 @@ const SYSTEM_DICTIONARY_GROUPS = [
             { t: 'DP cycle statuses', d: 'Requisition → Spec/F1 → F1 with DP → Quotes eval → AIAD → e-PO/Manual → Delivery → Verified → Paid (or Cancelled).', w: 'dp-procurement' },
             { t: 'Undelivered: Awaiting / Part / Fully / Cancelled', d: 'PO delivery progress.', w: 'undelivered-orders' },
             { t: 'Loan: On loan / Due / Overstayed / Returned', d: 'Temporary loan lifecycle (14-day max).', w: 'temporary-loans' },
+            { t: 'Permanent loan: Serving / 3-year due / Return on retirement / Personal', d: 'Laptop/iPad Comd/34 lifecycle — 3-year clock then Masasa scratch-off.', w: 'permanent-loans' },
             { t: 'ICT custody / S · U/S', d: 'In stores, issued, on loan, returned; Serviceable or Unserviceable.', w: 'ict-accountability' },
             { t: 'ICT Distribution Draft / Approved', d: 'List approval state for distribution exercises.', w: 'ict-distribution' },
             { t: 'Priority Normal / Immediate / Urgent / Critical / Flash', d: 'Colour-coded bands for letters, correspondence, minutes and messages: Normal (green), Immediate (orange), Urgent (purple), Critical (red), Flash (lightning).', w: 'Comms · Orderly Room · Notifications' },
@@ -233,6 +238,10 @@ const DICT_NAV_ALIASES = {
     'delivery-note': 'delivery-note',
     'temporary-loans': 'temporary-loans',
     'temporary loans': 'temporary-loans',
+    'permanent-loans': 'permanent-loans',
+    'permanent loans': 'permanent-loans',
+    'comd/34': 'permanent-loans',
+    'permanent t/loan': 'permanent-loans',
     'ict-accountability': 'ict-accountability',
     'ict asset register': 'ict-accountability',
     'ict-distribution': 'ict-distribution',
@@ -279,7 +288,7 @@ const DICT_NAV_ALIASES = {
 const DICT_KNOWN_MODULES = new Set([
     'dashboard', 'voucher-module', 'stock-take', 'unit-checks', 'financial-year-bids',
     'release-cut', 'dp-f1-form', 'dp-procurement', 'purchase-orders', 'undelivered-orders',
-    'unit-requisitions', 'orderly-room', 'spec-evaluation', 'guide-quotation', 'delivery-note', 'temporary-loans',
+    'unit-requisitions', 'orderly-room', 'spec-evaluation', 'guide-quotation', 'delivery-note', 'temporary-loans', 'permanent-loans',
     'ict-accountability', 'ict-distribution', 'gate-register', 'techstores-equipment-register',
     'workshop-repairs', 'suppliers-contracts', 'it-dir-comms', 'process-guides', 'system-help',
     'duties-roles', 'user-management', 'reports-module', 'zna-q-forms-index', 'cost-comparative-schedule',

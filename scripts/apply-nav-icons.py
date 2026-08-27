@@ -28,6 +28,7 @@ TARGET_ICONS = {
     "suppliers-contracts": "suppliers-contracts",
     "system-help": "system-help",
     "temporary-loans": "temporary-loans",
+    "permanent-loans": "permanent-loans",
     "undelivered-orders": "undelivered-orders",
     "unit-checks": "unit-checks",
     "unit-equipment": "unit-equipment",

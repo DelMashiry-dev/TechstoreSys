@@ -40,7 +40,7 @@ const DUTIES_ROLES_GUIDES = {
         values: ['Efficiency in support', 'Discipline in action', 'Victory in unity'],
         jobSpecs: [
             { title: 'Requisitions & procurement', text: 'Writes Q 982 requisition / indent forms for all required items.', moduleId: 'zna-q-982' },
-            { title: 'Issue of items', text: 'Writes Q 1033 issue vouchers for items issued (including temporary issues).', moduleId: 'zna-q-1033' },
+            { title: 'Issue of items', text: 'Writes Q 1033 issue vouchers for items issued (including temporary issues and Comd/34 permanent laptop / iPad loans).', moduleId: 'zna-q-1033' },
             { title: 'Receipt of items', text: 'Receipts all items received in the Quartermaster.', moduleId: 'zna-q-1033' },
             { title: 'Record keeping', text: 'Enters all items received in the sub-ledgers and master ledger.', moduleId: 'zna-q-178' },
             { title: 'Write-off & losses', text: 'Strikes off the ledgers all items issued out, lost or stolen.', moduleId: 'zna-q-1' },
@@ -84,7 +84,7 @@ const DUTIES_ROLES_GUIDES = {
         jobSpecs: [
             { title: 'Account — weapons & controlled stores', text: 'Account for all weapons and controlled stores.', moduleId: 'ict-accountability' },
             { title: 'Receive & record', text: 'Receive controlled stores and enter them in the sub-ledgers.', moduleId: 'zna-q-1033' },
-            { title: 'Issue', text: 'Issue controlled stores on proper authority / vouchers.', moduleId: 'temporary-loans' },
+            { title: 'Issue', text: 'Issue controlled stores on proper authority / vouchers (temporary loans and Comd/34 permanent laptop / iPad loans).', moduleId: 'temporary-loans' },
             { title: 'Reconcile for QM', text: 'Reconcile the sub-ledger for the Quartermaster’s signature.', moduleId: 'zna-q-178' },
             { title: 'Pack properly', text: 'Pack weapons and controlled stores in the prescribed manner.', moduleId: null },
             { title: 'Clean & maintain', text: 'Clean all weapons and controlled stores.', moduleId: null },

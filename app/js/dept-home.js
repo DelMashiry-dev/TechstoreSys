@@ -28,13 +28,14 @@ const DEPT_HOME_PRESETS = {
     storeman: {
         kicker: 'IT-DIR · Tech Stores (Storeman)',
         title: 'Storeman workspace',
-        blurb: 'Day-to-day stores duties: issue and receipt vouchers (Q 1033), delivery notes, stock take, equipment register, temporary loans, and ZNA Q forms.',
+        blurb: 'Day-to-day stores duties: issue and receipt vouchers (Q 1033), delivery notes, stock take, equipment register, temporary and permanent loans, and ZNA Q forms.',
         shortcuts: [
             { target: 'voucher-module', label: 'Issue / Receipt Voucher (Q 1033)', primary: true },
             { target: 'delivery-note', label: 'Delivery Note' },
             { target: 'stock-take', label: 'Stock Take' },
             { target: 'techstores-equipment-register', label: 'Equipment Register' },
             { target: 'temporary-loans', label: 'Temporary Loans' },
+            { target: 'permanent-loans', label: 'Permanent Loans' },
             { target: 'zna-q-forms-index', label: 'ZNA Q Forms' },
             { target: 'system-help', label: 'System Help / Dictionary' }
         ]

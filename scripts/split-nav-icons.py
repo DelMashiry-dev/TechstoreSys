@@ -33,6 +33,7 @@ ICONS = [
     "suppliers-contracts",
     "system-help",
     "temporary-loans",
+    "permanent-loans",
     "undelivered-orders",
     "unit-checks",
     "unit-equipment",
