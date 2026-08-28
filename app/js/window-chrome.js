@@ -54,6 +54,79 @@ function bindWinChromeModal(modal, options = {}) {
 
 let tableFocusState = null;
 
+function restoreModuleMaximize() {
+    document.querySelectorAll('.form-container.is-module-maximized').forEach((el) => {
+        el.classList.remove('is-module-maximized');
+        const btn = el.querySelector('[data-module-max]');
+        if (btn) {
+            btn.textContent = '▢';
+            btn.title = 'Maximize';
+            btn.setAttribute('aria-label', 'Maximize');
+        }
+    });
+    document.body.classList.remove('module-maximized');
+}
+
+function toggleModuleMaximize(moduleEl, maxBtn) {
+    if (!moduleEl) return false;
+    const next = !moduleEl.classList.contains('is-module-maximized');
+    document.querySelectorAll('.form-container.is-module-maximized').forEach((el) => {
+        if (el !== moduleEl) {
+            el.classList.remove('is-module-maximized');
+            const otherBtn = el.querySelector('[data-module-max]');
+            if (otherBtn) {
+                otherBtn.textContent = '▢';
+                otherBtn.title = 'Maximize';
+                otherBtn.setAttribute('aria-label', 'Maximize');
+            }
+        }
+    });
+    moduleEl.classList.toggle('is-module-maximized', next);
+    document.body.classList.toggle('module-maximized', next);
+    const btn = maxBtn || moduleEl.querySelector('[data-module-max]');
+    if (btn) {
+        btn.textContent = next ? '❐' : '▢';
+        btn.title = next ? 'Restore' : 'Maximize';
+        btn.setAttribute('aria-label', next ? 'Restore' : 'Maximize');
+    }
+    if (next) {
+        moduleEl.scrollTop = 0;
+        moduleEl.querySelector('.req-intray-panel, .form-table-wrapper')?.scrollIntoView({ block: 'start' });
+    }
+    return next;
+}
+
+function ensureModuleMaximizeControl(root) {
+    if (!root || !root.id || !root.classList.contains('form-container')) return;
+    const header = root.querySelector(':scope > .form-header');
+    if (!header || header.querySelector('[data-module-max]')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'win-chrome-btn form-max-btn';
+    btn.setAttribute('data-module-max', root.id);
+    btn.title = 'Maximize';
+    btn.setAttribute('aria-label', 'Maximize');
+    btn.textContent = '▢';
+    const close = header.querySelector('.close-btn');
+    if (close) {
+        if (!close.parentElement?.classList.contains('form-header-controls')) {
+            const wrap = document.createElement('div');
+            wrap.className = 'form-header-controls';
+            close.replaceWith(wrap);
+            wrap.appendChild(btn);
+            wrap.appendChild(close);
+        } else {
+            close.parentElement.insertBefore(btn, close);
+        }
+    } else {
+        header.appendChild(btn);
+    }
+}
+
+function ensureAllModuleMaximizeControls() {
+    document.querySelectorAll('.form-container').forEach(ensureModuleMaximizeControl);
+}
+
 function cloneTableHtml(tableSelector) {
     const table = document.querySelector(tableSelector);
     if (!table) return '';
@@ -187,7 +260,15 @@ function refreshTableFocusViewIfOpen() {
 }
 
 function initWindowChrome() {
+    ensureAllModuleMaximizeControls();
     document.addEventListener('click', (e) => {
+        const maxBtn = e.target.closest('[data-module-max]');
+        if (maxBtn) {
+            e.preventDefault();
+            const id = maxBtn.getAttribute('data-module-max');
+            toggleModuleMaximize(document.getElementById(id), maxBtn);
+            return;
+        }
         const btn = e.target.closest('[data-table-focus]');
         if (!btn) return;
         e.preventDefault();
@@ -203,8 +284,13 @@ function initWindowChrome() {
     });
 
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && document.body.classList.contains('table-focus-open')) {
+        if (e.key !== 'Escape') return;
+        if (document.body.classList.contains('table-focus-open')) {
             closeTableFocusView();
+            return;
+        }
+        if (document.body.classList.contains('module-maximized')) {
+            restoreModuleMaximize();
         }
     });
 }
@@ -217,3 +303,7 @@ window.openTableFocusView = openTableFocusView;
 window.closeTableFocusView = closeTableFocusView;
 window.refreshTableFocusViewIfOpen = refreshTableFocusViewIfOpen;
 window.initWindowChrome = initWindowChrome;
+window.toggleModuleMaximize = toggleModuleMaximize;
+window.restoreModuleMaximize = restoreModuleMaximize;
+window.ensureModuleMaximizeControl = ensureModuleMaximizeControl;
+window.ensureAllModuleMaximizeControls = ensureAllModuleMaximizeControls;

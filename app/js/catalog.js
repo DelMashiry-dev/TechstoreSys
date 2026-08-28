@@ -2203,7 +2203,11 @@ const STORES_CATALOG_SECTIONS = [
 ];
 
 function getStoresCatalogSections() {
-    return STORES_CATALOG_SECTIONS || [];
+    const base = STORES_CATALOG_SECTIONS || [];
+    if (typeof mergeIctSparesAccessoriesCatalog === 'function') {
+        return mergeIctSparesAccessoriesCatalog(base);
+    }
+    return base;
 }
 
 /** Nature-of-use groups for Softwares / software licence catalog items */
@@ -2596,7 +2600,8 @@ var VOUCHER_INVENTORY_CATEGORIES = getStoresCatalogSections().map((section) => {
         'spares-parts': 'Parts / Spares',
         'maintenance-equipment': 'Maint. Equipment',
         'software-licences': 'Software',
-        'ict-equipment': 'ICT Equipment'
+        'ict-equipment': 'ICT Equipment',
+        'ict-accessories': 'ICT Accessories'
     };
     return {
         key: section.key,

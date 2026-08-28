@@ -827,6 +827,9 @@ function getItemStockSummary(itemId, options = {}) {
         item: catalog?.name || allTxns[0]?.item || itemId,
         category: catalog?.category || allTxns[0]?.category || '',
         gl: catalog?.gl || allTxns[0]?.gl || '',
+        abcClass: catalog?.abcClass || '',
+        minStock: Number(catalog?.minStock) || 0,
+        highDemand: !!catalog?.highDemand,
         opening,
         openingBase,
         received,
@@ -937,7 +940,18 @@ function getStoresItemDepletionAlerts() {
                 target: 'voucher-module',
                 text: `STOCK DEPLETED: ${row.item} on hand is 0. Restock or stop further issues.`
             });
-        } else if (row.onHand > 0) {
+        } else if (row.onHand >= 0) {
+            const min = Number(row.minStock) || (typeof getCatalogItemById === 'function'
+                ? Number(getCatalogItemById(itemId)?.minStock) || 0
+                : 0);
+            const tracked = row.openingBase > 0 || row.received > 0 || row.issued > 0;
+            if (tracked && min > 0 && row.onHand < min) {
+                alerts.push({
+                    type: 'warning',
+                    target: 'voucher-module',
+                    text: `BELOW MINIMUM: ${row.item} has ${row.onHand} on hand (min ${min}${row.abcClass ? ` · class ${row.abcClass}` : ''}). Restock.`
+                });
+            } else if (row.onHand > 0) {
             const base = row.openingBase + row.received;
             if (base > 0 && row.onHand / base <= 0.2) {
                 alerts.push({
@@ -945,6 +959,7 @@ function getStoresItemDepletionAlerts() {
                     target: 'voucher-module',
                     text: `LOW STOCK: ${row.item} has only ${row.onHand} on hand.`
                 });
+            }
             }
         }
     });

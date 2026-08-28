@@ -50,6 +50,7 @@
     "delivery-note",
     "purchase-orders",
     "undelivered-orders",
+    "supplier-debts",
     "workshop-receipt-cert",
     "gate-register",
     "techstores-equipment-register",

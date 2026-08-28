@@ -705,6 +705,7 @@ function renderRequisitionsTable() {
 
     if (!rows.length) {
         tbody.innerHTML = '<tr><td colspan="7" class="req-empty-row">No requisitions in this view. Book one in below, or widen the filters.</td></tr>';
+        if (typeof refreshTableFocusViewIfOpen === 'function') refreshTableFocusViewIfOpen();
         return;
     }
 
@@ -751,6 +752,7 @@ function renderRequisitionsTable() {
             </tr>
         `;
     }).join('');
+    if (typeof refreshTableFocusViewIfOpen === 'function') refreshTableFocusViewIfOpen();
 }
 
 function renderRequisitionsModule() {
@@ -783,6 +785,26 @@ function populateRequisitionSelects() {
             .join('');
         priorityEl.dataset.ready = '1';
     }
+}
+
+function handleRequisitionActionClick(e) {
+    const btn = e.target.closest('[data-req-action]');
+    if (!btn) return;
+    const id = btn.dataset.reqId;
+    const action = btn.dataset.reqAction;
+    const fromOverlay = !!btn.closest('#tableFocusModal');
+    if (action === 'edit' || action === 'route') {
+        if (fromOverlay && typeof closeTableFocusView === 'function') closeTableFocusView();
+        if (fromOverlay && typeof restoreModuleMaximize === 'function') restoreModuleMaximize();
+    }
+    if (action === 'route') {
+        if (typeof routeRequisitionProcurement === 'function') routeRequisitionProcurement(id, { navigate: true });
+        return;
+    }
+    if (action === 'edit') editRequisition(id);
+    if (action === 'progress') setRequisitionStatus(id, 'in_progress');
+    if (action === 'issue') setRequisitionStatus(id, 'issued');
+    if (action === 'delete') deleteRequisition(id);
 }
 
 function initRequisitionsModule() {
@@ -852,20 +874,15 @@ function initRequisitionsModule() {
         setTimeout(renderRequisitionsTable, 0);
     });
 
-    document.getElementById('requisitions-table-body')?.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-req-action]');
-        if (!btn) return;
-        const id = btn.dataset.reqId;
-        const action = btn.dataset.reqAction;
-        if (action === 'route') {
-            if (typeof routeRequisitionProcurement === 'function') routeRequisitionProcurement(id, { navigate: true });
-            return;
-        }
-        if (action === 'edit') editRequisition(id);
-        if (action === 'progress') setRequisitionStatus(id, 'in_progress');
-        if (action === 'issue') setRequisitionStatus(id, 'issued');
-        if (action === 'delete') deleteRequisition(id);
-    });
+    document.getElementById('requisitions-table-body')?.addEventListener('click', handleRequisitionActionClick);
+    if (!document.body.dataset.reqActionBound) {
+        document.body.dataset.reqActionBound = '1';
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#requisitions-table-body')) return;
+            if (!e.target.closest('#tableFocusBody [data-req-action], .table-focus-table-wrap [data-req-action]')) return;
+            handleRequisitionActionClick(e);
+        });
+    }
 
     if (typeof bindSearchHistory === 'function') {
         const searchEl = document.getElementById('reqTableSearch');

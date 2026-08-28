@@ -1,4 +1,6 @@
-# Create / refresh Tech Stores launcher shortcuts (online DB + offline shell)
+# Create / refresh Tech Stores launcher shortcuts (online DB + offline shell).
+# Writes .lnk files in the repo root and on the Desktop. They are gitignored —
+# do not commit them; rerun this script after clone or icon changes.
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $desktop = [Environment]::GetFolderPath('Desktop')

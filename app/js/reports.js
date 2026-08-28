@@ -485,6 +485,16 @@ function buildModuleReportData(moduleId) {
             ? buildUnitRequisitionsReportData()
             : { title: 'Unit Requisitions', summary: ['Module not loaded.'], fields: [], tables: [] };
     }
+    if (moduleId === 'supplier-debts') {
+        return typeof buildSupplierDebtsReportData === 'function'
+            ? buildSupplierDebtsReportData()
+            : { title: 'Supplier Debts', summary: ['Module not loaded.'], fields: [], tables: [] };
+    }
+    if (moduleId === 'supplier-debt-chase') {
+        return typeof buildSupplierDebtChaseReportData === 'function'
+            ? buildSupplierDebtChaseReportData()
+            : { title: 'DAF chase — supplier debt', summary: ['Module not loaded.'], fields: [], tables: [] };
+    }
     if (moduleId === 'techstores-period') {
         return typeof buildTechStoresPeriodReportData === 'function'
             ? buildTechStoresPeriodReportData(dateFrom, dateTo)
@@ -948,8 +958,12 @@ function generateModuleReport(moduleId, options = {}) {
         showToast('You do not have access to reports.', 'error');
         return null;
     }
-    if (moduleId !== 'dashboard' && moduleId !== 'techstores-period' && moduleId !== 'stores-inventory' && moduleId !== 'stock-take' && moduleId !== 'monthly-returns' && moduleId !== 'inventory-accountability' && moduleId !== 'ict-accountability' && moduleId !== 'dp-procurement' && moduleId !== 'monthly-target-proposal' && moduleId !== 'daf-fund-request-memo' && !canAccessModule(moduleId) && moduleId !== 'release-cut') {
+    if (moduleId !== 'dashboard' && moduleId !== 'techstores-period' && moduleId !== 'stores-inventory' && moduleId !== 'stock-take' && moduleId !== 'monthly-returns' && moduleId !== 'inventory-accountability' && moduleId !== 'ict-accountability' && moduleId !== 'dp-procurement' && moduleId !== 'monthly-target-proposal' && moduleId !== 'daf-fund-request-memo' && moduleId !== 'supplier-debt-chase' && !canAccessModule(moduleId) && moduleId !== 'release-cut') {
         showToast('You do not have access to that module report.', 'error');
+        return null;
+    }
+    if (moduleId === 'supplier-debt-chase' && !canAccessModule('supplier-debts')) {
+        showToast('You do not have access to supplier debt chase minutes.', 'error');
         return null;
     }
     if ((moduleId === 'stores-inventory' || moduleId === 'stock-take' || moduleId === 'inventory-accountability') && !canAccessModule('voucher-module') && !canAccessModule('stock-take') && !canAccessModule('reports-module')) {

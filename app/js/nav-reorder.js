@@ -142,7 +142,6 @@ function navClearLongPress() {
 function navBeginDrag() {
     if (!navDrag || navDrag.active) return;
     navDrag.active = true;
-    navSuppressClick = true;
     navDrag.li.classList.add('nav-dragging');
     document.body.classList.add('nav-reordering');
     try {
@@ -154,6 +153,7 @@ function navEndDrag() {
     navClearLongPress();
     if (!navDrag) return;
     const didDrag = navDrag.active;
+    const moved = didDrag && navDrag.li.nextSibling !== navDrag.originNext;
     const li = navDrag.li;
     li.classList.remove('nav-dragging');
     document.body.classList.remove('nav-reordering');
@@ -161,9 +161,12 @@ function navEndDrag() {
         li.releasePointerCapture(navDrag.pointerId);
     } catch (_) { /* ignore */ }
     navDrag = null;
-    if (didDrag) persistNavMenuOrder();
-    if (navSuppressClick) {
+    if (moved) persistNavMenuOrder();
+    if (moved) {
+        navSuppressClick = true;
         setTimeout(() => { navSuppressClick = false; }, 80);
+    } else {
+        navSuppressClick = false;
     }
 }
 
@@ -183,6 +186,8 @@ function navOnPointerDown(e) {
         pointerId: e.pointerId,
         startX: e.clientX,
         startY: e.clientY,
+        originNext: li.nextSibling,
+        isToggle: !!e.target.closest('.nav-submenu-toggle'),
         active: false
     };
 
@@ -202,7 +207,7 @@ function navOnPointerMove(e) {
             if (dist > NAV_DRAG_THRESHOLD_PX) navClearLongPress();
             return;
         }
-        if (dist < NAV_DRAG_THRESHOLD_PX) return;
+        if (dist < (navDrag.isToggle ? 16 : NAV_DRAG_THRESHOLD_PX)) return;
         navBeginDrag();
     }
 

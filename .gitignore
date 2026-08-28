@@ -20,6 +20,10 @@ data/product-web-cache.json
 Thumbs.db
 *.swp
 
+# Windows launcher shortcuts — machine-specific binaries (target path + icon).
+# Regenerate with scripts/create-launcher-shortcuts.ps1 (or .bat).
+*.lnk
+
 # Runtime logs
 mode_switch.log
 **/mode_switch.log

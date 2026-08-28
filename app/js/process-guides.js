@@ -566,6 +566,7 @@ function renderOrderlyRoomGuide() {
             <p class="pg-links">Open modules:
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="orderly-room">Orderly Room (DF)</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="unit-requisitions">Unit Requisitions</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="supplier-debts">Supplier Debts</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="dp-procurement">ICT Procurement Cycle</button>
             </p>
         </article>`;

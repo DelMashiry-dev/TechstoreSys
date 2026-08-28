@@ -20,7 +20,13 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
-from mode_switch import handle_mode_switch, mode_status_payload, prepare_server_startup
+from mode_switch import (
+    handle_mode_switch,
+    mode_status_payload,
+    prepare_server_startup,
+    existing_http_ready,
+    wait_as_prelaunch_placeholder,
+)
 from python_runtime import runtime_root
 
 ROOT = runtime_root()
@@ -127,8 +133,24 @@ def main() -> None:
         except Exception:
             pass
 
+    print(" Starting Tech Stores Offline Shell…", flush=True)
+    if existing_http_ready(PORT, mode="offline-shell"):
+        print(f" Offline shell already running at http://127.0.0.1:{PORT}/app/", flush=True)
+        print("TECHSTORES_OFFLINE_READY", flush=True)
+        wait_as_prelaunch_placeholder()
+        return
+
     prepare_server_startup("offline-shell")
-    httpd = ThreadingHTTPServer((HOST, PORT), OfflineShellHandler)
+    try:
+        httpd = ThreadingHTTPServer((HOST, PORT), OfflineShellHandler)
+    except OSError as exc:
+        if existing_http_ready(PORT, mode="offline-shell"):
+            print(f" Offline shell already running at http://127.0.0.1:{PORT}/app/", flush=True)
+            print("TECHSTORES_OFFLINE_READY", flush=True)
+            wait_as_prelaunch_placeholder()
+            return
+        print(f" ERROR: could not bind port {PORT}: {exc}", flush=True)
+        sys.exit(1)
     url = f"http://127.0.0.1:{PORT}/app/"
     print("=" * 60)
     print(" IT-DIR Tech Stores — OFFLINE SHELL")

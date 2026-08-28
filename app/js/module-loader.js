@@ -58,7 +58,7 @@ async function loadModuleHtml(moduleId) {
     }
 
     MODULE_LOAD_PROMISES[moduleId] = (async () => {
-        const url = `modules/${encodeURIComponent(moduleId)}.html?v=20260827h2h3`;
+        const url = `modules/${encodeURIComponent(moduleId)}.html?v=20260827combo`;
         const res = await fetchAppAsset(url);
         if (!res.ok) throw new Error(`Module HTML not found: ${moduleId} (${res.status})`);
         const html = await res.text();
@@ -101,6 +101,7 @@ async function ensureModuleLoaded(moduleId) {
     el.style.display = 'none';
     host.appendChild(el);
     wireModuleShellEvents(el);
+    if (typeof ensureModuleMaximizeControl === 'function') ensureModuleMaximizeControl(el);
 
     // Restore saved field values for this module if available
     if (typeof restoreModule === 'function' && appState?.modules?.[moduleId]) {

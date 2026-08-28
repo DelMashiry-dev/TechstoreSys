@@ -15,6 +15,7 @@ const MODULE_SEARCH_ALIASES = {
     'zna-q-forms-index': 'q forms catalogue annex',
     'suppliers-contracts': 'vendor supplier register G/C/006',
     'delivery-note': 'dn delivery note goods received supplier',
+    'supplier-debts': 'supplier debt debts owed unpaid non-paid goods received age daf chase invoice po dampack',
     'workshop-repairs': 'workshop register repairs indent',
     'ict-compare': 'head to head compare laptop buy purchase duty profile crawl market benchmark FPS workstation rugged',
     'dp-f1-form': 'indent procurement f1',
@@ -324,6 +325,21 @@ function collectUniversalSearchIndex() {
         });
     });
 
+    const debts = typeof ensureSupplierDebts === 'function' ? ensureSupplierDebts() : (appState?.supplierDebts || []);
+    (debts || []).slice(0, 80).forEach((rec) => {
+        const usd = typeof sdCaseUsd === 'function' ? sdCaseUsd(rec) : rec.totalUsd;
+        const age = typeof sdAgeLabel === 'function' ? sdAgeLabel(typeof sdAgeDays === 'function' ? sdAgeDays(rec) : 0) : '';
+        add({
+            id: `sd-${rec.id}`,
+            kind: 'supplier-debt',
+            moduleId: 'supplier-debts',
+            title: `${rec.supplier || rec.caseNo || 'Supplier'} — USD ${usd}`,
+            subtitle: `Debt · ${rec.status || ''} · ${age}`,
+            haystack: `${rec.supplier || ''} ${rec.caseNo || ''} ${rec.minuteRef || ''} ${rec.description || ''} ${(rec.lines || []).map((l) => `${l.poNo || ''} ${l.invoiceNo || ''}`).join(' ')}`.toLowerCase(),
+            sdId: rec.id
+        });
+    });
+
     // DP procurements
     const dps = typeof ensureDpProcurements === 'function' ? ensureDpProcurements() : (appState?.dpProcurements || []);
     (dps || []).slice(0, 80).forEach((rec) => {
@@ -583,6 +599,7 @@ function kindBadge(kind) {
         'q-ref': 'Q ref',
         requisition: 'Req',
         undelivered: 'PO',
+        'supplier-debt': 'Debt',
         dp: 'DP',
         dictionary: 'Dict',
         letter: 'Letter',
@@ -619,6 +636,7 @@ function renderUniversalSearchResults(query, options = {}) {
             data-module="${escapeUs(item.moduleId || '')}"
             data-req-id="${escapeUs(item.reqId || '')}"
             data-und-id="${escapeUs(item.undId || '')}"
+            data-sd-id="${escapeUs(item.sdId || '')}"
             data-dp-id="${escapeUs(item.dpId || '')}"
             data-q-code="${escapeUs(item.qCode || '')}"
             data-dict-query="${escapeUs(item.dictQuery || '')}"
@@ -640,6 +658,7 @@ async function activateUniversalResult(el) {
     const moduleId = el.getAttribute('data-module');
     const reqId = el.getAttribute('data-req-id');
     const undId = el.getAttribute('data-und-id');
+    const sdId = el.getAttribute('data-sd-id');
     const dpId = el.getAttribute('data-dp-id');
     const qCode = el.getAttribute('data-q-code');
     const dictQuery = el.getAttribute('data-dict-query');
@@ -709,6 +728,7 @@ async function activateUniversalResult(el) {
     setTimeout(() => {
         if (reqId && typeof editRequisition === 'function') editRequisition(reqId);
         if (undId && typeof editUndelivered === 'function') editUndelivered(undId);
+        if (sdId && typeof editSupplierDebt === 'function') editSupplierDebt(sdId);
         if (dpId && typeof editDpProcurement === 'function') editDpProcurement(dpId);
         if (qCode && moduleId === 'zna-q-forms-index') {
             const search = document.getElementById('znaQIndexSearch');

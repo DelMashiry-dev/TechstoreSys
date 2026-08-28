@@ -23,7 +23,13 @@ from urllib.parse import unquote, urlparse, parse_qs
 
 from product_specs_lookup import lookup_product_specs, lookup_market_catalog, fetch_rbz_usd_zig_rate
 from ai_services import ai_status, parse_spec_document, answer_stores_question, draft_requisition_justification
-from mode_switch import handle_mode_switch, mode_status_payload, prepare_server_startup
+from mode_switch import (
+    handle_mode_switch,
+    mode_status_payload,
+    prepare_server_startup,
+    existing_http_ready,
+    wait_as_prelaunch_placeholder,
+)
 
 try:
     from version import APP_VERSION, APP_NAME
@@ -1600,12 +1606,30 @@ def main() -> None:
         input("Press Enter to close…")
         sys.exit(1)
 
+    # Cursor / VS Code preLaunchTask waits for TECHSTORES_READY. A second F5
+    # must not block on init_db / bind while the first server is still up.
+    print(" Starting Tech Stores Database Server…", flush=True)
+    if existing_http_ready(PORT, mode="online"):
+        print(f" Database server already running at http://127.0.0.1:{PORT}/app/", flush=True)
+        print("TECHSTORES_READY", flush=True)
+        wait_as_prelaunch_placeholder()
+        return
+
     # Ensure .webmanifest is served with the correct type for PWA install
     mimetypes.add_type("application/manifest+json", ".webmanifest")
 
     init_db()
     prepare_server_startup("online")
-    server = ThreadingHTTPServer((HOST, PORT), TechStoresHandler)
+    try:
+        server = ThreadingHTTPServer((HOST, PORT), TechStoresHandler)
+    except OSError as exc:
+        if existing_http_ready(PORT, mode="online"):
+            print(f" Database server already running at http://127.0.0.1:{PORT}/app/", flush=True)
+            print("TECHSTORES_READY", flush=True)
+            wait_as_prelaunch_placeholder()
+            return
+        print(f" ERROR: could not bind port {PORT}: {exc}", flush=True)
+        sys.exit(1)
     local_url = f"http://127.0.0.1:{PORT}/app/"
     lan = _lan_urls(PORT)
     print("=" * 60)

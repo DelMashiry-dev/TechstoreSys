@@ -1030,6 +1030,7 @@ function getActiveModuleId() {
 
 async function navigateToModule(targetId, options = {}) {
     if (!targetId) return;
+    if (typeof restoreModuleMaximize === 'function') restoreModuleMaximize();
     if (typeof hideFieldHelp === 'function') hideFieldHelp();
     if (!currentUser) {
         document.body.classList.add('app-locked');

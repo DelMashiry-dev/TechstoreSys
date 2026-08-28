@@ -329,6 +329,34 @@ function buildWatchAlertSections() {
         })
     });
 
+    const supplierDebtsOpen = typeof getOpenSupplierDebtsForWatch === 'function'
+        ? getOpenSupplierDebtsForWatch()
+        : [];
+    const sdUsd = supplierDebtsOpen.reduce((s, row) => s + (row.usd || 0), 0);
+    const sdFmt = typeof sdFmtUsd === 'function' ? sdFmtUsd : ((n) => Number(n || 0).toFixed(2));
+    sections.push({
+        key: 'supplier-debts',
+        title: 'SUPPLIER DEBTS (NON-PAID GOODS RECEIVED)',
+        count: supplierDebtsOpen.length,
+        target: 'supplier-debts',
+        tone: supplierDebtsOpen.some((row) => row.age >= 365) ? 'danger' : (supplierDebtsOpen.length ? 'warning' : 'ok'),
+        summary: supplierDebtsOpen.length
+            ? `${supplierDebtsOpen.length} unpaid case(s) · USD ${sdFmt(sdUsd)} owed — DAF pays; IT Dir chases.`
+            : 'None — no non-paid deliveries on the register.',
+        items: supplierDebtsOpen.slice(0, 8).map(({ rec, age, usd }) => ({
+            type: age >= 730 ? 'danger' : (age >= 365 ? 'warning' : 'info'),
+            target: 'supplier-debts',
+            sdId: rec.id,
+            text: `${rec.supplier || 'Supplier'} — USD ${sdFmt(usd)} (${typeof sdAgeLabel === 'function' ? sdAgeLabel(age) : `${age}d`})${rec.dafChasedAt ? ' · chased DAF' : ''}`,
+            receivedDate: rec.accumulatedFrom || rec.receivedDate || '',
+            dueDate: '',
+            ageDays: age,
+            department: 'IT DIR TECHSTORES OFFICE',
+            priority: age >= 365 ? 'critical' : 'high',
+            redFlag: age >= 365
+        }))
+    });
+
     const orderlyOpen = typeof getOrderlyOpenForTechStores === 'function'
         ? getOrderlyOpenForTechStores()
         : [];
@@ -360,6 +388,7 @@ function renderAlertItemHtml(alert) {
     const target = alert.target || '';
     const reqId = alert.reqId || '';
     const undId = alert.undId || '';
+    const sdId = alert.sdId || '';
     const dpId = alert.dpId || '';
     const loanId = alert.loanId || '';
     const orId = alert.orId || '';
@@ -367,7 +396,7 @@ function renderAlertItemHtml(alert) {
     const clickable = !!target;
     const tag = clickable ? 'button' : 'div';
     const attrs = clickable
-        ? `type="button" data-alert-target="${escapeAlertText(target)}"${reqId ? ` data-alert-req-id="${escapeAlertText(reqId)}"` : ''}${undId ? ` data-alert-und-id="${escapeAlertText(undId)}"` : ''}${dpId ? ` data-alert-dp-id="${escapeAlertText(dpId)}"` : ''}${loanId ? ` data-alert-loan-id="${escapeAlertText(loanId)}"` : ''}${orId ? ` data-alert-or-id="${escapeAlertText(orId)}"` : ''}${focus ? ` data-alert-focus="${escapeAlertText(focus)}"` : ''} title="Open related form"`
+        ? `type="button" data-alert-target="${escapeAlertText(target)}"${reqId ? ` data-alert-req-id="${escapeAlertText(reqId)}"` : ''}${undId ? ` data-alert-und-id="${escapeAlertText(undId)}"` : ''}${sdId ? ` data-alert-sd-id="${escapeAlertText(sdId)}"` : ''}${dpId ? ` data-alert-dp-id="${escapeAlertText(dpId)}"` : ''}${loanId ? ` data-alert-loan-id="${escapeAlertText(loanId)}"` : ''}${orId ? ` data-alert-or-id="${escapeAlertText(orId)}"` : ''}${focus ? ` data-alert-focus="${escapeAlertText(focus)}"` : ''} title="Open related form"`
         : '';
     return `<${tag} class="alert-item alert-${alert.type || 'info'}-item${clickable ? ' alert-item-link' : ''}" ${attrs}>${escapeAlertText(alert.text)}</${tag}>`;
 }
@@ -508,6 +537,9 @@ function updateSystemAlerts() {
     if (typeof getUndeliveredAlerts === 'function') {
         getUndeliveredAlerts({ skipSummaries: true }).forEach((alert) => alerts.push(alert));
     }
+    if (typeof getSupplierDebtAlerts === 'function') {
+        getSupplierDebtAlerts({ skipWatchCovered: true }).forEach((alert) => alerts.push(alert));
+    }
     if (typeof getDpProcurementAlerts === 'function') {
         getDpProcurementAlerts({ skipWatchCovered: true }).forEach((alert) => alerts.push(alert));
     }
@@ -551,6 +583,7 @@ function initSystemAlertsClicks() {
         const target = item.getAttribute('data-alert-target');
         const reqId = item.getAttribute('data-alert-req-id');
         const undId = item.getAttribute('data-alert-und-id');
+        const sdId = item.getAttribute('data-alert-sd-id');
         const dpId = item.getAttribute('data-alert-dp-id');
         const loanId = item.getAttribute('data-alert-loan-id');
         const orId = item.getAttribute('data-alert-or-id');
@@ -562,6 +595,9 @@ function initSystemAlertsClicks() {
         }
         if (undId && target === 'undelivered-orders' && typeof editUndelivered === 'function') {
             setTimeout(() => editUndelivered(undId), 50);
+        }
+        if (sdId && target === 'supplier-debts' && typeof editSupplierDebt === 'function') {
+            setTimeout(() => editSupplierDebt(sdId), 50);
         }
         if (dpId && target === 'dp-procurement' && typeof editDpProcurement === 'function') {
             setTimeout(() => editDpProcurement(dpId), 50);

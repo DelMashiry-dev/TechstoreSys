@@ -29,7 +29,7 @@ const INVENTORY_PARENT_LEDGERS = [
         key: 'spares',
         label: 'SPARES & PARTS INVENTORY',
         shortLabel: 'Spares & Parts',
-        detail: 'Laptop/printer rollers, RJ45, boards and spare parts',
+        detail: 'Laptop/printer rollers, RAM, SSD, boards, chargers, networking kit and spare parts',
         defaultGl: '2201900002',
         cssKey: 'spares'
     },
@@ -84,7 +84,17 @@ const STANDALONE_INVENTORY_LEDGERS = [
         defaultGl: '6122100009',
         detail: 'External HDD / portable storage',
         sourceKeys: ['consumables-media'],
-        itemFilter: /external|hdd|hard\s*drive|portable\s*disk/i
+        itemFilter: /external|hdd|hard\s*drive|portable\s*disk|external\s*ssd/i
+    },
+    {
+        key: 'inv-accessories',
+        label: 'ICT Accessories',
+        fullLabel: 'ICT Accessories Inventory',
+        parentKey: 'zoff',
+        defaultGl: '6122100009',
+        detail: 'Mice, keyboards, cables, chargers, hubs, headsets, bags and office ICT accessories',
+        sourceKeys: ['ict-accessories'],
+        itemFilter: null
     },
     {
         key: 'inv-softwares',
@@ -302,6 +312,7 @@ function suggestInventoryLedgerKey(itemName) {
     if (/\b(toner|cartridge|ink|printhead)\b/.test(lower)) return 'inv-toner';
     if (/\b(usb|flash|memory\s*stick|pen\s*drive)\b/.test(lower)) return 'inv-usb';
     if (/\b(external|hdd|hard\s*drive)\b/.test(lower)) return 'inv-external-hdd';
+    if (/\b(mouse|keyboard|hdmi|vga|headset|charger|adaptor|adapter|hub|cable|bag|webcam|speaker|surge|extension)\b/.test(lower)) return 'inv-accessories';
     if (/\b(software|licence|license|windows|office|kaspersky)\b/.test(lower)) return 'inv-softwares';
     if (/\b(motherboard|ssd|ram|ddr|fuser|roller|spare|ups|battery\s*kits?)\b/.test(lower)) return 'inv-spares';
     if (/\b(maintenance|photocopier|reballing)\b/.test(lower)) return 'inv-maintenance';

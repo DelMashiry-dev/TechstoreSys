@@ -4,7 +4,7 @@
         {
             "label": "Start Tech Stores Database Server",
             "type": "shell",
-            "command": "${env:LOCALAPPDATA}\\Python\\pythoncore-3.14-64\\python.exe",
+            "command": "${workspaceFolder}\\scripts\\resolve-python.cmd",
             "args": ["-u", "server.py"],
             "options": {
                 "cwd": "${workspaceFolder}",
@@ -27,13 +27,14 @@
             "presentation": {
                 "reveal": "always",
                 "panel": "dedicated",
-                "focus": false
+                "focus": false,
+                "showReuseMessage": false
             }
         },
         {
             "label": "Start Tech Stores Offline Shell",
             "type": "shell",
-            "command": "${env:LOCALAPPDATA}\\Python\\pythoncore-3.14-64\\python.exe",
+            "command": "${workspaceFolder}\\scripts\\resolve-python.cmd",
             "args": ["-u", "offline_static_server.py"],
             "options": {
                 "cwd": "${workspaceFolder}",
@@ -56,9 +57,9 @@
             "presentation": {
                 "reveal": "always",
                 "panel": "dedicated",
-                "focus": false
+                "focus": false,
+                "showReuseMessage": false
             }
         }
     ]
 }
-

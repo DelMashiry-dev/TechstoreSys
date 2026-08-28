@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import socket
 import subprocess
@@ -43,6 +44,30 @@ def port_is_listening(port: int = PORT, host: str = "127.0.0.1") -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.settimeout(0.4)
         return sock.connect_ex((host, port)) == 0
+
+
+def existing_http_ready(port: int = PORT, path: str = "/api/health", mode: str | None = None) -> bool:
+    """True if an HTTP server is already answering on the port (optionally matching mode)."""
+    try:
+        from urllib.request import urlopen
+        with urlopen(f"http://127.0.0.1:{port}{path}", timeout=0.6) as resp:
+            if not (200 <= int(getattr(resp, "status", 200)) < 500):
+                return False
+            if mode is None:
+                return True
+            payload = json.loads(resp.read().decode("utf-8") or "{}")
+            return str(payload.get("mode") or "") == mode
+    except Exception:
+        return False
+
+
+def wait_as_prelaunch_placeholder() -> None:
+    """Stay alive after reusing an existing server so VS Code preLaunchTasks finish."""
+    try:
+        while True:
+            time.sleep(3600)
+    except KeyboardInterrupt:
+        pass
 
 
 def kill_port(port: int = PORT) -> None:

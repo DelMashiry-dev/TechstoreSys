@@ -340,10 +340,14 @@ function applyAccessControl() {
         const target = link.getAttribute('data-target');
         const li = link.closest('li');
         if (!li) return;
-        if (canAccessModule(target)) {
-            li.classList.remove('nav-hidden');
+        const allowed = canAccessModule(target);
+        link.classList.toggle('nav-hidden', !allowed);
+        const siblingLinks = Array.from(li.querySelectorAll(':scope > a[data-target]'));
+        if (siblingLinks.length > 1) {
+            const anyAllowed = siblingLinks.some((a) => canAccessModule(a.getAttribute('data-target')));
+            li.classList.toggle('nav-hidden', !anyAllowed);
         } else {
-            li.classList.add('nav-hidden');
+            li.classList.toggle('nav-hidden', !allowed);
         }
     });
 
