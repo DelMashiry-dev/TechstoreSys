@@ -55,7 +55,11 @@ function updateIctCompareDutyHint() {
         return;
     }
     hint.hidden = false;
-    hint.textContent = `${profile.groupLabel}: ${profile.summary} ${profile.deviceHint || ''}`.trim();
+    hint.textContent = `${profile.groupLabel}: ${profile.summary} ${
+        typeof dutyProfileDeviceHint === 'function'
+            ? dutyProfileDeviceHint(profile, document.getElementById('ictCompareCategory')?.value)
+            : (profile.deviceHint || '')
+    }`.trim();
     syncIctCompareCrawlButton();
 }
 
@@ -71,7 +75,8 @@ function ictCompareDutyScore(row, profile) {
     if (key === 'programming' && /thinkpad|elitebook|latitude|16 gb/.test(blob)) score += 14;
     if (key === 'graphic-design' && /oled|creator|macbook|rtx|studio/.test(blob)) score += 18;
     if (key === 'architecture' && /zbook|precision|rtx|cad|workstation/.test(blob)) score += 20;
-    if (key === 'drone-robot' && /rugged|toughbook|wwan|outdoor/.test(blob)) score += 20;
+    if (key === 'server-room' && /proliant|poweredge|thinksystem|rack|xeon|ilo|idrac/.test(blob)) score += 22;
+    if (key === 'server-room' && /laptop|notebook|thinkpad|elitebook|latitude/.test(blob)) score -= 18;
     if (key === 'outdoor-field' && /rugged|ip65|hot.?swap|toughbook/.test(blob)) score += 24;
     if (row.source === 'manufacturer') score += 6;
     if (row.source === 'local') score += 4;
@@ -103,9 +108,11 @@ function renderIctCompareGrid() {
     grid.innerHTML = rows.map((row, idx) => {
         const fit = ictCompareDutyScore(row, profile);
         const checked = ictCompareState.selected.has(row.id) ? ' checked' : '';
-        const img = row.imageUrl
-            ? `<img src="${ictCmpEsc(row.imageUrl)}" alt="" class="market-card-img" loading="lazy">`
-            : `<div class="market-card-img market-card-img-placeholder" aria-hidden="true">${ictCmpEsc((row.title || '?').slice(0, 1))}</div>`;
+        const img = typeof marketCardImageHtml === 'function'
+            ? marketCardImageHtml(row, ictCmpEsc)
+            : (row.imageUrl
+                ? `<img src="${ictCmpEsc(row.imageUrl)}" alt="" class="market-card-img" loading="lazy" referrerpolicy="no-referrer">`
+                : `<div class="market-card-img market-card-img-placeholder" aria-hidden="true">${ictCmpEsc((row.title || '?').slice(0, 1))}</div>`);
         const price = row.priceDisplay || row.priceText || 'Price on request';
         const src = row.source === 'manufacturer' ? 'Official' : (row.source === 'local' ? 'Local catalog' : 'Web');
         return `
@@ -163,6 +170,30 @@ function renderIctCompareGrid() {
             }, 400);
         });
     });
+    ensureIctCompareImages();
+}
+
+function ensureIctCompareImages() {
+    if (ensureIctCompareImages.busy || typeof fillMissingProductImages !== 'function') return;
+    if (!ictCompareState.items.some((r) => r && !r.imageUrl && (r.title || r.url))) return;
+    ensureIctCompareImages.busy = true;
+    fillMissingProductImages(ictCompareState.items).then((n) => {
+        if (!n) return;
+        const hit = findIctCompareHistory(currentIctCompareSearchKey());
+        if (hit && Array.isArray(hit.items)) {
+            const byId = {};
+            ictCompareState.items.forEach((r) => {
+                if (r && r.id && r.imageUrl) byId[r.id] = r.imageUrl;
+            });
+            hit.items.forEach((it) => {
+                if (it && !it.imageUrl && byId[it.id]) it.imageUrl = byId[it.id];
+            });
+            if (typeof saveState === 'function') saveState();
+        }
+        renderIctCompareGrid();
+    }).finally(() => {
+        ensureIctCompareImages.busy = false;
+    });
 }
 
 function selectedIctCompareRows() {
@@ -208,25 +239,63 @@ function renderIctCompareChart(scored) {
         <div class="ict-h2h-chart">
             <div class="ict-h2h-chart-head">
                 <strong>Head-to-head for this duty</strong>
-                <span>Glossy pill: fill length is best-buy, inner glass length is duty fit. Ranked top to bottom — not game FPS.</span>
+                <span>Ranked top to bottom by best-buy. Scores are duty/price marks — not game FPS.</span>
             </div>
-            <div class="ict-h2h-legend">
-                <span><i class="ict-leg ict-leg-buy"></i> Best-buy (duty fit + listed price)</span>
-                <span><i class="ict-leg ict-leg-fit"></i> Duty fit</span>
+            <div class="ict-h2h-legend" role="group" aria-label="Chart legend">
+                <p class="ict-h2h-legend-title">Legend</p>
+                <div class="ict-h2h-legend-grid">
+                    <div class="ict-h2h-leg-item">
+                        <span class="ict-h2h-leg-demo" aria-hidden="true">
+                            <span class="ict-h2h-leg-demo-track">
+                                <span class="ict-h2h-leg-demo-outer">
+                                    <span class="ict-h2h-leg-demo-inner"></span>
+                                    <span class="ict-h2h-leg-demo-n">47</span>
+                                </span>
+                            </span>
+                        </span>
+                        <span>
+                            <strong>How to read a bar</strong>
+                            <small>The number is the <b>best-buy</b> score. Outer pill length = that score versus the top row. Inner glass length = duty fit inside the same pill.</small>
+                        </span>
+                    </div>
+                    <div class="ict-h2h-leg-item">
+                        <i class="ict-leg ict-leg-buy" aria-hidden="true"></i>
+                        <span>
+                            <strong>Best-buy (outer pill)</strong>
+                            <small>Duty fit plus listed price — cheaper among the ticked listings scores higher. Longer bar wins.</small>
+                        </span>
+                    </div>
+                    <div class="ict-h2h-leg-item">
+                        <i class="ict-leg ict-leg-fit" aria-hidden="true"></i>
+                        <span>
+                            <strong>Duty fit (inner glass)</strong>
+                            <small>How well the listing matches the duty profile you selected. Also printed under the product name.</small>
+                        </span>
+                    </div>
+                    <div class="ict-h2h-leg-item">
+                        <i class="ict-leg ict-leg-win" aria-hidden="true"></i>
+                        <span>
+                            <strong>Red = recommended</strong>
+                            <small>Highest best-buy — always the top row. Purple bars are the other candidates. Grey track is the full scale.</small>
+                        </span>
+                    </div>
+                </div>
             </div>
             ${scored.map((s, i) => {
                 const outer = Math.max(12, Math.round((s.buy / maxBuy) * 100));
                 const glass = Math.max(28, Math.min(92, Math.round((s.fit / Math.max(s.buy, 1)) * 92)));
                 const winner = i === 0 ? ' is-winner' : '';
+                const price = s.row.priceDisplay || s.row.priceText || '';
                 return `<div class="ict-h2h-row${winner}">
                     <div class="ict-h2h-meta">
                         <strong>${ictCmpEsc(s.row.title)}</strong>
                         <em>${ictCmpEsc(ictCompareSpecLine(s.row))}</em>
+                        <em class="ict-h2h-scores">Duty fit ${s.fit}${price ? ` · ${ictCmpEsc(price)}` : ''}</em>
                     </div>
-                    <div class="ict-h2h-track">
+                    <div class="ict-h2h-track" title="Best-buy ${s.buy} · duty fit ${s.fit}">
                         <span class="ict-h2h-outer" style="width:${outer}%">
                             <span class="ict-h2h-inner" style="width:${glass}%"></span>
-                            <span class="ict-h2h-inner-label">${s.buy}</span>
+                            <span class="ict-h2h-inner-label" title="Best-buy score">${s.buy}</span>
                         </span>
                     </div>
                 </div>`;
@@ -284,7 +353,55 @@ function setIctCompareStatus(msg, kind = '') {
 }
 
 function ictCompareHistoryKey(dutyKey, category, extra) {
-    return `${String(dutyKey || '').trim()}::${String(category || 'laptop').trim()}::${String(extra || '').trim().toLowerCase()}`;
+    return `${String(dutyKey || '').trim()}::${String(category || 'laptop').trim()}::${String(extra || '').trim().toLowerCase()}::v2`;
+}
+
+function isIctCompareArticle(row) {
+    const t = `${row?.title || ''} ${row?.snippet || ''}`.toLowerCase();
+    return /\bvs\.?\b|\bversus\b|head-to-head|round-?up|how to choose|best refurbished|side-by-side|compared|fleet (laptop|pc)|decision guide/.test(t);
+}
+
+function ictCompareMatchesCategory(row, category) {
+    if (!row || !category || category === 'all') return true;
+    if (row.product && row.product.category) {
+        if (category === 'tablet' && (row.product.category === 'tablet' || row.product.category === 'other')) return true;
+        return row.product.category === category;
+    }
+    const blob = `${row.title || ''} ${row.snippet || ''} ${row.subtitle || ''} ${row.series || ''} ${row.url || ''}`.toLowerCase();
+    const reject = {
+        server: /\b(laptop|notebook|ultrabook|macbook|thinkpad|elitebook|latitude|chromebook|probook|ipad|tablet)\b/,
+        laptop: /\b(proliant|poweredge|thinksystem|blade chassis|rack.?mount server)\b/,
+        desktop: /\b(laptop|notebook|thinkpad|proliant|poweredge)\b/,
+        tablet: /\b(proliant|poweredge|laserjet|rack server)\b/,
+        printer: /\b(laptop|thinkpad|proliant|poweredge|macbook)\b/
+    };
+    if (reject[category] && reject[category].test(blob)) return false;
+    const want = {
+        server: /\b(server|proliant|poweredge|thinksystem|rack\s*mount|xeon|dl\d{3}|r[67]\d{2})\b/,
+        laptop: /\b(laptop|notebook|thinkpad|elitebook|latitude|macbook|ultrabook|probook|yoga|xps)\b/,
+        desktop: /\b(desktop|optiplex|thinkcentre|workstation|precision|sff|tower|imac|mac mini)\b/,
+        tablet: /\b(tablet|ipad|surface|galaxy tab)\b/,
+        printer: /\b(printer|mfp|laserjet|officejet|inkjet|plotter)\b/
+    };
+    if (!want[category]) return true;
+    return want[category].test(blob);
+}
+
+function ictCompareMatchesExtra(row, extra) {
+    const q = String(extra || '').trim().toLowerCase();
+    if (!q) return true;
+    const blob = `${row?.title || ''} ${row?.snippet || ''} ${row?.series || ''} ${row?.url || ''}`.toLowerCase();
+    if (blob.includes(q)) return true;
+    const parts = q.split(/\s+/).filter((p) => p.length >= 3);
+    return parts.length ? parts.every((p) => blob.includes(p)) : true;
+}
+
+function ictCompareItemRelevant(row, category, extra) {
+    if (!row) return false;
+    if (isIctCompareArticle(row)) return false;
+    if (!ictCompareMatchesCategory(row, category)) return false;
+    if (!ictCompareMatchesExtra(row, extra)) return false;
+    return true;
 }
 
 function currentIctCompareSearchKey() {
@@ -438,11 +555,14 @@ function applyIctCompareHistoryEntry(entry, { note } = {}) {
     ictCompareState.dutyKey = entry.dutyKey || '';
     ictCompareState.category = entry.category || 'laptop';
     ictCompareState.extra = entry.extra || '';
-    ictCompareState.items = (entry.items || []).map(slimIctCompareItem).filter(Boolean);
+    ictCompareState.items = (entry.items || [])
+        .map(slimIctCompareItem)
+        .filter((row) => ictCompareItemRelevant(row, entry.category || 'laptop', entry.extra || ''));
     const selected = Array.isArray(entry.selectedIds) ? entry.selectedIds.filter(Boolean) : [];
+    const keep = selected.filter((id) => ictCompareState.items.some((r) => r.id === id));
     ictCompareState.selected = new Set(
-        selected.length
-            ? selected
+        keep.length
+            ? keep
             : ictCompareState.items.slice(0, 4).map((r) => r.id).filter(Boolean)
     );
     ictCompareState.lastResult = { cached: true, fromHistory: true };
@@ -519,7 +639,7 @@ async function runIctCompareCrawl({ force = false } = {}) {
     }
 
     const local = typeof mergeLocalCatalogForQuery === 'function'
-        ? mergeLocalCatalogForQuery(query, category === 'all' ? 'laptop' : category)
+        ? mergeLocalCatalogForQuery(extra || query, category === 'all' ? 'laptop' : category)
         : [];
 
     const btn = document.getElementById('ictCompareCrawlBtn');
@@ -553,6 +673,7 @@ async function runIctCompareCrawl({ force = false } = {}) {
     ictCompareState.items = merged.filter((row) => {
         const k = (row.id || row.title || '').toLowerCase();
         if (!k || seen.has(k)) return false;
+        if (!ictCompareItemRelevant(row, category, extra)) return false;
         seen.add(k);
         return true;
     }).sort((a, b) => ictCompareDutyScore(b, profile) - ictCompareDutyScore(a, profile));
@@ -600,7 +721,10 @@ function initIctCompareModule() {
     }
     root.dataset.inited = '1';
     document.getElementById('ictCompareDuty')?.addEventListener('change', updateIctCompareDutyHint);
-    document.getElementById('ictCompareCategory')?.addEventListener('change', syncIctCompareCrawlButton);
+    document.getElementById('ictCompareCategory')?.addEventListener('change', () => {
+        updateIctCompareDutyHint();
+        syncIctCompareCrawlButton();
+    });
     document.getElementById('ictCompareExtra')?.addEventListener('input', syncIctCompareCrawlButton);
     document.getElementById('ictCompareCrawlBtn')?.addEventListener('click', () => runIctCompareCrawl({ force: false }));
     document.getElementById('ictCompareRefreshBtn')?.addEventListener('click', () => runIctCompareCrawl({ force: true }));

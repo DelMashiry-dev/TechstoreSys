@@ -21,7 +21,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlparse, parse_qs
 
-from product_specs_lookup import lookup_product_specs, lookup_market_catalog, fetch_rbz_usd_zig_rate
+from product_specs_lookup import lookup_product_specs, lookup_market_catalog, lookup_product_images, fetch_rbz_usd_zig_rate
 from ai_services import ai_status, parse_spec_document, answer_stores_question, draft_requisition_justification
 from mode_switch import (
     handle_mode_switch,
@@ -100,6 +100,8 @@ DEFAULT_PLAIN_PASSWORDS = {
     "aiad": "aiad123",
     "daf": "daf123",
     "dp": "dp123",
+    "gsdesk": "gsdesk123",
+    "nixzimo": "nixzimo123",
     "tso": "tso123",
     "rq": "rq123",
     "orderly": "orderly123",
@@ -124,6 +126,12 @@ LOGIN_USERNAME_ALIASES = {
     "gate desk": "gate",
     "gate rp": "gate",
     "gaterp": "gate",
+    "gs branch": "gsdesk",
+    "colonel sd": "gsdesk",
+    "col sd": "gsdesk",
+    "manac": "daf",
+    "due diligence": "aiad",
+    "nixzimo": "nixzimo",
 }
 
 # Extra accepted passwords for demo accounts (normalized, no spaces)
@@ -252,6 +260,22 @@ DEFAULT_USERS = [
         "password": "dp123",
         "name": "Director DP",
         "role": "dir_dp",
+        "active": True,
+    },
+    {
+        "id": "u-gssd",
+        "username": "gsdesk",
+        "password": "gsdesk123",
+        "name": "Colonel SD (GS Branch)",
+        "role": "gs_sd",
+        "active": True,
+    },
+    {
+        "id": "u-nixzimo",
+        "username": "nixzimo",
+        "password": "nixzimo123",
+        "name": "Nixzimo Pvt Ltd",
+        "role": "supplier",
         "active": True,
     },
     {
@@ -1487,6 +1511,16 @@ class TechStoresHandler(BaseHTTPRequestHandler):
                 self._send_json(status, result)
             except Exception as exc:
                 self._send_json(500, {"ok": False, "error": f"Product lookup failed: {exc}"})
+            return
+
+        if path == "/api/product-images":
+            try:
+                payload = self._read_json()
+                requests = payload.get("items") if isinstance(payload.get("items"), list) else []
+                result = lookup_product_images(requests)
+                self._send_json(200, result)
+            except Exception as exc:
+                self._send_json(500, {"ok": False, "error": f"Product image lookup failed: {exc}"})
             return
 
         if path == "/api/market-catalog":

@@ -9,7 +9,7 @@ const SD_STATUSES = [
 ];
 
 const SD_OPEN_STATUSES = new Set(['open', 'chased_daf', 'part_paid']);
-const SD_SEED_REV = 1;
+const SD_SEED_REV = 2;
 
 function sdEscape(value) {
     return String(value ?? '')
@@ -176,6 +176,45 @@ function sdDampackSeedCase() {
     };
 }
 
+function sdNixzimoDp3478SeedCase() {
+    return {
+        id: 'sd-seed-nixzimo-dp3478-2026',
+        caseNo: 'SD-2026-3478',
+        minuteRef: 'Req 10080264',
+        receivedDate: '2026-08-25',
+        accumulatedFrom: '2026-08-24',
+        supplier: 'NIXZIMO PVT LTD',
+        costCentre: 'IT DIR',
+        description: 'DP 3478/2026 — 5 laptops received OSD HRE GP 3 (Q 1033 RV 205). P/O names EliteBook 830 G9; invoice/D-Note name Victus Gaming 15. Inspection hold before DAF pay.',
+        actionTo: 'DAF',
+        infoTo: 'IT Dir, DP, File',
+        status: 'open',
+        currency: 'ZWG',
+        totalUsd: 0,
+        attachments: 'P/O DP 3478/2026 · Invoice 205 · D-Note · Q 1033 RV 205 · AIAD due diligence · CABS banking',
+        notes: 'ZWG 350,000.00 on P/O. CABS Borrowdale ZWG 1156015626 / USD 1156015634. Do not chase DAF pay until IT Dir clears the EliteBook vs Victus spec mismatch.',
+        dafChasedAt: '',
+        dafChasedRef: '',
+        paidDate: '',
+        createdAt: '2026-08-25T00:00:00',
+        updatedAt: '2026-08-28T00:00:00',
+        lines: [
+            {
+                supplyDate: '2026-08-24',
+                costCentre: 'IT DIR',
+                poNo: 'DP 3478/2026',
+                invoiceNo: '205',
+                amountZwl: 0,
+                rateUsd: '',
+                convertedUsd: 0,
+                amountZwg: 350000,
+                amountUsd: 0,
+                totalUsd: 0
+            }
+        ]
+    };
+}
+
 function ensureSupplierDebts() {
     if (!appState) return [];
     if (!Array.isArray(appState.supplierDebts)) {
@@ -183,8 +222,10 @@ function ensureSupplierDebts() {
     }
     const rev = Number(appState.supplierDebtSeedRev) || 0;
     if (rev < SD_SEED_REV) {
-        const hasSeed = appState.supplierDebts.some((rec) => rec.id === 'sd-seed-dampack-2022');
-        if (!hasSeed) appState.supplierDebts.push(sdDampackSeedCase());
+        const hasDampack = appState.supplierDebts.some((rec) => rec.id === 'sd-seed-dampack-2022');
+        if (!hasDampack) appState.supplierDebts.push(sdDampackSeedCase());
+        const hasNixzimo = appState.supplierDebts.some((rec) => rec.id === 'sd-seed-nixzimo-dp3478-2026');
+        if (!hasNixzimo) appState.supplierDebts.push(sdNixzimoDp3478SeedCase());
         appState.supplierDebtSeedRev = SD_SEED_REV;
         if (typeof saveState === 'function') saveState();
     }

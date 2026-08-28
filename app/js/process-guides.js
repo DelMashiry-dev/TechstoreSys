@@ -191,114 +191,179 @@ function renderProcurementProcessGuide() {
         </article>`;
 }
 
+function getItdirIctProcurementCycle() {
+    return (typeof ITDIR_ICT_PROCUREMENT_CYCLE !== 'undefined' && ITDIR_ICT_PROCUREMENT_CYCLE.length)
+        ? ITDIR_ICT_PROCUREMENT_CYCLE
+        : [];
+}
+
+function renderNixzimoPaperPack() {
+    const papers = [
+        {
+            stage: '4 · PFMS',
+            paper: 'Requisition number on P/O',
+            shows: 'Req 10080264 handwritten on DP 3478/2026 (IT Dir RQ writes the PFMS number on the DP F1 / P/O).',
+            module: 'unit-requisitions',
+            moduleLabel: 'Requisitions'
+        },
+        {
+            stage: '9 · AIAD',
+            paper: 'Price Due Diligence certificate',
+            shows: 'Pre-audit of procurement contracts. Vendor NIXZIMO PVT LTD. Line on this form: HP EliteBook 830 G9 Core i7, qty 5. Comment: implied price within market range. Prepared SSGT MACHIHA MK; reviewed CAPT S SIBANDA; Head of Internal Audit COL L MSIPA. Stamp 27 Aug 2026, Army Internal Audit Directorate, P Bag 7720 Causeway.',
+            module: 'dp-procurement',
+            moduleLabel: 'ICT Cycle'
+        },
+        {
+            stage: '10 · P/O',
+            paper: 'Republic of Zimbabwe Purchase Order DP 3478/2026',
+            shows: 'Date 04.08.2026, delivery 11.08.2026, deliver to IT DIR, currency ZWG. HP ELITEBOOK 830 G9 CORE i7 LAPTOP, 5 EA × ZWG 70,000.00 = ZWG 350,000.00. GL 3112210001. Supplier NIKZIMO / NIXZIMO PVT LTD, 2780 Princess Margaret, Marlborough. Procurement Directorate stamp 17 Aug 2026.',
+            module: 'purchase-orders',
+            moduleLabel: 'Purchase Orders'
+        },
+        {
+            stage: '7–8 · Quote + spec',
+            paper: 'Nixzimo invoice 205 (quotation / spec pack)',
+            shows: 'Dated 24/08/2026, customer Zimbabwe National Army. Line: HP Victus Gaming Laptop 15 (Win 11 Pro, i7-13620H, RTX 3050 6 GB, 16 GB, 1 TB, 15.6″ FHD 144 Hz), qty 5 × ZWG 70,000.00 = ZWG 350,000.00. Sales tax listed ZWG 46,969.70 but total still ZWG 350,000.00. Due date on form 31/07/2026 (before the invoice date).',
+            module: 'spec-evaluation',
+            moduleLabel: 'Spec eval'
+        },
+        {
+            stage: '11 · D-Note',
+            paper: 'Nixzimo Delivery Note',
+            shows: 'Delivered to OSD HRE GP 3. HP Victus gaming laptop 15, Core i7, 16 GB, 13th Gen, 1 TB SSD, qty 5. Delivery person Leory Juko. Received by SIBANDA F. Date on the note reads 24/08/2024 (year likely a 2026 typing error).',
+            module: 'delivery-note',
+            moduleLabel: 'Delivery Note'
+        },
+        {
+            stage: '11 · MLG RV',
+            paper: 'Issue & Receipt Voucher ZNA Q 1033 (voucher 205)',
+            shows: 'MLG master-ledger RV. 25/8/26. Issued by NIXZIMO (C/STORES) to OSD HRE GP 3. Authority DP 3478/2026. “LAPTOP Core i7”, qty 5 EA. Unit 70 000 000 / total 350 000 000 on the voucher (digit scale differs from the P/O ZWG 70,000 / 350,000). Received by MAJ J SIZI, 786209 Z, OC OSD HRE GP 3. OSD Harare stamp 25 Aug 2026.',
+            module: 'zna-q-1033',
+            moduleLabel: 'Q 1033'
+        },
+        {
+            stage: '11 · DAF pay',
+            paper: 'Nixzimo banking details',
+            shows: 'CABS Bank, Borrowdale Branch. Account name Nixzimo Pvt Ltd. ZWG 1156015626. USD 1156015634. Used when IT Dir is satisfied and triggers DAF to pay.',
+            module: 'supplier-debts',
+            moduleLabel: 'Supplier Debts'
+        }
+    ];
+    const rows = papers.map((p) => `
+        <tr>
+            <td>${escapePg(p.stage)}</td>
+            <td><strong>${escapePg(p.paper)}</strong></td>
+            <td>${escapePg(p.shows)}</td>
+            <td><button type="button" class="btn btn-ghost btn-sm" data-pg-open="${escapePg(p.module)}">${escapePg(p.moduleLabel)}</button></td>
+        </tr>`).join('');
+    return `
+        <div class="pg-paper-pack">
+            <h4 class="pg-cycle-stages-title">Worked example — DP 3478/2026 · Nixzimo · Req 10080264</h4>
+            <p class="pg-note">
+                Paper trail from one live ICT buy (Ministry of Defence / ZNA). Scans stay off the system;
+                facts below are the register. Use this pack to walk Requisition → payment.
+            </p>
+            <div class="table-responsive">
+                <table class="overview-table pg-table pg-paper-table">
+                    <thead>
+                        <tr>
+                            <th>Cycle step</th>
+                            <th>Paper</th>
+                            <th>What it shows</th>
+                            <th>Module</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+            <div class="pg-hd-panel pg-inspect-flags">
+                <h4>IT Dir inspection — hold points before triggering DAF pay</h4>
+                <p>Step 11 is not a rubber stamp. The Nixzimo pack does not line up on description, dates, or denomination. Do not pay until these are resolved on the file.</p>
+                <ul>
+                    <li><strong>Description mismatch.</strong> P/O and AIAD due diligence name <em>HP EliteBook 830 G9 Core i7</em>. Invoice 205 and the delivery note name <em>HP Victus Gaming Laptop 15</em> (gaming chassis, RTX 3050, 15.6″). Same qty 5 and same ZWG 70,000 / 350,000 as the P/O — different machine.</li>
+                    <li><strong>Due diligence after P/O.</strong> P/O dated 04.08.2026; AIAD certificate stamped 27 Aug 2026. The flowchart puts AIAD <em>before</em> the P/O.</li>
+                    <li><strong>Figures on the due-diligence form</strong> use ZWL 30,000,000 each (rate 526.59, implied ~USD 56,970) and total ZWL 150,000,000 — not the P/O ZWG 350,000 line.</li>
+                    <li><strong>Q 1033 RV</strong> writes unit 70,000,000 / total 350,000,000 versus P/O ZWG 70,000 / 350,000.</li>
+                    <li><strong>Invoice arithmetic.</strong> Sales tax ZWG 46,969.70 is listed but the total still equals the subtotal (ZWG 350,000.00). Due date 31/07/2026 is before the invoice date 24/08/2026.</li>
+                    <li><strong>Delivery note year</strong> printed 24/08/2024 against an August 2026 buy.</li>
+                </ul>
+            </div>
+        </div>`;
+}
+
 function renderHdProcurementCyclePoster() {
-    const ringSteps = [
-        { n: 1, phase: 'plan', label: 'Identify needs / scope' },
-        { n: 2, phase: 'plan', label: 'Justify needs & analyze options' },
-        { n: 3, phase: 'plan', label: 'Specify requirements' },
-        { n: 4, phase: 'acquire', label: 'Plan procurement approach' },
-        { n: 5, phase: 'acquire', label: 'Approach the market & suppliers' },
-        { n: 6, phase: 'acquire', label: 'Negotiate & select contract' },
-        { n: 7, phase: 'manage', label: 'Manage contract performance & relationships' },
-        { n: 8, phase: 'manage', label: 'Review supplier performance & learn' }
-    ];
-    const stages = [
-        { n: 1, title: 'Need identification & procurement planning', detail: 'Identify needs and develop a procurement plan aligned to organisational objectives.' },
-        { n: 2, title: 'Preparation of tender documents and specifications', detail: 'Prepare clear, complete and accurate tender documents and specifications.' },
-        { n: 3, title: 'Issue of invitations to tender & tender documentation', detail: 'Invite qualified suppliers and issue tender documents.' },
-        { n: 4, title: 'Receipt of offers', detail: 'Receive, open and record tenders in a transparent and secure manner.' },
-        { n: 5, title: 'Tender evaluation', detail: 'Evaluate tenders fairly and objectively against pre-defined criteria.' },
-        { n: 6, title: 'Approval of tender award', detail: 'Obtain the necessary approval to award the contract to the successful bidder.' },
-        { n: 7, title: 'Contract formation', detail: 'Formalise the agreement and terms through contract signing.' },
-        { n: 8, title: 'Contract management (acceptance, payment & closure)', detail: 'Manage contract performance, inspect and accept goods/services, make payments and close out the contract / disposal.' }
-    ];
-
-    const cx = 160;
-    const cy = 160;
-    const r = 118;
-    const nodes = ringSteps.map((s, i) => {
-        const angle = (-90 + i * 45) * (Math.PI / 180);
-        const x = cx + r * Math.cos(angle);
-        const y = cy + r * Math.sin(angle);
-        return `<g class="pg-cycle-node pg-cycle-${s.phase}">
-            <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="18" />
-            <text x="${x.toFixed(1)}" y="${(y + 5).toFixed(1)}" text-anchor="middle">${s.n}</text>
-        </g>`;
-    }).join('');
-
-    const legend = ringSteps.map((s) => `
-        <li class="pg-cycle-leg pg-cycle-${s.phase}">
-            <span class="pg-cycle-leg-n">${s.n}</span>
-            <span>${escapePg(s.label)}</span>
-        </li>`).join('');
-
-    const stageRows = stages.map((s) => `
-        <li class="pg-hd-step">
-            <span class="pg-hd-num" aria-hidden="true">${s.n}</span>
-            <div class="pg-hd-step-body">
+    const steps = getItdirIctProcurementCycle();
+    const boxes = steps.map((s) => `
+        <li class="pg-flow-box pg-flow-${escapePg(s.phase)}">
+            <span class="pg-flow-n">${s.n}</span>
+            <div class="pg-flow-body">
                 <h4>${escapePg(s.title)}</h4>
+                <p class="pg-flow-actor">${escapePg(s.actor)}</p>
                 <p>${escapePg(s.detail)}</p>
+                ${s.module ? `<button type="button" class="btn btn-ghost btn-sm" data-pg-open="${escapePg(s.module)}">Open module</button>` : ''}
             </div>
         </li>`).join('');
 
     return `
-        <section class="pg-hd-poster pg-hd-cycle" aria-label="Procurement cycle HD chart">
+        <section class="pg-hd-poster pg-hd-cycle" aria-label="IT Dir procurement cycle from requisition to payment">
             <header class="pg-hd-head pg-hd-head-cycle">
                 <div class="pg-hd-brand">
                     <img src="../assets/zna-logo.png" alt="ZNA" class="pg-hd-logo" onerror="this.style.display='none'">
+                    <img src="../assets/techstores-badge.png" alt="techstores" class="pg-hd-badge-img" onerror="this.style.display='none'">
                 </div>
                 <div class="pg-hd-titles">
-                    <p class="pg-hd-kicker">Zimbabwe National Army · TechStores</p>
-                    <h3>The procurement cycle</h3>
-                    <p class="pg-hd-tagline">Ensuring value, transparency and accountability</p>
+                    <p class="pg-hd-kicker">Zimbabwe National Army · IT Dir TechStores</p>
+                    <h3>Procurement cycle — requisition to payment of goods</h3>
+                    <p class="pg-hd-tagline">IT Dir user · GS · DAF · PFMS · DP Contracts · AIAD · supplier · DAF pay</p>
                 </div>
             </header>
 
-            <div class="pg-cycle-layout">
-                <div class="pg-cycle-visual">
-                    <svg class="pg-cycle-svg" viewBox="0 0 320 320" role="img" aria-label="Eight-step procurement cycle around Needs">
-                        <circle class="pg-cycle-ring-outer" cx="160" cy="160" r="138" />
-                        <circle class="pg-cycle-ring-mid" cx="160" cy="160" r="118" />
-                        <circle class="pg-cycle-core" cx="160" cy="160" r="42" />
-                        <text class="pg-cycle-core-text" x="160" y="166" text-anchor="middle">Needs</text>
-                        ${nodes}
-                    </svg>
-                    <div class="pg-cycle-phases">
-                        <span class="pg-cycle-phase plan">Plan 1–3</span>
-                        <span class="pg-cycle-phase acquire">Acquire 4–6</span>
-                        <span class="pg-cycle-phase manage">Service / Manage 7–8</span>
-                    </div>
+            <div class="pg-flow-inputs" aria-label="Cycle starts with two inputs">
+                <div class="pg-flow-box pg-flow-input">
+                    <strong>Requisition</strong>
+                    <span>User / unit / formation need</span>
                 </div>
-                <div class="pg-cycle-side">
-                    <div class="pg-hd-panel">
-                        <h4>Our goal</h4>
-                        <p>Right quality · Right price · Right time · Right supplier</p>
-                    </div>
-                    <div class="pg-hd-panel">
-                        <h4>Value for money</h4>
-                        <p>Not always the cheapest — best overall value:</p>
-                        <ul>
-                            <li>Capacity</li>
-                            <li>Quality</li>
-                            <li>Reputation</li>
-                            <li>Delivery</li>
-                            <li>Price</li>
-                        </ul>
-                    </div>
-                    <div class="pg-hd-panel pg-hd-panel-dark">
-                        <h4>Due diligence</h4>
-                        <p>Conducted by the Army Internal Audit Directorate (AIAD) to certify quotations. Choose best value, not just lowest cost.</p>
-                    </div>
-                    <ol class="pg-cycle-legend">${legend}</ol>
+                <span class="pg-flow-plus" aria-hidden="true">+</span>
+                <div class="pg-flow-box pg-flow-input">
+                    <strong>Target</strong>
+                    <span>DAF vote / buying power on the GL</span>
+                </div>
+                <span class="pg-flow-arrow" aria-hidden="true">→</span>
+                <p class="pg-flow-inputs-note">Both are required before DP F1 is raised.</p>
+            </div>
+
+            <div class="pg-cycle-phases pg-flow-phases">
+                <span class="pg-cycle-phase plan">Raise &amp; endorse 1–4</span>
+                <span class="pg-cycle-phase acquire">Market 5–8</span>
+                <span class="pg-cycle-phase certify">AIAD 9</span>
+                <span class="pg-cycle-phase manage">P/O · supply · pay 10–11</span>
+            </div>
+
+            <ol class="pg-flow-steps">${boxes}</ol>
+
+            <div class="pg-cycle-side pg-flow-side">
+                <div class="pg-hd-panel">
+                    <h4>Actors</h4>
+                    <ul>
+                        <li><strong>IT Dir (user)</strong> — need, spec, inspect, trigger pay</li>
+                        <li><strong>IT Dir RQ</strong> — PFMS number; surrenders DP F1</li>
+                        <li><strong>Colonel SD (GS)</strong> — endorses DP F1</li>
+                        <li><strong>MANAC (DD DAF)</strong> — funds / vote endorsement</li>
+                        <li><strong>DP Contracts / SO1</strong> — quotes, adjudication, P/O</li>
+                        <li><strong>AIAD</strong> — Price Due Diligence certificate</li>
+                        <li><strong>DAF</strong> — pays the supplier after IT Dir is satisfied</li>
+                    </ul>
+                </div>
+                <div class="pg-hd-panel pg-hd-panel-dark">
+                    <h4>Paper pack at payment</h4>
+                    <p>P/O + supplier quotation/spec + D-Note + AIAD certificate + MLG Q 1033 RV. Banking details go to DAF only after inspection.</p>
                 </div>
             </div>
 
-            <h4 class="pg-cycle-stages-title">8 stages of the procurement cycle</h4>
-            <ol class="pg-hd-steps pg-cycle-stages">${stageRows}</ol>
+            ${renderNixzimoPaperPack()}
 
             <footer class="pg-hd-foot">
-                <p><strong>Transparency · Accountability · Integrity · Value for Money</strong></p>
-                <p class="pg-hd-motto" style="margin:0">Procure with purpose. Deliver with excellence.</p>
+                <p><strong>Do not pay on the invoice alone.</strong> Match P/O description, qty, GL and D-Note to what was received, then chase DAF.</p>
             </footer>
         </section>`;
 }
@@ -307,22 +372,31 @@ function renderProcurementCycleGuide() {
     return `
         <article class="pg-article pg-article-wide">
             <header class="pg-header">
-                <h3>The procurement cycle</h3>
-                <p>Ensuring value, transparency and accountability</p>
+                <h3>The procurement cycle — requisition to payment</h3>
+                <p>IT Dir ICT path: user requisition through DAF payment of goods.</p>
                 <p class="pg-note">
-                    HD cycle chart below is screen-sharp. Complements the Army procedure steps on the
-                    <strong>Procurement process</strong> tab (Cost Centre Dir / QS Br / DP / AIAD).
+                    This is the operating cycle (DP F1, GS, MANAC, PFMS, DP Contracts, AIAD, P/O, inspect, pay).
+                    The <strong>Procurement process</strong> tab remains the Army-wide Cost Centre Dir / QS Br chart.
+                    Worked example: <strong>DP 3478/2026</strong> · Nixzimo · <strong>Req 10080264</strong>.
+                    Each actor logs into their own portal (DP, GS, DAF, AIAD, supplier) to input or upload their step.
                 </p>
             </header>
             ${renderHdProcurementCyclePoster()}
             <details class="pg-originals">
-                <summary>View original cycle poster (optional)</summary>
+                <summary>View generic textbook cycle poster (optional)</summary>
                 ${renderProcessGuideChart(processGuideAsset('procurement-cycle.png'), 'Original procurement cycle poster')}
             </details>
             <p class="pg-links">Related modules:
-                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="dp-procurement">ICT Procurement Cycle</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="portals-board">Portals</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="unit-requisitions">Requisitions</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="dp-f1-form">DP F1</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="dp-procurement">ICT Procurement Cycle</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="spec-evaluation">Spec / Tech Evaluation</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="cost-comparative-schedule">Cost Comparative</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="purchase-orders">Purchase Orders</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="delivery-note">Delivery Note</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="zna-q-1033">Q 1033</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="supplier-debts">Supplier Debts</button>
             </p>
         </article>`;
 }

@@ -17,6 +17,47 @@ function mcEscape(v) {
         .replace(/"/g, '&quot;');
 }
 
+function marketCardImageHtml(row, esc) {
+    const escape = esc || mcEscape;
+    const letter = escape((row.title || '?').slice(0, 1) || '?');
+    const ph = `<div class="market-card-img market-card-img-placeholder" aria-hidden="true"${row.imageUrl ? ' hidden' : ''}>${letter}</div>`;
+    if (!row.imageUrl) return ph;
+    return `<img src="${escape(row.imageUrl)}" alt="" class="market-card-img" loading="lazy" referrerpolicy="no-referrer" decoding="async" onerror="this.hidden=true;var n=this.nextElementSibling;if(n)n.hidden=false;">${ph}`;
+}
+
+async function fillMissingProductImages(rows) {
+    if (!Array.isArray(rows) || !rows.length) return 0;
+    const missing = rows.filter((r) => r && !r.imageUrl && (r.title || r.url));
+    if (!missing.length) return 0;
+    const apiBase = typeof API_BASE === 'string' ? API_BASE : '';
+    try {
+        const res = await fetch(`${apiBase}/api/product-images`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                items: missing.slice(0, 12).map((r) => ({
+                    id: r.id || r.title,
+                    title: r.title || '',
+                    url: r.url || ''
+                }))
+            })
+        });
+        const data = await res.json().catch(() => ({}));
+        const map = data.images || {};
+        let n = 0;
+        rows.forEach((r) => {
+            const key = r.id || r.title;
+            if (r && !r.imageUrl && key && map[key]) {
+                r.imageUrl = map[key];
+                n += 1;
+            }
+        });
+        return n;
+    } catch (_) {
+        return 0;
+    }
+}
+
 function mergeLocalCatalogForQuery(query, category) {
     if (typeof PRODUCT_SPECS_CATALOG === 'undefined' || !query) return [];
     const q = query.trim().toLowerCase();
@@ -141,9 +182,7 @@ function renderMarketCatalogGrid() {
     }
 
     grid.innerHTML = rows.map((row, idx) => {
-        const img = row.imageUrl
-            ? `<img src="${mcEscape(row.imageUrl)}" alt="" class="market-card-img" loading="lazy">`
-            : `<div class="market-card-img market-card-img-placeholder" aria-hidden="true">${mcEscape((row.title || '?').slice(0, 1))}</div>`;
+        const img = marketCardImageHtml(row, mcEscape);
         const price = renderMarketPriceBlock(row);
         const badges = [
             row.isNew ? '<span class="market-badge market-badge-new">Latest</span>' : '',
@@ -261,6 +300,9 @@ async function runMarketCatalogBrowse({ force = false } = {}) {
         renderMarketSeriesFilters(result.series || []);
         renderMarketBenchmarkBar(result);
         renderMarketCatalogGrid();
+        fillMissingProductImages([...marketCatalogState.localItems, ...marketCatalogState.items]).then((n) => {
+            if (n) renderMarketCatalogGrid();
+        });
 
         const localN = marketCatalogState.localItems.length;
         const webN = marketCatalogState.items.length;
@@ -278,6 +320,9 @@ async function runMarketCatalogBrowse({ force = false } = {}) {
         if (marketCatalogState.localItems.length) {
             renderMarketSeriesFilters([]);
             renderMarketCatalogGrid();
+            fillMissingProductImages(marketCatalogState.localItems).then((n) => {
+                if (n) renderMarketCatalogGrid();
+            });
         }
     } finally {
         if (btn) { btn.disabled = false; btn.textContent = 'Browse market'; }

@@ -23,7 +23,11 @@ function navItemId(li) {
     if (!link) return '';
     const target = link.getAttribute('data-target');
     const panel = link.getAttribute('data-dept-panel');
-    if (target) return panel ? `${target}::${panel}` : target;
+    const desk = link.getAttribute('data-stk-desk');
+    if (target) {
+        const extra = [panel && `panel:${panel}`, desk && `desk:${desk}`].filter(Boolean).join('::');
+        return extra ? `${target}::${extra}` : target;
+    }
     const label = link.querySelector('.nav-label')?.textContent || link.textContent || '';
     const slug = navSlugLabel(label);
     return slug ? `menu:${slug}` : '';

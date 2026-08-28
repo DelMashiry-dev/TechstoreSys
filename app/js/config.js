@@ -18,9 +18,11 @@ const ROLE_LABELS = {
     director: 'Director IT Dir (Col)',
     deputy_director: 'Deputy Director (Lt Col)',
     aqso2: 'GSO2 / AQSO2 (Maj)',
-    dir_aiad: 'Director AIAD',
-    dir_daf: 'Director DAF',
-    dir_dp: 'Director DP',
+    dir_aiad: 'Director AIAD — Due Diligence window',
+    dir_daf: 'Director DAF — DAF window',
+    dir_dp: 'Director DP — DP window',
+    gs_sd: 'Colonel SD (GS Branch) — GS window',
+    supplier: 'Registered supplier — Supplier window',
     techstores_officer: 'TechStores Officer',
     rq: 'Regimental Quartermaster (RQ)',
     store_officer: 'Store Officer',
@@ -62,7 +64,7 @@ const MODULES_FULL_OPS = [
     ...MODULES_DEPT_DESKS,
     ...MODULES_STORES_LEDGERS,
     'unit-requisitions',
-    'spec-evaluation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'zna-svcs-1045',
+    'spec-evaluation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'portals-board', 'stakeholder-desk', 'zna-svcs-1045',
     'workshop-repairs', 'workshop-receipt-cert', 'ict-compare', 'guide-quotation', 'gate-register', 'techstores-equipment-register',
     'suppliers-contracts', 'duties-roles', 'process-guides', 'system-help', 'reports-module'
 ];
@@ -71,7 +73,7 @@ const MODULES_FULL_OPS = [
 const MODULES_RQ = [
     'dashboard', 'it-dir-comms',
     ...MODULES_STORES_LEDGERS,
-    'unit-requisitions', 'spec-evaluation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'zna-svcs-1045',
+    'unit-requisitions', 'spec-evaluation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'portals-board', 'stakeholder-desk', 'zna-svcs-1045',
     'techstores-equipment-register', 'workshop-repairs', 'workshop-receipt-cert', 'ict-compare', 'guide-quotation',
     'suppliers-contracts', 'duties-roles', 'process-guides', 'system-help', 'reports-module'
 ];
@@ -122,6 +124,35 @@ const MODULES_COMMS_ONLY = [
 
 const MODULES_COMMON = ['dashboard', 'process-guides', 'system-help'];
 
+const MODULES_STAKEHOLDER_SHARED = [
+    'dashboard', 'portals-board', 'stakeholder-desk', 'process-guides', 'system-help'
+];
+
+const MODULES_DESK_DP = [
+    ...MODULES_STAKEHOLDER_SHARED, 'it-dir-comms',
+    'dp-procurement', 'dp-f1-form', 'cost-comparative-schedule', 'spec-evaluation',
+    'purchase-orders', 'suppliers-contracts', 'undelivered-orders'
+];
+
+const MODULES_DESK_GS = [
+    ...MODULES_STAKEHOLDER_SHARED, 'it-dir-comms',
+    'unit-requisitions', 'dp-f1-form', 'dp-procurement'
+];
+
+const MODULES_DESK_DAF = [
+    ...MODULES_STAKEHOLDER_SHARED, 'it-dir-comms',
+    'dp-procurement', 'supplier-debts', 'financial-year-bids'
+];
+
+const MODULES_DESK_AIAD = [
+    ...MODULES_STAKEHOLDER_SHARED, 'it-dir-comms',
+    'dp-procurement', 'cost-comparative-schedule', 'spec-evaluation'
+];
+
+const MODULES_DESK_SUPPLIER = [
+    ...MODULES_STAKEHOLDER_SHARED
+];
+
 /** Oversight: view every module; cannot alter quantities / save data. */
 function roleOversightViewAll() {
     return {
@@ -159,19 +190,29 @@ const ROLE_PERMISSIONS = {
     aqso2: roleOversightViewAll(),
     techstores_officer: roleOversightViewAll(),
     dir_aiad: {
-        modules: [...MODULES_COMMON, 'it-dir-comms', 'reports-module', 'dp-procurement', 'cost-comparative-schedule', 'duties-roles'],
-        canEdit: false, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: true,
-        accessMode: 'oversight_view'
+        modules: MODULES_DESK_AIAD,
+        canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: true,
+        accessMode: 'desk_aiad'
     },
     dir_daf: {
-        modules: [...MODULES_COMMON, 'it-dir-comms', 'reports-module', 'financial-year-bids', 'supplier-debts', 'duties-roles'],
-        canEdit: false, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: true,
-        accessMode: 'oversight_view'
+        modules: MODULES_DESK_DAF,
+        canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: true,
+        accessMode: 'desk_daf'
     },
     dir_dp: {
-        modules: [...MODULES_COMMON, 'it-dir-comms', 'reports-module', 'dp-procurement', 'dp-f1-form', 'cost-comparative-schedule', 'spec-evaluation', 'suppliers-contracts', 'supplier-debts', 'duties-roles'],
-        canEdit: false, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: true,
-        accessMode: 'oversight_view'
+        modules: MODULES_DESK_DP,
+        canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: true,
+        accessMode: 'desk_dp'
+    },
+    gs_sd: {
+        modules: MODULES_DESK_GS,
+        canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: false,
+        accessMode: 'desk_gs'
+    },
+    supplier: {
+        modules: MODULES_DESK_SUPPLIER,
+        canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: false,
+        accessMode: 'desk_supplier'
     },
     rq: roleSuperOversight(),
     store_officer: {
@@ -261,8 +302,10 @@ function createDefaultUsers() {
         { id: 'u-dd', username: 'dd', password: 'dd123', name: 'Deputy Director', role: 'deputy_director', department: "IT DIR DD'S OFFICE", active: true, mustChangePassword: false },
         { id: 'u-aqso2', username: 'aqso2', password: 'aqso2123', name: 'AQSO2', role: 'aqso2', department: "IT DIR AQSO2'S OFFICE", active: true, mustChangePassword: false },
         { id: 'u-aiad', username: 'aiad', password: 'aiad123', name: 'Director AIAD', role: 'dir_aiad', department: 'AIAD', active: true, mustChangePassword: false },
-        { id: 'u-daf', username: 'daf', password: 'daf123', name: 'Director DAF', role: 'dir_daf', department: 'DAF', active: true, mustChangePassword: false },
+        { id: 'u-daf', username: 'daf', password: 'daf123', name: 'Director DAF / MANAC', role: 'dir_daf', department: 'DAF', active: true, mustChangePassword: false },
         { id: 'u-dp', username: 'dp', password: 'dp123', name: 'Director DP', role: 'dir_dp', department: 'DP', active: true, mustChangePassword: false },
+        { id: 'u-gssd', username: 'gsdesk', password: 'gsdesk123', name: 'Colonel SD (GS Branch)', role: 'gs_sd', department: 'GS BRANCH', active: true, mustChangePassword: false },
+        { id: 'u-nixzimo', username: 'nixzimo', password: 'nixzimo123', name: 'Nixzimo Pvt Ltd', role: 'supplier', department: 'SUPPLIER', supplierKey: 'Nixzimo', active: true, mustChangePassword: false },
         { id: 'u-tso', username: 'tso', password: 'tso123', name: 'TechStores Officer', role: 'techstores_officer', department: 'IT DIR TECHSTORES OFFICE', active: true, mustChangePassword: false },
         { id: 'u-rq', username: 'rq', password: 'rq123', name: 'Regimental Quartermaster', role: 'rq', department: 'IT DIR TECHSTORES OFFICE', active: true, mustChangePassword: false },
         { id: 'u-store', username: 'store', password: 'store123', name: 'Store Officer', role: 'store_officer', department: 'IT DIR TECHSTORES OFFICE', active: true, mustChangePassword: false },
@@ -292,7 +335,16 @@ const LOGIN_USERNAME_ALIASES = {
     'regimental police': 'rp',
     'gate desk': 'gate',
     'gate rp': 'gate',
-    'gaterp': 'gate'
+    'gaterp': 'gate',
+    'gs branch': 'gsdesk',
+    'gsdesk': 'gsdesk',
+    'colonel sd': 'gsdesk',
+    'col sd': 'gsdesk',
+    'manac': 'daf',
+    'due diligence': 'aiad',
+    'aiad': 'aiad',
+    'nixzimo': 'nixzimo',
+    'supplier': 'nixzimo'
 };
 
 /** Extra passwords accepted for a resolved username (demo convenience). */
@@ -392,7 +444,7 @@ const MODULE_IDS = [
     'zna-q-985', 'zna-q-1', 'zna-q-998', 'zna-q-1680',
     'zna-q-forms-index', 'zna-q-3', 'zna-q-31', 'zna-q-40', 'zna-q-1049', 'zna-q-1229', 'zna-q-1571', 'zna-q-1954',
     'accommodation-stores',
-    'delivery-note', 'purchase-orders', 'undelivered-orders', 'supplier-debts', 'workshop-receipt-cert', 'workshop-repairs', 'ict-compare', 'gate-register', 'techstores-equipment-register', 'suppliers-contracts',
+    'delivery-note', 'purchase-orders', 'undelivered-orders', 'supplier-debts', 'portals-board', 'stakeholder-desk', 'workshop-receipt-cert', 'workshop-repairs', 'ict-compare', 'gate-register', 'techstores-equipment-register', 'suppliers-contracts',
     'orderly-room', 'it-dir-comms', 'duties-roles', 'process-guides', 'system-help', 'reports-module', 'user-management', 'release-cut'
 ];
 

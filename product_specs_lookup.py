@@ -13,6 +13,7 @@ import threading
 import time
 import urllib.request
 import urllib.parse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from html import unescape
 from pathlib import Path
 from typing import Any
@@ -515,8 +516,8 @@ def commons_image_lookup(query: str) -> str:
         return ""
     pages = (data.get("query") or {}).get("pages") or {}
     best = ""
-    best_score = -1
-    qbits = set(re.findall(r"[a-z0-9]{3,}", query.lower()))
+    best_score = 12
+    qbits, distinctive = _image_query_bits(query)
     for page in pages.values():
         info = (page.get("imageinfo") or [{}])[0]
         mime = str(info.get("mime") or "").lower()
@@ -526,16 +527,221 @@ def commons_image_lookup(query: str) -> str:
         if not candidate:
             continue
         title = str(page.get("title") or "").lower()
+        if "logo" in title or "icon" in title or "screenshot" in title or "wikimedia foundation" in title:
+            continue
+        if not _image_title_matches(query, title, candidate):
+            continue
         score = 10
         for bit in qbits:
             if bit in title or bit in candidate.lower():
                 score += 8
-        if "logo" in title or "icon" in title:
-            score -= 20
         if score > best_score:
             best_score = score
             best = candidate
     return best
+
+
+_IMAGE_SKIP_RE = re.compile(
+    r"logo|sprite|icon|favicon|pixel|tracking|1x1|spacer|blank\.gif|placeholder|avatar",
+    re.I,
+)
+_IMAGE_QUERY_STOP = {
+    "the", "and", "for", "with", "gen", "intel", "amd", "laptop", "server",
+    "notebook", "computer", "system", "series", "from", "best", "new",
+}
+
+
+def _image_query_bits(query: str) -> tuple[set[str], set[str]]:
+    bits = {
+        b for b in re.findall(r"[a-z0-9]{3,}", (query or "").lower())
+        if b not in _IMAGE_QUERY_STOP
+    }
+    distinctive = {b for b in bits if re.search(r"\d", b) or len(b) >= 7}
+    return bits, distinctive
+
+
+def _image_title_matches(query: str, title: str, extra: str = "") -> bool:
+    blob = f"{title} {extra}".lower()
+    bits, distinctive = _image_query_bits(query)
+    if not bits:
+        return False
+    model_bits = {b for b in bits if re.search(r"\d", b)}
+    if model_bits and not any(bit in blob for bit in model_bits):
+        return False
+    if distinctive and not any(bit in blob for bit in distinctive):
+        return False
+    return any(bit in blob for bit in bits)
+
+
+def is_public_http_url(url: str) -> bool:
+    try:
+        parsed = urllib.parse.urlparse(url or "")
+    except Exception:
+        return False
+    if parsed.scheme not in ("http", "https"):
+        return False
+    host = (parsed.hostname or "").lower()
+    if not host or host in ("localhost", "127.0.0.1", "::1") or host.endswith(".local"):
+        return False
+    if host.startswith("10.") or host.startswith("192.168.") or host.startswith("169.254."):
+        return False
+    return True
+
+
+def is_usable_product_image(url: str) -> bool:
+    u = unescape((url or "").strip())
+    if not u.startswith("http://") and not u.startswith("https://"):
+        return False
+    if _IMAGE_SKIP_RE.search(u):
+        return False
+    return True
+
+
+def wikipedia_thumb_lookup(query: str) -> str:
+    q = re.sub(r"\s+", " ", (query or "").strip())
+    if len(q) < 4:
+        return ""
+    url = (
+        "https://en.wikipedia.org/w/api.php?"
+        + urllib.parse.urlencode(
+            {
+                "action": "query",
+                "format": "json",
+                "generator": "search",
+                "gsrsearch": q,
+                "gsrlimit": "4",
+                "prop": "pageimages",
+                "pithumbsize": "720",
+                "pilicense": "any",
+            }
+        )
+    )
+    try:
+        data = json.loads(http_get(url, timeout=8))
+    except Exception:
+        return ""
+    pages = (data.get("query") or {}).get("pages") or {}
+    qbits, _distinctive = _image_query_bits(q)
+    best = ""
+    best_score = 40
+    for page in pages.values():
+        thumb = page.get("thumbnail") or {}
+        src = str(thumb.get("source") or "")
+        if not src:
+            continue
+        title = str(page.get("title") or "").lower()
+        if re.search(r"screenshot|disambiguation|logo|icon|windows|openvms|desktop environment|wikimedia foundation", title):
+            continue
+        if re.search(r"wikimedia_foundation|foundation_servers", src, re.I):
+            continue
+        if not _image_title_matches(q, title, src):
+            continue
+        overlap = sum(1 for bit in qbits if bit in title)
+        if overlap < 1:
+            continue
+        score = int(thumb.get("width") or 0) + overlap * 40
+        if score > best_score:
+            best_score = score
+            best = src
+    return best
+
+
+def extract_html_image(html: str, base_url: str) -> str:
+    blob = html or ""
+    patterns = (
+        r'<meta[^>]+property=["\']og:image(?::url)?["\'][^>]+content=["\']([^"\']+)',
+        r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image(?::url)?["\']',
+        r'<meta[^>]+name=["\']twitter:image(?::src)?["\'][^>]+content=["\']([^"\']+)',
+        r'"image"\s*:\s*\[\s*"(https?://[^"]+)"',
+        r'"image"\s*:\s*"(https?://[^"]+)"',
+    )
+    for pattern in patterns:
+        match = re.search(pattern, blob, re.I)
+        if not match:
+            continue
+        url = resolve_catalog_url(unescape(match.group(1)), base_url)
+        if is_usable_product_image(url):
+            return url
+    return ""
+
+
+def product_image_lookup(title: str, page_url: str = "") -> str:
+    title = re.sub(r"\s+", " ", (title or "").strip())
+    if not title and not page_url:
+        return ""
+    cache_q = f"img6::{(title or page_url)[:90]}"
+    cached = read_cached_enrich(cache_q)
+    if cached and cached.get("imageUrl"):
+        return str(cached["imageUrl"])
+    img = listing_page_image(page_url) if page_url else ""
+    if not img and title:
+        img = wikipedia_thumb_lookup(title)
+    if not img and title:
+        img = commons_image_lookup(title)
+    if not img and title:
+        family_parts = [
+            tok for tok in re.findall(r"[A-Za-z][A-Za-z\-]{2,}", title)
+            if tok.lower() not in _IMAGE_QUERY_STOP
+        ][:3]
+        family = " ".join(family_parts)
+        if family:
+            img = commons_image_lookup(family) or wikipedia_thumb_lookup(family)
+    if img:
+        write_cached_enrich(cache_q, {"ok": True, "imageUrl": img})
+    return img
+
+
+def listing_page_image(page_url: str) -> str:
+    if not is_public_http_url(page_url):
+        return ""
+    try:
+        html = http_get(page_url, timeout=7)
+    except Exception:
+        return ""
+    return extract_html_image(html, page_url)
+
+
+def fill_product_images(items: list[dict[str, Any]], limit: int = 12) -> None:
+    jobs = [row for row in items if isinstance(row, dict) and not row.get("imageUrl")][:limit]
+    if not jobs:
+        return
+
+    def _one(row: dict[str, Any]) -> tuple[dict[str, Any], str]:
+        return row, product_image_lookup(str(row.get("title") or ""), str(row.get("url") or ""))
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        futs = [pool.submit(_one, row) for row in jobs]
+        for fut in as_completed(futs):
+            try:
+                row, img = fut.result()
+            except Exception:
+                continue
+            if img:
+                row["imageUrl"] = img
+
+
+def lookup_product_images(requests: list[Any]) -> dict[str, Any]:
+    items: list[dict[str, Any]] = []
+    for req in (requests or [])[:12]:
+        if not isinstance(req, dict):
+            continue
+        title = str(req.get("title") or "").strip()
+        ident = str(req.get("id") or title)
+        if not ident:
+            continue
+        items.append({
+            "id": ident,
+            "title": title,
+            "url": str(req.get("url") or ""),
+            "imageUrl": str(req.get("imageUrl") or ""),
+        })
+    fill_product_images(items, limit=12)
+    images = {
+        row["id"]: row["imageUrl"]
+        for row in items
+        if row.get("id") and row.get("imageUrl")
+    }
+    return {"ok": True, "images": images, "count": len(images)}
 
 
 def score_datasheet_url(url: str, query: str) -> int:
@@ -866,11 +1072,34 @@ def resolve_catalog_url(href: str, base_url: str) -> str:
     return urllib.parse.urljoin(base_url, raw)
 
 
+CATEGORY_EXCLUDE_TERMS: dict[str, tuple[str, ...]] = {
+    "server": (
+        "laptop", "notebook", "ultrabook", "macbook", "thinkpad", "elitebook",
+        "latitude", "chromebook", "probook", "tablet", "ipad",
+    ),
+    "laptop": ("proliant", "poweredge", "thinksystem", "blade chassis"),
+    "desktop": ("laptop", "notebook", "thinkpad", "proliant", "poweredge"),
+    "tablet": ("proliant", "poweredge", "laserjet", "rack server"),
+    "printer": ("laptop", "thinkpad", "proliant", "poweredge", "macbook"),
+}
+
+
 def category_matches_text(category: str, text: str) -> bool:
     if category == "all":
         return True
     blob = (text or "").lower()
+    if any(term in blob for term in CATEGORY_EXCLUDE_TERMS.get(category, ())):
+        return False
     return any(term in blob for term in CATEGORY_MATCH_TERMS.get(category, CATEGORY_MATCH_TERMS["all"]))
+
+
+def is_roundup_listing(title: str, snippet: str = "") -> bool:
+    blob = f"{title} {snippet}".lower()
+    return bool(re.search(
+        r"\bvs\.?\b|\bversus\b|head-to-head|round-?up|how to choose|"
+        r"best refurbished|side-by-side|compared|fleet (laptop|pc)|decision guide",
+        blob,
+    ))
 
 
 def extract_nearby_image(html: str, anchor_end: int) -> str:
@@ -1109,6 +1338,8 @@ def is_generic_catalog_title(title: str) -> bool:
     t = (title or "").lower()
     if "official site" in t and "|" in t:
         return True
+    if is_roundup_listing(title):
+        return True
     return bool(re.search(
         r"^(view all|shop all|see all|all laptops|all desktops|gaming laptops|"
         r"official site|shop now|learn more|register form|create an account|"
@@ -1183,6 +1414,7 @@ def parse_ddg_lite_products(
     *,
     keyword: str = "",
     require_brand: bool = True,
+    category: str = "all",
 ) -> list[dict[str, Any]]:
     brand_l = normalize_market_brand(brand).lower() if brand else ""
     keyword_l = (keyword or brand or "").lower()
@@ -1215,6 +1447,10 @@ def parse_ddg_lite_products(
         if len(title) < 5:
             continue
         if re.search(r"\b(login|sign in|support|driver|download only|careers|contact us)\b", title, re.I):
+            continue
+        if is_roundup_listing(title):
+            continue
+        if category and category != "all" and not category_matches_text(category, f"{title} {url}"):
             continue
 
         tail = html[match.end(): match.end() + 480]
@@ -1442,7 +1678,7 @@ def lookup_market_catalog(query: str, category: str = "laptop", force: bool = Fa
     brand = parsed.get("brand") or ""
     keywords = parsed.get("keywords") or parsed.get("display") or query
     mode = parsed["mode"]
-    cache_q = f"market:{mode}:{keywords.lower()}:{brand.lower()}:{category}"
+    cache_q = f"market:{mode}:{keywords.lower()}:{brand.lower()}:{category}:v2"
     if not force:
         cached = read_cached_enrich(cache_q)
         if cached:
@@ -1478,9 +1714,9 @@ def lookup_market_catalog(query: str, category: str = "laptop", force: bool = Fa
     cat_terms = MARKET_CATEGORY_TERMS.get(category, MARKET_CATEGORY_TERMS["laptop"])
     search_seed = " ".join(part for part in [brand, keywords, use_case_hint, cat_terms] if part).strip()
     queries = [
-        f"{search_seed} price benchmark buy 2025 2026",
-        f"best {search_seed} recommended review price USD",
-        f"{search_seed} specifications latest models",
+        f"{search_seed} buy specifications 2025 2026",
+        f"{search_seed} official model datasheet",
+        f"{search_seed} rackmount price USD" if category == "server" else f"{search_seed} specifications latest models",
     ]
     if brand:
         brand_slug = re.sub(r"[^a-z0-9]", "", normalize_market_brand(brand))
@@ -1499,6 +1735,7 @@ def lookup_market_catalog(query: str, category: str = "laptop", force: bool = Fa
                 limit=24,
                 keyword=keywords,
                 require_brand=bool(brand and mode == "brand"),
+                category=category,
             ):
                 key = row.get("url") or row.get("title")
                 if key in seen:
@@ -1508,15 +1745,16 @@ def lookup_market_catalog(query: str, category: str = "laptop", force: bool = Fa
         except Exception as exc:
             errors.append(str(exc))
 
-    for row in items[:14]:
-        if row.get("imageUrl"):
-            continue
-        try:
-            img = commons_image_lookup(f"{label_for_parse} {row.get('title', '')[:48]}")
-            if img:
-                row["imageUrl"] = img
-        except Exception:
-            pass
+    fill_product_images(items, limit=12)
+
+    items = [
+        row for row in items
+        if not is_roundup_listing(row.get("title") or "", row.get("snippet") or "")
+        and (category == "all" or category_matches_text(
+            category,
+            f"{row.get('title', '')} {row.get('snippet', '')} {row.get('url', '')}",
+        ))
+    ]
 
     if category == "laptop":
         items = [

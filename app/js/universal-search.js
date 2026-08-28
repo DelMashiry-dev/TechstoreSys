@@ -18,7 +18,8 @@ const MODULE_SEARCH_ALIASES = {
     'supplier-debts': 'supplier debt debts owed unpaid non-paid goods received age daf chase invoice po dampack',
     'workshop-repairs': 'workshop register repairs indent',
     'ict-compare': 'head to head compare laptop buy purchase duty profile crawl market benchmark FPS workstation rugged',
-    'dp-f1-form': 'indent procurement f1',
+    'stakeholder-desk': 'portals portal dp window gs branch daf due diligence aiad supplier desk login upload quotation endorsement',
+    'portals-board': 'portals dashboard workflow procurement chart dp gs daf due diligence supplier requisition pfms purchase order',
     'voucher-module': 'issue voucher receipt rv iv stock',
     'temporary-loans': 'temporary loan za controlled stores 14 day',
     'permanent-loans': 'permanent loan laptop ipad comd/34 masasa za-no three year qs br mid wipe write-off'
@@ -247,19 +248,24 @@ function collectUniversalSearchIndex() {
     document.querySelectorAll('.sidebar-menu a[data-target]').forEach((a) => {
         const id = a.getAttribute('data-target');
         if (!id) return;
-        const label = (typeof getModuleLabel === 'function' ? getModuleLabel(id) : '')
-            || a.querySelector('.nav-label')?.textContent?.trim()
-            || id;
+        if (a.classList.contains('nav-hidden') || a.closest('li')?.classList.contains('nav-hidden')) return;
+        const desk = a.getAttribute('data-stk-desk') || '';
+        if (desk && typeof canAccessPortalDesk === 'function' && !canAccessPortalDesk(desk)) return;
+        const navLabel = a.querySelector('.nav-label')?.textContent?.trim() || '';
+        const label = desk
+            ? navLabel
+            : ((typeof getModuleLabel === 'function' ? getModuleLabel(id) : '') || navLabel || id);
         const groupEl = a.closest('.submenu')?.closest('li')?.querySelector('.nav-submenu-toggle .nav-label');
         const group = groupEl?.textContent?.trim()
             || (a.closest('.submenu') ? 'Submenu' : 'Modules');
         add({
-            id: `mod-${id}`,
+            id: desk ? `mod-${id}-${desk}` : `mod-${id}`,
             kind: 'module',
             moduleId: id,
+            stkDesk: desk,
             title: label,
             subtitle: group,
-            haystack: `${id} ${label} ${group} ${MODULE_SEARCH_ALIASES[id] || ''}`.toLowerCase()
+            haystack: `${id} ${label} ${group} ${desk} ${MODULE_SEARCH_ALIASES[id] || ''}`.toLowerCase()
         });
     });
 
@@ -644,7 +650,8 @@ function renderUniversalSearchResults(query, options = {}) {
             data-track-query="${escapeUs(item.trackQuery || '')}"
             data-ict-acc-id="${escapeUs(item.ictAccId || '')}"
             data-stock-search="${escapeUs(item.stockSearch || '')}"
-            data-stock-category="${escapeUs(item.stockCategory || '')}">
+            data-stock-category="${escapeUs(item.stockCategory || '')}"
+            data-stk-desk="${escapeUs(item.stkDesk || '')}">
             <span class="universal-search-badge">${escapeUs(kindBadge(item.kind))}</span>
             <span class="universal-search-text">
                 <strong>${escapeUs(item.title)}</strong>
@@ -667,6 +674,7 @@ async function activateUniversalResult(el) {
     const ictAccId = el.getAttribute('data-ict-acc-id');
     const stockSearch = el.getAttribute('data-stock-search');
     const stockCategory = el.getAttribute('data-stock-category');
+    const stkDesk = el.getAttribute('data-stk-desk');
     const q = document.getElementById('universalSearchInput')?.value || '';
     if (q && typeof rememberSearchTerm === 'function') {
         rememberSearchTerm(UNIVERSAL_SEARCH_HISTORY_KEY, q);
@@ -685,7 +693,7 @@ async function activateUniversalResult(el) {
         }
     }
 
-    await navigateToModule(targetModule);
+    await navigateToModule(targetModule, stkDesk ? { stkDesk } : {});
 
     if (stockSearch && moduleId === 'voucher-module') {
         setTimeout(() => {

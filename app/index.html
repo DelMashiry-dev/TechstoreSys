@@ -13,7 +13,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" type="image/png" href="../assets/favicon.png">
     <link rel="apple-touch-icon" href="../assets/pwa-icon-180.png">
-    <link rel="stylesheet" href="css/main.css?v=20260827ws">
+    <link rel="stylesheet" href="css/main.css?v=20260828wht">
 
 </head>
 <body class="app-locked">
@@ -120,6 +120,12 @@
                     · Software Eng — <code>swengr</code> · Sys Admin — <code>sysadmin</code> · ICT Sec — <code>ictsec</code>
                     (IT Dir Comms only)<br>
                     TechStores edit (full ledgers) — Store Officer: <code>store</code>/<code class="login-pwd" data-pwd="store123">••••••••</code><br>
+                    <strong>Portals (input + upload)</strong><br>
+                    DP — <code>dp</code>/<code class="login-pwd" data-pwd="dp123">••••••</code>
+                    · GS Branch — <code>gsdesk</code>/<code class="login-pwd" data-pwd="gsdesk123">•••••••••</code>
+                    · DAF / MANAC — <code>daf</code>/<code class="login-pwd" data-pwd="daf123">••••••</code>
+                    · AIAD due diligence — <code>aiad</code>/<code class="login-pwd" data-pwd="aiad123">•••••••</code>
+                    · Supplier (Nixzimo) — <code>nixzimo</code>/<code class="login-pwd" data-pwd="nixzimo123">••••••••••</code><br>
                     Viewer — <code>viewer</code> / <code class="login-pwd" data-pwd="view123">•••••••</code>
                     <hr class="login-hint-rule">
                     Department roles see a tailored dashboard — not GL / stock / target screens.
@@ -256,6 +262,55 @@
                                     <strong>GL 6122100009</strong>
                                     <small>ZOFF / Office Supplies &amp; Services</small>
                                 </span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn nav-submenu-toggle" id="portalsNavToggle" data-target="portals-board" title="Procurement workflow dashboard — click a box to open that window">
+                        <img class="nav-ico-img" src="../assets/nav-icons/dp-procurement.png" alt="" width="46" height="46" loading="lazy">
+                        <span class="nav-label">Portals</span>
+                        <span class="nav-caret" aria-hidden="true">▾</span>
+                    </a>
+                    <ul class="submenu portals-submenu">
+                        <li>
+                            <a href="#" class="nav-btn portal-nav-btn" data-target="stakeholder-desk" data-stk-desk="dp" title="Directorate Procurement — quotations, winner, P/O">
+                                <span class="nav-ico nav-ico-portal" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11a7 7 0 0 1 11.3-5.5"/><polyline points="16.5 3.5 16.5 6.2 13.8 6.2"/><path d="M19 13a7 7 0 0 1-11.3 5.5"/><polyline points="7.5 20.5 7.5 17.8 10.2 17.8"/><rect x="8" y="8.4" width="4.2" height="3.4" rx=".4"/><path d="M13 14.2h3.6l.7-2H12.8"/><circle cx="14" cy="15.4" r=".55" fill="currentColor" stroke="none"/><circle cx="16.2" cy="15.4" r=".55" fill="currentColor" stroke="none"/></svg>
+                                </span>
+                                <span class="nav-label">DP Window</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn portal-nav-btn" data-target="stakeholder-desk" data-stk-desk="gs" title="GS Branch — Colonel SD endorsement">
+                                <span class="nav-ico nav-ico-portal" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11a7 7 0 0 1 11.3-5.5"/><polyline points="16.5 3.5 16.5 6.2 13.8 6.2"/><path d="M19 13a7 7 0 0 1-11.3 5.5"/><polyline points="7.5 20.5 7.5 17.8 10.2 17.8"/><rect x="8" y="8.4" width="4.2" height="3.4" rx=".4"/><path d="M13 14.2h3.6l.7-2H12.8"/><circle cx="14" cy="15.4" r=".55" fill="currentColor" stroke="none"/><circle cx="16.2" cy="15.4" r=".55" fill="currentColor" stroke="none"/></svg>
+                                </span>
+                                <span class="nav-label">GS Branch Window</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn portal-nav-btn" data-target="stakeholder-desk" data-stk-desk="daf" title="DAF / MANAC — funds endorsement and payment">
+                                <span class="nav-ico nav-ico-portal" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11a7 7 0 0 1 11.3-5.5"/><polyline points="16.5 3.5 16.5 6.2 13.8 6.2"/><path d="M19 13a7 7 0 0 1-11.3 5.5"/><polyline points="7.5 20.5 7.5 17.8 10.2 17.8"/><rect x="8" y="8.4" width="4.2" height="3.4" rx=".4"/><path d="M13 14.2h3.6l.7-2H12.8"/><circle cx="14" cy="15.4" r=".55" fill="currentColor" stroke="none"/><circle cx="16.2" cy="15.4" r=".55" fill="currentColor" stroke="none"/></svg>
+                                </span>
+                                <span class="nav-label">DAF Window</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn portal-nav-btn" data-target="stakeholder-desk" data-stk-desk="aiad" title="AIAD — Price Due Diligence certificate">
+                                <span class="nav-ico nav-ico-portal" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11a7 7 0 0 1 11.3-5.5"/><polyline points="16.5 3.5 16.5 6.2 13.8 6.2"/><path d="M19 13a7 7 0 0 1-11.3 5.5"/><polyline points="7.5 20.5 7.5 17.8 10.2 17.8"/><rect x="8" y="8.4" width="4.2" height="3.4" rx=".4"/><path d="M13 14.2h3.6l.7-2H12.8"/><circle cx="14" cy="15.4" r=".55" fill="currentColor" stroke="none"/><circle cx="16.2" cy="15.4" r=".55" fill="currentColor" stroke="none"/></svg>
+                                </span>
+                                <span class="nav-label">Due Diligence Window</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn portal-nav-btn" data-target="stakeholder-desk" data-stk-desk="supplier" title="Registered supplier — quote, D-Note, banking">
+                                <span class="nav-ico nav-ico-portal" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11a7 7 0 0 1 11.3-5.5"/><polyline points="16.5 3.5 16.5 6.2 13.8 6.2"/><path d="M19 13a7 7 0 0 1-11.3 5.5"/><polyline points="7.5 20.5 7.5 17.8 10.2 17.8"/><rect x="8" y="8.4" width="4.2" height="3.4" rx=".4"/><path d="M13 14.2h3.6l.7-2H12.8"/><circle cx="14" cy="15.4" r=".55" fill="currentColor" stroke="none"/><circle cx="16.2" cy="15.4" r=".55" fill="currentColor" stroke="none"/></svg>
+                                </span>
+                                <span class="nav-label">Supplier Window</span>
                             </a>
                         </li>
                     </ul>
@@ -1595,40 +1650,40 @@
             }
         } catch (e) { /* ignore */ }
     </script>
-    <script src="js/config.js"></script>
+    <script src="js/config.js?v=20260828board"></script>
     <script src="js/offline-store.js"></script>
     <script src="js/offline-precache.js"></script>
-    <script src="js/org-profile.js"></script>
+    <script src="js/org-profile.js?v=20260828cyc"></script>
     <script src="js/zna-units.js"></script>
     <script src="js/catalog.js"></script>
     <script src="js/ict-spares-accessories.js?v=20260827spa"></script>
     <script src="js/inventory-ledgers.js"></script>
     <script src="js/it-dir-bids-seed.js"></script>
     <script src="js/product-specs-catalog.js"></script>
-    <script src="js/laptop-duty-profiles.js?v=20260827h2h"></script>
+    <script src="js/laptop-duty-profiles.js?v=20260828cat"></script>
     <script src="js/suppliers-seed.js"></script>
     <script src="js/state.js?v=20260823dblabel"></script>
     <script src="js/storage-mode.js?v=20260823dblabel"></script>
     <script src="js/gl-targets.js"></script>
     <script src="js/monthly-target-proposals.js"></script>
-    <script src="js/auth.js?v=20260827ws"></script>
-    <script src="js/dept-home.js"></script>
+    <script src="js/auth.js?v=20260828board"></script>
+    <script src="js/dept-home.js?v=20260828board"></script>
     <script src="js/utils.js"></script>
     <script src="js/window-chrome.js?v=20260827max"></script>
-    <script src="js/module-loader.js?v=20260827combo"></script>
+    <script src="js/module-loader.js?v=20260828board"></script>
     <script src="js/how-it-works.js?v=20260826hiw"></script>
     <script src="js/search-history.js"></script>
-    <script src="js/universal-search.js?v=20260824board"></script>
+    <script src="js/universal-search.js?v=20260828board"></script>
     <script src="js/duties-roles.js?v=20260827duty2"></script>
     <script src="js/it-dir-departments.js"></script>
     <script src="js/it-dir-establishment.js"></script>
-    <script src="js/process-guides.js"></script>
-    <script src="js/system-dictionary.js"></script>
+    <script src="js/process-guides.js?v=20260828board"></script>
+    <script src="js/system-dictionary.js?v=20260828board"></script>
     <script src="js/field-help.js"></script>
     <script src="js/ui-preferences.js"></script>
-    <script src="js/nav-reorder.js?v=20260827ws"></script>
+    <script src="js/nav-reorder.js?v=20260828port"></script>
     <script src="js/modules-data.js"></script>
-    <script src="js/dashboard.js"></script>
+    <script src="js/dashboard.js?v=20260828board"></script>
     <script src="js/inventory.js"></script>
     <script src="js/gl-inventory-view.js"></script>
     <script src="js/voucher-inventory.js?v=20260826sort"></script>
@@ -1656,7 +1711,7 @@
     <script src="js/correspondence-files.js"></script>
     <script src="js/monthly-returns.js"></script>
     <script src="js/undelivered.js"></script>
-    <script src="js/supplier-debts.js?v=20260827combo"></script>
+    <script src="js/supplier-debts.js?v=20260828cyc"></script>
     <script src="js/workshop-receipt-cert.js"></script>
     <script src="js/delivery-note.js"></script>
     <script src="js/temporary-loans.js"></script>
@@ -1667,16 +1722,18 @@
     <script src="js/repair-intake.js"></script>
     <script src="js/workshop-stores-request.js"></script>
     <script src="js/bids-import.js"></script>
-    <script src="js/market-catalog.js?v=20260826kw"></script>
-    <script src="js/ict-compare.js?v=20260827hist"></script>
-    <script src="js/real-dp-purchase-orders.js?v=20260826dp"></script>
+    <script src="js/market-catalog.js?v=20260828img"></script>
+    <script src="js/ict-compare.js?v=20260828cat"></script>
+    <script src="js/real-dp-purchase-orders.js?v=20260828cyc"></script>
     <script src="js/zimbabwe-po-benchmarks.js?v=20260826po2"></script>
     <script src="js/guide-quotation.js?v=20260826gq2"></script>
     <script src="js/spec-eval.js?v=20260827duty"></script>
     <script src="js/dp-f1.js"></script>
     <script src="js/purchase-orders.js"></script>
     <script src="js/cost-comparative-schedule.js"></script>
-    <script src="js/dp-procurement.js"></script>
+    <script src="js/dp-procurement.js?v=20260828cyc"></script>
+    <script src="js/stakeholder-desk.js?v=20260828port"></script>
+    <script src="js/portals-board.js?v=20260828wht"></script>
     <script src="js/zna-q-982.js"></script>
     <script src="js/zna-qm-forms.js"></script>
     <script src="js/zna-qm-batch2.js"></script>
@@ -1702,7 +1759,7 @@
     <script src="js/tables.js"></script>
     <script src="js/ux-improvements.js"></script>
     <script src="js/pwa-install.js"></script>
-    <script src="js/boot.js?v=20260823fastboot"></script>
+    <script src="js/boot.js?v=20260828board"></script>
 
 </body>
 </html>

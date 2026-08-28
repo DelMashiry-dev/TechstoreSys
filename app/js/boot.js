@@ -190,6 +190,8 @@ async function runHeavyBootInit() {
     if (typeof initMonthlyReturnsModule === 'function') initMonthlyReturnsModule();
     if (typeof initUndeliveredModule === 'function') initUndeliveredModule();
     if (typeof initSupplierDebtsModule === 'function') initSupplierDebtsModule();
+    if (typeof initStakeholderDeskModule === 'function') initStakeholderDeskModule();
+    if (typeof initPortalsBoardModule === 'function') initPortalsBoardModule();
     if (typeof initWorkshopReceiptCertModule === 'function') initWorkshopReceiptCertModule();
     if (typeof initDeliveryNoteModule === 'function') initDeliveryNoteModule();
     if (typeof initDpProcurementModule === 'function') initDpProcurementModule();
@@ -308,6 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     document.getElementById('saveUserBtn')?.addEventListener('click', saveUserFromForm);
+    document.getElementById('newUserRole')?.addEventListener('change', stkToggleSupplierField);
     document.getElementById('resetUserFormBtn')?.addEventListener('click', function() {
         document.getElementById('newUserPassword').placeholder = 'Password';
         resetUserForm();
@@ -333,6 +336,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const opts = {};
         const panel = link.getAttribute('data-dept-panel');
         if (panel) opts.deptPanel = panel;
+        const desk = link.getAttribute('data-stk-desk');
+        if (desk) opts.stkDesk = desk;
         navigateToModule(targetId, opts);
     }, true);
 
@@ -344,6 +349,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const opts = {};
             const panel = this.getAttribute('data-dept-panel');
             if (panel) opts.deptPanel = panel;
+            const desk = this.getAttribute('data-stk-desk');
+            if (desk) opts.stkDesk = desk;
             navigateToModule(targetId, opts);
         });
     });
@@ -422,6 +429,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const li = this.closest('li');
             const submenu = li?.querySelector(':scope > .submenu');
             if (!submenu) return;
+            if (this.getAttribute('data-target')) {
+                submenu.classList.add('active');
+                this.classList.add('is-open');
+                return;
+            }
             submenu.classList.toggle('active');
             this.classList.toggle('is-open', submenu.classList.contains('active'));
         });

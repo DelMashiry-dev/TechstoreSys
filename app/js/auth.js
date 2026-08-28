@@ -311,13 +311,37 @@ function canSeeStoresOpsDashboard() {
 function canSeeRoleNotifications() {
     if (!currentUser) return false;
     if (canSeeStoresOpsDashboard()) return true;
-    return isGateRegisterRole();
+    return isGateRegisterRole() || ['dir_dp', 'dir_daf', 'dir_aiad', 'gs_sd', 'supplier'].includes(currentUser.role);
+}
+
+function stkRoleDeskFromRole(role) {
+    if (role === 'dir_dp') return 'dp';
+    if (role === 'gs_sd') return 'gs';
+    if (role === 'dir_daf') return 'daf';
+    if (role === 'dir_aiad') return 'aiad';
+    if (role === 'supplier') return 'supplier';
+    return '';
+}
+
+function canSwitchPortalDesks() {
+    const role = currentUser?.role || '';
+    return role === 'admin' || role === 'store_officer' || role === 'rq' || role === 'techstores_officer';
+}
+
+function canAccessPortalDesk(desk) {
+    if (!desk || !canAccessModule('stakeholder-desk')) return false;
+    if (canSwitchPortalDesks()) return true;
+    const mine = stkRoleDeskFromRole(currentUser?.role);
+    if (mine) return mine === desk;
+    const perms = typeof ROLE_PERMISSIONS !== 'undefined' ? ROLE_PERMISSIONS[currentUser?.role] : null;
+    return !!(perms?.modules?.includes('*'));
 }
 
 function applyAccessControl() {
     const roleClasses = [
         'role-admin', 'role-army_commander', 'role-brig_gs', 'role-brig_as', 'role-brig_qs',
         'role-director', 'role-deputy_director', 'role-aqso2', 'role-dir_aiad', 'role-dir_daf', 'role-dir_dp',
+        'role-gs_sd', 'role-supplier',
         'role-techstores_officer', 'role-rq', 'role-store_officer', 'role-orderly_clerk',
         'role-storeman', 'role-rp', 'role-workshop',
         'role-oc_sysadmin', 'role-oc_workshop', 'role-oc_compengr', 'role-oc_swengr',
@@ -340,11 +364,13 @@ function applyAccessControl() {
         const target = link.getAttribute('data-target');
         const li = link.closest('li');
         if (!li) return;
-        const allowed = canAccessModule(target);
+        const desk = link.getAttribute('data-stk-desk');
+        let allowed = canAccessModule(target);
+        if (allowed && desk) allowed = canAccessPortalDesk(desk);
         link.classList.toggle('nav-hidden', !allowed);
         const siblingLinks = Array.from(li.querySelectorAll(':scope > a[data-target]'));
         if (siblingLinks.length > 1) {
-            const anyAllowed = siblingLinks.some((a) => canAccessModule(a.getAttribute('data-target')));
+            const anyAllowed = siblingLinks.some((a) => !a.classList.contains('nav-hidden'));
             li.classList.toggle('nav-hidden', !anyAllowed);
         } else {
             li.classList.toggle('nav-hidden', !allowed);
@@ -354,9 +380,18 @@ function applyAccessControl() {
     document.querySelectorAll('.nav-submenu-toggle').forEach((toggle) => {
         const parentLi = toggle.closest('li');
         if (!parentLi) return;
-        const anyVisible = Array.from(parentLi.querySelectorAll('.submenu a[data-target]'))
-            .some((a) => canAccessModule(a.getAttribute('data-target')));
-        parentLi.classList.toggle('nav-hidden', !anyVisible);
+        const toggleTarget = toggle.getAttribute('data-target');
+        const toggleAllowed = toggleTarget
+            ? (typeof canAccessModule === 'function' && canAccessModule(toggleTarget) && !toggle.classList.contains('nav-hidden'))
+            : false;
+        const anyChildVisible = Array.from(parentLi.querySelectorAll('.submenu a[data-target]'))
+            .some((a) => !a.classList.contains('nav-hidden'));
+        parentLi.classList.toggle('nav-hidden', !(toggleAllowed || anyChildVisible));
+        if (toggle.id === 'portalsNavToggle' && !parentLi.classList.contains('nav-hidden')) {
+            const submenu = parentLi.querySelector(':scope > .submenu');
+            submenu?.classList.add('active');
+            toggle.classList.add('is-open');
+        }
     });
 
     document.querySelectorAll('.nav-admin-only').forEach((el) => {
@@ -383,6 +418,7 @@ function applyAccessControl() {
     if (rpHome) rpHome.hidden = true;
 
     if (typeof renderRoleScopedHome === 'function') renderRoleScopedHome();
+    if (typeof renderStakeholderDeskChrome === 'function') renderStakeholderDeskChrome();
     else if (isGateRegisterRole()) {
         const legacy = document.getElementById('rpGateHome');
         if (legacy) legacy.hidden = false;
@@ -409,7 +445,10 @@ function applyAccessControl() {
 }
 
 function enterApp(user) {
-    currentUser = user;
+    const seeded = (appState?.users || []).find((u) =>
+        String(u.username || '').toLowerCase() === String(user?.username || '').toLowerCase()
+    );
+    currentUser = seeded ? { ...user, ...seeded, password: user.password } : user;
     saveSession(user);
     document.body.classList.remove('app-locked');
     sessionStorage.removeItem('techstoresAutoStartFailed');
@@ -457,6 +496,7 @@ async function logoutUser() {
         recordAccessAudit('logout', `Signed out ${currentUser.username}`);
     }
     currentUser = null;
+    window._stkDeskOverride = '';
     clearSession();
     document.body.classList.add('app-locked');
     if (typeof setFieldHelpMode === 'function') setFieldHelpMode(false, { silent: true });
@@ -465,6 +505,7 @@ async function logoutUser() {
     document.body.classList.remove(
         'role-admin', 'role-army_commander', 'role-brig_gs', 'role-brig_as', 'role-brig_qs',
         'role-director', 'role-deputy_director', 'role-aqso2', 'role-dir_aiad', 'role-dir_daf', 'role-dir_dp',
+        'role-gs_sd', 'role-supplier',
         'role-techstores_officer', 'role-rq', 'role-store_officer', 'role-orderly_clerk',
         'role-storeman', 'role-rp', 'role-workshop',
         'role-oc_sysadmin', 'role-oc_workshop', 'role-oc_compengr', 'role-oc_swengr',
@@ -516,7 +557,16 @@ function resetUserForm() {
     document.getElementById('newUserUsername').value = '';
     document.getElementById('newUserPassword').value = '';
     document.getElementById('newUserRole').value = 'store_officer';
+    const sup = document.getElementById('newUserSupplierKey');
+    if (sup) sup.value = '';
     document.getElementById('newUserUsername').dataset.editingId = '';
+    stkToggleSupplierField();
+}
+
+function stkToggleSupplierField() {
+    const wrap = document.getElementById('newUserSupplierWrap');
+    const role = document.getElementById('newUserRole')?.value;
+    if (wrap) wrap.hidden = role !== 'supplier';
 }
 
 function saveUserFromForm() {
@@ -528,6 +578,7 @@ function saveUserFromForm() {
     const username = document.getElementById('newUserUsername').value.trim();
     const password = document.getElementById('newUserPassword').value;
     const role = document.getElementById('newUserRole').value;
+    const supplierKey = (document.getElementById('newUserSupplierKey')?.value || '').trim();
     const editingId = document.getElementById('newUserUsername').dataset.editingId || '';
 
     if (!name || !username) {
@@ -558,6 +609,7 @@ function saveUserFromForm() {
         user.name = name;
         user.username = username;
         user.role = role;
+        user.supplierKey = role === 'supplier' ? supplierKey : '';
         if (password) user.password = password;
         if (currentUser && currentUser.id === user.id) {
             currentUser = { ...user };
@@ -576,6 +628,7 @@ function saveUserFromForm() {
             username,
             password,
             role,
+            supplierKey: role === 'supplier' ? supplierKey : '',
             active: true,
             mustChangePassword: false
         });
@@ -595,6 +648,9 @@ function editUser(userId) {
     document.getElementById('newUserPassword').value = '';
     document.getElementById('newUserPassword').placeholder = 'Leave blank to keep current password';
     document.getElementById('newUserRole').value = user.role;
+    const sup = document.getElementById('newUserSupplierKey');
+    if (sup) sup.value = user.supplierKey || '';
+    stkToggleSupplierField();
     document.getElementById('newUserUsername').dataset.editingId = user.id;
 }
 

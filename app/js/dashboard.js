@@ -30,7 +30,8 @@ function getModuleLabel(moduleId) {
         'cost-comparative-schedule': 'Cost Comparative Schedule',
         'stores-inventory': 'Stores Inventory',
         'inventory-accountability': 'Inventory Accountability',
-        'dp-procurement': 'ICT Procurement Cycle',
+        'stakeholder-desk': 'Portals — DP / GS Branch / DAF / Due Diligence / Supplier',
+        'portals-board': 'Portals — procurement workflow dashboard',
         'zna-q-982': 'ZNA Q 982 — Combined Indent',
         'zna-q-178': 'ZNA Q 178 — Sub Ledger Sheet',
         'zna-q-1033': 'ZNA Q 1033 — Issue & Receipt Voucher',
@@ -1066,6 +1067,10 @@ async function navigateToModule(targetId, options = {}) {
         }
     }
 
+    if (options.stkDesk) {
+        window._stkDeskOverride = options.stkDesk;
+    }
+
     document.querySelectorAll('.content-section, .form-container').forEach((section) => {
         section.style.display = 'none';
         section.classList.remove('is-open');
@@ -1077,9 +1082,14 @@ async function navigateToModule(targetId, options = {}) {
         targetSection.classList.remove('is-open');
     }
     document.querySelectorAll('.sidebar-menu a').forEach((link) => link.classList.remove('active'));
+    const deskKey = options.stkDesk
+        || (targetId === 'stakeholder-desk' && typeof getStakeholderDeskKey === 'function' ? getStakeholderDeskKey() : '');
     const menuLink = options.deptPanel
         ? document.querySelector(`.sidebar-menu a[data-target="${targetId}"][data-dept-panel="${options.deptPanel}"]`)
-        : document.querySelector(`.sidebar-menu a[data-target="${targetId}"]:not([data-dept-panel])`)
+        : (deskKey
+            ? document.querySelector(`.sidebar-menu a[data-target="${targetId}"][data-stk-desk="${deskKey}"]`)
+            : document.querySelector(`.sidebar-menu a[data-target="${targetId}"]:not([data-dept-panel]):not([data-stk-desk])`))
+            || document.querySelector(`.sidebar-menu a[data-target="${targetId}"]:not([data-dept-panel])`)
             || document.querySelector(`.sidebar-menu a[data-target="${targetId}"]`);
     if (menuLink) {
         menuLink.classList.add('active');
@@ -1198,6 +1208,13 @@ async function navigateToModule(targetId, options = {}) {
     }
     if (targetId === 'cost-comparative-schedule' && typeof initCostComparativeScheduleModule === 'function') {
         initCostComparativeScheduleModule();
+    }
+    if (targetId === 'portals-board') {
+        if (typeof initPortalsBoardModule === 'function') initPortalsBoardModule();
+    }
+    if (targetId === 'stakeholder-desk') {
+        if (typeof initStakeholderDeskModule === 'function') initStakeholderDeskModule();
+        if (typeof renderStakeholderDesk === 'function') renderStakeholderDesk();
     }
     if (targetId === 'dp-procurement' && typeof renderDpProcurementModule === 'function') {
         renderDpProcurementModule();

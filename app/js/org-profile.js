@@ -70,6 +70,69 @@ const ZNA_PROCUREMENT_PROCESS = [
     { n: 10, title: 'Pro-forma / minute sheet closure', actor: 'comdElm', detail: 'Signed pro-formas / minute sheet close the process for all stakeholders.' }
 ];
 
+/**
+ * IT Dir ICT path — requisition by the user through payment of goods.
+ * Source: IT Dir RQ / DP Contracts flowchart (Requisition + Target → DPF1 → GS → MANAC → PFMS → DP → quotes → AIAD → PO → inspect → DAF pay).
+ */
+const ITDIR_ICT_PROCUREMENT_CYCLE = [
+    {
+        n: 1, phase: 'raise', actor: 'IT Dir (user)', module: 'dp-f1-form',
+        title: 'Raise DP F1 from requisition + target',
+        detail: 'User requisition plus DAF target / vote on the GL. IT Dir raises DP F1 (electronic indent) against the charged vote (e.g. GL 3112210001).'
+    },
+    {
+        n: 2, phase: 'endorse', actor: 'Colonel SD (GS Branch)', module: 'unit-requisitions',
+        title: 'Endorsement by Colonel SD (GS Branch)',
+        detail: 'Colonel Staff Duties, GS Branch, endorses the DP F1.'
+    },
+    {
+        n: 3, phase: 'endorse', actor: 'MANAC (Deputy Director DAF)', module: 'dp-f1-form',
+        title: 'Endorsement by MANAC (Deputy Director DAF)',
+        detail: 'MANAC endorses for funds / vote so procurement can proceed against the target.'
+    },
+    {
+        n: 4, phase: 'endorse', actor: 'IT Dir RQ · PFMS', module: 'unit-requisitions',
+        title: 'PFMS requisition number on the DP F1',
+        detail: 'IT Dir RQ creates the requisition number in PFMS (Public Financial Management System) and writes it on the DP F1 (e.g. Req 10080264).'
+    },
+    {
+        n: 5, phase: 'market', actor: 'IT Dir RQ → DP Contracts', module: 'dp-procurement',
+        title: 'Surrender DP F1 to DP Contracts',
+        detail: 'IT Dir RQ hands the endorsed DP F1 to Directorate Procurement — Contracts.'
+    },
+    {
+        n: 6, phase: 'market', actor: 'DP', module: 'dp-procurement',
+        title: 'DP calls for quotations',
+        detail: 'DP invites relevant suppliers to quote against the IT Dir specification.'
+    },
+    {
+        n: 7, phase: 'market', actor: 'Adjudication team', module: 'spec-evaluation',
+        title: 'Open tender box and adjudicate',
+        detail: 'Quotations received. Adjudication team opens the tender box and selects vendors who meet requirements including technical specs.'
+    },
+    {
+        n: 8, phase: 'market', actor: 'DP SO1', module: 'cost-comparative-schedule',
+        title: 'DP SO1 picks the winning vendor',
+        detail: 'DP SO1 highlights the best vendor / winning supplier (value for money, not always cheapest).'
+    },
+    {
+        n: 9, phase: 'certify', actor: 'AIAD', module: 'dp-procurement',
+        title: 'AIAD price due diligence certificate',
+        detail: 'DP takes the endorsed DP F1 with IT Dir spec, supplier quotation and specs to Army Internal Audit Directorate for evaluation and the Price Due Diligence certificate.'
+    },
+    {
+        n: 10, phase: 'fulfil', actor: 'DP → IT Dir (user)', module: 'purchase-orders',
+        title: 'DP produces the Purchase Order',
+        detail: 'DP raises the P/O and sends it to IT Dir (user). IT Dir informs the supplier to collect the P/O.'
+    },
+    {
+        n: 11, phase: 'fulfil', actor: 'Supplier · IT Dir · DAF', module: 'supplier-debts',
+        title: 'Supply, inspect, then DAF pays',
+        detail: 'Supplier delivers (D-Note). IT Dir inspects against PO + spec. When satisfied: Workshop cert / MLG Q 1033 RV on the master ledger, then trigger DAF to pay the supplier (banking details).'
+    }
+];
+window.ITDIR_ICT_PROCUREMENT_CYCLE = ITDIR_ICT_PROCUREMENT_CYCLE;
+
 /** Supplier evaluation pack (Director Procurement, Army HQ) — Registered Suppliers G/C/006 */
 const SUPPLIER_EVALUATION_REQUIREMENTS = [
     'Introductory letter addressed to the Director Procurement, Army HQ, P Bag 7720, Causeway, Harare',

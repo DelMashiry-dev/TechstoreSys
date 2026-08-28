@@ -32,6 +32,7 @@ const REAL_DP_PURCHASE_ORDERS = [
         poNumber: 'DP 3478/2026',
         date: '2026-08-04',
         deliveryDate: '2026-08-11',
+        reqNo: '10080264',
         supplierName: 'NIXZIMO PVT LTD',
         supplierAddress: '2780 Princess Margaret, Marlborough, Harare',
         supplierPhone: '0712491600',
