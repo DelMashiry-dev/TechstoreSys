@@ -387,10 +387,12 @@ function applyAccessControl() {
         const anyChildVisible = Array.from(parentLi.querySelectorAll('.submenu a[data-target]'))
             .some((a) => !a.classList.contains('nav-hidden'));
         parentLi.classList.toggle('nav-hidden', !(toggleAllowed || anyChildVisible));
-        if (toggle.id === 'portalsNavToggle' && !parentLi.classList.contains('nav-hidden')) {
+        // Portals is intentionally collapsed on startup. Clicking its header
+        // still opens the submenu through the normal navigation handler.
+        if (toggle.id === 'portalsNavToggle') {
             const submenu = parentLi.querySelector(':scope > .submenu');
-            submenu?.classList.add('active');
-            toggle.classList.add('is-open');
+            submenu?.classList.remove('active');
+            toggle.classList.remove('is-open');
         }
     });
 
@@ -412,6 +414,10 @@ function applyAccessControl() {
         if (btn.classList.contains('quick-action-btn')) {
             btn.style.display = allowed ? '' : 'none';
         }
+    });
+
+    document.querySelectorAll('.doc-import-entry').forEach((el) => {
+        el.classList.toggle('nav-hidden', !canAccessModule('doc-import'));
     });
 
     const rpHome = document.getElementById('rpGateHome');

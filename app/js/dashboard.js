@@ -1216,6 +1216,9 @@ async function navigateToModule(targetId, options = {}) {
         if (typeof initStakeholderDeskModule === 'function') initStakeholderDeskModule();
         if (typeof renderStakeholderDesk === 'function') renderStakeholderDesk();
     }
+    if (targetId === 'doc-import' && typeof initDocImportModule === 'function') {
+        initDocImportModule();
+    }
     if (targetId === 'dp-procurement' && typeof renderDpProcurementModule === 'function') {
         renderDpProcurementModule();
     }

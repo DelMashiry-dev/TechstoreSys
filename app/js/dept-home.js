@@ -37,6 +37,7 @@ const DEPT_HOME_PRESETS = {
         shortcuts: [
             { target: 'voucher-module', label: 'Issue / Receipt Voucher (Q 1033)', primary: true },
             { target: 'delivery-note', label: 'Delivery Note' },
+            { target: 'doc-import', label: 'Import document' },
             { target: 'stock-take', label: 'Stock Take' },
             { target: 'techstores-equipment-register', label: 'Equipment Register' },
             { target: 'temporary-loans', label: 'Temporary Loans' },
@@ -52,6 +53,7 @@ const DEPT_HOME_PRESETS = {
         shortcuts: [
             { target: 'workshop-repairs', label: 'Workshop Register', primary: true },
             { target: 'spec-evaluation', label: 'Spec / Tech Evaluation' },
+            { target: 'doc-import', label: 'Import document' },
             { target: 'it-dir-comms', label: 'IT Dir Comms' }
         ]
     },
@@ -61,6 +63,7 @@ const DEPT_HOME_PRESETS = {
         blurb: 'Daily File, correspondence routing, and IT Directorate communications. No access to GL accounts or stock ledgers.',
         shortcuts: [
             { target: 'orderly-room', label: 'Orderly Room', primary: true },
+            { target: 'doc-import', label: 'Import document' },
             { target: 'it-dir-comms', label: 'IT Dir Comms' }
         ]
     },
@@ -79,6 +82,7 @@ const DEPT_HOME_PRESETS = {
         shortcuts: [
             { target: 'portals-board', label: 'Portals dashboard' },
             { target: 'stakeholder-desk', desk: 'dp', label: 'Open DP Window', primary: true },
+            { target: 'doc-import', label: 'Import document' },
             { target: 'dp-procurement', label: 'ICT Procurement Cycle' },
             { target: 'purchase-orders', label: 'Purchase Orders' },
             { target: 'suppliers-contracts', label: 'Suppliers' }
@@ -91,6 +95,7 @@ const DEPT_HOME_PRESETS = {
         shortcuts: [
             { target: 'portals-board', label: 'Portals dashboard' },
             { target: 'stakeholder-desk', desk: 'gs', label: 'Open GS Window', primary: true },
+            { target: 'doc-import', label: 'Import document' },
             { target: 'unit-requisitions', label: 'Requisitions' },
             { target: 'it-dir-comms', label: 'IT Dir Comms' }
         ]
@@ -102,6 +107,7 @@ const DEPT_HOME_PRESETS = {
         shortcuts: [
             { target: 'portals-board', label: 'Portals dashboard' },
             { target: 'stakeholder-desk', desk: 'daf', label: 'Open DAF Window', primary: true },
+            { target: 'doc-import', label: 'Import document' },
             { target: 'supplier-debts', label: 'Supplier Debts' },
             { target: 'financial-year-bids', label: 'Financial Year Bids' }
         ]
@@ -113,6 +119,7 @@ const DEPT_HOME_PRESETS = {
         shortcuts: [
             { target: 'portals-board', label: 'Portals dashboard' },
             { target: 'stakeholder-desk', desk: 'aiad', label: 'Open Due Diligence Window', primary: true },
+            { target: 'doc-import', label: 'Import document' },
             { target: 'cost-comparative-schedule', label: 'Cost Comparative Schedule' },
             { target: 'dp-procurement', label: 'ICT Procurement Cycle' }
         ]
@@ -124,6 +131,7 @@ const DEPT_HOME_PRESETS = {
         shortcuts: [
             { target: 'portals-board', label: 'Portals dashboard' },
             { target: 'stakeholder-desk', desk: 'supplier', label: 'Open Supplier Window', primary: true },
+            { target: 'doc-import', label: 'Import document' },
             { target: 'process-guides', label: 'Procurement cycle (Learning Centre)' }
         ]
     }

@@ -215,9 +215,12 @@ function realDpFieldsFromPo(po) {
         { tag: 'input', type: 'text', id: 'poNumber', value: po.poNumber },
         { tag: 'input', type: 'date', id: 'poDate', value: po.date },
         { tag: 'input', type: 'text', id: 'poVendorNo', value: po.supplierPhone || '' },
+        { tag: 'input', type: 'text', id: 'poReqNo', value: po.reqNo || '' },
         { tag: 'input', type: 'text', id: 'poDeliverTo', value: po.deliverTo || 'IT DIR' },
         { tag: 'input', type: 'date', id: 'poDeliveryDate', value: po.deliveryDate || '' },
         { tag: 'input', type: 'text', id: 'poPaymentTerms', value: po.paymentTerms || '' },
+        { tag: 'input', type: 'text', id: 'poContact', value: po.contact || 'Dir of Procurement' },
+        { tag: 'input', type: 'text', id: 'poTelephone', value: po.contactPhone || '0242-790016' },
         { tag: 'select', type: '', id: 'poCurrency', value: po.currency || 'USD' },
         { tag: 'select', type: '', id: 'poGl', value: po.gl || '3112210001' },
         { tag: 'input', type: 'text', id: 'poSignature', value: po.cancelled ? 'CANCELLED' : '' }
@@ -325,9 +328,12 @@ function loadRealDpPurchaseOrderIntoForm(poNo) {
     set('poNumber', po.poNumber);
     set('poDate', po.date);
     set('poVendorNo', po.supplierPhone || '');
+    set('poReqNo', po.reqNo || '');
     set('poDeliverTo', po.deliverTo || 'IT DIR');
     set('poDeliveryDate', po.deliveryDate || '');
     set('poPaymentTerms', po.paymentTerms || '');
+    set('poContact', po.contact || 'Dir of Procurement');
+    set('poTelephone', po.contactPhone || '0242-790016');
     set('poCurrency', po.currency || 'USD');
     set('poGl', po.gl || '3112210001');
     set('poSignature', po.cancelled ? 'CANCELLED' : '');

@@ -573,6 +573,11 @@ function saveRequisitionFromForm() {
         if (typeof saveState === 'function') saveState();
         renderRequisitionsModule();
     }
+    if (savedReq && typeof syncUnitRequisitionsToOrderlyRoom === 'function') {
+        syncUnitRequisitionsToOrderlyRoom();
+        if (typeof saveState === 'function') saveState();
+        if (typeof renderOrderlyRoomModule === 'function') renderOrderlyRoomModule();
+    }
 }
 
 function editRequisition(id) {
@@ -704,14 +709,13 @@ function renderRequisitionsTable() {
         });
 
     if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="req-empty-row">No requisitions in this view. Book one in below, or widen the filters.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="req-empty-row">No requisitions in this view. Book one in below, or widen the filters.</td></tr>';
         if (typeof refreshTableFocusViewIfOpen === 'function') refreshTableFocusViewIfOpen();
         return;
     }
 
     tbody.innerHTML = rows.map((req) => {
         const ageView = getRequisitionAgeDisplay(req);
-        const split = getRequisitionStockSplit(req);
         const canEdit = typeof canEditData === 'function' ? canEditData() : true;
         const item = getRequisitionItemCell(req);
         const unitLabel = (typeof resolveZnaUnitLabel === 'function' ? resolveZnaUnitLabel(req.unit) : req.unit) || '—';
@@ -730,8 +734,6 @@ function renderRequisitionsTable() {
                     ${item.secondary ? `<div class="req-item-meta">${reqEscape(item.secondary)}</div>` : ''}
                     ${typeof fulfillmentBadgeHtml === 'function' ? fulfillmentBadgeHtml(req) : ''}
                 </td>
-                <td class="req-cell-stock">${reqStockInCell(split)}</td>
-                <td class="req-cell-stock">${reqStockOutCell(split)}</td>
                 <td>
                     <span class="req-age-badge ${ageView.bucket.className}" title="${reqEscape(ageView.title)}">${reqEscape(ageView.text)}</span>
                     <div class="req-item-meta">${reqEscape(getRequisitionStatusLabel(req.status))}</div>
@@ -739,13 +741,12 @@ function renderRequisitionsTable() {
                 <td class="req-actions-cell">
                     ${canEdit ? `
                         <div class="req-action-bar" role="group" aria-label="Requisition actions">
-                            <button type="button" class="btn btn-primary btn-sm" data-req-action="route" data-req-id="${reqEscape(req.id)}" title="Stock check → Q 1033 or DP F1">Route</button>
-                            <button type="button" class="btn btn-ghost btn-sm" data-req-action="edit" data-req-id="${reqEscape(req.id)}" title="Edit">Edit</button>
+                            <button type="button" class="btn btn-primary btn-sm req-action-route" data-req-action="route" data-req-id="${reqEscape(req.id)}" title="Stock check → Q 1033 or DP F1">Route</button>
+                            <button type="button" class="btn btn-ghost btn-sm req-action-edit" data-req-action="edit" data-req-id="${reqEscape(req.id)}" title="Edit">Edit</button>
                             ${open ? `
-                                <button type="button" class="btn btn-ghost btn-sm" data-req-action="progress" data-req-id="${reqEscape(req.id)}" title="Mark in progress">Progress</button>
-                                <button type="button" class="btn btn-success btn-sm" data-req-action="issue" data-req-id="${reqEscape(req.id)}" title="Issue / close">Close</button>
+                                <button type="button" class="btn btn-ghost btn-sm req-action-progress" data-req-action="progress" data-req-id="${reqEscape(req.id)}" title="Mark in progress">Progress</button>
+                                <button type="button" class="btn btn-success btn-sm req-action-close" data-req-action="issue" data-req-id="${reqEscape(req.id)}" title="Issue / close">Close</button>
                             ` : ''}
-                            <button type="button" class="btn btn-ghost btn-sm req-btn-del" data-req-action="delete" data-req-id="${reqEscape(req.id)}" title="Delete">Del</button>
                         </div>
                     ` : '—'}
                 </td>

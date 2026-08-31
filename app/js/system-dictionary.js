@@ -141,6 +141,7 @@ const SYSTEM_DICTIONARY_GROUPS = [
             { t: 'Dashboard', d: 'KPIs, Notifications, GL cards, stock overview and navigation hub.', w: 'dashboard' },
             { t: 'Issue Voucher / ZNA-Q-1033', d: 'Post IV/RV stock movements by catalog category against GLs (official form ZNA-Q-1033).', w: 'voucher-module' },
             { t: 'Unit / Formation Requisitions', d: 'Independent Requisitions button. In-tray lists incoming requests (date in, unit, items, in-stock, out-of-stock, age). Book in loose minutes, then Route to Q 1033 or DP F1.', w: 'unit-requisitions' },
+            { t: 'Import document', d: 'Upload or paste a typed PDF/Word file, or a photo of a written page. The system classifies it (loose minute, requisition, quotation, P/O, DP F1, tech spec, D-Note, cost comparative) and fills the related form. Review every field before save. Handwriting needs OPENAI_API_KEY on the server; typed text works without it.', w: 'doc-import' },
             { t: 'Orderly Room', d: 'Daily File / First Sight correspondence and TechStores alerts.', w: 'orderly-room' },
             { t: 'Gate Register (RP)', d: 'Equipment in/out at the gate. Does not change inventory balances.', w: 'gate-register' },
             { t: 'TechStores Equipment Register', d: 'Storeman custody stage for repair intake (before Workshop).', w: 'techstores-equipment-register' },

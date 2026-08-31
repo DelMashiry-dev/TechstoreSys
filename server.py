@@ -22,7 +22,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse, parse_qs
 
 from product_specs_lookup import lookup_product_specs, lookup_market_catalog, lookup_product_images, fetch_rbz_usd_zig_rate
-from ai_services import ai_status, parse_spec_document, answer_stores_question, draft_requisition_justification
+from ai_services import ai_status, parse_spec_document, parse_import_document, answer_stores_question, draft_requisition_justification
 from mode_switch import (
     handle_mode_switch,
     mode_status_payload,
@@ -1557,6 +1557,23 @@ class TechStoresHandler(BaseHTTPRequestHandler):
                 self._send_json(status, result)
             except Exception as exc:
                 self._send_json(500, {"ok": False, "error": f"Spec document parse failed: {exc}"})
+            return
+
+        if path == "/api/ai/import-document":
+            try:
+                payload = self._read_json()
+                result = parse_import_document(
+                    text=str(payload.get("text") or ""),
+                    image_base64=str(payload.get("imageBase64") or payload.get("image") or ""),
+                    file_base64=str(payload.get("fileBase64") or payload.get("file") or ""),
+                    mime_type=str(payload.get("mimeType") or payload.get("mime") or ""),
+                    file_name=str(payload.get("fileName") or payload.get("filename") or ""),
+                    doc_type_hint=str(payload.get("docType") or payload.get("docTypeHint") or ""),
+                )
+                status = 200 if result.get("ok") else 400
+                self._send_json(status, result)
+            except Exception as exc:
+                self._send_json(500, {"ok": False, "error": f"Document import failed: {exc}"})
             return
 
         if path == "/api/ai/ask":

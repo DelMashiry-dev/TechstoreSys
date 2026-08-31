@@ -182,6 +182,7 @@ async function runHeavyBootInit() {
     if (typeof initMonthlyTargetProposalControls === 'function') initMonthlyTargetProposalControls();
     initSpecEvaluationModule();
     if (typeof initAiAssistant === 'function') initAiAssistant();
+    if (typeof initDocImportModule === 'function') initDocImportModule();
     if (typeof initStoresQueryEngine === 'function') initStoresQueryEngine();
     if (typeof initWindowChrome === 'function') initWindowChrome();
     if (typeof initRequisitionsModule === 'function') initRequisitionsModule();

@@ -31,6 +31,8 @@ def ai_status() -> dict[str, Any]:
         "features": {
             "specDocument": bool(key),
             "specDocumentVision": bool(key),
+            "documentImport": True,
+            "documentImportVision": bool(key),
             "storesAssistant": True,
             "draftJustification": bool(key),
             "productEnrich": bool(key),
@@ -248,6 +250,7 @@ SYSTEM_MODULE_GUIDE = """
 Key TECHSTORESys modules (sidebar):
 - Dashboard — GL targets, buying power, alerts, stock overview.
 - Unit Requisitions — capture unit needs; Route checks stock → Q 1033 issue or DP F1 procurement.
+- Import document — upload or paste a loose minute, requisition, quotation, P/O, DP F1, spec sheet or D-Note; review extracted fields then open the matching form.
 - Spec Evaluation — write/search specs; upload spec sheets for procurement files.
 - DP F1 / DP Procurement — electronic procurement cycle with AIAD due diligence.
 - Issue Voucher (Q 1033) — issue/receipt stock; RV/IV movements.
@@ -586,3 +589,497 @@ def draft_requisition_justification(params: dict[str, Any]) -> dict[str, Any]:
             }
 
     return {"ok": True, "justification": template, "ai": False}
+
+
+# --- Import any system document (typed, PDF, scan / handwriting) ---
+
+IMPORT_DOC_TYPES = (
+    "loose_minute",
+    "requisition",
+    "quotation",
+    "purchase_order",
+    "dp_f1",
+    "tech_spec",
+    "delivery_note",
+    "cost_comparative",
+    "unknown",
+)
+
+IMPORT_MODULE_MAP = {
+    "loose_minute": ("unit-requisitions", "Requisitions"),
+    "requisition": ("unit-requisitions", "Requisitions"),
+    "quotation": ("guide-quotation", "Guide Quotation"),
+    "purchase_order": ("purchase-orders", "Purchase Orders"),
+    "dp_f1": ("dp-f1-form", "DP F1 Form"),
+    "tech_spec": ("spec-evaluation", "Spec / Tech Evaluation"),
+    "delivery_note": ("delivery-note", "Delivery Note"),
+    "cost_comparative": ("cost-comparative-schedule", "Cost Comparative Schedule"),
+    "unknown": ("", ""),
+}
+
+IMPORT_DOC_SYSTEM = """You extract ZNA / IT-DIR Tech Stores paperwork into JSON.
+Return only JSON with keys: docType, confidence, fields, lines.
+
+docType must be one of:
+loose_minute, requisition, quotation, purchase_order, dp_f1, tech_spec, delivery_note, cost_comparative, unknown.
+
+confidence is 0 to 1.
+
+fields is an object of string/number values. Use these keys when present:
+- loose_minute / requisition: unit, requestedBy, contact, fileRef, subject, itemDescription, qty, unitPrice, estimatedCost, justification, notes, date, originRef, docType (loose_minute or requisition_letter)
+- quotation: supplier, ref, date, preparedFor, purpose, currency, notes
+- purchase_order: supplierName, supplierAddress, poNumber, date, vendorNo, reqNo, deliverTo, deliveryDate, paymentTerms, contact, telephone, currency, gl
+- dp_f1: date, estimatedCost, currency, delivery, gl, remarks
+- tech_spec: productName, brand, model, category, purpose, summary
+- delivery_note: date, item, description, qty, uom, serial, po, supplier, receivedBy
+- cost_comparative: ref, date, dpF1Ref, currency, winningVendor, vendorA, vendorB, vendorC
+
+lines is an array of objects:
+- requisition / quotation: description, qty, unit, unitUsd, unitZig, source
+- purchase_order: item, material, qty, unit, desc, price
+- dp_f1: designation, qty, holding, supplier
+- tech_spec: name, value, note
+- delivery_note: item, description, qty, uom, serial, po, supplier
+- cost_comparative: description, qty, priceA, priceB, priceC
+
+Use only facts visible in the document. Empty string if unknown. Never invent totals, ranks, or serials.
+Dates as YYYY-MM-DD when possible. Quantity as a number. Money as a number without currency symbol."""
+
+
+def _import_module_for(doc_type: str) -> tuple[str, str]:
+    return IMPORT_MODULE_MAP.get(doc_type) or ("", "")
+
+
+def _clean_str(val: Any, limit: int = 400) -> str:
+    return str(val or "").strip()[:limit]
+
+
+def _clean_num(val: Any) -> str:
+    if val is None or val == "":
+        return ""
+    if isinstance(val, (int, float)) and not isinstance(val, bool):
+        n = float(val)
+        return str(int(n) if n.is_integer() else n)
+    s = str(val).replace(",", "").replace("$", "").strip()
+    m = re.search(r"-?\d+(?:\.\d+)?", s)
+    return m.group(0) if m else ""
+
+
+def _iso_date(val: Any) -> str:
+    s = str(val or "").strip()
+    if not s:
+        return ""
+    m = re.search(r"(\d{4})-(\d{2})-(\d{2})", s)
+    if m:
+        return m.group(0)
+    m = re.search(r"\b(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})\b", s)
+    if m:
+        day, month, year = m.group(1), m.group(2), m.group(3)
+        if len(year) == 2:
+            year = "20" + year
+        return f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+    return ""
+
+
+def _decode_b64(raw: str) -> bytes:
+    import base64
+
+    data = (raw or "").strip()
+    if not data:
+        return b""
+    try:
+        return base64.b64decode(data, validate=False)
+    except Exception:
+        return b""
+
+
+def _extract_pdf_text(data: bytes) -> str:
+    if not data.startswith(b"%PDF"):
+        return ""
+    try:
+        from io import BytesIO
+        from pypdf import PdfReader
+
+        reader = PdfReader(BytesIO(data))
+        parts = [(page.extract_text() or "") for page in reader.pages[:16]]
+        text = "\n".join(parts).strip()
+        if text:
+            return text
+    except Exception:
+        pass
+    try:
+        from io import BytesIO
+        from PyPDF2 import PdfReader as LegacyReader
+
+        reader = LegacyReader(BytesIO(data))
+        parts = [(page.extract_text() or "") for page in reader.pages[:16]]
+        text = "\n".join(parts).strip()
+        if text:
+            return text
+    except Exception:
+        pass
+    chunks = re.findall(rb"\((?:\\.|[^\\)]){3,}\)Tj", data[:800000])
+    out: list[str] = []
+    for chunk in chunks[:400]:
+        inner = chunk[1:-3].decode("latin-1", "ignore")
+        inner = inner.replace("\\n", " ").replace("\\r", " ")
+        inner = re.sub(r"\\[()]", "", inner)
+        if inner.strip():
+            out.append(inner.strip())
+    return " ".join(out).strip()
+
+
+def _extract_docx_text(data: bytes) -> str:
+    if data[:2] != b"PK":
+        return ""
+    try:
+        import zipfile
+        from html import unescape
+        from io import BytesIO
+
+        with zipfile.ZipFile(BytesIO(data)) as zf:
+            xml = zf.read("word/document.xml").decode("utf-8", "ignore")
+        xml = re.sub(r"</w:p>", "\n", xml)
+        xml = re.sub(r"<[^>]+>", "", xml)
+        return unescape(xml).strip()
+    except Exception:
+        return ""
+
+
+def _extract_plain_bytes(data: bytes) -> str:
+    if not data:
+        return ""
+    for enc in ("utf-8", "utf-16", "cp1252", "latin-1"):
+        try:
+            text = data.decode(enc)
+            if text.strip():
+                return text
+        except Exception:
+            continue
+    return ""
+
+
+def _field_search(text: str, *patterns: str) -> str:
+    for pattern in patterns:
+        m = re.search(pattern, text, re.I | re.M)
+        if m:
+            val = (m.group(1) if m.lastindex else m.group(0)).strip()
+            val = re.sub(r"\s+", " ", val).strip(" .:;-")
+            if val:
+                return val[:400]
+    return ""
+
+
+def _classify_import_doc(text: str, file_name: str = "", hint: str = "") -> tuple[str, float]:
+    hint_key = re.sub(r"[^a-z0-9]+", "_", (hint or "").lower()).strip("_")
+    if hint_key in IMPORT_DOC_TYPES and hint_key != "unknown":
+        return hint_key, 0.95
+    blob = f"{file_name}\n{text}".lower()
+    rules = [
+        ("dp_f1", 0.9, ("official indent", "dp f1", "it dir f1", "current holding stock")),
+        ("purchase_order", 0.88, ("purchase order", "p/o no", "our ref", "vendor no.")),
+        ("cost_comparative", 0.88, ("cost comparative", "winning vendor", "vendor a")),
+        ("delivery_note", 0.86, ("delivery note", "d-note", "d/note", "goods received note")),
+        ("quotation", 0.84, ("quotation", "proforma", "quote no", "quoted price")),
+        ("tech_spec", 0.82, ("specification", "tech eval", "operating system", "processor")),
+        ("loose_minute", 0.84, ("loose minute", "minute sheet", "thru:", "through:")),
+        ("requisition", 0.8, ("requisition", "indent for", "unit request")),
+    ]
+    for doc_type, score, keys in rules:
+        if any(k in blob for k in keys):
+            return doc_type, score
+    if re.search(r"\bfrom\s*:", blob) and re.search(r"\b(to|subject)\s*:", blob):
+        return "loose_minute", 0.62
+    return "unknown", 0.2
+
+
+def _qty_item_lines(text: str) -> list[dict[str, str]]:
+    lines: list[dict[str, str]] = []
+    for m in re.finditer(
+        r"(?m)^\s*(?:[-*]|ser\.?\s*\d+|\d+[.)])?\s*(\d+(?:\.\d+)?)\s*[x×]\s+([^\n@]+?)(?:\s*@\s*[\$]?\s*([\d,]+\.?\d*))?\s*$",
+        text,
+        re.I,
+    ):
+        desc = m.group(2).strip(" -:")
+        if len(desc) < 3:
+            continue
+        lines.append({
+            "description": desc[:240],
+            "qty": m.group(1),
+            "unitUsd": (m.group(3) or "").replace(",", ""),
+        })
+    return lines[:20]
+
+
+def _heuristic_import_fields(doc_type: str, text: str) -> tuple[dict[str, str], list[dict[str, str]]]:
+    fields: dict[str, str] = {}
+    lines = _qty_item_lines(text)
+    fields["date"] = _iso_date(_field_search(
+        text,
+        r"(?:dated|date)\s*[:.]?\s*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4}|\d{4}-\d{2}-\d{2})",
+    ))
+    subject = _field_search(text, r"(?:subject|re)\s*[:.-]\s*(.+)$")
+    if subject:
+        fields["subject"] = subject
+        fields["itemDescription"] = subject
+        fields["purpose"] = subject
+    if doc_type in ("loose_minute", "requisition"):
+        fields["unit"] = _field_search(text, r"(?:from|unit|formation)\s*[:.-]\s*(.+)$")
+        fields["requestedBy"] = _field_search(text, r"(?:from|originator|requested by)\s*[:.-]\s*(.+)$")
+        fields["fileRef"] = _field_search(text, r"(?:file\s*ref|our\s*ref|ref(?:erence)?)\s*[:.-]\s*(\S.+)$")
+        fields["justification"] = text.strip()[:800]
+        fields["notes"] = "Imported from document — review before save."
+        fields["docType"] = "loose_minute" if doc_type == "loose_minute" else "requisition_letter"
+        if lines:
+            fields["qty"] = lines[0].get("qty") or "1"
+            fields["itemDescription"] = lines[0].get("description") or fields.get("itemDescription", "")
+            fields["unitPrice"] = lines[0].get("unitUsd") or ""
+    elif doc_type == "quotation":
+        fields["supplier"] = _field_search(text, r"(?:from|supplier|vendor)\s*[:.-]\s*(.+)$")
+        fields["ref"] = _field_search(text, r"(?:quote\s*no|quotation\s*no|ref)\s*[:.-]\s*(\S.+)$")
+        fields["currency"] = "USD" if "usd" in text.lower() else ("ZiG" if "zig" in text.lower() else "USD")
+        fields["notes"] = text.strip()[:600]
+        for row in lines:
+            row["unit"] = row.get("unit") or "EA"
+            row["source"] = fields.get("supplier") or ""
+    elif doc_type == "purchase_order":
+        fields["poNumber"] = _field_search(text, r"(?:p/?o(?:\s*no\.?)?|our\s*ref|purchase\s*order)\s*[:.-]?\s*([A-Z0-9][A-Z0-9/._-]{3,})")
+        fields["reqNo"] = _field_search(text, r"(?:requisition|req(?:uisition)?)\s*(?:no\.?|number)?\s*[:.-]?\s*([A-Z0-9][A-Z0-9/._-]{4,})")
+        fields["contact"] = _field_search(text, r"(?:contact)\s*[:.-]\s*(.+)$")
+        fields["telephone"] = _field_search(text, r"(?:telephone|phone|tel)\s*[:.-]?\s*([+\d][\d ()-]{5,})")
+        fields["supplierName"] = _field_search(text, r"(?:supplier|vendor|to)\s*[:.-]\s*(.+)$")
+        fields["vendorNo"] = _field_search(text, r"vendor\s*(?:no\.?|number)\s*[:.-]?\s*(\S+)")
+        fields["gl"] = _field_search(text, r"\b(2200\d{6}|3112210001|2201900002|220200002)\b")
+        fields["currency"] = "USD" if "usd" in text.lower() else "ZiG"
+        po_lines = []
+        for i, row in enumerate(lines, start=1):
+            po_lines.append({
+                "item": f"{i * 10:05d}",
+                "desc": row.get("description") or "",
+                "qty": row.get("qty") or "1",
+                "unit": "each",
+                "price": row.get("unitUsd") or "",
+            })
+        lines = po_lines
+    elif doc_type == "dp_f1":
+        fields["estimatedCost"] = _clean_num(_field_search(text, r"(?:estimated\s*cost|total)\D{0,12}([\d,]+\.?\d*)"))
+        fields["currency"] = "USD" if "usd" in text.lower() else "USD"
+        fields["gl"] = _field_search(text, r"\b(2200\d{6}|3112210001)\b")
+        fields["remarks"] = subject or ""
+        f1_lines = []
+        for row in lines:
+            f1_lines.append({
+                "designation": row.get("description") or "",
+                "qty": row.get("qty") or "1",
+                "holding": "",
+                "supplier": _field_search(text, r"(?:supplier|vendor)\s*[:.-]\s*(.+)$"),
+            })
+        lines = f1_lines
+    elif doc_type == "tech_spec":
+        fields["productName"] = subject or text.split("\n", 1)[0][:120]
+        fields["summary"] = text.strip()[:400]
+        spec_lines = []
+        for m in re.finditer(r"(?m)^\s*([A-Za-z][A-Za-z0-9 /()+.-]{2,40})\s*[:.-]\s*(.+)$", text):
+            name, value = m.group(1).strip(), m.group(2).strip()
+            if name.lower() in ("from", "to", "subject", "date", "ref"):
+                continue
+            spec_lines.append({"name": name, "value": value, "note": "From imported document"})
+        if spec_lines:
+            lines = spec_lines[:24]
+    elif doc_type == "delivery_note":
+        fields["supplier"] = _field_search(text, r"(?:supplied\s*by|supplier|from)\s*[:.-]\s*(.+)$")
+        fields["po"] = _field_search(text, r"(?:p/?o|purchase\s*(?:order|no\.?))\s*[:.-]?\s*([A-Z0-9][A-Z0-9/._-]{3,})")
+        fields["item"] = (lines[0].get("description") if lines else "") or subject
+        fields["description"] = fields.get("item") or ""
+        fields["qty"] = lines[0].get("qty") if lines else "1"
+        fields["uom"] = "ea"
+        fields["serial"] = _field_search(text, r"(?:s/?n|serial)\s*[:.-]?\s*([A-Z0-9][A-Z0-9-]{3,})")
+    elif doc_type == "cost_comparative":
+        fields["ref"] = _field_search(text, r"(?:ccs|ref|schedule)\s*[:.-]\s*(\S.+)$")
+        fields["dpF1Ref"] = _field_search(text, r"(?:dp\s*f1|f1)\s*[:.-]?\s*(\S+)")
+        fields["winningVendor"] = _field_search(text, r"winning\s*vendor\s*[:.-]\s*(.+)$")
+        fields["currency"] = "USD"
+        for letter, key in (("A", "vendorA"), ("B", "vendorB"), ("C", "vendorC")):
+            fields[key] = _field_search(text, rf"vendor\s*{letter}\s*[:.-]\s*(.+)$")
+    if not fields.get("itemDescription") and subject:
+        fields["itemDescription"] = subject
+    return fields, lines
+
+
+def _normalize_import_payload(parsed: dict, *, fallback_text: str, file_name: str, hint: str) -> dict[str, Any]:
+    raw_type = str(parsed.get("docType") or "").strip().lower().replace(" ", "_").replace("-", "_")
+    aliases = {
+        "minute": "loose_minute",
+        "looseminute": "loose_minute",
+        "f1": "dp_f1",
+        "dpf1": "dp_f1",
+        "po": "purchase_order",
+        "p_o": "purchase_order",
+        "quote": "quotation",
+        "spec": "tech_spec",
+        "specification": "tech_spec",
+        "dnote": "delivery_note",
+        "d_note": "delivery_note",
+        "ccs": "cost_comparative",
+    }
+    doc_type = aliases.get(raw_type, raw_type)
+    if doc_type not in IMPORT_DOC_TYPES:
+        doc_type, _ = _classify_import_doc(fallback_text, file_name, hint)
+    try:
+        confidence = float(parsed.get("confidence") or 0)
+    except (TypeError, ValueError):
+        confidence = 0.0
+    confidence = max(0.0, min(1.0, confidence))
+    fields_in = parsed.get("fields") if isinstance(parsed.get("fields"), dict) else {}
+    fields: dict[str, str] = {}
+    for key, val in fields_in.items():
+        k = str(key).strip()
+        if not k:
+            continue
+        if k in ("qty", "unitPrice", "estimatedCost", "price", "unitUsd", "unitZig"):
+            fields[k] = _clean_num(val)
+        elif k == "date" or k.endswith("Date") or k.endswith("date"):
+            fields[k] = _iso_date(val) or _clean_str(val, 40)
+        else:
+            fields[k] = _clean_str(val)
+    lines_in = parsed.get("lines") if isinstance(parsed.get("lines"), list) else []
+    lines: list[dict[str, str]] = []
+    for row in lines_in[:30]:
+        if isinstance(row, dict):
+            item = {str(k): _clean_str(v, 240) for k, v in row.items() if str(k).strip()}
+            if item:
+                lines.append(item)
+        elif isinstance(row, (list, tuple)) and len(row) >= 2:
+            lines.append({"name": _clean_str(row[0], 80), "value": _clean_str(row[1], 180), "note": _clean_str(row[2] if len(row) > 2 else "", 120)})
+    module_id, module_label = _import_module_for(doc_type)
+    return {
+        "ok": True,
+        "docType": doc_type,
+        "confidence": round(confidence, 2),
+        "moduleId": module_id,
+        "moduleLabel": module_label,
+        "fields": fields,
+        "lines": lines,
+        "extractedText": (fallback_text or "")[:4000],
+        "fileName": file_name,
+    }
+
+
+def parse_import_document(
+    *,
+    text: str = "",
+    image_base64: str = "",
+    file_base64: str = "",
+    mime_type: str = "",
+    file_name: str = "",
+    doc_type_hint: str = "",
+) -> dict[str, Any]:
+    mime = (mime_type or "").lower()
+    name = (file_name or "").strip()
+    extracted = (text or "").strip()
+    image = (image_base64 or "").strip()
+    file_bytes = _decode_b64(file_base64)
+
+    if file_bytes:
+        if "pdf" in mime or name.lower().endswith(".pdf") or file_bytes.startswith(b"%PDF"):
+            extracted = (_extract_pdf_text(file_bytes) or extracted).strip()
+        elif "word" in mime or name.lower().endswith(".docx") or file_bytes[:2] == b"PK":
+            extracted = (_extract_docx_text(file_bytes) or extracted).strip()
+        elif mime.startswith("image/") or name.lower().endswith((".png", ".jpg", ".jpeg", ".webp", ".gif")):
+            image = image or (file_base64 or "").strip()
+        elif mime.startswith("text/") or name.lower().endswith((".txt", ".md", ".csv")):
+            extracted = (_extract_plain_bytes(file_bytes) or extracted).strip()
+
+    prompt = (
+        f"Document type hint: {doc_type_hint or 'auto'}. File name: {name or 'none'}.\n"
+        "Classify the document and extract fields for TECHSTORESys.\n"
+    )
+    parsed: dict | None = None
+    ai_used = False
+
+    if image:
+        parsed = _openai_vision_json(
+            IMPORT_DOC_SYSTEM,
+            prompt + "This is a photo or scan of a typed or handwritten document.",
+            image,
+            mime if mime.startswith("image/") else "image/jpeg",
+        )
+        ai_used = bool(parsed)
+
+    if not parsed and extracted:
+        if _api_key():
+            parsed = _openai_json(
+                IMPORT_DOC_SYSTEM,
+                f"{prompt}\n---\n{extracted[:9000]}",
+            )
+            ai_used = bool(parsed)
+
+    if parsed:
+        result = _normalize_import_payload(parsed, fallback_text=extracted, file_name=name, hint=doc_type_hint)
+        if result["docType"] == "unknown" or (not result["fields"] and not result["lines"]):
+            guessed, score = _classify_import_doc(extracted, name, doc_type_hint)
+            h_fields, h_lines = _heuristic_import_fields(guessed, extracted)
+            if result["docType"] == "unknown":
+                result["docType"] = guessed
+                result["confidence"] = max(result["confidence"], score)
+                result["moduleId"], result["moduleLabel"] = _import_module_for(guessed)
+            if not result["fields"]:
+                result["fields"] = h_fields
+            if not result["lines"]:
+                result["lines"] = h_lines
+        result["ai"] = ai_used
+        result["note"] = (
+            "AI-extracted — review every field before saving."
+            if ai_used
+            else "Heuristic extract — review every field before saving."
+        )
+        return result
+
+    if extracted:
+        guessed, score = _classify_import_doc(extracted, name, doc_type_hint)
+        fields, lines = _heuristic_import_fields(guessed, extracted)
+        module_id, module_label = _import_module_for(guessed)
+        return {
+            "ok": True,
+            "ai": False,
+            "docType": guessed,
+            "confidence": score,
+            "moduleId": module_id,
+            "moduleLabel": module_label,
+            "fields": fields,
+            "lines": lines,
+            "extractedText": extracted[:4000],
+            "fileName": name,
+            "note": (
+                "Heuristic extract from typed text — review every field before saving. "
+                "Set OPENAI_API_KEY for handwriting/photos and fuller parsing."
+            ),
+        }
+
+    if image and not _api_key():
+        guessed, score = _classify_import_doc("", name, doc_type_hint)
+        module_id, module_label = _import_module_for(guessed)
+        return {
+            "ok": True,
+            "ai": False,
+            "docType": guessed if guessed != "unknown" else "unknown",
+            "confidence": score if guessed != "unknown" else 0.1,
+            "moduleId": module_id,
+            "moduleLabel": module_label,
+            "fields": {},
+            "lines": [],
+            "extractedText": "",
+            "fileName": name,
+            "note": (
+                "Photo stored. Handwriting and scans need OPENAI_API_KEY on the server, "
+                "or paste typed text from the document."
+            ),
+        }
+
+    return {
+        "ok": False,
+        "error": (
+            "Could not read the document. Upload a PDF, Word, photo, or paste typed text. "
+            "Handwritten scans need OPENAI_API_KEY on the server."
+        ),
+    }

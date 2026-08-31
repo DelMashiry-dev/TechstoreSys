@@ -63,7 +63,7 @@ const MODULES_FULL_OPS = [
     'dashboard', 'orderly-room', 'it-dir-comms',
     ...MODULES_DEPT_DESKS,
     ...MODULES_STORES_LEDGERS,
-    'unit-requisitions',
+    'unit-requisitions', 'doc-import',
     'spec-evaluation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'portals-board', 'stakeholder-desk', 'zna-svcs-1045',
     'workshop-repairs', 'workshop-receipt-cert', 'ict-compare', 'guide-quotation', 'gate-register', 'techstores-equipment-register',
     'suppliers-contracts', 'duties-roles', 'process-guides', 'system-help', 'reports-module'
@@ -73,7 +73,7 @@ const MODULES_FULL_OPS = [
 const MODULES_RQ = [
     'dashboard', 'it-dir-comms',
     ...MODULES_STORES_LEDGERS,
-    'unit-requisitions', 'spec-evaluation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'portals-board', 'stakeholder-desk', 'zna-svcs-1045',
+    'unit-requisitions', 'doc-import', 'spec-evaluation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'portals-board', 'stakeholder-desk', 'zna-svcs-1045',
     'techstores-equipment-register', 'workshop-repairs', 'workshop-receipt-cert', 'ict-compare', 'guide-quotation',
     'suppliers-contracts', 'duties-roles', 'process-guides', 'system-help', 'reports-module'
 ];
@@ -81,7 +81,7 @@ const MODULES_RQ = [
 const MODULES_STORE_OFFICER = MODULES_RQ.slice();
 
 function modulesForDeptDesk(deskId, extras = []) {
-    return ['dashboard', deskId, 'it-dir-comms', 'unit-requisitions', ...extras, 'process-guides', 'system-help'];
+    return ['dashboard', deskId, 'it-dir-comms', 'unit-requisitions', 'doc-import', ...extras, 'process-guides', 'system-help'];
 }
 
 /** Orderly Room — removed duplicate; see MODULES_ORDERLY below. */
@@ -98,13 +98,13 @@ const MODULES_ZNA_Q = [
 const MODULES_STOREMAN = [
     'dashboard',
     'voucher-module', 'delivery-note', 'stock-take', 'techstores-equipment-register',
-    'temporary-loans', 'permanent-loans', 'system-help',
+    'temporary-loans', 'permanent-loans', 'doc-import', 'system-help',
     ...MODULES_ZNA_Q
 ];
 
 /** Workshop IC / 2IC / Senior Technician — repairs register, spec eval, comms only. */
 const MODULES_WORKSHOP = [
-    'dashboard', 'workshop-repairs', 'workshop-receipt-cert', 'ict-compare', 'spec-evaluation', 'guide-quotation', 'it-dir-comms'
+    'dashboard', 'workshop-repairs', 'workshop-receipt-cert', 'ict-compare', 'spec-evaluation', 'guide-quotation', 'doc-import', 'it-dir-comms'
 ];
 
 /** RP Gate — gate register only (no stores / GL / comms module). */
@@ -114,7 +114,7 @@ const MODULES_RP = [
 
 /** Orderly Room / Admin Officer / Chief Clerk. */
 const MODULES_ORDERLY = [
-    'dashboard', 'orderly-room', 'it-dir-comms'
+    'dashboard', 'orderly-room', 'it-dir-comms', 'doc-import'
 ];
 
 /** DBA / ITTS / Software Eng / ICT Sec / Sys Admin — comms portal only. */
@@ -125,7 +125,7 @@ const MODULES_COMMS_ONLY = [
 const MODULES_COMMON = ['dashboard', 'process-guides', 'system-help'];
 
 const MODULES_STAKEHOLDER_SHARED = [
-    'dashboard', 'portals-board', 'stakeholder-desk', 'process-guides', 'system-help'
+    'dashboard', 'portals-board', 'stakeholder-desk', 'doc-import', 'process-guides', 'system-help'
 ];
 
 const MODULES_DESK_DP = [
@@ -444,8 +444,8 @@ const MODULE_IDS = [
     'zna-q-985', 'zna-q-1', 'zna-q-998', 'zna-q-1680',
     'zna-q-forms-index', 'zna-q-3', 'zna-q-31', 'zna-q-40', 'zna-q-1049', 'zna-q-1229', 'zna-q-1571', 'zna-q-1954',
     'accommodation-stores',
-    'delivery-note', 'purchase-orders', 'undelivered-orders', 'supplier-debts', 'portals-board', 'stakeholder-desk', 'workshop-receipt-cert', 'workshop-repairs', 'ict-compare', 'gate-register', 'techstores-equipment-register', 'suppliers-contracts',
-    'orderly-room', 'it-dir-comms', 'duties-roles', 'process-guides', 'system-help', 'reports-module', 'user-management', 'release-cut'
+    'delivery-note', 'purchase-orders', 'undelivered-orders', 'supplier-debts', 'portals-board', 'stakeholder-desk', 'doc-import', 'workshop-receipt-cert', 'workshop-repairs', 'ict-compare', 'gate-register', 'techstores-equipment-register', 'suppliers-contracts',
+    'orderly-room', 'it-dir-comms', 'unit-requisitions', 'duties-roles', 'process-guides', 'system-help', 'reports-module', 'user-management', 'release-cut'
 ];
 
 const ROW_BUILDERS = {

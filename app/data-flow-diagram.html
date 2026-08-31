@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TECHSTORESys — Data Flow Diagram</title>
+    <style>
+        :root {
+            --navy: #173b67;
+            --navy-dark: #102b4d;
+            --blue: #168ac4;
+            --teal: #087e83;
+            --green: #1c8a4b;
+            --gold: #d49100;
+            --ink: #172b4d;
+            --muted: #62748a;
+            --line: #c9d5e3;
+            --line-dark: #91a6bd;
+            --surface: #ffffff;
+            --surface-soft: #f5f8fb;
+            --surface-blue: #eaf4fb;
+            --surface-green: #edf8f1;
+            --surface-gold: #fff7e5;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-width: 320px;
+            color: var(--ink);
+            background: #eef3f8;
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+        .page { width: min(100% - 32px, 1680px); margin: 0 auto; padding: 24px 0 44px; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 24px 28px;
+            color: #fff;
+            background: var(--navy-dark);
+            border-radius: 14px;
+        }
+        .eyebrow {
+            margin: 0 0 6px;
+            color: #a9d8f2;
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        h1 { margin: 0 0 8px; font-size: clamp(1.55rem, 2.8vw, 2.3rem); }
+        h2 { margin: 20px 0 6px; color: var(--navy-dark); font-size: 1.28rem; }
+        h3 { margin: 0 0 6px; color: var(--navy-dark); font-size: 1.03rem; }
+        .header p { max-width: 900px; margin: 0; color: #d9e6f3; line-height: 1.5; }
+        .actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; align-items: flex-start; gap: 8px; }
+        .button, .link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 36px;
+            padding: 8px 14px;
+            border: 1px solid #c8d6e5;
+            border-radius: 8px;
+            font: inherit;
+            font-size: 0.84rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .button { color: var(--navy-dark); background: #fff; }
+        .link { color: #fff; background: var(--green); border-color: #69c38e; }
+        .button:hover, .link:hover { filter: brightness(0.96); }
+        .intro {
+            margin: 16px 0 0;
+            padding: 14px 18px;
+            color: var(--muted);
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            font-size: 0.88rem;
+            line-height: 1.5;
+        }
+        .diagram-scroll {
+            margin-top: 12px;
+            padding: 12px;
+            overflow: auto;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+        }
+        .diagram {
+            position: relative;
+            width: 1600px;
+            height: 920px;
+            background:
+                linear-gradient(var(--surface-soft), var(--surface-soft)) 0 0 / 100% 78px no-repeat,
+                var(--surface);
+            border: 1px solid #dce5ee;
+            border-radius: 8px;
+        }
+        .diagram-title {
+            position: absolute;
+            top: 22px;
+            left: 0;
+            width: 100%;
+            color: var(--navy);
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .diagram-lines {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .diagram-lines path {
+            fill: none;
+            stroke: var(--line-dark);
+            stroke-width: 2;
+            marker-end: url("#dfd-arrow");
+        }
+        .diagram-lines .primary { stroke: var(--blue); stroke-width: 2.5; }
+        .diagram-lines .external { stroke: var(--teal); }
+        .diagram-lines .ai { stroke: var(--gold); stroke-dasharray: 7 6; }
+        .diagram-lines text {
+            fill: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+            paint-order: stroke;
+            stroke: #fff;
+            stroke-width: 5px;
+            stroke-linejoin: round;
+        }
+        .dfd-item {
+            position: absolute;
+            z-index: 3;
+            cursor: pointer;
+            transition: transform 140ms ease, filter 140ms ease;
+        }
+        .dfd-item:hover, .dfd-item:focus-visible { outline: none; transform: translateY(-2px); filter: brightness(0.98); }
+        .entity {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 190px;
+            min-height: 70px;
+            padding: 10px 14px;
+            color: #fff;
+            text-align: center;
+            background: var(--teal);
+            border: 2px solid #075c60;
+            border-radius: 5px;
+            font-size: 0.86rem;
+            font-weight: 800;
+        }
+        .process {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 210px;
+            min-height: 92px;
+            padding: 12px 18px;
+            color: var(--navy-dark);
+            text-align: center;
+            background: var(--surface-blue);
+            border: 3px solid var(--blue);
+            border-radius: 50%;
+            font-size: 0.86rem;
+            font-weight: 800;
+            line-height: 1.25;
+        }
+        .process small {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .store {
+            width: 230px;
+            min-height: 66px;
+            padding: 12px 16px 12px 28px;
+            color: var(--navy-dark);
+            background: var(--surface-green);
+            border-top: 3px solid var(--green);
+            border-bottom: 3px solid var(--green);
+            border-left: 2px solid var(--green);
+            font-size: 0.84rem;
+            font-weight: 800;
+        }
+        .store::before {
+            position: absolute;
+            top: -3px;
+            bottom: -3px;
+            left: 14px;
+            border-left: 2px solid var(--green);
+            content: "";
+        }
+        .store small {
+            display: block;
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .i-user { left: 35px; top: 105px; }
+        .i-unit { left: 35px; top: 390px; }
+        .i-supplier { left: 35px; top: 710px; }
+        .i-gs { left: 1375px; top: 108px; }
+        .i-ai { left: 1375px; top: 390px; }
+        .i-directorate { left: 1375px; top: 710px; }
+        .p-auth { left: 290px; top: 95px; }
+        .p-intake { left: 290px; top: 370px; }
+        .p-import { left: 610px; top: 95px; }
+        .p-requisition { left: 610px; top: 370px; }
+        .p-decision { left: 930px; top: 245px; }
+        .p-procurement { left: 930px; top: 505px; }
+        .p-close { left: 1210px; top: 370px; }
+        .d-records { left: 585px; top: 690px; }
+        .d-inventory { left: 905px; top: 690px; }
+        .d-procurement { left: 1200px; top: 120px; }
+        .d-alerts { left: 1200px; top: 710px; }
+        .dfd-item.is-selected { outline: 4px solid #9bd2ed; outline-offset: 3px; }
+        .details {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+            gap: 16px;
+            margin-top: 16px;
+            align-items: start;
+        }
+        .panel {
+            min-height: 185px;
+            padding: 16px 18px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+        }
+        .detail-kicker {
+            margin-bottom: 5px;
+            color: var(--blue);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+        }
+        .panel p { color: var(--muted); font-size: 0.86rem; line-height: 1.5; }
+        .panel ul { margin: 0; padding-left: 18px; color: var(--muted); }
+        .panel li { margin: 6px 0; font-size: 0.86rem; }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            margin-top: 14px;
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+        .legend-item { display: inline-flex; align-items: center; gap: 7px; }
+        .legend-shape { width: 22px; height: 13px; border: 2px solid var(--blue); border-radius: 50%; background: var(--surface-blue); }
+        .legend-shape.entity { width: 22px; min-height: 13px; padding: 0; background: var(--teal); border-color: #075c60; border-radius: 2px; }
+        .legend-shape.store { width: 22px; height: 13px; min-height: 13px; padding: 0; border-width: 2px; border-color: var(--green); border-radius: 0; }
+        .legend-line { width: 26px; border-top: 3px solid var(--blue); }
+        .legend-line.ai { border-top-color: var(--gold); border-top-style: dashed; }
+        .footnote {
+            margin-top: 18px;
+            padding-top: 12px;
+            color: var(--muted);
+            border-top: 1px solid var(--line);
+            font-size: 0.76rem;
+            line-height: 1.45;
+        }
+        @media (max-width: 760px) {
+            .page { width: min(100% - 20px, 1680px); padding-top: 10px; }
+            .header { flex-direction: column; padding: 20px; }
+            .details { grid-template-columns: 1fr; }
+        }
+        @media print {
+            @page { size: A3 landscape; margin: 10mm; }
+            body { background: #fff; }
+            .page { width: 100%; padding: 0; }
+            .header { color: #000; background: #fff; border: 2px solid var(--navy); }
+            .header p, .eyebrow { color: #000; }
+            .actions, .details, .legend { display: none; }
+            .diagram-scroll { overflow: visible; border: 0; padding: 0; }
+            .diagram { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header class="header">
+            <div>
+                <p class="eyebrow">Zimbabwe National Army · IT Directorate</p>
+                <h1>TECHSTORESys — Data Flow Diagram</h1>
+                <p>Level-0 view of how users, units, Orderly Room, suppliers, authorising offices and configured AI services exchange data with the system.</p>
+            </div>
+            <div class="actions">
+                <button class="button" type="button" id="printDfd">Print / Save PDF</button>
+                <a class="link" href="index.html">Open TECHSTORESys</a>
+            </div>
+        </header>
+
+        <div class="intro">
+            DFD convention: rectangles are external entities, circles are system processes, and the double-line symbols are data stores. Arrows are labelled with the main data being exchanged. Click any symbol for its role in the system.
+        </div>
+
+        <section aria-labelledby="diagramHeading">
+            <h2 id="diagramHeading">Level-0 data flow</h2>
+            <div class="diagram-scroll">
+                <div class="diagram">
+                    <div class="diagram-title">TECHSTORESys system boundary</div>
+                    <svg class="diagram-lines" viewBox="0 0 1600 920" aria-hidden="true">
+                        <defs>
+                            <marker id="dfd-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#168ac4"></path>
+                            </marker>
+                            <marker id="dfd-arrow-external" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#087e83"></path>
+                            </marker>
+                        </defs>
+                        <path class="external" d="M225 140 C250 140 260 140 290 140" marker-end="url(#dfd-arrow-external)"></path>
+                        <text x="236" y="130">credentials</text>
+                        <path class="external" d="M395 190 C395 270 395 290 395 370"></path>
+                        <text x="405" y="285">authorised session</text>
+
+                        <path class="external" d="M225 425 C250 425 260 425 290 425" marker-end="url(#dfd-arrow-external)"></path>
+                        <text x="235" y="415">letters / requisitions</text>
+                        <path class="primary" d="M500 416 C545 416 565 416 610 416"></path>
+                        <text x="510" y="405">filed work</text>
+
+                        <path class="external" d="M715 187 C715 220 715 225 715 370"></path>
+                        <text x="725" y="275">structured fields</text>
+                        <path class="ai" d="M820 141 C1030 80 1190 80 1375 425" marker-end="url(#dfd-arrow-external)"></path>
+                        <text x="1005" y="102">image / text for extraction</text>
+                        <path class="ai" d="M1375 455 C1160 250 950 210 820 140" marker-end="url(#dfd-arrow)"></path>
+                        <text x="1060" y="235">extracted JSON</text>
+
+                        <path class="primary" d="M820 416 C865 380 885 340 930 310"></path>
+                        <text x="835" y="370">requisition data</text>
+                        <path class="primary" d="M1035 340 C1035 415 1035 450 1035 505"></path>
+                        <text x="1045" y="430">shortfall / route</text>
+                        <path class="primary" d="M930 275 C865 245 840 230 820 185"></path>
+                        <text x="825" y="250">stock / GL lookup</text>
+
+                        <path class="primary" d="M1035 597 C1090 555 1145 500 1210 440"></path>
+                        <text x="1080" y="535">issue / DP F1 / PO</text>
+                        <path class="external" d="M1375 745 C1325 680 1265 625 1140 585" marker-end="url(#dfd-arrow-external)"></path>
+                        <text x="1265" y="675">approvals / direction</text>
+                        <path class="external" d="M225 745 C450 800 760 825 930 595" marker-end="url(#dfd-arrow-external)"></path>
+                        <text x="500" y="820">quotations / delivery data</text>
+
+                        <path class="primary" d="M1315 416 C1350 350 1370 300 1375 178"></path>
+                        <text x="1330" y="320">PO / status enquiry</text>
+                        <path class="primary" d="M1375 178 C1345 225 1325 300 1315 416"></path>
+                        <text x="1360" y="295">supplier records</text>
+
+                        <path class="primary" d="M1315 462 C1315 545 1315 625 1315 710"></path>
+                        <text x="1325" y="590">alerts / reports</text>
+                        <path class="primary" d="M1200 745 C1150 745 1130 745 1135 735"></path>
+                        <text x="1138" y="730">audit data</text>
+
+                        <path class="primary" d="M700 690 C590 610 500 540 500 462"></path>
+                        <text x="560" y="620">records</text>
+                        <path class="primary" d="M1020 690 C1040 650 1040 630 1035 597"></path>
+                        <text x="1050" y="660">stock / GL balances</text>
+                        <path class="primary" d="M1200 153 C1080 153 980 175 820 140"></path>
+                        <text x="995" y="145">procurement evidence</text>
+                    </svg>
+
+                    <button class="dfd-item entity i-user" type="button" data-id="user">System user / administrator</button>
+                    <button class="dfd-item entity i-unit" type="button" data-id="unit">Unit / formation</button>
+                    <button class="dfd-item entity i-supplier" type="button" data-id="supplier">Supplier / vendor</button>
+                    <button class="dfd-item entity i-gs" type="button" data-id="gs">GS Branch / authorising office</button>
+                    <button class="dfd-item entity i-ai" type="button" data-id="ai">Configured AI / OCR service</button>
+                    <button class="dfd-item entity i-directorate" type="button" data-id="directorate">IT Directorate offices</button>
+
+                    <button class="dfd-item process p-auth" type="button" data-id="auth"><span>P1<br>Authenticate &amp; control<small>Roles and permissions</small></span></button>
+                    <button class="dfd-item process p-intake" type="button" data-id="intake"><span>P2<br>Capture &amp; file<small>Orderly Room / Daily File</small></span></button>
+                    <button class="dfd-item process p-import" type="button" data-id="import"><span>P3<br>Import &amp; extract<small>Classify and parse documents</small></span></button>
+                    <button class="dfd-item process p-requisition" type="button" data-id="requisition"><span>P4<br>Manage requisitions<small>In-tray and Orderly mirror</small></span></button>
+                    <button class="dfd-item process p-decision" type="button" data-id="decision"><span>P5<br>Stock &amp; GL decision<small>Route to issue or procurement</small></span></button>
+                    <button class="dfd-item process p-procurement" type="button" data-id="procurement"><span>P6<br>Procure &amp; fulfil<small>DP F1, PO, delivery and Q 1033</small></span></button>
+                    <button class="dfd-item process p-close" type="button" data-id="close"><span>P7<br>Close &amp; monitor<small>Status, alerts and reports</small></span></button>
+
+                    <button class="dfd-item store d-records" type="button" data-id="records">D1 Application records<small>Users, requisitions, Daily File and forms</small></button>
+                    <button class="dfd-item store d-inventory" type="button" data-id="inventory">D2 Inventory &amp; GL<small>Stock, issue, receipt and buying power</small></button>
+                    <button class="dfd-item store d-procurement" type="button" data-id="procurementStore">D3 Procurement records<small>Quotes, specs, CCS, POs and delivery notes</small></button>
+                    <button class="dfd-item store d-alerts" type="button" data-id="alerts">D4 Alerts &amp; messages<small>Notifications, ageing and audit trail</small></button>
+                </div>
+            </div>
+            <div class="legend" aria-label="DFD legend">
+                <span class="legend-item"><i class="legend-shape entity"></i>External entity</span>
+                <span class="legend-item"><i class="legend-shape"></i>Process</span>
+                <span class="legend-item"><i class="legend-shape store"></i>Data store</span>
+                <span class="legend-item"><i class="legend-line"></i>System data flow</span>
+                <span class="legend-item"><i class="legend-line ai"></i>AI / OCR exchange</span>
+            </div>
+        </section>
+
+        <section class="details" aria-live="polite">
+            <article class="panel">
+                <div class="detail-kicker" id="detailType">Process</div>
+                <h3 id="detailTitle">P5 — Stock &amp; GL decision</h3>
+                <p id="detailText">The Route action checks inventory and buying-power context before choosing the issue or procurement path.</p>
+                <ul id="detailList">
+                    <li>Sufficient stock can move to Q 1033.</li>
+                    <li>Partial or unavailable stock can move to DP F1.</li>
+                    <li>GL and funding exceptions remain visible for review.</li>
+                </ul>
+            </article>
+            <aside class="panel" style="background:var(--surface-gold);border-color:#e7d4a2;">
+                <h3>Boundary note</h3>
+                <p>This DFD represents the current TECHSTORESys application boundary. Pension Payroll and PFMS SignalR connections are not shown because they are not part of the application flow.</p>
+                <p>Imported handwriting and scans require the configured AI/OCR service; typed text has a heuristic fallback.</p>
+            </aside>
+        </section>
+
+        <p class="footnote">Source: current TECHSTORESys workspace modules and integration code · Snapshot: 31 August 2026. The diagram is a functional data-flow view, not a network or deployment diagram.</p>
+    </main>
+
+    <script>
+        const details = {
+            user: ["External entity", "System user / administrator", "Users start at login and interact with permitted modules.", ["Credentials and session requests", "Form entries and approvals", "Queries, edits and print actions"]],
+            unit: ["External entity", "Unit / formation", "Units originate letters, loose minutes, requisitions and requirements.", ["Requisition letters", "Requested items and quantities", "Originating unit and reference"]],
+            supplier: ["External entity", "Supplier / vendor", "Suppliers provide commercial and delivery information used during procurement and receiving.", ["Quotations and supplier details", "Purchase order responses", "Delivery and goods-received information"]],
+            gs: ["External entity", "GS Branch / authorising office", "Authorising offices provide direction or approval information used in the procurement and filing process.", ["Authorisation status", "Funding / direction", "Procurement decision input"]],
+            ai: ["External service", "Configured AI / OCR service", "When configured, the AI service interprets typed, scanned or handwritten documents and returns structured extraction.", ["Document image or text", "Document type and confidence", "Fields and line items as JSON"]],
+            directorate: ["External entity", "IT Directorate offices", "Directorate offices receive notifications and contribute to coordinated action.", ["Office messages", "Action requests and replies", "Departmental direction"]],
+            auth: ["Process", "P1 — Authenticate & control", "Applies identity, role, module-access and edit-right rules before work is performed.", ["Login and role validation", "Permission gate", "Session context"]],
+            intake: ["Process", "P2 — Capture & file", "Books incoming correspondence into the Orderly Room Daily File / First Sight process and refers action to the right office.", ["Daily File reference", "GS authorisation and priority", "TechStores alerts and messages"]],
+            import: ["Process", "P3 — Import & extract", "Accepts PDF, Word, image or text documents, classifies them and extracts fields for human review.", ["Document upload or pasted text", "AI vision or heuristic extraction", "Matching form destination"]],
+            requisition: ["Process", "P4 — Manage requisitions", "Maintains the Unit Requisitions in-tray, minute sheet, ageing, priority and its mirror into Orderly Room.", ["Unit and requester", "Items, quantities and costs", "Open, progress, issue and close status"]],
+            decision: ["Process", "P5 — Stock & GL decision", "The Route action evaluates inventory availability and funding context.", ["Stock lookup", "Sufficient / partial / unavailable branch", "Q 1033 or DP F1 route"]],
+            procurement: ["Process", "P6 — Procure & fulfil", "Runs the procurement evidence and fulfilment path from DP F1 through quotations, specs, CCS, purchase order and delivery.", ["DP F1 and due diligence", "Quotes, specs and comparison", "PO, delivery and Q 1033 records"]],
+            close: ["Process", "P7 — Close & monitor", "Updates completion status and feeds dashboards, alerts, reports and operational registers.", ["Issued / part issued / closed", "Ageing and alert state", "Reports and audit trail"]],
+            records: ["Data store", "D1 — Application records", "Core operational state for users, requisitions, Daily File entries and form records.", ["Users and roles", "Requisitions and minute sheets", "Orderly Room and module records"]],
+            inventory: ["Data store", "D2 — Inventory & GL", "Stock movements and GL buying-power context used for routing and fulfilment.", ["On-hand quantities", "Issue and receipt movements", "GL balances and funding checks"]],
+            procurementStore: ["Data store", "D3 — Procurement records", "Commercial, technical and official purchasing documents.", ["Quotations and tech specs", "Cost comparative schedules", "Purchase orders and delivery notes"]],
+            alerts: ["Data store", "D4 — Alerts & messages", "Notifications and monitoring records that keep outstanding work visible.", ["Office messages", "Dashboard alerts", "Ageing and action trail"]]
+        };
+
+        const type = document.getElementById("detailType");
+        const title = document.getElementById("detailTitle");
+        const text = document.getElementById("detailText");
+        const list = document.getElementById("detailList");
+        document.querySelectorAll("[data-id]").forEach((item) => {
+            item.addEventListener("click", () => {
+                const detail = details[item.dataset.id];
+                if (!detail) return;
+                document.querySelectorAll(".dfd-item").forEach((node) => node.classList.remove("is-selected"));
+                item.classList.add("is-selected");
+                type.textContent = detail[0];
+                title.textContent = detail[1];
+                text.textContent = detail[2];
+                list.innerHTML = detail[3].map((entry) => `<li>${entry}</li>`).join("");
+            });
+        });
+        document.getElementById("printDfd").addEventListener("click", () => window.print());
+    </script>
+</body>
+</html>

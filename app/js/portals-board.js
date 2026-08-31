@@ -106,18 +106,22 @@ function renderPortalsStepCard(step) {
         `).join('')}</span>`
         : '';
     return `
-        <article class="portals-step portals-step-${step.tone} portals-area-${step.id}${allowed ? '' : ' is-locked'}"
+        <article class="card portals-step portals-step-${step.tone} portals-area-${step.id}${allowed ? '' : ' is-locked'}"
             data-pb-id="${portalsEscape(step.id)}" ${allowed ? 'tabindex="0"' : ''}
             title="${allowed ? `Open ${portalsEscape(step.windowLabel)}` : 'No window on this login'}">
-            <span class="portals-step-n">${portalsEscape(step.n)}</span>
-            <span class="portals-step-icon" aria-hidden="true">${PORTALS_BOARD_ICONS[step.icon] || ''}</span>
-            <strong class="portals-step-title">${portalsEscape(step.title)}</strong>
-            <span class="portals-step-text">${portalsEscape(step.text)}</span>
-            <span class="portals-step-foot">
-                <em>${portalsEscape(step.windowLabel)}</em>
-                ${count ? `<span class="portals-step-count">${count}</span>` : ''}
-            </span>
-            ${extraHtml}
+            <div class="card-header portals-step-header">
+                <span class="portals-step-n">${portalsEscape(step.n)}</span>
+                <span class="portals-step-header-title">${portalsEscape(step.title)}</span>
+            </div>
+            <div class="card-body portals-step-body">
+                <div class="portals-step-top">
+                    <span class="portals-step-icon" aria-hidden="true">${PORTALS_BOARD_ICONS[step.icon] || ''}</span>
+                    ${count ? `<span class="portals-step-count">${count}</span>` : ''}
+                </div>
+                <strong class="card-title portals-step-title">${portalsEscape(step.text)}</strong>
+                <span class="card-text portals-step-text">${portalsEscape(step.windowLabel)}</span>
+                ${extraHtml}
+            </div>
         </article>`;
 }
 
@@ -135,26 +139,8 @@ function renderPortalsBoard() {
                 <p class="portals-board-hint">Click a box to open the related window.</p>
             </header>
             <div class="portals-board-flow" aria-label="Procurement cycle">
-                ${card('s1')}
-                <span class="portals-flow-arrow portals-arrow-e12" aria-hidden="true">→</span>
-                ${card('s2')}
-                <span class="portals-flow-arrow portals-arrow-e23" aria-hidden="true">→</span>
-                ${card('s3')}
-                <span class="portals-flow-arrow portals-arrow-s34a" aria-hidden="true">↓</span>
-                ${card('s4a')}
-                <span class="portals-flow-arrow portals-arrow-s4ab" aria-hidden="true">↓</span>
-                ${card('s4b')}
-                <span class="portals-flow-arrow portals-arrow-s4bc" aria-hidden="true">↓</span>
-                ${card('s4c')}
-                <span class="portals-flow-arrow portals-arrow-edc" aria-hidden="true">←</span>
-                ${card('s4d')}
-                <span class="portals-flow-arrow portals-arrow-e6d" aria-hidden="true">←</span>
-                ${card('s6')}
-                <span class="portals-flow-arrow portals-arrow-n65" aria-hidden="true">↑</span>
-                ${card('s5')}
-                <span class="portals-flow-arrow portals-arrow-n5o" aria-hidden="true">↑</span>
-                ${card('spo')}
-                <span class="portals-flow-arrow portals-arrow-n1p" aria-hidden="true">↑</span>
+                ${['s1', 's2', 's3', 's4a', 's4b', 's4c', 's4d', 's6', 's5', 'spo']
+                    .map((id) => card(id)).join('')}
             </div>
         </div>`;
 }

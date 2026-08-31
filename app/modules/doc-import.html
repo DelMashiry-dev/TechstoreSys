@@ -1,0 +1,75 @@
+<div id="doc-import" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Import document</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <p class="stk-desk-intro">
+                    Upload a typed PDF, Word file, photo of a written page, or paste text.
+                    The system classifies the paper (loose minute, requisition, quotation, P/O, DP F1, tech spec, D-Note, cost comparative)
+                    and fills the related form. <strong>Always review extracted fields before save.</strong>
+                    Handwriting and faint scans need AI on the server (<code>OPENAI_API_KEY</code>); typed text works without it.
+                </p>
+
+                <div class="doc-import-drop" id="docImportDrop" tabindex="0">
+                    <input type="file" id="docImportFile" hidden
+                        accept=".pdf,.txt,.md,.csv,.docx,image/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
+                    <p><strong>Drop a file here</strong> or
+                        <button type="button" class="btn btn-primary btn-sm" id="docImportPickBtn">Choose file</button>
+                    </p>
+                    <p class="muted">PDF, Word, photo (JPG/PNG), or text · max 4 MB</p>
+                    <p id="docImportFileName" class="doc-import-filename" hidden></p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="docImportPaste">Or paste typed text</label>
+                    <textarea class="form-control" id="docImportPaste" rows="6"
+                        placeholder="Paste a loose minute, quotation, P/O, DP F1, spec sheet or D-Note…"></textarea>
+                </div>
+
+                <div class="module-toolbar doc-import-toolbar">
+                    <label class="form-label" for="docImportTypeHint">Document type</label>
+                    <select class="form-control" id="docImportTypeHint">
+                        <option value="">Auto-detect</option>
+                        <option value="loose_minute">Loose minute</option>
+                        <option value="requisition">Unit requisition</option>
+                        <option value="quotation">Quotation</option>
+                        <option value="purchase_order">Purchase order</option>
+                        <option value="dp_f1">DP F1</option>
+                        <option value="tech_spec">Tech spec / evaluation</option>
+                        <option value="delivery_note">Delivery note</option>
+                        <option value="cost_comparative">Cost comparative schedule</option>
+                    </select>
+                    <button type="button" class="btn btn-primary" id="docImportParseBtn">Read document</button>
+                    <span id="docImportStatus" class="doc-import-status" aria-live="polite"></span>
+                </div>
+
+                <div id="docImportResult" class="doc-import-result" hidden>
+                    <div class="dashboard-panel">
+                        <div class="doc-import-meta">
+                            <p id="docImportKind"></p>
+                            <p id="docImportNote" class="muted"></p>
+                        </div>
+                        <div class="form-table-wrapper">
+                            <table class="doc-import-fields-table">
+                                <thead>
+                                    <tr><th>Field</th><th>Value (edit before applying)</th></tr>
+                                </thead>
+                                <tbody id="docImportFieldsBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="form-group" id="docImportLinesWrap" hidden>
+                            <label class="form-label">Line items</label>
+                            <textarea class="form-control" id="docImportLinesJson" rows="6" spellcheck="false"></textarea>
+                            <p class="muted">JSON array — one object per line. Leave as-is unless you need to correct a row.</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="docImportExtracted">Extracted text</label>
+                            <textarea class="form-control" id="docImportExtracted" rows="5" readonly></textarea>
+                        </div>
+                        <div class="module-actions">
+                            <button type="button" class="btn btn-primary" id="docImportApplyBtn">Open form and fill fields</button>
+                            <button type="button" class="btn btn-secondary" id="docImportClearBtn">Clear</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
