@@ -329,8 +329,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Capture-phase: always open modules on first click (Field Help must not block nav)
     document.querySelector('.sidebar-menu')?.addEventListener('click', function(e) {
-        const link = e.target.closest('a[data-target]');
+        const link = e.target.closest('a[data-target], a.nav-submenu-toggle');
         if (!link || !this.contains(link)) return;
+
+        // Submenu headers (Portals, GL Accounts, etc.) — toggle expand/collapse
+        if (link.classList.contains('nav-submenu-toggle')) {
+            const submenu = link.closest('li')?.querySelector(':scope > .submenu');
+            if (submenu) {
+                e.preventDefault();
+                if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+                const opening = !submenu.classList.contains('active');
+                submenu.classList.toggle('active');
+                link.classList.toggle('is-open', submenu.classList.contains('active'));
+                const targetId = link.getAttribute('data-target');
+                if (opening && targetId) {
+                    navigateToModule(targetId);
+                }
+                return;
+            }
+        }
+
         e.preventDefault();
         const targetId = link.getAttribute('data-target');
         if (!targetId) return;
@@ -422,23 +440,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     if (typeof initUiPreferences === 'function') initUiPreferences();
-
-    document.querySelectorAll('.nav-submenu-toggle').forEach((toggle) => {
-        toggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const li = this.closest('li');
-            const submenu = li?.querySelector(':scope > .submenu');
-            if (!submenu) return;
-            if (this.getAttribute('data-target')) {
-                submenu.classList.add('active');
-                this.classList.add('is-open');
-                return;
-            }
-            submenu.classList.toggle('active');
-            this.classList.toggle('is-open', submenu.classList.contains('active'));
-        });
-    });
 
     document.querySelectorAll('.btn-save-module').forEach(button => {
         button.addEventListener('click', function() {

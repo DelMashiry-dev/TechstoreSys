@@ -80,7 +80,7 @@ const ZNA_UNIT_GROUPS = [
             { name: 'Medical Directorate', abbr: 'Med Dir' },
             { name: 'Ordnance Directorate', abbr: 'Ord Dir' },
             { name: 'Zimbabwe Military Police Directorate', abbr: 'ZMP Dir' },
-            { name: 'Directorate of Legal Services', abbr: 'DLS' },
+            { name: 'Directorate of Legal Services (Joint ZNA/AFZ)', abbr: 'DLS' },
             { name: 'Army Project', abbr: 'Army Projs' },
             { name: 'Directorate of Procurement', abbr: 'DP' },
             { name: 'Directorate of Prosecution', abbr: 'Dir Pros' },
@@ -317,57 +317,155 @@ function buildZnaUnitOptionsHtml(selected, opts = {}) {
 function fillZnaUnitSelect(selectEl, selected, opts = {}) {
     if (!selectEl) return;
     const current = selected != null ? selected : selectEl.value;
-    selectEl.innerHTML = buildZnaUnitOptionsHtml(current, opts);
+    selectEl.innerHTML = buildZnaUnitOptionsHtml(current, {
+        ...opts,
+        includeOther: false
+    });
     if (current && selectEl.value !== current) {
-        // Prefer exact match after rebuild
         const options = [...selectEl.options];
         const hit = options.find((o) => o.value === current || o.textContent === current);
         if (hit) selectEl.value = hit.value;
     }
+    ensureZnaUnitTypeable(selectEl, opts);
+}
+
+function ensureZnaUnitTypeable(selectEl, opts = {}) {
+    if (!selectEl) return;
+    const placeholder = opts.typeablePlaceholder
+        || (opts.blankLabel ? String(opts.blankLabel).replace(/^—\s*/, 'Type or pick ') : '')
+        || 'Type or pick unit / formation…';
+    if (selectEl.dataset.typeableMounted === '1') {
+        if (typeof refreshTypeableSelect === 'function') refreshTypeableSelect(selectEl);
+        return;
+    }
+    if (typeof mountTypeableSelect !== 'function') return;
+    mountTypeableSelect(selectEl, {
+        placeholder,
+        allowCustom: opts.allowCustom !== false,
+        maxItems: 220
+    });
 }
 
 function wireZnaUnitPicker(selectEl, filterEl, opts = {}) {
     if (!selectEl || selectEl.dataset.znaWired === '1') return;
     selectEl.dataset.znaWired = '1';
     fillZnaUnitSelect(selectEl, selectEl.value || opts.selected || '', opts);
-
-    const refresh = () => {
-        const keep = selectEl.value;
-        fillZnaUnitSelect(selectEl, keep, {
-            ...opts,
-            filter: filterEl?.value || ''
-        });
-        // Keep focus friendly when filtering
-        if (filterEl?.value && selectEl.options.length > 1) {
-            const firstReal = [...selectEl.options].find((o) => o.value && o.value !== '__other__');
-            if (firstReal && !keep) selectEl.value = firstReal.value;
-        }
-    };
-
-    filterEl?.addEventListener('input', refresh);
-    selectEl.addEventListener('change', () => {
-        if (selectEl.value !== '__other__') return;
-        const custom = window.prompt('Enter unit / formation / directorate:', '');
-        if (custom && custom.trim()) {
-            fillZnaUnitSelect(selectEl, custom.trim(), { ...opts, filter: '' });
-            if (filterEl) filterEl.value = '';
-        } else {
-            selectEl.value = '';
-        }
-    });
+    if (filterEl) {
+        filterEl.hidden = true;
+        filterEl.style.display = 'none';
+        filterEl.setAttribute('aria-hidden', 'true');
+    }
 }
 
 function buildZnaUnitSelectMarkup(id, opts = {}) {
-    const filterId = opts.filterId || `${id}Filter`;
     const selected = opts.selected || '';
-    const placeholder = opts.filterPlaceholder || 'Type to filter units…';
     return `
         <div class="zna-unit-picker">
-            <input type="search" class="form-control zna-unit-filter" id="${znaUnitEscape(filterId)}"
-                placeholder="${znaUnitEscape(placeholder)}" autocomplete="off" aria-label="Filter units">
             <select class="form-control zna-unit-select" id="${znaUnitEscape(id)}" title="ZNA unit / formation">
                 ${buildZnaUnitOptionsHtml(selected, opts)}
             </select>
         </div>
     `;
 }
+
+window.fillZnaUnitSelect = fillZnaUnitSelect;
+window.wireZnaUnitPicker = wireZnaUnitPicker;
+window.resolveZnaUnitLabel = resolveZnaUnitLabel;
+window.flattenZnaUnits = flattenZnaUnits;
+
+/** Known unit/formation field ids (Q forms, orderly room, workshop cert, etc.). */
+const ZNA_UNIT_FIELD_IDS = new Set([
+    'orFrom', 'wrcOfficerUnit', 'accUnit', 'reqOriginUnitDetail',
+    'q1Unit', 'q3FromUnit', 'q31Unit', 'q40Unit', 'q80UnitStamp', 'q985Unit',
+    'q998Unit', 'q1179Unit', 'q1229Unit', 'q1571Unit', 'q1680IssuingUnit', 'q1680DebtorUnit',
+    'q1954Unit', 'q3977Unit', 'q1043ToUnit', 'q1043UnitHq', 'q1049FromUnit', 'q1049ToUnit',
+    'svcs890Unit', 'svcs1045Unit', 'svcs1045OcUnit'
+]);
+
+function isZnaUnitInput(el) {
+    if (!el || el.tagName !== 'INPUT') return false;
+    const type = (el.type || 'text').toLowerCase();
+    if (type === 'hidden' || type === 'number' || type === 'date' || type === 'month') return false;
+    if (el.dataset.znaUnit === '1' || el.classList.contains('zna-unit-input')) return true;
+    const id = el.id || '';
+    if (ZNA_UNIT_FIELD_IDS.has(id)) return true;
+    if (/Unit$|FromUnit$|ToUnit$|IssuingUnit$|DebtorUnit$|OcUnit$/i.test(id)
+        && !/Unit(No|Number|Indent|Stamp|Price|Cost|Address|Qty)/i.test(id)) return true;
+    return false;
+}
+
+function setZnaUnitField(idOrEl, value) {
+    const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+    if (!el) return;
+    if (el.tagName === 'SELECT' && typeof fillZnaUnitSelect === 'function') {
+        fillZnaUnitSelect(el, value || '', { includeBlank: true, includeOther: true });
+        return;
+    }
+    el.value = value ?? '';
+}
+
+function upgradeInputToZnaUnitSelect(inputEl, opts = {}) {
+    if (!inputEl || inputEl.tagName !== 'INPUT') return null;
+    if (inputEl.closest('.zna-unit-picker')) {
+        return inputEl.closest('.zna-unit-picker').querySelector('select.zna-unit-select');
+    }
+    const val = String(inputEl.value || opts.selected || '').trim();
+    const blankLabel = opts.blankLabel || inputEl.placeholder || '— Select unit / formation —';
+    const select = document.createElement('select');
+    select.className = `${inputEl.className} zna-unit-select`.replace(/\s+/g, ' ').trim();
+    if (!select.classList.contains('form-control')) select.classList.add('form-control');
+    if (inputEl.id) select.id = inputEl.id;
+    if (inputEl.name) select.name = inputEl.name;
+    if (inputEl.title) select.title = inputEl.title;
+    select.innerHTML = buildZnaUnitOptionsHtml(val, {
+        includeBlank: opts.includeBlank !== false,
+        includeOther: false,
+        blankLabel
+    });
+    const wrap = document.createElement('div');
+    wrap.className = 'zna-unit-picker';
+    inputEl.replaceWith(wrap);
+    wrap.appendChild(select);
+    wireZnaUnitPicker(select, null, {
+        includeBlank: opts.includeBlank !== false,
+        includeOther: true,
+        blankLabel,
+        allowCustom: opts.allowCustom !== false,
+        selected: val,
+        ...opts
+    });
+    return select;
+}
+
+/** Wire every ZNA unit select and upgrade known unit text inputs under root. */
+function wireAllZnaUnitFields(root = document, opts = {}) {
+    if (!root || typeof buildZnaUnitOptionsHtml !== 'function') return;
+
+    const inputs = root.tagName === 'INPUT' && isZnaUnitInput(root)
+        ? [root]
+        : [...root.querySelectorAll('input[data-zna-unit], input.zna-unit-input, input[id]')].filter(isZnaUnitInput);
+    inputs.forEach((inp) => {
+        if (inp.closest('.zna-unit-picker')) return;
+        upgradeInputToZnaUnitSelect(inp, opts);
+    });
+
+    const selects = root.tagName === 'SELECT' && root.classList.contains('zna-unit-select')
+        ? [root]
+        : [...root.querySelectorAll('select.zna-unit-select')];
+    selects.forEach((sel) => {
+        if (sel.dataset.znaWired === '1' || sel.dataset.znaSkipAuto === '1') return;
+        const blankOpt = sel.querySelector('option[value=""]');
+        wireZnaUnitPicker(sel, null, {
+            includeBlank: true,
+            includeOther: true,
+            blankLabel: blankOpt?.textContent?.trim() || opts.blankLabel || '— Select unit / formation —',
+            selected: sel.value,
+            allowCustom: opts.allowCustom !== false,
+            ...opts
+        });
+    });
+}
+
+window.setZnaUnitField = setZnaUnitField;
+window.upgradeInputToZnaUnitSelect = upgradeInputToZnaUnitSelect;
+window.wireAllZnaUnitFields = wireAllZnaUnitFields;

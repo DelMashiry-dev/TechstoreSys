@@ -24,7 +24,8 @@ function getModuleLabel(moduleId) {
         'daf-fund-request-memo': 'DAF Fund Request Memo',
         'monthly-returns': 'Monthly Returns — Unit ICT Equipment',
         'spec-evaluation': 'Spec/Tech Evaluation',
-        'ict-compare': 'Workshop — Head-to-head ICT comparison',
+        'laptop-compare': 'Laptop Compare — buy the winner',
+        'ict-compare': 'H2H ICT Comparison — crawl & compare',
         'guide-quotation': 'Rough Guide Quotation',
         'dp-f1-form': 'DP F1 Form',
         'cost-comparative-schedule': 'Cost Comparative Schedule',
@@ -59,7 +60,7 @@ function getModuleLabel(moduleId) {
         'delivery-note': 'Delivery Note',
         'purchase-orders': 'Purchase Orders',
         'undelivered-orders': 'Undelivered Items',
-        'supplier-debts': 'Supplier Debts — Non-paid goods received',
+        'supplier-debts': 'Creditors — non-paid goods · DAF payment register',
         'workshop-repairs': 'Workshop Register',
         'gate-register': 'Gate Register (RP)',
         'techstores-equipment-register': 'TechStores Equipment Register',
@@ -1070,6 +1071,9 @@ async function navigateToModule(targetId, options = {}) {
     if (options.stkDesk) {
         window._stkDeskOverride = options.stkDesk;
     }
+    if (options.stkDafTab) {
+        window._stkDafTab = options.stkDafTab;
+    }
 
     document.querySelectorAll('.content-section, .form-container').forEach((section) => {
         section.style.display = 'none';
@@ -1168,6 +1172,9 @@ async function navigateToModule(targetId, options = {}) {
         if (typeof initSpecEvaluationModule === 'function') initSpecEvaluationModule();
         else if (typeof populateSpecSearchFacets === 'function') populateSpecSearchFacets();
     }
+    if (targetId === 'laptop-compare' && typeof initLaptopCompareModule === 'function') {
+        initLaptopCompareModule();
+    }
     if (targetId === 'ict-compare' && typeof initIctCompareModule === 'function') {
         initIctCompareModule();
     }
@@ -1180,6 +1187,9 @@ async function navigateToModule(targetId, options = {}) {
     if (targetId === 'supplier-debts') {
         if (typeof initSupplierDebtsModule === 'function') initSupplierDebtsModule();
         if (typeof renderSupplierDebtsModule === 'function') renderSupplierDebtsModule();
+        if (options.sdId && typeof editSupplierDebt === 'function') {
+            setTimeout(() => editSupplierDebt(options.sdId), 0);
+        }
     }
     if (targetId === 'zna-q-forms-index' && typeof renderZnaQFormsIndex === 'function') {
         renderZnaQFormsIndex();

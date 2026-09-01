@@ -551,3 +551,337 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.body.classList.contains('is-printing')) clearPrintMode();
     });
 });
+
+/** Turn a <select> into a type-to-filter combobox; keeps the native select as the value source. */
+function typeableSelectOptions(selectEl) {
+    const out = [];
+    if (!selectEl) return out;
+    selectEl.childNodes.forEach((node) => {
+        if (node.tagName === 'OPTGROUP') {
+            const group = String(node.label || '').trim();
+            [...node.options].forEach((opt) => {
+                out.push({
+                    value: opt.value,
+                    label: String(opt.textContent || '').trim(),
+                    group
+                });
+            });
+        } else if (node.tagName === 'OPTION') {
+            out.push({
+                value: node.value,
+                label: String(node.textContent || '').trim(),
+                group: ''
+            });
+        }
+    });
+    return out;
+}
+
+function syncTypeableSelectFromNative(selectEl) {
+    const ui = selectEl?._typeable;
+    if (!ui) return;
+    const opt = selectEl.selectedOptions?.[0];
+    ui.input.value = opt ? String(opt.textContent || '').trim() : '';
+}
+
+function resolveTypeableSelectInput(selectEl) {
+    const ui = selectEl?._typeable;
+    if (!ui) return false;
+    const q = ui.input.value.trim();
+    const qLower = q.toLowerCase();
+    const options = typeableSelectOptions(selectEl).filter((o) => o.value !== '' && o.value !== '__other__');
+    if (!q) {
+        syncTypeableSelectFromNative(selectEl);
+        return false;
+    }
+    let hit = options.find((o) => o.label.toLowerCase() === qLower);
+    if (!hit) hit = options.find((o) => o.value.toLowerCase() === qLower);
+    if (!hit) hit = options.find((o) => o.label.toLowerCase().startsWith(qLower));
+    if (!hit) hit = options.find((o) => o.value.toLowerCase().startsWith(qLower));
+    if (!hit) hit = options.find((o) => o.label.toLowerCase().includes(qLower));
+    if (!hit) hit = options.find((o) => o.value.toLowerCase().includes(qLower));
+    if (!hit) hit = options.find((o) => o.value.toLowerCase() === qLower.replace(/\s+/g, '-'));
+    if (!hit && ui.allowCustom) {
+        applyTypeableSelectCustomValue(selectEl, q);
+        return true;
+    }
+    if (!hit) return false;
+    if (selectEl.value !== hit.value) {
+        selectEl.value = hit.value;
+        selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    ui.input.value = hit.label;
+    return true;
+}
+
+function applyTypeableSelectCustomValue(selectEl, text) {
+    const ui = selectEl?._typeable;
+    const val = String(text || '').trim();
+    if (!val || !ui) return;
+    let opt = [...selectEl.options].find((o) => o.value === val);
+    if (!opt) {
+        opt = new Option(`${val} (custom)`, val, true, true);
+        selectEl.add(opt);
+    }
+    selectEl.value = val;
+    ui.input.value = val;
+    selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function hideTypeableSelectList(selectEl) {
+    const ui = selectEl?._typeable;
+    if (!ui?.list) return;
+    ui.list.hidden = true;
+    ui.list.style.position = '';
+    ui.list.style.left = '';
+    ui.list.style.top = '';
+    ui.list.style.width = '';
+    ui.list.style.maxHeight = '';
+    ui.list.style.zIndex = '';
+    ui.wrap?.classList.remove('is-open');
+    ui.list.querySelectorAll('.typeable-select-item.is-active').forEach((el) => el.classList.remove('is-active'));
+    if (ui.wrap && ui.list.parentNode === document.body) {
+        ui.wrap.appendChild(ui.list);
+    }
+    if (ui._reposition) {
+        window.removeEventListener('scroll', ui._reposition, true);
+        window.removeEventListener('resize', ui._reposition);
+        ui._reposition = null;
+    }
+}
+
+function attachTypeableSelectList(selectEl) {
+    const ui = selectEl?._typeable;
+    if (!ui?.list) return;
+    if (ui.list.parentNode !== document.body) {
+        document.body.appendChild(ui.list);
+    }
+    ui.list.dataset.typeableFor = selectEl.id || '';
+}
+
+function positionTypeableSelectList(selectEl) {
+    const ui = selectEl?._typeable;
+    if (!ui?.list || ui.list.hidden) return;
+    attachTypeableSelectList(selectEl);
+    const rect = ui.input.getBoundingClientRect();
+    const gap = 4;
+    const maxH = 260;
+    const spaceBelow = window.innerHeight - rect.bottom - gap;
+    const spaceAbove = rect.top - gap;
+    const openUp = spaceBelow < 160 && spaceAbove > spaceBelow;
+    const maxHeight = Math.min(maxH, openUp ? spaceAbove : spaceBelow);
+    ui.list.style.position = 'fixed';
+    ui.list.style.left = `${Math.max(8, rect.left)}px`;
+    ui.list.style.width = `${Math.max(rect.width, 180)}px`;
+    ui.list.style.maxHeight = `${Math.max(120, maxHeight)}px`;
+    ui.list.style.zIndex = '15000';
+    if (openUp) {
+        ui.list.style.top = `${Math.max(8, rect.top - gap - Math.min(maxH, maxHeight))}px`;
+    } else {
+        ui.list.style.top = `${rect.bottom + gap}px`;
+    }
+}
+
+function showTypeableSelectList(selectEl, filterText) {
+    const ui = selectEl?._typeable;
+    if (!ui) return;
+    renderTypeableSelectList(selectEl, filterText != null ? filterText : ui.input.value);
+    ui.wrap.classList.add('is-open');
+    ui.list.hidden = false;
+    positionTypeableSelectList(selectEl);
+    if (!ui._reposition) {
+        ui._reposition = () => {
+            if (!ui.list.hidden) positionTypeableSelectList(selectEl);
+        };
+        window.addEventListener('scroll', ui._reposition, true);
+        window.addEventListener('resize', ui._reposition);
+    }
+}
+
+function renderTypeableSelectList(selectEl, filterText = '') {
+    const ui = selectEl?._typeable;
+    if (!ui?.list) return;
+    const q = String(filterText || '').trim().toLowerCase();
+    const options = typeableSelectOptions(selectEl).filter((o) => o.value !== '' && o.value !== '__other__');
+    const filtered = q
+        ? options.filter((o) => {
+            const label = o.label.toLowerCase();
+            const value = o.value.toLowerCase();
+            const group = (o.group || '').toLowerCase();
+            const hay = `${label} ${value} ${group}`;
+            const parts = q.split(/\s+/).filter(Boolean);
+            return parts.length
+                ? parts.every((p) => hay.includes(p))
+                : true;
+        })
+        : options;
+    let lastGroup = null;
+    const parts = [];
+    filtered.slice(0, ui.maxItems || 200).forEach((row, index) => {
+        if (row.group && row.group !== lastGroup) {
+            lastGroup = row.group;
+            parts.push(`<li class="typeable-select-group" aria-hidden="true">${escapeHtml(row.group)}</li>`);
+        }
+        parts.push(
+            `<li class="typeable-select-item" role="option" data-value="${escapeHtml(row.value)}" data-index="${index}">${escapeHtml(row.label)}</li>`
+        );
+    });
+    ui.list.innerHTML = parts.length
+        ? parts.join('')
+        : '<li class="typeable-select-empty">No match — keep typing or pick from the list.</li>';
+}
+
+function escapeHtml(v) {
+    return String(v ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function refreshTypeableSelect(selectEl) {
+    if (!selectEl?._typeable) return;
+    syncTypeableSelectFromNative(selectEl);
+    if (!selectEl._typeable.list.hidden) {
+        renderTypeableSelectList(selectEl, selectEl._typeable.input.value);
+        positionTypeableSelectList(selectEl);
+    }
+}
+
+function mountTypeableSelect(selectEl, { placeholder = 'Type or pick…', allowCustom = false, maxItems = 200 } = {}) {
+    if (!selectEl) return;
+    if (selectEl.dataset.typeableMounted === '1') {
+        refreshTypeableSelect(selectEl);
+        return;
+    }
+    selectEl.dataset.typeableMounted = '1';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'typeable-select';
+    selectEl.parentNode.insertBefore(wrap, selectEl);
+    wrap.appendChild(selectEl);
+    selectEl.classList.add('typeable-select-native');
+    selectEl.tabIndex = -1;
+    selectEl.setAttribute('aria-hidden', 'true');
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'form-control typeable-select-input';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    input.placeholder = placeholder;
+    wrap.insertBefore(input, selectEl);
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'typeable-select-toggle';
+    toggle.setAttribute('aria-label', 'Show options');
+    toggle.textContent = '▾';
+    wrap.insertBefore(toggle, selectEl);
+
+    const list = document.createElement('ul');
+    list.className = 'typeable-select-list';
+    list.setAttribute('role', 'listbox');
+    list.hidden = true;
+    wrap.appendChild(list);
+
+    selectEl._typeable = { input, list, toggle, wrap, allowCustom: !!allowCustom, maxItems };
+
+    input.addEventListener('focus', () => {
+        showTypeableSelectList(selectEl, '');
+    });
+    input.addEventListener('click', () => {
+        if (ui.list.hidden) showTypeableSelectList(selectEl, '');
+        else showTypeableSelectList(selectEl, input.value);
+    });
+    input.addEventListener('input', () => {
+        showTypeableSelectList(selectEl, input.value);
+    });
+    input.addEventListener('blur', () => {
+        window.setTimeout(() => {
+            if (!wrap.contains(document.activeElement)) {
+                resolveTypeableSelectInput(selectEl);
+                hideTypeableSelectList(selectEl);
+            }
+        }, 120);
+    });
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (list.hidden) showTypeableSelectList(selectEl, input.value);
+            const items = [...list.querySelectorAll('.typeable-select-item')];
+            if (!items.length) return;
+            const active = list.querySelector('.typeable-select-item.is-active');
+            let idx = active ? items.indexOf(active) : -1;
+            if (e.key === 'ArrowDown') idx = Math.min(items.length - 1, idx + 1);
+            else idx = Math.max(0, idx <= 0 ? 0 : idx - 1);
+            items.forEach((el) => el.classList.remove('is-active'));
+            if (items[idx]) {
+                items[idx].classList.add('is-active');
+                items[idx].scrollIntoView({ block: 'nearest' });
+            }
+            return;
+        }
+        const active = list.querySelector('.typeable-select-item.is-active');
+        if (e.key === 'Enter') {
+            if (active) {
+                e.preventDefault();
+                selectEl.value = active.getAttribute('data-value') || '';
+                uiSyncAndClose(selectEl, active.textContent.trim());
+                selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+            } else {
+                e.preventDefault();
+                resolveTypeableSelectInput(selectEl);
+                hideTypeableSelectList(selectEl);
+            }
+            return;
+        } else if (e.key === 'Escape') {
+            hideTypeableSelectList(selectEl);
+            syncTypeableSelectFromNative(selectEl);
+        }
+    });
+
+    toggle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+    });
+    toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (list.hidden) {
+            input.focus();
+            showTypeableSelectList(selectEl, '');
+        } else {
+            hideTypeableSelectList(selectEl);
+        }
+    });
+
+    list.addEventListener('mousedown', (e) => {
+        const item = e.target.closest('.typeable-select-item');
+        if (!item) return;
+        e.preventDefault();
+        selectEl.value = item.getAttribute('data-value') || '';
+        uiSyncAndClose(selectEl, item.textContent.trim());
+        selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    function uiSyncAndClose(sel, label) {
+        input.value = label;
+        hideTypeableSelectList(sel);
+    }
+
+    if (!document.body.dataset.typeableSelectBound) {
+        document.body.dataset.typeableSelectBound = '1';
+        document.addEventListener('click', (e) => {
+            document.querySelectorAll('.typeable-select-native').forEach((sel) => {
+                const ui = sel._typeable;
+                if (!ui) return;
+                if (ui.wrap.contains(e.target) || ui.list.contains(e.target)) return;
+                hideTypeableSelectList(sel);
+            });
+        });
+    }
+
+    syncTypeableSelectFromNative(selectEl);
+}
+
+window.mountTypeableSelect = mountTypeableSelect;
+window.refreshTypeableSelect = refreshTypeableSelect;

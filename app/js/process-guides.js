@@ -246,7 +246,7 @@ function renderNixzimoPaperPack() {
             paper: 'Nixzimo banking details',
             shows: 'CABS Bank, Borrowdale Branch. Account name Nixzimo Pvt Ltd. ZWG 1156015626. USD 1156015634. Used when IT Dir is satisfied and triggers DAF to pay.',
             module: 'supplier-debts',
-            moduleLabel: 'Supplier Debts'
+            moduleLabel: 'Creditors'
         }
     ];
     const rows = papers.map((p) => `
@@ -396,7 +396,7 @@ function renderProcurementCycleGuide() {
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="purchase-orders">Purchase Orders</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="delivery-note">Delivery Note</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="zna-q-1033">Q 1033</button>
-                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="supplier-debts">Supplier Debts</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="supplier-debts">Creditors</button>
             </p>
         </article>`;
 }
@@ -640,7 +640,7 @@ function renderOrderlyRoomGuide() {
             <p class="pg-links">Open modules:
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="orderly-room">Orderly Room (DF)</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="unit-requisitions">Unit Requisitions</button>
-                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="supplier-debts">Supplier Debts</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="supplier-debts">Creditors</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="dp-procurement">ICT Procurement Cycle</button>
             </p>
         </article>`;

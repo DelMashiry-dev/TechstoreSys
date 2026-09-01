@@ -7,16 +7,23 @@ const MODULE_SEARCH_ALIASES = {
     'it-dir-comms': 'memo memos compose memo letter letters correspondence sample correspondence load sample print letter fuel diesel generator standby IT/18 restricted communications portal comms request demand minutes directive',
     'orderly-room': 'daily file first sight correspondence files register letter DF fuel IT/18 orderly clerk',
     'purchase-orders': 'po purchase order sap supplier vendor material net value',
-    'unit-requisitions': 'requisition indent demand minute sheet route',
+    'unit-requisitions': 'requisition indent demand minute sheet route import document loose minute',
+    'doc-import': 'import document upload scan ocr paste loose minute quotation purchase order dp f1 spec delivery note',
     'notifications': 'alerts inbox messages compose',
     dashboard: 'notifications alerts kpis gl cards inbox messages',
     'process-guides': 'learning centre how to memo correspondence',
     'system-help': 'dictionary glossary help memo correspondence',
     'zna-q-forms-index': 'q forms catalogue annex',
     'suppliers-contracts': 'vendor supplier register G/C/006',
-    'delivery-note': 'dn delivery note goods received',
-    'dp-f1-form': 'indent procurement f1',
-    'voucher-module': 'issue voucher receipt rv iv stock'
+    'delivery-note': 'dn delivery note goods received supplier',
+    'supplier-debts': 'supplier debt debts owed unpaid non-paid goods received age daf chase invoice po dampack',
+    'workshop-repairs': 'workshop register repairs indent',
+    'ict-compare': 'ict equipment compare laptop compare head to head compare laptop desktop workstation tablet printer server buy purchase duty profile crawl market benchmark FPS rugged',
+    'stakeholder-desk': 'portals portal dp window gs branch daf due diligence aiad supplier desk login upload quotation endorsement',
+    'portals-board': 'portals dashboard workflow procurement chart dp gs daf due diligence supplier requisition pfms purchase order',
+    'voucher-module': 'issue voucher receipt rv iv stock',
+    'temporary-loans': 'temporary loan za controlled stores 14 day',
+    'permanent-loans': 'permanent loan laptop ipad comd/34 masasa za-no three year qs br mid wipe write-off'
 };
 
 function looksLikeControlledIdQuery(query) {
@@ -85,7 +92,7 @@ function collectControlledStoreSearchEntries(add) {
             zaNumber: za || rec.zaNumber,
             statusMeta: rec.statusMeta || (typeof getIctAccStatusMeta === 'function' ? getIctAccStatusMeta(rec) : null)
         });
-        const trackQuery = za || serial || designation;
+        const trackQuery = za || serial || rec.holderName || designation;
         const statusLabel = rec.statusMeta?.label
             || (typeof getIctAccStatusMeta === 'function' ? getIctAccStatusMeta(rec).label : (rec.status || ''));
 
@@ -98,8 +105,10 @@ function collectControlledStoreSearchEntries(add) {
             haystack: [
                 za, serial, serialKey, designation, rec.description, rec.item,
                 rec.holderName, rec.forceNo, rec.unit, rec.itDirLocation,
-                rec.traceRef, statusLabel,
-                'za serial sn laptop desktop printer projector tablet router access point controlled store issued'
+                rec.traceRef, rec.form1033Ref, rec.boardRef, rec.form1045Ref, rec.remarks,
+                rec.source, rec.scheduleSerial,
+                statusLabel,
+                'za serial sn laptop desktop printer projector tablet router access point controlled store issued personnel name boarded condemned backloaded survey destruction board schedule'
             ].filter(Boolean).join(' ').toLowerCase(),
             trackQuery,
             ictAccId: rec.id || '',
@@ -166,6 +175,63 @@ function collectControlledStoreSearchEntries(add) {
             }, { moduleId: 'temporary-loans', scoreBoost: 6 });
         });
     }
+
+    if (typeof collectPermanentLoanRows === 'function') {
+        collectPermanentLoanRows().forEach((loan) => {
+            if (loan.status?.key === 'returned' || loan.status?.key === 'personal') return;
+            const za = typeof normalizeZaNumber === 'function'
+                ? normalizeZaNumber(loan.zaNumber)
+                : String(loan.zaNumber || '').trim().toUpperCase();
+            if (za && seenZa.has(za)) return;
+            if (za) seenZa.add(za);
+            pushAsset({
+                id: `perm-loan-${za || loan.id || loan.item}`,
+                assetClass: 'equipment',
+                designation: loan.item || za || 'Permanent loan',
+                description: loan.description || '',
+                zaNumber: za,
+                serialNo: loan.serialNo || '',
+                holderName: loan.issuedTo || '',
+                forceNo: loan.forceNo || '',
+                unit: loan.unit || '',
+                status: 'on_perm_loan',
+                engraved: !!za
+            }, { moduleId: 'permanent-loans', scoreBoost: 7 });
+        });
+    }
+}
+
+/** Receive/issue stock movements — searchable by issued-to name, voucher no., item. */
+function collectStockMovementSearchEntries(add) {
+    const inv = typeof ensureStoresInventory === 'function'
+        ? ensureStoresInventory()
+        : (appState?.storesInventory || null);
+    if (!inv || !Array.isArray(inv.transactions)) return;
+
+    inv.transactions.slice().reverse().slice(0, 150).forEach((txn) => {
+        if (!txn?.id) return;
+        const party = String(txn.party || '').trim();
+        const voucher = String(txn.voucherNo || '').trim();
+        const item = String(txn.item || '').trim();
+        if (!party && !voucher && !item) return;
+
+        const isIssue = txn.type === 'issue';
+        add({
+            id: `stk-${txn.id}`,
+            kind: 'stock',
+            moduleId: 'voucher-module',
+            title: `${isIssue ? 'Issue' : 'Receive'} — ${party || item || voucher}`,
+            subtitle: [txn.date, voucher, item].filter(Boolean).join(' · '),
+            haystack: [
+                party, voucher, item, txn.description, txn.appointment, txn.by, txn.type,
+                txn.source, txn.sourceRef, txn.gl,
+                isIssue ? 'issue issued to personnel' : 'receive receipt'
+            ].filter(Boolean).join(' ').toLowerCase(),
+            stockSearch: party || voucher || item,
+            stockCategory: txn.category || 'ict-equipment',
+            scoreBoost: isIssue && party ? 6 : 3
+        });
+    });
 }
 
 function collectUniversalSearchIndex() {
@@ -183,19 +249,24 @@ function collectUniversalSearchIndex() {
     document.querySelectorAll('.sidebar-menu a[data-target]').forEach((a) => {
         const id = a.getAttribute('data-target');
         if (!id) return;
-        const label = (typeof getModuleLabel === 'function' ? getModuleLabel(id) : '')
-            || a.querySelector('.nav-label')?.textContent?.trim()
-            || id;
+        if (a.classList.contains('nav-hidden') || a.closest('li')?.classList.contains('nav-hidden')) return;
+        const desk = a.getAttribute('data-stk-desk') || '';
+        if (desk && typeof canAccessPortalDesk === 'function' && !canAccessPortalDesk(desk)) return;
+        const navLabel = a.querySelector('.nav-label')?.textContent?.trim() || '';
+        const label = desk
+            ? navLabel
+            : ((typeof getModuleLabel === 'function' ? getModuleLabel(id) : '') || navLabel || id);
         const groupEl = a.closest('.submenu')?.closest('li')?.querySelector('.nav-submenu-toggle .nav-label');
         const group = groupEl?.textContent?.trim()
             || (a.closest('.submenu') ? 'Submenu' : 'Modules');
         add({
-            id: `mod-${id}`,
+            id: desk ? `mod-${id}-${desk}` : `mod-${id}`,
             kind: 'module',
             moduleId: id,
+            stkDesk: desk,
             title: label,
             subtitle: group,
-            haystack: `${id} ${label} ${group} ${MODULE_SEARCH_ALIASES[id] || ''}`.toLowerCase()
+            haystack: `${id} ${label} ${group} ${desk} ${MODULE_SEARCH_ALIASES[id] || ''}`.toLowerCase()
         });
     });
 
@@ -261,6 +332,21 @@ function collectUniversalSearchIndex() {
         });
     });
 
+    const debts = typeof ensureSupplierDebts === 'function' ? ensureSupplierDebts() : (appState?.supplierDebts || []);
+    (debts || []).slice(0, 80).forEach((rec) => {
+        const usd = typeof sdCaseUsd === 'function' ? sdCaseUsd(rec) : rec.totalUsd;
+        const age = typeof sdAgeLabel === 'function' ? sdAgeLabel(typeof sdAgeDays === 'function' ? sdAgeDays(rec) : 0) : '';
+        add({
+            id: `sd-${rec.id}`,
+            kind: 'supplier-debt',
+            moduleId: 'supplier-debts',
+            title: `${rec.supplier || rec.caseNo || 'Supplier'} — USD ${usd}`,
+            subtitle: `Debt · ${rec.status || ''} · ${age}`,
+            haystack: `${rec.supplier || ''} ${rec.caseNo || ''} ${rec.minuteRef || ''} ${rec.description || ''} ${(rec.lines || []).map((l) => `${l.poNo || ''} ${l.invoiceNo || ''}`).join(' ')}`.toLowerCase(),
+            sdId: rec.id
+        });
+    });
+
     // DP procurements
     const dps = typeof ensureDpProcurements === 'function' ? ensureDpProcurements() : (appState?.dpProcurements || []);
     (dps || []).slice(0, 80).forEach((rec) => {
@@ -278,6 +364,9 @@ function collectUniversalSearchIndex() {
 
     // Issued / engraved controlled stores — track by ZA or Serial Number
     collectControlledStoreSearchEntries(add);
+
+    // Stock receive/issue — party (issued to), voucher, item
+    collectStockMovementSearchEntries(add);
 
     // Sample correspondence / letters (fuel request, etc.)
     const samples = typeof IT_DIR_CORRESPONDENCE_SAMPLES !== 'undefined'
@@ -357,12 +446,13 @@ function rankUniversalHit(item, query) {
     score += Number(item.scoreBoost || 0);
 
     // Prefer exact ZA / serial hits when the query looks like an engraved ID
-    if (item.kind === 'controlled' && looksLikeControlledIdQuery(query)) {
+    if (item.kind === 'controlled' && (looksLikeControlledIdQuery(query) || /^\d{2,6}$/.test(q))) {
         const zaQ = typeof normalizeZaNumber === 'function' ? normalizeZaNumber(query) : '';
         const snQ = normalizeSerialKey(query);
         const titleU = (item.title || '').toUpperCase();
-        if (zaQ && titleU.includes(zaQ)) score += 40;
+        if (zaQ && (titleU.startsWith(zaQ) || titleU.includes(zaQ))) score += 50;
         else if (snQ && normalizeSerialKey(item.haystack).includes(snQ)) score += 35;
+        else if (zaQ && (item.haystack || '').toUpperCase().includes(zaQ)) score += 45;
         else score += 15;
     }
     return score;
@@ -408,11 +498,11 @@ function ensureUniversalSearchUi() {
                 </div>
             </div>
             <input type="search" id="universalSearchInput" class="form-control universal-search-input"
-                placeholder="Search anything — memo, fuel, PO, ZA / S/N, modules…"
+                placeholder="Search anything — name, ZA / S/N, memo, fuel, PO, modules…"
                 data-search-history-key="${UNIVERSAL_SEARCH_HISTORY_KEY}"
                 autocomplete="off" spellcheck="false">
             <div id="universalSearchResults" class="universal-search-results" role="listbox"></div>
-            <p class="universal-search-foot muted">Type any system word (memo, fuel, PO…) · Track stores by <kbd>ZA</kbd> / <kbd>S/N</kbd> · <kbd>Ctrl</kbd>+<kbd>K</kbd> · Enter to open</p>
+            <p class="universal-search-foot muted">Names (issued to) · <kbd>ZA</kbd> / <kbd>S/N</kbd> · memo, fuel, PO · <kbd>Ctrl</kbd>+<kbd>K</kbd> · Enter to open</p>
         </div>`;
         document.body.appendChild(modal);
     } else if (!document.getElementById('universalSearchMaximizeBtn')) {
@@ -516,11 +606,13 @@ function kindBadge(kind) {
         'q-ref': 'Q ref',
         requisition: 'Req',
         undelivered: 'PO',
+        'supplier-debt': 'Debt',
         dp: 'DP',
         dictionary: 'Dict',
         letter: 'Letter',
         file: 'File',
-        controlled: 'ZA / S/N'
+        controlled: 'ZA / S/N',
+        stock: 'Stock'
     };
     return map[kind] || 'Go';
 }
@@ -542,7 +634,7 @@ function renderUniversalSearchResults(query, options = {}) {
     if (!hits.length) {
         host.innerHTML = controlledOnly
             ? `<div class="universal-search-empty">No serialised / ZA-engraved items found yet. Register them on <strong>ZNA ICT Asset Register</strong> or Unit Equipment first.</div>`
-            : `<div class="universal-search-empty">No matches for “${escapeUs(query)}”. Try memo, fuel, PO, a module name, ZA number, or serial.</div>`;
+            : `<div class="universal-search-empty">No matches for “${escapeUs(query)}”. Try a <strong>name</strong> (issued to), ZA / Q 1033 ref, memo, fuel, PO, or module name. Refresh the page if you just imported data.</div>`;
         return;
     }
     host.innerHTML = hits.map((item, i) => `
@@ -551,12 +643,16 @@ function renderUniversalSearchResults(query, options = {}) {
             data-module="${escapeUs(item.moduleId || '')}"
             data-req-id="${escapeUs(item.reqId || '')}"
             data-und-id="${escapeUs(item.undId || '')}"
+            data-sd-id="${escapeUs(item.sdId || '')}"
             data-dp-id="${escapeUs(item.dpId || '')}"
             data-q-code="${escapeUs(item.qCode || '')}"
             data-dict-query="${escapeUs(item.dictQuery || '')}"
             data-corr-sample="${escapeUs(item.corrSampleId || '')}"
             data-track-query="${escapeUs(item.trackQuery || '')}"
-            data-ict-acc-id="${escapeUs(item.ictAccId || '')}">
+            data-ict-acc-id="${escapeUs(item.ictAccId || '')}"
+            data-stock-search="${escapeUs(item.stockSearch || '')}"
+            data-stock-category="${escapeUs(item.stockCategory || '')}"
+            data-stk-desk="${escapeUs(item.stkDesk || '')}">
             <span class="universal-search-badge">${escapeUs(kindBadge(item.kind))}</span>
             <span class="universal-search-text">
                 <strong>${escapeUs(item.title)}</strong>
@@ -570,12 +666,16 @@ async function activateUniversalResult(el) {
     const moduleId = el.getAttribute('data-module');
     const reqId = el.getAttribute('data-req-id');
     const undId = el.getAttribute('data-und-id');
+    const sdId = el.getAttribute('data-sd-id');
     const dpId = el.getAttribute('data-dp-id');
     const qCode = el.getAttribute('data-q-code');
     const dictQuery = el.getAttribute('data-dict-query');
     const corrSample = el.getAttribute('data-corr-sample');
     const trackQuery = el.getAttribute('data-track-query');
     const ictAccId = el.getAttribute('data-ict-acc-id');
+    const stockSearch = el.getAttribute('data-stock-search');
+    const stockCategory = el.getAttribute('data-stock-category');
+    const stkDesk = el.getAttribute('data-stk-desk');
     const q = document.getElementById('universalSearchInput')?.value || '';
     if (q && typeof rememberSearchTerm === 'function') {
         rememberSearchTerm(UNIVERSAL_SEARCH_HISTORY_KEY, q);
@@ -588,13 +688,33 @@ async function activateUniversalResult(el) {
     if (!moduleId || typeof navigateToModule !== 'function') return;
 
     let targetModule = moduleId;
-    if (trackQuery && (moduleId === 'ict-accountability' || moduleId === 'temporary-loans')) {
+    if (trackQuery && (moduleId === 'ict-accountability' || moduleId === 'temporary-loans' || moduleId === 'permanent-loans')) {
         if (typeof canAccessModule === 'function' && canAccessModule('ict-accountability')) {
             targetModule = 'ict-accountability';
         }
     }
 
-    await navigateToModule(targetModule);
+    await navigateToModule(targetModule, stkDesk ? { stkDesk } : {});
+
+    if (stockSearch && moduleId === 'voucher-module') {
+        setTimeout(() => {
+            const cat = stockCategory || 'ict-equipment';
+            document.querySelector(`#voucherInvTabs .voucher-inv-tab[data-inv-tab="${cat}"]`)?.click();
+            if (typeof setInvMovementFilters === 'function') {
+                setInvMovementFilters(cat, { item: stockSearch, description: stockSearch });
+            } else {
+                const itemInput = document.querySelector(
+                    `[data-inv-filters-target="voucher-inv-body-${cat}"] [data-inv-filter="item"]`
+                );
+                if (itemInput) {
+                    itemInput.value = stockSearch;
+                    itemInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+            document.querySelector(`[data-inv-filters-target="voucher-inv-body-${cat}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 120);
+        return;
+    }
 
     if (trackQuery && targetModule === 'ict-accountability') {
         const runTrack = () => {
@@ -617,6 +737,7 @@ async function activateUniversalResult(el) {
     setTimeout(() => {
         if (reqId && typeof editRequisition === 'function') editRequisition(reqId);
         if (undId && typeof editUndelivered === 'function') editUndelivered(undId);
+        if (sdId && typeof editSupplierDebt === 'function') editSupplierDebt(sdId);
         if (dpId && typeof editDpProcurement === 'function') editDpProcurement(dpId);
         if (qCode && moduleId === 'zna-q-forms-index') {
             const search = document.getElementById('znaQIndexSearch');
@@ -657,7 +778,7 @@ function openUniversalSearch(prefill = '', options = {}) {
     }
     input.placeholder = trackMode
         ? 'Type ZA number or serial number to find location…'
-        : 'Search anything — memo, fuel, PO, ZA / S/N, modules…';
+        : 'Search anything — name, ZA / S/N, memo, fuel, PO, modules…';
     modal.hidden = false;
     document.body.classList.add('universal-search-open');
     input.value = prefill || '';

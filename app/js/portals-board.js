@@ -60,12 +60,18 @@ const PORTALS_BOARD_STEPS = [
         icon: 'search', desk: 'aiad', windowLabel: 'Due Diligence Window'
     },
     {
+        id: 'creditors', n: 'PAY', tone: 'green', title: 'CREDITORS — DAF PAYMENT',
+        text: 'Goods delivered but not yet paid. Import creditors register, apply DAF paid lists, and record payment.',
+        icon: 'po', desk: 'daf', dafTab: 'creditors', windowLabel: 'DAF Window — Creditors & payment'
+    },
+    {
         id: 'spo', n: '4', tone: 'green', title: 'DP PRODUCES PURCHASE ORDER (P/O)',
         text: 'DP sends the P/O to IT Dir (user). User informs the supplier. Supplier supplies. IT Dir inspects, then DAF pays.',
         icon: 'po', desk: 'dp', windowLabel: 'DP Window',
         extra: [
             { desk: 'supplier', label: 'Supplier Window' },
-            { desk: 'daf', label: 'DAF pay' }
+            { desk: 'daf', label: 'DAF pay', dafTab: 'procurement' },
+            { desk: 'daf', label: 'Creditors register', dafTab: 'creditors' }
         ]
     }
 ];
@@ -102,7 +108,7 @@ function renderPortalsStepCard(step) {
     const extras = (step.extra || []).filter((x) => !x.desk || (typeof canAccessPortalDesk !== 'function' || canAccessPortalDesk(x.desk)));
     const extraHtml = extras.length
         ? `<span class="portals-step-extras">${extras.map((x) => `
-            <button type="button" class="portals-step-chip" data-pb-desk="${portalsEscape(x.desk)}">${portalsEscape(x.label)}</button>
+            <button type="button" class="portals-step-chip" data-pb-desk="${portalsEscape(x.desk)}"${x.dafTab ? ` data-pb-daf-tab="${portalsEscape(x.dafTab)}"` : ''}>${portalsEscape(x.label)}</button>
         `).join('')}</span>`
         : '';
     return `
@@ -139,7 +145,7 @@ function renderPortalsBoard() {
                 <p class="portals-board-hint">Click a box to open the related window.</p>
             </header>
             <div class="portals-board-flow" aria-label="Procurement cycle">
-                ${['s1', 's2', 's3', 's4a', 's4b', 's4c', 's4d', 's6', 's5', 'spo']
+                ${['s1', 's2', 's3', 's4a', 's4b', 's4c', 's4d', 's6', 's5', 'spo', 'creditors']
                     .map((id) => card(id)).join('')}
             </div>
         </div>`;
@@ -148,12 +154,15 @@ function renderPortalsBoard() {
 function openPortalsBoardTarget(opts) {
     const desk = opts.desk;
     const moduleId = opts.module;
+    const dafTab = opts.dafTab;
     if (desk) {
         if (typeof canAccessPortalDesk === 'function' && !canAccessPortalDesk(desk)) {
             if (typeof showToast === 'function') showToast('That window is for another actor.', 'info');
             return;
         }
-        if (typeof navigateToModule === 'function') navigateToModule('stakeholder-desk', { stkDesk: desk });
+        if (typeof navigateToModule === 'function') {
+            navigateToModule('stakeholder-desk', { stkDesk: desk, stkDafTab: dafTab || '' });
+        }
         return;
     }
     if (moduleId) {
@@ -168,12 +177,12 @@ function openPortalsBoardTarget(opts) {
 function openPortalsBoardStep(step) {
     if (!step) return;
     if (step.desk && (typeof canAccessPortalDesk !== 'function' || canAccessPortalDesk(step.desk))) {
-        openPortalsBoardTarget({ desk: step.desk });
+        openPortalsBoardTarget({ desk: step.desk, dafTab: step.dafTab || '' });
         return;
     }
     const extra = (step.extra || []).find((x) => x.desk && (typeof canAccessPortalDesk !== 'function' || canAccessPortalDesk(x.desk)));
     if (extra) {
-        openPortalsBoardTarget({ desk: extra.desk });
+        openPortalsBoardTarget({ desk: extra.desk, dafTab: extra.dafTab || '' });
         return;
     }
     if (step.module) {
@@ -194,7 +203,10 @@ function initPortalsBoardModule() {
             if (chip && chip.classList.contains('portals-step-chip')) {
                 e.preventDefault();
                 e.stopPropagation();
-                openPortalsBoardTarget({ desk: chip.getAttribute('data-pb-desk') });
+                openPortalsBoardTarget({
+                    desk: chip.getAttribute('data-pb-desk'),
+                    dafTab: chip.getAttribute('data-pb-daf-tab') || ''
+                });
                 return;
             }
             const tile = e.target.closest('[data-pb-id]');

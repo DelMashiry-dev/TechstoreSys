@@ -99,11 +99,58 @@ async function reconnectDatabaseIfOnline() {
             });
         }
         updateDbStatusBadge();
+        if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
         if (synced && typeof showToast === 'function') {
-            showToast('Switched to online mode — synced to techstores.db.', 'success');
+            showToast('Database reconnected — synced to techstores.db.', 'success');
         }
         if (typeof refreshStorageModeModal === 'function') refreshStorageModeModal();
     } catch (_) { /* still offline */ }
+}
+
+let _connectivityLossNotified = false;
+
+/** Runtime fallback when SQLite server is unreachable — keeps Online as preference, no manual toggle. */
+function enterRuntimeOfflineFallback(options = {}) {
+    const wasConnected = dbConnected;
+    dbConnected = false;
+    pendingServerSync = true;
+    if (storageMode === 'online') {
+        storageMode = offlineDurable ? 'offline-local' : storageMode;
+    }
+    updateDbStatusBadge();
+    if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
+    if (typeof syncModeToggleUi === 'function') syncModeToggleUi();
+    const notify = options.notify !== false;
+    if (notify && wasConnected && !_connectivityLossNotified && typeof showToast === 'function') {
+        _connectivityLossNotified = true;
+        showToast(
+            options.message
+                || 'Database server unreachable — saving to browser copy. Will sync when START-SYSTEM.bat is running again.',
+            'warning'
+        );
+    }
+}
+
+/** Ping server; auto-fallback to offline copy or reconnect when preferred mode is Online. */
+async function checkDatabaseConnectivity() {
+    if (!appState) return;
+    if (typeof getPreferredStorageMode === 'function' && getPreferredStorageMode() !== 'online') return;
+    if (storageMode === 'offline-shell') return;
+
+    try {
+        const health = await apiRequestWithTimeout('/api/health', 2000);
+        if (health?.database) {
+            _connectivityLossNotified = false;
+            if (!dbConnected || pendingServerSync) {
+                await reconnectDatabaseIfOnline();
+            }
+            return;
+        }
+    } catch (_) { /* server down */ }
+
+    if (dbConnected || storageMode === 'online') {
+        enterRuntimeOfflineFallback();
+    }
 }
 
 function createDefaultState() {
@@ -118,6 +165,8 @@ function createDefaultState() {
         glBudgets,
         glMonthlyTargets: {},
         glTargetViewMonth: '',
+        glTargetPeriodMode: 'month',
+        monthlyTargetProposals: {},
         releaseCuts: [],
         storesInventory: createDefaultStoresInventory(),
         customInventoryLedgers: [],
@@ -125,6 +174,7 @@ function createDefaultState() {
         stockTakes: [],
         monthlyReturns: [],
         ictAccountability: [],
+        permanentLoans: [],
         ictDistributionLists: [],
         ictDistributionActiveId: '',
         requisitions: createDefaultRequisitions(),
@@ -132,18 +182,36 @@ function createDefaultState() {
         correspondenceFiles: [],
         correspondenceHandovers: [],
         undeliveredOrders: createDefaultUndelivered(),
+        supplierDebts: [],
+        supplierDebtSeedRev: 0,
+        workshopReceiptCerts: [],
         dpProcurements: createDefaultDpProcurements(),
         costComparativeSchedules: [],
         unitChecks: [],
         unitNews: [],
         alertDesk: { seq: 0, meta: {}, reads: {} },
         officeMessages: [],
+        ictCompareHistory: [],
+        navMenuOrder: {},
         saveRevision: 0,
         savedAt: '',
         savedBy: '',
         modules: {},
         users: createDefaultUsers()
     };
+}
+
+function mergeNavMenuOrder(parsed) {
+    const incoming = parsed && parsed.navMenuOrder;
+    if (incoming && typeof incoming === 'object' && !Array.isArray(incoming)) {
+        return incoming;
+    }
+    if (appState && appState.navMenuOrder
+        && typeof appState.navMenuOrder === 'object'
+        && !Array.isArray(appState.navMenuOrder)) {
+        return appState.navMenuOrder;
+    }
+    return {};
 }
 
 function createDefaultRequisitions() {
@@ -189,6 +257,10 @@ function loadState() {
                 ? parsed.glMonthlyTargets
                 : {},
             glTargetViewMonth: parsed.glTargetViewMonth || '',
+            glTargetPeriodMode: parsed.glTargetPeriodMode || 'month',
+            monthlyTargetProposals: (parsed.monthlyTargetProposals && typeof parsed.monthlyTargetProposals === 'object')
+                ? parsed.monthlyTargetProposals
+                : {},
             releaseCuts: parsed.releaseCuts || [],
             storesInventory: mergeStoresInventory(parsed.storesInventory),
             customInventoryLedgers: Array.isArray(parsed.customInventoryLedgers) ? parsed.customInventoryLedgers : [],
@@ -196,6 +268,7 @@ function loadState() {
             stockTakes: Array.isArray(parsed.stockTakes) ? parsed.stockTakes : [],
             monthlyReturns: Array.isArray(parsed.monthlyReturns) ? parsed.monthlyReturns : [],
             ictAccountability: Array.isArray(parsed.ictAccountability) ? parsed.ictAccountability : [],
+            permanentLoans: Array.isArray(parsed.permanentLoans) ? parsed.permanentLoans : [],
             ictDistributionLists: Array.isArray(parsed.ictDistributionLists) ? parsed.ictDistributionLists : [],
             ictDistributionActiveId: parsed.ictDistributionActiveId || '',
             requisitions: Array.isArray(parsed.requisitions) ? parsed.requisitions : [],
@@ -203,6 +276,9 @@ function loadState() {
             correspondenceFiles: Array.isArray(parsed.correspondenceFiles) ? parsed.correspondenceFiles : [],
             correspondenceHandovers: Array.isArray(parsed.correspondenceHandovers) ? parsed.correspondenceHandovers : [],
             undeliveredOrders: Array.isArray(parsed.undeliveredOrders) ? parsed.undeliveredOrders : [],
+            supplierDebts: Array.isArray(parsed.supplierDebts) ? parsed.supplierDebts : [],
+            supplierDebtSeedRev: Number(parsed.supplierDebtSeedRev) || 0,
+            workshopReceiptCerts: Array.isArray(parsed.workshopReceiptCerts) ? parsed.workshopReceiptCerts : [],
             dpProcurements: Array.isArray(parsed.dpProcurements) ? parsed.dpProcurements : [],
             costComparativeSchedules: Array.isArray(parsed.costComparativeSchedules) ? parsed.costComparativeSchedules : [],
             unitChecks: Array.isArray(parsed.unitChecks) ? parsed.unitChecks : [],
@@ -215,6 +291,8 @@ function loadState() {
                 }
                 : { seq: 0, meta: {}, reads: {} },
             officeMessages: Array.isArray(parsed.officeMessages) ? parsed.officeMessages : [],
+            ictCompareHistory: Array.isArray(parsed.ictCompareHistory) ? parsed.ictCompareHistory : [],
+            navMenuOrder: mergeNavMenuOrder(parsed),
             saveRevision: Number(parsed.saveRevision) || 0,
             savedAt: parsed.savedAt || '',
             savedBy: parsed.savedBy || '',
@@ -257,6 +335,10 @@ function mergeState(parsed) {
             ? parsed.glMonthlyTargets
             : {},
         glTargetViewMonth: parsed.glTargetViewMonth || '',
+        glTargetPeriodMode: parsed.glTargetPeriodMode || 'month',
+        monthlyTargetProposals: (parsed.monthlyTargetProposals && typeof parsed.monthlyTargetProposals === 'object')
+            ? parsed.monthlyTargetProposals
+            : {},
         releaseCuts: parsed.releaseCuts || [],
         storesInventory: mergeStoresInventory(parsed.storesInventory),
         customInventoryLedgers: Array.isArray(parsed.customInventoryLedgers) ? parsed.customInventoryLedgers : [],
@@ -264,6 +346,7 @@ function mergeState(parsed) {
         stockTakes: Array.isArray(parsed.stockTakes) ? parsed.stockTakes : [],
         monthlyReturns: Array.isArray(parsed.monthlyReturns) ? parsed.monthlyReturns : [],
         ictAccountability: Array.isArray(parsed.ictAccountability) ? parsed.ictAccountability : [],
+        permanentLoans: Array.isArray(parsed.permanentLoans) ? parsed.permanentLoans : [],
         ictDistributionLists: Array.isArray(parsed.ictDistributionLists) ? parsed.ictDistributionLists : [],
         ictDistributionActiveId: parsed.ictDistributionActiveId || '',
         requisitions: Array.isArray(parsed.requisitions) ? parsed.requisitions : [],
@@ -271,6 +354,9 @@ function mergeState(parsed) {
         correspondenceFiles: Array.isArray(parsed.correspondenceFiles) ? parsed.correspondenceFiles : [],
         correspondenceHandovers: Array.isArray(parsed.correspondenceHandovers) ? parsed.correspondenceHandovers : [],
         undeliveredOrders: Array.isArray(parsed.undeliveredOrders) ? parsed.undeliveredOrders : [],
+        supplierDebts: Array.isArray(parsed.supplierDebts) ? parsed.supplierDebts : [],
+        supplierDebtSeedRev: Number(parsed.supplierDebtSeedRev) || 0,
+        workshopReceiptCerts: Array.isArray(parsed.workshopReceiptCerts) ? parsed.workshopReceiptCerts : [],
         dpProcurements: Array.isArray(parsed.dpProcurements) ? parsed.dpProcurements : [],
         costComparativeSchedules: Array.isArray(parsed.costComparativeSchedules) ? parsed.costComparativeSchedules : [],
         unitChecks: Array.isArray(parsed.unitChecks) ? parsed.unitChecks : [],
@@ -283,6 +369,8 @@ function mergeState(parsed) {
             }
             : { seq: 0, meta: {}, reads: {} },
         officeMessages: Array.isArray(parsed.officeMessages) ? parsed.officeMessages : [],
+        ictCompareHistory: Array.isArray(parsed.ictCompareHistory) ? parsed.ictCompareHistory : [],
+        navMenuOrder: mergeNavMenuOrder(parsed),
         saveRevision: Number(parsed.saveRevision) || 0,
         savedAt: parsed.savedAt || '',
         savedBy: parsed.savedBy || '',
@@ -326,29 +414,29 @@ function updateDbStatusBadge() {
         badge.textContent = typeof getStorageModeLabel === 'function' ? getStorageModeLabel() : 'Storage';
         if (dbConnected || storageMode === 'online') {
             badge.className = 'db-status-badge db-online';
-            badge.title = 'Online — techstores.db. Click to switch mode.';
+            badge.title = 'Database — techstores.db on this PC (local server). Click to switch mode.';
         } else if (storageMode === 'offline-shell' || offlineDurable) {
             badge.className = 'db-status-badge db-offline-durable';
-            badge.title = 'Offline mode. Click for switch instructions.';
+            badge.title = 'Browser-only storage. Click for switch instructions.';
         } else {
             badge.className = 'db-status-badge db-offline';
-            badge.title = 'Click to set up online or offline mode.';
+            badge.title = 'Click to set up database or browser-only storage.';
         }
     }
     const dbChip = document.getElementById('dashboardDbChip');
     if (dbChip) {
         if (dbConnected || storageMode === 'online') {
             dbChip.textContent = pendingServerSync
-                ? 'Storage: SQLite + pending sync'
-                : 'Storage: Online (techstores.db)';
+                ? 'Storage: Database + pending sync'
+                : 'Storage: Database (techstores.db)';
         } else if (storageMode === 'offline-shell') {
-            dbChip.textContent = 'Storage: Offline shell (browser)';
+            dbChip.textContent = 'Storage: Browser (offline shell)';
         } else if (offlineDurable) {
-            dbChip.textContent = 'Storage: Offline copy (IndexedDB)';
+            dbChip.textContent = 'Storage: Browser copy (IndexedDB)';
         } else {
             dbChip.textContent = 'Storage: Local only';
         }
-        dbChip.title = 'Click to switch online / offline mode';
+        dbChip.title = 'Click to switch database / browser storage';
     }
     if (typeof syncModeToggleUi === 'function') syncModeToggleUi();
 }
@@ -360,24 +448,28 @@ function stateHasOperationalData(state) {
     if ((state.stockTakes || []).length > 0) return true;
     if ((state.requisitions || []).length > 0) return true;
     if ((state.undeliveredOrders || []).length > 0) return true;
+    if ((state.supplierDebts || []).length > 0) return true;
     if ((state.dpProcurements || []).length > 0) return true;
     if ((state.unitChecks || []).length > 0) return true;
     if ((state.monthlyReturns || []).length > 0) return true;
     if ((state.ictAccountability || []).length > 0) return true;
+    if ((state.permanentLoans || []).length > 0) return true;
     if ((state.ictDistributionLists || []).length > 0) return true;
     const inv = state.storesInventory;
     if (inv && Array.isArray(inv.transactions) && inv.transactions.length > 0) return true;
     if (Object.keys(state.glMonthlyTargets || {}).length > 0) return true;
+    if (Object.keys(state.monthlyTargetProposals || {}).length > 0) return true;
     return false;
 }
 
 async function loadStateFromDatabase() {
-    if (typeof initOfflineStore === 'function') {
-        await initOfflineStore();
-    }
-    if (typeof probeStorageMode === 'function') {
-        await probeStorageMode({ fresh: false });
-    }
+    const probePromise = typeof probeStorageMode === 'function'
+        ? probeStorageMode({ fresh: false })
+        : Promise.resolve();
+    const offlinePromise = typeof initOfflineStore === 'function'
+        ? initOfflineStore()
+        : Promise.resolve(true);
+    await Promise.all([probePromise, offlinePromise]);
 
     if (storageMode !== 'online') {
         dbConnected = false;
@@ -390,7 +482,7 @@ async function loadStateFromDatabase() {
     }
 
     try {
-        const data = await apiRequestWithTimeout('/api/state', 5000);
+        const data = await apiRequestWithTimeout('/api/state', 2500);
         dbConnected = true;
         pendingServerSync = false;
         storageMode = 'online';
@@ -408,23 +500,46 @@ async function loadStateFromDatabase() {
             if (typeof warmOfflineModuleCache === 'function') warmOfflineModuleCache();
             return localState;
         }
-        await persistLocalCopy(remote);
+        persistLocalCopy(remote).catch(() => { /* background */ });
         if (typeof warmOfflineModuleCache === 'function') warmOfflineModuleCache();
         return remote;
     } catch (error) {
         console.warn('Database unavailable, using offline storage.', error?.message || error);
         dbConnected = false;
-        if (typeof probeStorageMode === 'function') {
-            await probeStorageMode({ attempts: 1 });
-        }
         const localState = await loadBestLocalState();
         updateDbStatusBadge();
         if (typeof showToast === 'function' && offlineDurable) {
-            showToast('Offline mode — using your saved browser copy. Use the login toggle or START-SYSTEM.bat for online.', 'info');
+            showToast('Server unavailable — using browser copy. Run START-SYSTEM.bat for database mode.', 'info');
         }
         return localState;
     }
 }
+
+let stateHydratePromise = null;
+
+/** Load app state without blocking the login screen (online first, offline fallback). */
+function hydrateAppStateFromDatabase(force = false) {
+    if (!force && stateHydratePromise) return stateHydratePromise;
+    stateHydratePromise = loadStateFromDatabase()
+        .catch((err) => {
+            console.warn('State hydrate failed', err);
+            try {
+                return loadState();
+            } catch (_) {
+                return createDefaultState();
+            }
+        });
+    window.__stateHydratePromise = stateHydratePromise;
+    return stateHydratePromise;
+}
+
+function resetStateHydratePromise() {
+    stateHydratePromise = null;
+    window.__stateHydratePromise = null;
+}
+
+window.hydrateAppStateFromDatabase = hydrateAppStateFromDatabase;
+window.resetStateHydratePromise = resetStateHydratePromise;
 
 function bumpSaveMeta() {
     if (!appState) return;
@@ -479,12 +594,9 @@ function saveState() {
                 return;
             }
             console.error('Failed to save to database', error);
-            dbConnected = false;
-            pendingServerSync = true;
-            updateDbStatusBadge();
-            if (typeof showToast === 'function') {
-                showToast('Database unavailable — saved to offline copy.', 'warning');
-            }
+            enterRuntimeOfflineFallback({
+            message: 'Database unavailable — saved to browser copy. Will sync when the server is back.'
+        });
         }
     }, 250);
 }
@@ -520,9 +632,7 @@ async function saveStateNow() {
             return trySyncStateToServer(true);
         }
         console.error('Failed to save to database', error);
-        dbConnected = false;
-        pendingServerSync = true;
-        updateDbStatusBadge();
+        enterRuntimeOfflineFallback();
         return false;
     }
 }
@@ -569,14 +679,17 @@ function initPersistentDatabaseHooks() {
 
     window.addEventListener('online', () => {
         updateDbStatusBadge();
-        reconnectDatabaseIfOnline();
+        checkDatabaseConnectivity();
     });
     window.addEventListener('offline', () => {
-        dbConnected = false;
-        updateDbStatusBadge();
+        enterRuntimeOfflineFallback({
+            message: 'Network offline — browser copy active. Database mode resumes when the local server responds.'
+        });
     });
 
     setInterval(() => {
-        reconnectDatabaseIfOnline();
+        checkDatabaseConnectivity();
     }, 15000);
+
+    setTimeout(() => checkDatabaseConnectivity(), 2500);
 }

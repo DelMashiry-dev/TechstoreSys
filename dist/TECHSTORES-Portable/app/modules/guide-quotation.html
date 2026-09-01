@@ -1,0 +1,123 @@
+<div id="guide-quotation" class="form-container">
+    <div class="form-header">
+        <h2 class="form-title">Rough Guide Quotation — Zimbabwe prevailing prices</h2>
+        <button class="close-btn">&times;</button>
+    </div>
+
+    <p class="gq-intro">
+        Draft an indicative budget quotation in the official <strong>Republic of Zimbabwe</strong> procurement layout
+        (based on DP purchase orders). Uses prevailing market prices and/or unit prices from <strong>real DP POs in the system</strong>,
+        with <strong>USD</strong> and <strong>ZiG</strong> at the
+        <a href="https://www.rbz.co.zw/index.php/research/markets/exchange-rates" target="_blank" rel="noopener noreferrer">RBZ prevailing bank rate</a>.
+        For planning and F1 support — <em>not</em> an official purchase order.
+    </p>
+
+    <div class="gq-meta form-row">
+        <div class="form-col">
+            <label class="form-label" for="gqRef">Reference</label>
+            <input type="text" class="form-control" id="gqRef" placeholder="e.g. GQ/IT/2026/001" autocomplete="off">
+        </div>
+        <div class="form-col">
+            <label class="form-label" for="gqDate">Date</label>
+            <input type="date" class="form-control" id="gqDate">
+        </div>
+        <div class="form-col">
+            <label class="form-label" for="gqDeliveryDate">Indicative delivery</label>
+            <input type="date" class="form-control" id="gqDeliveryDate">
+        </div>
+        <div class="form-col">
+            <label class="form-label" for="gqCurrency">Primary currency</label>
+            <select class="form-control" id="gqCurrency">
+                <option value="USD">USD</option>
+                <option value="ZiG">ZiG / ZWG</option>
+                <option value="both">Show both USD &amp; ZiG</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="gq-meta form-row">
+        <div class="form-col">
+            <label class="form-label" for="gqPreparedFor">Prepared for</label>
+            <input type="text" class="form-control" id="gqPreparedFor" placeholder="Unit / formation / DP" autocomplete="off">
+        </div>
+        <div class="form-col">
+            <label class="form-label" for="gqPurpose">Purpose</label>
+            <input type="text" class="form-control" id="gqPurpose" placeholder="ICT laptops procurement FY2026" autocomplete="off">
+        </div>
+        <div class="form-col">
+            <label class="form-label" for="gqDeliverTo">Deliver to</label>
+            <input type="text" class="form-control" id="gqDeliverTo" value="IT DIR" autocomplete="off">
+        </div>
+        <div class="form-col">
+            <label class="form-label" for="gqGlAccount">GL account</label>
+            <input type="text" class="form-control" id="gqGlAccount" value="3112210001" autocomplete="off">
+        </div>
+    </div>
+
+    <div id="gqRateBanner" class="gq-rate-banner" aria-live="polite"></div>
+
+    <div class="dashboard-panel gq-fetch-panel">
+        <div class="section-heading section-heading-compact">
+            <h3>Fetch prevailing unit prices</h3>
+        </div>
+        <p class="gq-fetch-hint">Web market crawl, or pick a recent DP ICT benchmark (EliteBook, ProLiant, Cisco, etc.).</p>
+        <div class="gq-fetch-toolbar">
+            <input type="text" class="form-control" id="gqFetchQuery" placeholder="gaming laptop, HP EliteBook, ProLiant…" autocomplete="off" list="gqBenchmarkList">
+            <datalist id="gqBenchmarkList"></datalist>
+            <select class="form-control" id="gqFetchCategory">
+                <option value="laptop">Laptops</option>
+                <option value="desktop">Desktops</option>
+                <option value="tablet">Tablets</option>
+                <option value="printer">Printers</option>
+                <option value="server">Servers</option>
+                <option value="all">All ICT</option>
+            </select>
+            <input type="number" class="form-control gq-fetch-qty" id="gqFetchQty" min="1" step="1" value="1" title="Quantity">
+            <button type="button" class="btn btn-secondary btn-sm" id="gqLoadBenchmarkBtn">DP benchmark</button>
+            <button type="button" class="btn btn-primary" id="gqFetchPriceBtn">Web price</button>
+        </div>
+        <div id="gqFetchStatus" class="gq-fetch-status"></div>
+    </div>
+
+    <div class="module-actions gq-toolbar">
+        <button type="button" class="btn btn-secondary btn-sm" id="gqAddRowBtn">Add blank line</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="gqRefreshRateBtn" title="Refresh RBZ rate">Refresh RBZ rate</button>
+        <button type="button" class="btn btn-primary btn-sm" id="gqSaveBtn">Save quotation</button>
+        <button type="button" class="btn btn-secondary btn-sm btn-print-module" id="gqPrintBtn">Print / PDF</button>
+    </div>
+
+    <div class="form-table-wrapper gq-table-wrap">
+        <table class="gq-table" id="gqTable">
+            <thead>
+                <tr>
+                    <th>Ser</th>
+                    <th>Description</th>
+                    <th>Qty</th>
+                    <th>Unit</th>
+                    <th>Unit (USD)</th>
+                    <th>Unit (ZiG)</th>
+                    <th>Amount (USD)</th>
+                    <th>Amount (ZiG)</th>
+                    <th>Source</th>
+                    <th class="gq-screen-only">Action</th>
+                </tr>
+            </thead>
+            <tbody id="gq-table-body"></tbody>
+            <tfoot>
+                <tr class="gq-total-row">
+                    <td colspan="6"><strong>Total net value (indicative)</strong></td>
+                    <td id="gqTotalUsd" class="gq-total-usd">—</td>
+                    <td id="gqTotalZig" class="gq-total-zig">—</td>
+                    <td colspan="2"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div class="gq-notes">
+        <label class="form-label" for="gqNotes">Notes / assumptions</label>
+        <textarea class="form-control" id="gqNotes" rows="3" placeholder="Indicative guide — confirm with formal RFQ quotations before procurement."></textarea>
+    </div>
+
+    <p id="gqSaveStatus" class="gq-save-status" aria-live="polite"></p>
+</div>

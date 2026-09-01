@@ -91,7 +91,9 @@ function ictCompareParseRam(row) {
 }
 
 function getIctCompareVisibleItems() {
-    return ictCompareState.items;
+    const category = ictCompareState.category || document.getElementById('ictCompareCategory')?.value || 'laptop';
+    const extra = ictCompareState.extra || document.getElementById('ictCompareExtra')?.value || '';
+    return ictCompareState.items.filter((row) => ictCompareItemRelevant(row, category, extra));
 }
 
 function renderIctCompareGrid() {
@@ -140,11 +142,6 @@ function renderIctCompareGrid() {
         box.addEventListener('change', () => {
             const id = box.getAttribute('data-ict-pick');
             if (box.checked) {
-                if (ictCompareState.selected.size >= 4) {
-                    box.checked = false;
-                    if (typeof showToast === 'function') showToast('Compare up to four machines at a time.', 'info');
-                    return;
-                }
                 ictCompareState.selected.add(id);
             } else {
                 ictCompareState.selected.delete(id);
@@ -197,7 +194,7 @@ function ensureIctCompareImages() {
 }
 
 function selectedIctCompareRows() {
-    return ictCompareState.items.filter((r) => ictCompareState.selected.has(r.id));
+    return getIctCompareVisibleItems().filter((r) => ictCompareState.selected.has(r.id));
 }
 
 function ictCompareSpecLine(row) {
@@ -231,75 +228,44 @@ function ictCompareScorePicks(picks, profile) {
     return scored;
 }
 
-function renderIctCompareChart(scored) {
+function renderIctCompareChart(scored, profile) {
     const bars = document.getElementById('ictCompareBars');
     if (!bars) return;
     const maxBuy = Math.max(...scored.map((s) => s.buy), 1);
+    const dutyLabel = profile?.groupLabel || profile?.label || 'Selected duty';
     bars.innerHTML = `
-        <div class="ict-h2h-chart">
-            <div class="ict-h2h-chart-head">
-                <strong>Head-to-head for this duty</strong>
-                <span>Ranked top to bottom by best-buy. Scores are duty/price marks — not game FPS.</span>
+        <div class="ict-buy-score-chart">
+            <div class="ict-buy-score-head">
+                <strong>Buy score ranking</strong>
+                <span>${ictCmpEsc(dutyLabel)} · darker bar = overall buy score · lighter inset = spec score</span>
             </div>
-            <div class="ict-h2h-legend" role="group" aria-label="Chart legend">
-                <p class="ict-h2h-legend-title">Legend</p>
-                <div class="ict-h2h-legend-grid">
-                    <div class="ict-h2h-leg-item">
-                        <span class="ict-h2h-leg-demo" aria-hidden="true">
-                            <span class="ict-h2h-leg-demo-track">
-                                <span class="ict-h2h-leg-demo-outer">
-                                    <span class="ict-h2h-leg-demo-inner"></span>
-                                    <span class="ict-h2h-leg-demo-n">47</span>
-                                </span>
-                            </span>
-                        </span>
-                        <span>
-                            <strong>How to read a bar</strong>
-                            <small>The number is the <b>best-buy</b> score. Outer pill length = that score versus the top row. Inner glass length = duty fit inside the same pill.</small>
-                        </span>
+            <div class="ict-buy-score-legend" role="group" aria-label="Chart legend">
+                <span><i class="ict-buy-score-swatch ict-buy-score-swatch-spec" aria-hidden="true"></i>Spec score</span>
+                <span><i class="ict-buy-score-swatch ict-buy-score-swatch-overall" aria-hidden="true"></i>Overall buy score</span>
+                <span><i class="ict-buy-score-swatch ict-buy-score-swatch-recommended" aria-hidden="true"></i>Recommended buy</span>
+            </div>
+            <div class="ict-buy-score-list">
+            ${scored.map((s, i) => {
+                const outer = Math.max(12, Math.round((s.buy / maxBuy) * 100));
+                const spec = Math.max(28, Math.min(100, Math.round((s.fit / Math.max(s.buy, 1)) * 100)));
+                const winner = i === 0 ? ' is-winner' : '';
+                const price = s.row.priceDisplay || s.row.priceText || '';
+                return `<div class="ict-buy-score-row${winner}">
+                    <div class="ict-buy-score-meta">
+                        <strong>${ictCmpEsc(s.row.title)}</strong>
+                        <em>${ictCmpEsc(ictCompareSpecLine(s.row))}</em>
+                        <em class="ict-buy-score-details">Spec score ${s.fit}${price ? ` · ${ictCmpEsc(price)}` : ''}</em>
                     </div>
-                    <div class="ict-h2h-leg-item">
-                        <i class="ict-leg ict-leg-buy" aria-hidden="true"></i>
-                        <span>
-                            <strong>Best-buy (outer pill)</strong>
-                            <small>Duty fit plus listed price — cheaper among the ticked listings scores higher. Longer bar wins.</small>
-                        </span>
-                    </div>
-                    <div class="ict-h2h-leg-item">
-                        <i class="ict-leg ict-leg-fit" aria-hidden="true"></i>
-                        <span>
-                            <strong>Duty fit (inner glass)</strong>
-                            <small>How well the listing matches the duty profile you selected. Also printed under the product name.</small>
-                        </span>
-                    </div>
-                    <div class="ict-h2h-leg-item">
-                        <i class="ict-leg ict-leg-win" aria-hidden="true"></i>
-                        <span>
-                            <strong>Red = recommended</strong>
-                            <small>Highest best-buy — always the top row. Purple bars are the other candidates. Grey track is the full scale.</small>
+                    <div class="ict-buy-score-track" title="Overall buy score ${s.buy} · spec score ${s.fit}">
+                        <span class="ict-buy-score-overall" style="width:${outer}%">
+                            <span class="ict-buy-score-spec" style="width:${spec}%"></span>
+                            <span class="ict-buy-score-value">${s.buy}</span>
                         </span>
                     </div>
                 </div>
-            </div>
-            ${scored.map((s, i) => {
-                const outer = Math.max(12, Math.round((s.buy / maxBuy) * 100));
-                const glass = Math.max(28, Math.min(92, Math.round((s.fit / Math.max(s.buy, 1)) * 92)));
-                const winner = i === 0 ? ' is-winner' : '';
-                const price = s.row.priceDisplay || s.row.priceText || '';
-                return `<div class="ict-h2h-row${winner}">
-                    <div class="ict-h2h-meta">
-                        <strong>${ictCmpEsc(s.row.title)}</strong>
-                        <em>${ictCmpEsc(ictCompareSpecLine(s.row))}</em>
-                        <em class="ict-h2h-scores">Duty fit ${s.fit}${price ? ` · ${ictCmpEsc(price)}` : ''}</em>
-                    </div>
-                    <div class="ict-h2h-track" title="Best-buy ${s.buy} · duty fit ${s.fit}">
-                        <span class="ict-h2h-outer" style="width:${outer}%">
-                            <span class="ict-h2h-inner" style="width:${glass}%"></span>
-                            <span class="ict-h2h-inner-label" title="Best-buy score">${s.buy}</span>
-                        </span>
-                    </div>
-                </div>`;
+                `;
             }).join('')}
+            </div>
         </div>`;
 }
 
@@ -313,8 +279,11 @@ function renderIctCompareTable() {
 
     if (!body) return;
     if (picks.length < 2) {
-        body.innerHTML = '<tr><td colspan="5" class="req-empty-row">Tick at least two listings — crawl selects the top four automatically.</td></tr>';
-        if (winnerEl) winnerEl.textContent = '';
+        body.innerHTML = '<tr><td colspan="5" class="req-empty-row">Select at least two listings to compare.</td></tr>';
+        if (winnerEl) {
+            winnerEl.className = 'muted';
+            winnerEl.textContent = '';
+        }
         const barsEl = document.getElementById('ictCompareBars');
         if (barsEl) barsEl.innerHTML = '';
         return;
@@ -324,9 +293,15 @@ function renderIctCompareTable() {
     const best = scored[0];
 
     if (winnerEl) {
-        winnerEl.innerHTML = `<strong>Recommended buy:</strong> ${ictCmpEsc(best.row.title)} ` +
-            `(best-buy ${best.buy} · duty fit ${best.fit}%${best.price ? ` · ${ictCmpEsc(best.row.priceDisplay || best.row.priceText)}` : ''}). ` +
-            `Confirm a supplier quotation before DP F1.`;
+        const price = best.row.priceDisplay || best.row.priceText || '';
+        winnerEl.className = 'ict-recommended-buy';
+        winnerEl.innerHTML = `
+            <span class="ict-recommended-buy-label">Recommended buy</span>
+            <strong class="ict-recommended-buy-title">${ictCmpEsc(best.row.title)}</strong>
+            <span class="ict-recommended-buy-spec">${ictCmpEsc(ictCompareSpecLine(best.row))}</span>
+            <span class="ict-recommended-buy-score">Buy score ${best.buy} / 100 · Spec score ${best.fit}${price ? ` · ${ictCmpEsc(price)}` : ''}</span>
+            <span class="ict-recommended-buy-why">Why: strongest combined duty fit and value score among the ${scored.length} selected candidate(s).</span>
+        `;
     }
 
     const factorHead = scored.map((s) => `<th>${ictCmpEsc(s.row.title)}</th>`).join('');
@@ -342,7 +317,7 @@ function renderIctCompareTable() {
         factorRow('Source', (s) => ictCmpEsc(s.row.source || 'web'))
     ].join('');
 
-    renderIctCompareChart(scored);
+    renderIctCompareChart(scored, profile);
 }
 
 function setIctCompareStatus(msg, kind = '') {
@@ -357,8 +332,28 @@ function ictCompareHistoryKey(dutyKey, category, extra) {
 }
 
 function isIctCompareArticle(row) {
-    const t = `${row?.title || ''} ${row?.snippet || ''}`.toLowerCase();
-    return /\bvs\.?\b|\bversus\b|head-to-head|round-?up|how to choose|best refurbished|side-by-side|compared|fleet (laptop|pc)|decision guide/.test(t);
+    const t = `${row?.title || ''} ${row?.snippet || ''} ${row?.url || ''}`.toLowerCase();
+    if (/\bvs\.?\b|\bversus\b|head-to-head|round-?up|how to choose|best refurbished|side-by-side|compared|fleet (laptop|pc)|decision guide/.test(t)) {
+        return true;
+    }
+    if (/^amazon\.com:|^ebay\.|^walmart\.|^best buy/.test((row?.title || '').toLowerCase().trim())) {
+        return true;
+    }
+    if (/\bfind .+ designed for|\bchoose from\b|\bshop (for|online)\b/.test(t)) {
+        return true;
+    }
+    if (/benchmark|notebookcheck|cpu-monkey|nanoreview|techpowerup|anandtech|passmark|cinebench|geekbench/.test(t)) {
+        return true;
+    }
+    const title = row?.title || '';
+    if (/\bprocessor\b|\bcpu\b|\bsoc\b|\bchip\b/i.test(title) && !/\blaptop\b|\bnotebook\b|\bmacbook\b|\bultrabook\b/i.test(t)) {
+        return true;
+    }
+    const url = (row?.url || '').toLowerCase();
+    if (url.includes('amazon.') && /\/(s\?|gp\/browse|stores\/|b\/ref=|b\?node=)/.test(url)) {
+        return true;
+    }
+    return false;
 }
 
 function ictCompareMatchesCategory(row, category) {
@@ -563,7 +558,7 @@ function applyIctCompareHistoryEntry(entry, { note } = {}) {
     ictCompareState.selected = new Set(
         keep.length
             ? keep
-            : ictCompareState.items.slice(0, 4).map((r) => r.id).filter(Boolean)
+            : ictCompareState.items.map((r) => r.id).filter(Boolean)
     );
     ictCompareState.lastResult = { cached: true, fromHistory: true };
 
@@ -602,7 +597,7 @@ function clearIctCompareHistory() {
     }
     renderIctCompareHistory();
     syncIctCompareCrawlButton();
-    if (typeof showToast === 'function') showToast('Head-to-head search history cleared.', 'info');
+    if (typeof showToast === 'function') showToast('ICT Equipment Compare search history cleared.', 'info');
 }
 
 async function runIctCompareCrawl({ force = false } = {}) {
@@ -679,7 +674,7 @@ async function runIctCompareCrawl({ force = false } = {}) {
     }).sort((a, b) => ictCompareDutyScore(b, profile) - ictCompareDutyScore(a, profile));
 
     ictCompareState.selected = new Set(
-        ictCompareState.items.slice(0, 4).map((r) => r.id).filter(Boolean)
+        ictCompareState.items.map((r) => r.id).filter(Boolean)
     );
 
     ictCompareState.lastResult = result;
@@ -695,7 +690,7 @@ async function runIctCompareCrawl({ force = false } = {}) {
     const picked = ictCompareState.selected.size;
     setIctCompareStatus(
         n
-            ? `${n} candidate(s) ranked for ${profile.label}. Top ${picked} selected for the ranked bar chart.${result?.cached ? ' (server cache — not a new web crawl)' : ' Saved to previous searches.'}`
+            ? `${n} candidate(s) ranked for ${profile.label}. ${picked} selected for the ranked bar chart.${result?.cached ? ' (server cache — not a new web crawl)' : ' Saved to previous searches.'}`
             : 'No candidates. Check START-SYSTEM is running for web crawl, or widen keywords.',
         n ? 'ok' : 'warn'
     );

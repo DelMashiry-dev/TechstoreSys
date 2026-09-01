@@ -6,8 +6,11 @@
 
                 <p class="dp-proc-intro">
                     ITDIR procures and accounts for ZNA ICT equipment, software, licences, consumables, spares, and services
-                    via <strong>DP</strong> (procurement) and <strong>DAF</strong> (targets / votes / budgets). Track each case through the
-                    official 8-step cycle below.
+                    via <strong>DP</strong> (procurement) and <strong>DAF</strong> (targets / votes / budgets).
+                    Operating path: <strong>Requisition + Target → DP F1 → Colonel SD (GS) → MANAC (DAF) → PFMS req number →
+                    DP Contracts → quotations / adjudication → SO1 winner → AIAD due diligence → P/O → supply / inspect → DAF pay</strong>.
+                    Tracker below compresses that path into eight status groups. Learning Centre holds the full chart and the
+                    Nixzimo <strong>DP 3478/2026</strong> paper pack.
                 </p>
 
                 <div id="dpProcCycleStrip" class="dp-cycle-strip" aria-label="Procurement cycle steps"></div>
@@ -135,13 +138,16 @@
                     <div class="module-actions">
                         <button type="button" class="btn btn-success" id="dpProcSaveBtn">Save Status</button>
                         <button type="button" class="btn btn-primary" id="dpProcAdvanceBtn">Advance to Next Stage</button>
+                        <button type="button" class="btn btn-secondary" id="dpProcWorkshopCertBtn" title="IT Dir Workshop receipt certification before MLG">Workshop Certification</button>
                         <button type="button" class="btn btn-secondary" id="dpProcPostStockBtn" title="Post verified delivery into Stores Inventory">Post to Stores Inventory</button>
                         <button type="button" class="btn btn-secondary" id="dpProcClearBtn">Clear Selection</button>
                     </div>
                     <p id="dpProcStockStatus" class="dp-proc-stock-status">Not posted to Stores Inventory.</p>
+                    <p id="dpProcWrcStatus" class="dp-proc-wrc-status"></p>
                     <p class="dp-proc-stock-hint">
+                        <strong>ICT equipment:</strong> Workshop assesses spec → certification form → supplier to MLG with PO + D-Note → ZA engraving → then post receipt here.
                         Inventory must reflect what ITDIR <strong>procures</strong>, <strong>receives &amp; stocks</strong>, then
-                        <strong>issues / distributes</strong>. After delivery verification, post receipts here so reports can account for stock.
+                        <strong>issues / distributes</strong>.
                     </p>
                     <div class="dp-proc-history-wrap">
                         <h4>Status history</h4>

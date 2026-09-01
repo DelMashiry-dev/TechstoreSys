@@ -8,14 +8,14 @@ const REPORT_TABLE_HEADERS = {
     'gl-220200002-table-body': ['Serial', 'Item', 'Description', 'Qty', 'Unit', 'Price/Unit', 'Amount'],
     'gl-2201900002-table-body': ['Date', 'Consignor / Consignee', 'Receipts', 'Issues', 'Stock', 'Voucher / QM Signature', 'Number and Name'],
     'gl-3112210001-table-body': ['Date', 'Consignor / Consignee', 'Receipts', 'Issues', 'Stock', 'Voucher / QM Signature', 'Number and Name'],
-    'voucher-table-body': ['Date', 'Item Category', 'Item', 'Description', 'Qty', 'UoM', 'GL Account', 'Unit Cost', 'Line Total', 'RV/IV No.', 'Purchase No.', 'Supplied By', 'Issued To', 'Initials'],
+    'voucher-table-body': ['Date', 'Item Category', 'Item', 'Description', 'Qty', 'UoM', 'GL Account', 'Unit Cost', 'Line Total', 'RV/IV No.', 'Purchase No.', 'Supplied By', 'Issued To', 'Appointment', 'Initials'],
     'bids-table-body': ['Serial', 'Item', 'Cost Centre', 'GL A/C', 'Description', 'Qty', 'Unit Cost', 'Total Cost'],
     'unit-equipment-table-body': ['Ser', 'Item Name', 'ZA Number', 'Description', 'Holding Unit', 'Location'],
     'loans-table-body': ['Date Loaned', 'ZA Number', 'Item', 'Description', 'Qty', 'UoM', 'Issued To', 'Force No.', 'Unit / Formation / Dir', 'Expected Return', 'Date Returned', 'Issued By', 'Issuer Initials'],
     'spec-eval-table-body': ['Ser', 'Specification Field', 'Required Spec / Value', 'Price Justification / Notes'],
     'dp-f1-table-body': ['Ser', 'Designation', 'Qty', 'Holding Stock', 'Potential Supplier'],
     'zna-q-982-table-body': ['Line', 'Stock', 'Location', 'Vocab/Part', 'Section', 'Designation', 'UOI', 'Required', 'Issued', 'To Follow', 'Pkg', 'Weight', '$', 'c'],
-    'delivery-table-body': ['Date', 'Item', 'Description', 'Qty', 'UoM', 'Product Serial', 'Purchase No.', 'Supplied By', 'Received By', 'Initials'],
+    'delivery-table-body': ['Date', 'Item', 'Description', 'Qty', 'UoM', 'Product Serial', 'Purchase No.', 'Supplied By', 'Received By', 'Initials', 'Workshop cert'],
     'purchase-orders-table-body': ['Date', 'Supplier', 'PO Number', 'Total', 'GL Account', 'Vendor No.', 'Signature'],
     'purchase-orders-lines-body': ['Item (Ser)', 'Material Number', 'Order Qty', 'Unit', 'Description', 'Price Per Unit', 'Net Value'],
     'workshop-repairs-table-body': ['Serial', 'Equipment Type', 'S/N or ZA No.', 'Unit', 'Diagnosis', 'Remarks', 'Date In', 'Received By', 'Date Out', 'SVCS 1045 Ref'],
@@ -243,7 +243,7 @@ function buildStoresInventoryReportData(dateFrom, dateTo) {
         });
     });
 
-    const movementHeaders = ['Date', 'Type', 'Source', 'Category', 'Item', 'Qty', 'UoM', 'GL', 'RV/IV / DN', 'PO / Cycle', 'Party', 'By', 'Description'];
+    const movementHeaders = ['Date', 'Type', 'Source', 'Category', 'Item', 'Qty', 'UoM', 'GL', 'RV/IV / DN', 'PO / Cycle', 'Party', 'Appointment', 'By', 'Description'];
     const movements = (appState.storesInventory?.transactions || []).filter((txn) => {
         const d = txn.date || '';
         if (dateFrom && d < dateFrom) return false;
@@ -265,6 +265,7 @@ function buildStoresInventoryReportData(dateFrom, dateTo) {
             txn.deliveryNoteRef || txn.voucherNo || '',
             [txn.poNumber, txn.dpRef].filter(Boolean).join(' / ') || txn.sourceRef || '',
             txn.party || '',
+            txn.appointment || '',
             txn.by || '',
             txn.description || ''
         ];
@@ -413,10 +414,87 @@ function buildIctAccountabilityReportData(dateFrom, dateTo) {
     };
 }
 
+function buildPermanentLoansReportData(dateFrom, dateTo) {
+    const inPeriod = (iso) => {
+        if (!iso) return !dateFrom && !dateTo;
+        if (dateFrom && iso < dateFrom) return false;
+        if (dateTo && iso > dateTo) return false;
+        return true;
+    };
+    const rows = (typeof collectPermanentLoanRows === 'function' ? collectPermanentLoanRows() : [])
+        .filter((rec) => inPeriod(rec.issueDate))
+        .map((rec) => [
+            rec.zaNumber || '',
+            rec.item || (typeof plCategoryLabel === 'function' ? plCategoryLabel(rec.category) : rec.category),
+            rec.issueDate || '',
+            [rec.rank, rec.issuedTo].filter(Boolean).join(' '),
+            rec.forceNo || '',
+            (typeof plUnitLabel === 'function' ? plUnitLabel(rec.unit) : rec.unit) || '',
+            rec.status?.threeYearIso || '',
+            rec.status?.label || '',
+            (typeof plEligibilityLabel === 'function' ? plEligibilityLabel(rec.eligibility) : rec.eligibility) || ''
+        ]);
+    const summaryStats = typeof getPermanentLoansSummary === 'function'
+        ? getPermanentLoansSummary()
+        : { serving: 0, due3yr: 0, retireReturn: 0, personal: 0, total: rows.length };
+
+    return {
+        title: 'Permanent Loans — Laptops & iPads',
+        summary: [
+            `Records in period: ${rows.length} (register total ${summaryStats.total || rows.length})`,
+            `On permanent loan (serving): ${summaryStats.serving || 0}`,
+            `3-year / strike-off in progress: ${summaryStats.due3yr || 0}`,
+            `Return on retirement (< 3 years): ${summaryStats.retireReturn || 0}`,
+            `Personal / struck off: ${summaryStats.personal || 0}`,
+            'Policy: Comd/34 (06 Nov 15) · AS(PLANS)/34 · QM IT DIR 17 Mar 20'
+        ],
+        fields: [
+            { label: 'Directorate', value: 'Information Technology Directorate' },
+            { label: 'File', value: 'IT/34 — Computer policy instruction and directives' }
+        ],
+        tables: [
+            {
+                tbodyId: 'permanent-loans-report',
+                title: 'Permanent loan register',
+                headers: [
+                    'ZA No.', 'Item', 'Date of issue', 'Issued to', 'Force No.',
+                    'Unit', '3-year date', 'Status', 'Eligibility'
+                ],
+                rows
+            }
+        ]
+    };
+}
+
 function buildModuleReportData(moduleId) {
     const { from: dateFrom, to: dateTo } = getReportDateFilters();
 
     if (moduleId === 'dashboard') return buildDashboardReportData();
+    if (moduleId === 'monthly-target-proposal') {
+        return typeof buildMonthlyTargetProposalReportData === 'function'
+            ? buildMonthlyTargetProposalReportData()
+            : { title: 'Monthly Target Proposal', summary: ['Module not loaded.'], fields: [], tables: [] };
+    }
+    if (moduleId === 'daf-fund-request-memo') {
+        return typeof buildDafFundRequestMemoReportData === 'function'
+            ? buildDafFundRequestMemoReportData()
+            : { title: 'DAF Fund Request Memo', summary: ['Module not loaded.'], fields: [], tables: [] };
+    }
+    if (moduleId === 'unit-requisitions') {
+        return typeof buildUnitRequisitionsReportData === 'function'
+            ? buildUnitRequisitionsReportData()
+            : { title: 'Unit Requisitions', summary: ['Module not loaded.'], fields: [], tables: [] };
+    }
+    if (moduleId === 'supplier-debts') {
+        return typeof buildSupplierDebtsReportData === 'function'
+            ? buildSupplierDebtsReportData()
+            : { title: 'Supplier Debts', summary: ['Module not loaded.'], fields: [], tables: [] };
+    }
+    if (moduleId === 'supplier-debt-chase') {
+        return typeof buildSupplierDebtChaseReportData === 'function'
+            ? buildSupplierDebtChaseReportData()
+            : { title: 'DAF chase — supplier debt', summary: ['Module not loaded.'], fields: [], tables: [] };
+    }
     if (moduleId === 'techstores-period') {
         return typeof buildTechStoresPeriodReportData === 'function'
             ? buildTechStoresPeriodReportData(dateFrom, dateTo)
@@ -436,6 +514,7 @@ function buildModuleReportData(moduleId) {
     }
     if (moduleId === 'inventory-accountability') return buildInventoryAccountabilityReportData(dateFrom, dateTo);
     if (moduleId === 'ict-accountability') return buildIctAccountabilityReportData(dateFrom, dateTo);
+    if (moduleId === 'permanent-loans') return buildPermanentLoansReportData(dateFrom, dateTo);
     if (moduleId === 'dp-procurement') {
         const rows = (typeof ensureDpProcurements === 'function' ? ensureDpProcurements() : [])
             .map((r) => {
@@ -783,6 +862,9 @@ function renderReportHtml(reportData) {
     if (reportData?.layout === 'techstores-period' && reportData.html) {
         return reportData.html;
     }
+    if (reportData?.layout === 'daf-fund-memo' && reportData.html) {
+        return reportData.html;
+    }
     if (reportData?.layout === 'monthly-returns' && reportData.html) {
         return reportData.html;
     }
@@ -815,10 +897,12 @@ function renderReportHtml(reportData) {
     if (from || to) period = `${from || '…'} to ${to || '…'}`;
 
     let html = `
-        <div class="report-doc-header">
-            <h2>IT-DIR Tech Stores</h2>
+        <div class="report-doc-header ${reportData.layout === 'priority-list' ? 'report-priority-list-header' : ''}">
+            ${reportData.layout === 'priority-list' ? '<div class="report-restricted-mark">RESTRICTED</div>' : ''}
+            <h2>Information Technology Directorate</h2>
             <h3>${escapeHtml(reportData.title)}</h3>
-            <div>Cost Centre: Z04P2SP212</div>
+            <div>Cost Centre: Z04P2SP212 · Josiah Magama Tongogara Barracks</div>
+            ${reportData.layout === 'priority-list' ? '<div class="report-restricted-mark report-restricted-foot">RESTRICTED</div>' : ''}
         </div>
         <div class="report-meta">
             <span><strong>Generated:</strong> ${escapeHtml(generatedAt)}</span>
@@ -874,8 +958,12 @@ function generateModuleReport(moduleId, options = {}) {
         showToast('You do not have access to reports.', 'error');
         return null;
     }
-    if (moduleId !== 'dashboard' && moduleId !== 'techstores-period' && moduleId !== 'stores-inventory' && moduleId !== 'stock-take' && moduleId !== 'monthly-returns' && moduleId !== 'inventory-accountability' && moduleId !== 'ict-accountability' && moduleId !== 'dp-procurement' && !canAccessModule(moduleId) && moduleId !== 'release-cut') {
+    if (moduleId !== 'dashboard' && moduleId !== 'techstores-period' && moduleId !== 'stores-inventory' && moduleId !== 'stock-take' && moduleId !== 'monthly-returns' && moduleId !== 'inventory-accountability' && moduleId !== 'ict-accountability' && moduleId !== 'dp-procurement' && moduleId !== 'monthly-target-proposal' && moduleId !== 'daf-fund-request-memo' && moduleId !== 'supplier-debt-chase' && !canAccessModule(moduleId) && moduleId !== 'release-cut') {
         showToast('You do not have access to that module report.', 'error');
+        return null;
+    }
+    if (moduleId === 'supplier-debt-chase' && !canAccessModule('supplier-debts')) {
+        showToast('You do not have access to supplier debt chase minutes.', 'error');
         return null;
     }
     if ((moduleId === 'stores-inventory' || moduleId === 'stock-take' || moduleId === 'inventory-accountability') && !canAccessModule('voucher-module') && !canAccessModule('stock-take') && !canAccessModule('reports-module')) {
@@ -926,7 +1014,8 @@ function printGeneratedReport() {
         'zna-q-982': 'printing-zna-q-982',
         'zna-q-178': 'printing-zna-q-178',
         'zna-q-1033': 'printing-zna-q-1033',
-        'zna-q-1043': 'printing-zna-q-1043',
+        'priority-list': 'printing-priority-list',
+        'daf-fund-memo': 'printing-daf-fund-memo',
         'zna-q-80': 'printing-zna-q-80',
         'zna-svcs-890': 'printing-zna-svcs-890',
         'zna-q-1179': 'printing-zna-q-1179',

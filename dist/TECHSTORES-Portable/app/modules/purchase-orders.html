@@ -6,8 +6,9 @@
 
                 <p class="req-intro po-screen-only">
                     <span class="aso-ref">ASO Pt 1 Ch 26</span>
-                    Electronic purchase order — SAP-style layout. Complete the document, add to the register, then save.
-                    Cancelled POs: pin all copies together and file in numerical sequence.
+                    Republic of Zimbabwe DP purchase orders for IT DIR ICT procurement. The
+                    <strong>PO Register</strong> holds real issued orders (e.g. <em>DP 3199/2026</em>, <em>DP 3478/2026</em>).
+                    Click a register row to open the full PO document. Cancelled POs: pin all copies together and file in numerical sequence.
                 </p>
 
                 <div class="po-electronic-doc">
@@ -46,6 +47,10 @@
                             <input type="text" id="poVendorNo" class="form-control" placeholder="Vendor number">
                         </label>
                         <label class="po-doc-meta-item">
+                            <span>Requisition No.</span>
+                            <input type="text" id="poReqNo" class="form-control" placeholder="PFMS requisition number">
+                        </label>
+                        <label class="po-doc-meta-item">
                             <span>Deliver to</span>
                             <input type="text" id="poDeliverTo" class="form-control" value="IT DIR / 04 731831" placeholder="Delivery location">
                         </label>
@@ -56,6 +61,14 @@
                         <label class="po-doc-meta-item">
                             <span>Payment Terms</span>
                             <input type="text" id="poPaymentTerms" class="form-control" placeholder="e.g. 30 days">
+                        </label>
+                        <label class="po-doc-meta-item">
+                            <span>Contact</span>
+                            <input type="text" id="poContact" class="form-control" value="Dir of Procurement" placeholder="Procurement contact">
+                        </label>
+                        <label class="po-doc-meta-item">
+                            <span>Telephone</span>
+                            <input type="text" id="poTelephone" class="form-control" value="0242-790016" placeholder="Contact telephone">
                         </label>
                         <label class="po-doc-meta-item">
                             <span>Currency</span>
@@ -129,8 +142,12 @@
                 </div>
 
                 <div class="po-register-section po-screen-only">
-                    <h3 class="po-register-heading">PO Register</h3>
-                    <p class="po-register-hint">Saved purchase orders linked to GL commitments.</p>
+                    <h3 class="po-register-heading">PO Register — IT DIR DP orders</h3>
+                    <p class="po-register-hint">Real Republic of Zimbabwe purchase orders linked to GL <strong>3112210001</strong>. Click a row to load the full document.</p>
+                    <div class="po-register-toolbar module-toolbar">
+                        <button type="button" class="btn btn-secondary btn-sm" id="poLoadRealDpBtn">Ensure DP register loaded</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="poReloadRealDpBtn">Reload scanned POs</button>
+                    </div>
 
                     <div class="module-toolbar">
                         <input type="search" class="form-control table-search" data-search-target="purchase-orders-table-body" placeholder="Search register...">

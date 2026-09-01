@@ -1,0 +1,71 @@
+<div id="laptop-compare" class="form-container">
+    <div class="form-header">
+        <h2 class="form-title">Laptop Compare — buy the winner</h2>
+        <button class="close-btn">&times;</button>
+    </div>
+    <p class="q982-intro">
+        Ranks <strong>laptops</strong> from the local ICT catalog (CPU, RAM, storage, display, security, battery, etc.)
+        and DP purchase-order prices where available. Use this <em>before</em> Spec Evaluation and Guide Quotation —
+        it does not replace official due diligence or supplier quotation.
+    </p>
+
+    <div class="dashboard-panel ict-compare-search-panel">
+        <div class="section-heading section-heading-compact">
+            <h3>What are we buying for?</h3>
+        </div>
+        <div class="form-row">
+            <div class="form-col">
+                <label class="form-label" for="laptopCompareDuty">Duty profile</label>
+                <select class="form-control" id="laptopCompareDuty"></select>
+            </div>
+            <div class="form-col">
+                <label class="form-label" for="laptopCompareBrand">Brand</label>
+                <select class="form-control" id="laptopCompareBrand">
+                    <option value="Any">Any brand</option>
+                </select>
+            </div>
+            <div class="form-col">
+                <label class="form-label" for="laptopCompareMinRam">Minimum RAM</label>
+                <select class="form-control" id="laptopCompareMinRam">
+                    <option value="any">Any</option>
+                </select>
+            </div>
+            <div class="form-col">
+                <label class="form-label" for="laptopCompareMinStorage">Minimum storage</label>
+                <select class="form-control" id="laptopCompareMinStorage">
+                    <option value="any">Any</option>
+                </select>
+            </div>
+        </div>
+        <p class="spec-search-duty-hint" id="laptopCompareDutyHint" hidden></p>
+        <div class="module-actions ict-compare-actions">
+            <button type="button" class="btn btn-primary" id="laptopCompareRankBtn">Rank laptops &amp; pick winner</button>
+            <button type="button" class="btn btn-secondary" id="laptopCompareMarketBtn">Add live market listings</button>
+            <button type="button" class="btn btn-secondary" id="laptopComparePrintBtn">Print comparison</button>
+        </div>
+        <div id="laptopCompareStatus" class="spec-search-status" aria-live="polite"></div>
+    </div>
+
+    <div class="dashboard-panel ict-compare-results-panel" id="laptopCompareResultsPanel" hidden>
+        <div id="laptopCompareWinner" class="ict-recommended-buy" hidden></div>
+        <div id="laptopCompareBars" class="ict-compare-bars"></div>
+        <div class="section-heading section-heading-compact ict-compare-side-head">
+            <h3>Side-by-side specs (top ranked)</h3>
+        </div>
+        <div class="form-table-wrapper">
+            <table class="overview-table ict-compare-table ict-compare-sidebyside">
+                <thead>
+                    <tr id="laptopCompareSideHeadRow">
+                        <th>Spec</th>
+                    </tr>
+                </thead>
+                <tbody id="laptopCompareTableBody">
+                    <tr><td colspan="2" class="req-empty-row">Rank laptops to compare.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="module-actions">
+            <button type="button" class="btn btn-primary" id="laptopCompareSendWinnerBtn" hidden>Send winner to Spec Evaluation</button>
+        </div>
+    </div>
+</div>

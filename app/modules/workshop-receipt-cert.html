@@ -79,8 +79,12 @@
                 <input type="text" class="form-control" id="wrcOfficerName">
             </div>
             <div class="form-col">
-                <label class="form-label">Unit</label>
-                <input type="text" class="form-control" id="wrcOfficerUnit" value="IT Directorate" list="znaUnitDatalist">
+                <label class="form-label" for="wrcOfficerUnit">Unit</label>
+                <div class="zna-unit-picker">
+                    <select class="form-control zna-unit-select" id="wrcOfficerUnit" title="Officer unit / formation">
+                        <option value="">— Select unit / formation —</option>
+                    </select>
+                </div>
             </div>
         </div>
         <div class="form-row">

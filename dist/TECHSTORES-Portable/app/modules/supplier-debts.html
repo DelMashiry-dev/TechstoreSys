@@ -1,0 +1,218 @@
+<div id="supplier-debts" class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Supplier Debts — Non-paid goods received</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <p class="req-intro">
+                    Goods or services <strong>already delivered</strong> to the cost centre, but
+                    <strong>not yet paid</strong>. Payment is effected by <strong>DAF</strong>.
+                    IT Dir keeps this register so we know how much each supplier is owed and how old the debt is,
+                    then we can <strong>push DAF</strong> from our end.
+                    Opposite of Undelivered Items (ordered, not yet received).
+                </p>
+
+                <div class="req-aging-strip sd-aging-strip" aria-label="Supplier debt summary">
+                    <div class="req-stat"><span class="req-stat-value" id="sdStatOpen">0</span><span class="req-stat-label">Open cases</span></div>
+                    <div class="req-stat"><span class="req-stat-value" id="sdStatUsd">0</span><span class="req-stat-label">USD owed</span></div>
+                    <div class="req-stat"><span class="req-stat-value req-stat-overdue" id="sdStatOld">0</span><span class="req-stat-label">1 year+</span></div>
+                    <div class="req-stat"><span class="req-stat-value" id="sdStatChased">0</span><span class="req-stat-label">Chased DAF</span></div>
+                    <div class="req-stat"><span class="req-stat-value" id="sdStatSuppliers">0</span><span class="req-stat-label">Suppliers owed</span></div>
+                </div>
+
+                <div class="dashboard-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>By supplier — how much is owed</h3>
+                    </div>
+                    <div class="form-table-wrapper">
+                        <table class="overview-table sd-supplier-table">
+                            <thead>
+                                <tr>
+                                    <th>Supplier</th>
+                                    <th>Open cases</th>
+                                    <th>USD owed</th>
+                                    <th>Oldest debt</th>
+                                    <th>Last DAF chase</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sd-supplier-summary-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="dashboard-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>In-tray — non-paid deliveries</h3>
+                    </div>
+                    <div class="module-toolbar">
+                        <div class="sd-combo" data-sd-combo="filter">
+                            <input type="search" class="form-control table-search" id="sdTableSearch" placeholder="Type a supplier, PO, or invoice…" autocomplete="off" spellcheck="false" aria-autocomplete="list" aria-controls="sdFilterSupplierList" aria-expanded="false">
+                            <button type="button" class="sd-combo-toggle" id="sdFilterSupplierToggle" aria-label="Show listed suppliers" aria-controls="sdFilterSupplierList" title="Pick a listed supplier">▾</button>
+                            <ul class="sd-combo-list" id="sdFilterSupplierList" role="listbox" hidden></ul>
+                        </div>
+                        <select class="form-control" id="sdFilterStatus" style="max-width:170px;">
+                            <option value="open">Unpaid (open)</option>
+                            <option value="all">All statuses</option>
+                            <option value="open_only">Open</option>
+                            <option value="chased_daf">Chased DAF</option>
+                            <option value="part_paid">Part paid</option>
+                            <option value="paid">Paid</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                        <select class="form-control" id="sdFilterAge" style="max-width:160px;">
+                            <option value="all">All ages</option>
+                            <option value="y0">Under 1 year</option>
+                            <option value="y1">1–2 years</option>
+                            <option value="y2">2 years+</option>
+                        </select>
+                        <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                        <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                    </div>
+                    <div class="form-table-wrapper">
+                        <table class="overview-table req-table">
+                            <thead>
+                                <tr>
+                                    <th>Date in</th>
+                                    <th>Supplier</th>
+                                    <th>Ref / PO</th>
+                                    <th>Cost centre</th>
+                                    <th>USD owed</th>
+                                    <th>Age of debt</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sd-cases-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="dashboard-panel req-capture-panel" id="sdCapturePanel">
+                    <div class="section-heading section-heading-compact">
+                        <h3 id="sdFormTitle">Book a non-paid delivery</h3>
+                    </div>
+                    <input type="hidden" id="sdEditId" value="">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Date in (IT Dir)</label>
+                            <input type="date" class="form-control" id="sdReceivedDate">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Debt from (accumulation start)</label>
+                            <input type="date" class="form-control" id="sdAccumulatedFrom" title="First supply / invoice date — age counts from here until paid">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Minute / file ref</label>
+                            <input type="text" class="form-control" id="sdMinuteRef" placeholder="e.g. QS/13/3">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Case no.</label>
+                            <input type="text" class="form-control" id="sdCaseNo" placeholder="Auto">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col" style="flex:1.4;">
+                            <label class="form-label">Supplier</label>
+                            <div class="sd-combo sd-combo-form" data-sd-combo="form">
+                                <input type="text" class="form-control" id="sdSupplier" placeholder="Type a name or pick a listed supplier" autocomplete="off" spellcheck="false" aria-autocomplete="list" aria-controls="sdSupplierPickList" aria-expanded="false">
+                                <button type="button" class="sd-combo-toggle" id="sdSupplierToggle" aria-label="Show listed suppliers" aria-controls="sdSupplierPickList" title="Pick a listed supplier">▾</button>
+                                <ul class="sd-combo-list" id="sdSupplierPickList" role="listbox" hidden></ul>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Cost centre</label>
+                            <select class="form-control" id="sdCostCentre">
+                                <option value="IT DIR">IT DIR</option>
+                                <option value="DAF">DAF</option>
+                                <option value="ORD DIR">ORD DIR</option>
+                                <option value="OSD">OSD</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Status</label>
+                            <select class="form-control" id="sdStatus"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Goods / services received (not paid)</label>
+                        <input type="text" class="form-control" id="sdDescription" placeholder="e.g. Repair and maintenance of printing press">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Action (routing)</label>
+                            <input type="text" class="form-control" id="sdActionTo" placeholder="e.g. AS Branch">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Info</label>
+                            <input type="text" class="form-control" id="sdInfoTo" placeholder="e.g. Brig Gen QS, IT Dir, File">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Paid date</label>
+                            <input type="date" class="form-control" id="sdPaidDate" title="Set when DAF has paid — stops the age clock">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">DAF chased on</label>
+                            <input type="date" class="form-control" id="sdDafChasedAt">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">DAF chase / minute ref</label>
+                            <input type="text" class="form-control" id="sdDafChasedRef" placeholder="IT Dir minute to DAF">
+                        </div>
+                        <div class="form-col" style="flex:1.4;">
+                            <label class="form-label">Attachment register</label>
+                            <input type="text" class="form-control" id="sdAttachments" placeholder="e.g. Reconciled outstanding debt (01 copy)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" id="sdNotes" rows="2" placeholder="Liquidity / continuity of service / follow-up"></textarea>
+                    </div>
+
+                    <div class="section-heading section-heading-compact">
+                        <h3>Invoice / PO lines (supply register)</h3>
+                    </div>
+                    <p class="muted">One row per delivery invoice. Total USD is converted ZWL + direct USD (and ZiG equivalent if you enter it in Total USD).</p>
+                    <div class="form-table-wrapper">
+                        <table class="overview-table sd-lines-table">
+                            <thead>
+                                <tr>
+                                    <th>Date of supply</th>
+                                    <th>Cost centre</th>
+                                    <th>PO number</th>
+                                    <th>Invoice no.</th>
+                                    <th>Amount ZWL</th>
+                                    <th>Rate (USD)</th>
+                                    <th>Converted USD</th>
+                                    <th>Amount ZiG</th>
+                                    <th>Amount USD</th>
+                                    <th>Total USD</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="sd-lines-body"></tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="6">Totals</th>
+                                    <th id="sdTotConverted">0.00</th>
+                                    <th id="sdTotZig">0.00</th>
+                                    <th id="sdTotUsd">0.00</th>
+                                    <th id="sdTotGrand">0.00</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="module-actions">
+                        <button type="button" class="btn btn-ghost btn-sm" id="sdAddLineBtn">Add invoice line</button>
+                    </div>
+
+                    <div class="module-actions">
+                        <button type="button" class="btn btn-success" id="sdSaveBtn">Save case</button>
+                        <button type="button" class="btn btn-primary" id="sdChaseBtn">Chase DAF</button>
+                        <button type="button" class="btn btn-ghost" id="sdClearBtn">Clear form</button>
+                    </div>
+                </div>
+            </div>

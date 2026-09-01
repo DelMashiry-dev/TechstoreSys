@@ -7,7 +7,14 @@ const AUTOSTART_INSTALLED_KEY = 'techstoresAutostartInstalled';
 
 function getPreferredStorageMode() {
     const saved = localStorage.getItem(PREFERRED_MODE_KEY);
-    return saved === 'offline' ? 'offline' : 'online';
+    if (saved === 'offline') return 'offline';
+    return 'online';
+}
+
+function ensureOnlinePreferredByDefault() {
+    if (!localStorage.getItem(PREFERRED_MODE_KEY)) {
+        localStorage.setItem(PREFERRED_MODE_KEY, 'online');
+    }
 }
 
 function setPreferredStorageMode(target) {
@@ -22,7 +29,7 @@ async function tryWakeServerViaProtocol(target) {
         iframe.style.display = 'none';
         iframe.src = `techstores-wake:${target === 'offline' ? 'offline' : 'online'}`;
         document.body.appendChild(iframe);
-        await new Promise((resolve) => setTimeout(resolve, 3500));
+        await new Promise((resolve) => setTimeout(resolve, 1200));
         iframe.remove();
     } catch (_) { /* ignore */ }
     return !!(await fetchLauncherHealth(2500));
@@ -131,50 +138,50 @@ function isStorageModeOnline() {
 
 function getStorageModeLabel() {
     if (storageMode === 'online') {
-        return pendingServerSync ? 'Online — syncing' : 'Online — SQLite';
+        return pendingServerSync ? 'Database — syncing' : 'Database — techstores.db';
     }
-    if (storageMode === 'offline-shell') return 'Offline shell';
-    if (storageMode === 'offline-local') return 'Offline — local copy';
-    return 'Local only';
+    if (storageMode === 'offline-shell') return 'Browser — offline shell';
+    if (storageMode === 'offline-local') return 'Browser — local copy';
+    return 'Browser — local only';
 }
 
 function getStorageModeHelp() {
     if (storageMode === 'online') {
         return {
-            title: 'Online mode (database server)',
-            body: 'Data saves to techstores.db on this PC. Shared across users and survives restarts.',
-            switchTo: 'Use the toggle below to switch to offline mode (browser storage).'
+            title: 'Database mode (techstores.db)',
+            body: 'Data saves to techstores.db on this PC via the local server (127.0.0.1:8080). Does not require internet — only the database server running.',
+            switchTo: 'Use the toggle to switch to browser-only storage when the server is stopped.'
         };
     }
     if (storageMode === 'offline-shell') {
         return {
-            title: 'Offline shell',
-            body: 'The lightweight offline server is running. Data saves in your browser (IndexedDB) and syncs when you switch back to online.',
-            switchTo: 'Use the toggle below to switch to online mode (SQLite database).'
+            title: 'Browser — offline shell',
+            body: 'The lightweight offline server is running. Data saves in your browser (IndexedDB) and syncs when you switch back to database mode.',
+            switchTo: 'Use the toggle to switch to database mode (techstores.db on this PC).'
         };
     }
     if (storageMode === 'offline-local') {
         return {
-            title: 'Offline — local copy',
-            body: 'No app server on port 8080. Your work is in the browser. Use the toggle on the login form to start offline or online mode.',
-            switchTo: 'If the toggle does nothing, run START-OFFLINE.bat or START-SYSTEM.bat once (starts the background launcher).'
+            title: 'Browser — local copy',
+            body: 'The database server on port 8080 is not running. Your work is in the browser. Run START-SYSTEM.bat to use techstores.db.',
+            switchTo: 'If the toggle does nothing, run START-SYSTEM.bat once (starts the background launcher).'
         };
     }
     return {
-        title: 'Local only',
-        body: 'No server detected. Use the Storage mode toggle on the login form, or run START-SYSTEM.bat / START-OFFLINE.bat.',
-        switchTo: 'The launcher on port 8765 lets the toggle start servers after you run a starter batch file once.'
+        title: 'Browser — local only',
+        body: 'No database server detected. Run START-SYSTEM.bat, or use browser-only storage until the server is available.',
+        switchTo: 'The launcher on port 8765 lets the toggle start the server after you run a starter batch file once.'
     };
 }
 
 function storageModeToggleMarkup(id) {
     return `
-        <span class="storage-mode-toggle-label" data-side="offline">Offline</span>
+        <span class="storage-mode-toggle-label" data-side="offline">Browser</span>
         <button type="button" class="storage-mode-toggle" id="${id}" role="switch"
-            aria-checked="false" aria-label="Switch between online and offline storage">
+            aria-checked="false" aria-label="Switch between database (techstores.db) and browser-only storage">
             <span class="storage-mode-toggle-track"><span class="storage-mode-toggle-thumb"></span></span>
         </button>
-        <span class="storage-mode-toggle-label" data-side="online">Online</span>
+        <span class="storage-mode-toggle-label" data-side="online">Database</span>
     `;
 }
 
@@ -190,7 +197,7 @@ function ensureStorageModeModal() {
         <div class="storage-mode-backdrop" data-sm-close></div>
         <div class="storage-mode-panel" role="dialog" aria-labelledby="storageModeTitle">
             <header class="storage-mode-head">
-                <h2 id="storageModeTitle">Storage mode</h2>
+                <h2 id="storageModeTitle">Data storage</h2>
                 <button type="button" class="btn btn-ghost btn-sm" data-sm-close aria-label="Close">✕</button>
             </header>
             <div class="storage-mode-body">
@@ -249,7 +256,10 @@ function setModeToggleBusy(busy) {
 }
 
 function syncModeToggleUi() {
-    const online = isStorageModeOnline();
+    ensureOnlinePreferredByDefault();
+    const preferOnline = getPreferredStorageMode() === 'online';
+    const onLogin = document.body?.classList.contains('app-locked');
+    const online = isStorageModeOnline() || (onLogin && preferOnline);
     document.querySelectorAll('.storage-mode-toggle').forEach((btn) => {
         btn.setAttribute('aria-checked', online ? 'true' : 'false');
         btn.classList.toggle('is-online', online);
@@ -260,7 +270,38 @@ function syncModeToggleUi() {
         wrap.classList.toggle('is-offline', !online);
     });
     const loginLabel = document.getElementById('loginStorageLabel');
-    if (loginLabel) loginLabel.textContent = getStorageModeLabel();
+    if (loginLabel) updateLoginStorageLabel();
+}
+
+function updateLoginStorageLabel() {
+    const loginLabel = document.getElementById('loginStorageLabel');
+    if (!loginLabel) return;
+    ensureOnlinePreferredByDefault();
+    if (!document.body?.classList.contains('app-locked')) {
+        loginLabel.textContent = getStorageModeLabel();
+        return;
+    }
+    const preferOnline = getPreferredStorageMode() === 'online';
+    if (preferOnline && !isStorageModeOnline()) {
+        loginLabel.textContent = 'Database — connecting to techstores.db… (local server, not internet)';
+        return;
+    }
+    if (storageMode === 'online') {
+        loginLabel.textContent = pendingServerSync
+            ? 'Database — connected (sync pending)'
+            : 'Database — connected to techstores.db';
+    } else if (storageMode === 'offline-shell') {
+        loginLabel.textContent = 'Browser storage — switch to Database when the server is running';
+    } else if (storageMode === 'offline-local') {
+        loginLabel.textContent = 'Browser copy — run START-SYSTEM.bat for database (techstores.db)';
+    } else {
+        loginLabel.textContent = 'Browser copy — run START-SYSTEM.bat for database (techstores.db)';
+    }
+}
+
+/** Fast probe for the login screen — avoids multi-second waits when the server is down. */
+async function quickProbeStorageMode() {
+    return probeStorageMode({ fresh: true, attempts: 1, timeoutMs: 650, delayMs: 0 });
 }
 
 async function waitForModeAfterSwitch(target, options = {}) {
@@ -287,40 +328,38 @@ async function waitForModeAfterSwitch(target, options = {}) {
 }
 
 async function autoStartAppServerIfNeeded() {
+    ensureOnlinePreferredByDefault();
+    if (getPreferredStorageMode() !== 'online') return;
     if (sessionStorage.getItem('techstoresAutoStarting') === '1') return;
     if (sessionStorage.getItem('techstoresAutoStartFailed') === '1') return;
-    await probeStorageMode({ fresh: false, attempts: 2, timeoutMs: 900 });
-    if (storageMode === 'online' || storageMode === 'offline-shell') {
-        sessionStorage.removeItem('techstoresAutoStarting');
-        return;
-    }
-    let launcher = await fetchLauncherHealth(2000);
+    if (isStorageModeOnline()) return;
+
+    let launcher = await fetchLauncherHealth(800);
     if (!launcher?.launcher) {
-        const woke = await tryWakeServerViaProtocol(getPreferredStorageMode());
-        if (woke) launcher = await fetchLauncherHealth(2000);
+        const woke = await tryWakeServerViaProtocol('online');
+        if (woke) launcher = await fetchLauncherHealth(1200);
     }
     if (!launcher?.launcher) return;
 
-    const preferred = getPreferredStorageMode();
     sessionStorage.setItem('techstoresAutoStarting', '1');
     try {
-        if (typeof showToast === 'function') {
-            showToast(
-                preferred === 'online'
-                    ? 'Auto-starting online server…'
-                    : 'Auto-starting offline server…',
-                'info'
-            );
+        if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
+        await postModeSwitch('online');
+        await waitForModeAfterSwitch('online', { maxAttempts: 12 });
+        storageMode = 'online';
+        dbConnected = true;
+        sessionStorage.removeItem('techstoresAutoStarting');
+        if (typeof resetStateHydratePromise === 'function') resetStateHydratePromise();
+        if (typeof hydrateAppStateFromDatabase === 'function') {
+            await hydrateAppStateFromDatabase(true);
         }
-        await postModeSwitch(preferred);
-        await waitForModeAfterSwitch(preferred, { maxAttempts: 25 });
-        location.reload();
+        if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
+        if (typeof syncModeToggleUi === 'function') syncModeToggleUi();
+        if (typeof updateDbStatusBadge === 'function') updateDbStatusBadge();
     } catch (error) {
         sessionStorage.removeItem('techstoresAutoStarting');
         sessionStorage.setItem('techstoresAutoStartFailed', '1');
-        if (typeof showToast === 'function') {
-            showToast(error.message || 'Auto-start failed.', 'warning');
-        }
+        if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
     }
 }
 
@@ -339,15 +378,15 @@ async function switchStorageMode(target) {
             syncModeToggleUi();
             if (typeof updateDbStatusBadge === 'function') updateDbStatusBadge();
             if (typeof showToast === 'function') {
-                showToast(`Already in ${normalized === 'online' ? 'online' : 'offline'} mode.`);
+                showToast(`Already in ${normalized === 'online' ? 'database' : 'browser'} mode.`);
             }
             return;
         }
         if (typeof showToast === 'function') {
             showToast(
                 normalized === 'online'
-                    ? 'Switching to online mode (SQLite)…'
-                    : 'Switching to offline mode…',
+                    ? 'Switching to database mode (techstores.db)…'
+                    : 'Switching to browser-only storage…',
                 'info'
             );
         }
@@ -435,6 +474,8 @@ function initStorageModeUi() {
 }
 
 window.probeStorageMode = probeStorageMode;
+window.quickProbeStorageMode = quickProbeStorageMode;
+window.updateLoginStorageLabel = updateLoginStorageLabel;
 window.refreshStorageModeModal = refreshStorageModeModal;
 window.initStorageModeUi = initStorageModeUi;
 window.openStorageModeModal = openStorageModeModal;
@@ -442,3 +483,4 @@ window.switchStorageMode = switchStorageMode;
 window.syncModeToggleUi = syncModeToggleUi;
 window.autoStartAppServerIfNeeded = autoStartAppServerIfNeeded;
 window.setPreferredStorageMode = setPreferredStorageMode;
+window.ensureOnlinePreferredByDefault = ensureOnlinePreferredByDefault;

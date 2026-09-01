@@ -8,6 +8,472 @@ function invHtmlEscape(value) {
         .replace(/"/g, '&quot;');
 }
 
+function invAttrEscape(value) {
+    return invHtmlEscape(value).replace(/\r?\n/g, ' ');
+}
+
+/** Canonical ZA / manufacturer serial for stock movements (ZA820, S/N, etc.). */
+function normalizeStockSerialOrZa(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (typeof normalizeZaNumber === 'function') {
+        const za = normalizeZaNumber(raw);
+        if (/^ZA\d+$/i.test(za)) return za.toUpperCase();
+    }
+    return raw.toUpperCase().replace(/\s+/g, '');
+}
+
+function requiresStockSerialOrZa(category, itemId, itemName) {
+    if (typeof isLaptopStockItem === 'function' && isLaptopStockItem(itemId, itemName, category)) {
+        return true;
+    }
+    const cat = String(category || '').toLowerCase();
+    if (cat === 'laptops' || cat === 'inv-laptops') return true;
+    const blob = `${itemId || ''} ${itemName || ''} ${category || ''}`.toLowerCase();
+    if (cat === 'ict-equipment' && /\b(laptop|notebook|desktop|aio|tablet|macbook|elitebook|probook|latitude|optiplex|victus|thinkpad|surface|workstation|server|printer|monitor)\b/.test(blob)) {
+        return true;
+    }
+    return false;
+}
+
+function getStockSerialOrZaBalance(serialOrZa) {
+    const key = normalizeStockSerialOrZa(serialOrZa);
+    if (!key) return { key: '', net: 0, txns: [] };
+    let net = 0;
+    const txns = (ensureStoresInventory().transactions || []).filter((t) => (
+        normalizeStockSerialOrZa(t.serialOrZa) === key
+    ));
+    txns.forEach((t) => {
+        const q = Number(t.qty) || 0;
+        if (t.type === 'receipt') net += q;
+        else if (t.type === 'issue') net -= q;
+    });
+    return { key, net, txns };
+}
+
+function validateStockSerialOrZa(payload, type) {
+    const required = requiresStockSerialOrZa(payload.category, payload.itemId, payload.item || payload.itemName);
+    const serialRaw = (payload.serialOrZa || '').trim();
+    const key = normalizeStockSerialOrZa(serialRaw);
+
+    if (required && !key) {
+        return 'Enter ZA No / Serial number for this item — required to prevent duplicate assets.';
+    }
+    if (!key) return null;
+
+    if ((Number(payload.qty) || 0) > 1) {
+        return 'Quantity must be 1 when using ZA / Serial — post each unit separately.';
+    }
+
+    const bal = getStockSerialOrZaBalance(key);
+    if (type === 'receipt' && bal.net >= 1) {
+        const prev = bal.txns.find((t) => t.type === 'receipt');
+        const when = prev?.date ? ` (${prev.date})` : '';
+        return `ZA / Serial ${key} is already on hand${when}. Cannot receive the same asset twice.`;
+    }
+    if (type === 'issue' && bal.net < 1) {
+        return `ZA / Serial ${key} is not on hand — receive it first or check the number.`;
+    }
+    return null;
+}
+
+function resolveInvMovementTbody(filterRoot) {
+    if (!filterRoot) return null;
+    const modalBody = filterRoot.closest('.table-focus-body');
+    if (modalBody) {
+        return modalBody.querySelector('.table-focus-table-wrap tbody')
+            || filterRoot.nextElementSibling?.querySelector('tbody')
+            || null;
+    }
+    const tbodyId = filterRoot.dataset.invFiltersTarget;
+    const panel = filterRoot.closest('.voucher-inv-panel');
+    if (tbodyId && panel) {
+        const inPanel = panel.querySelector(`tbody#${CSS.escape(tbodyId)}`);
+        if (inPanel) return inPanel;
+    }
+    if (tbodyId && !filterRoot.dataset.invFiltersModal) {
+        const byId = document.getElementById(tbodyId);
+        if (byId) return byId;
+    }
+    return panel?.querySelector('.voucher-inv-movements-wrap tbody') || null;
+}
+
+const INV_MOVEMENT_SORT_OPTIONS = [
+    { value: 'entry-desc', label: 'Last entry first' },
+    { value: 'entry-asc', label: 'First entry first' },
+    { value: 'date-desc', label: 'Date (newest)' },
+    { value: 'date-asc', label: 'Date (oldest)' },
+    { value: 'item-asc', label: 'Item (A–Z)' },
+    { value: 'item-desc', label: 'Item (Z–A)' },
+    { value: 'type-asc', label: 'Type (Receive → Issue)' },
+    { value: 'type-desc', label: 'Type (Issue → Receive)' },
+    { value: 'gl-asc', label: 'GL account (A–Z)' },
+    { value: 'gl-desc', label: 'GL account (Z–A)' },
+    { value: 'party-asc', label: 'Party / facility (A–Z)' },
+    { value: 'party-desc', label: 'Party / facility (Z–A)' },
+    { value: 'serial-asc', label: 'ZA / Serial (A–Z)' },
+    { value: 'voucher-asc', label: 'RV/IV No. (A–Z)' },
+    { value: 'by-asc', label: 'Posted by (A–Z)' }
+];
+
+function buildInvMovementSortOptionsHtml(selected = 'entry-desc') {
+    return INV_MOVEMENT_SORT_OPTIONS.map((opt) => (
+        `<option value="${invHtmlEscape(opt.value)}"${opt.value === selected ? ' selected' : ''}>${invHtmlEscape(opt.label)}</option>`
+    )).join('');
+}
+
+function invMovementTypeRank(type) {
+    const t = String(type || '').toLowerCase();
+    if (t === 'receive') return 0;
+    if (t === 'issue') return 1;
+    return 2;
+}
+
+function compareInvMovementRows(a, b, sortKey) {
+    const key = sortKey || 'entry-desc';
+    const desc = key.endsWith('-desc');
+    const field = key.replace(/-(asc|desc)$/, '');
+    const mul = desc ? -1 : 1;
+    let cmp = 0;
+
+    if (field === 'entry' || field === 'seq') {
+        cmp = (Number(a.dataset.invSeq) || 0) - (Number(b.dataset.invSeq) || 0);
+    } else if (field === 'date') {
+        cmp = String(a.dataset.invDate || '').localeCompare(String(b.dataset.invDate || ''));
+        if (!cmp) cmp = (Number(a.dataset.invSeq) || 0) - (Number(b.dataset.invSeq) || 0);
+    } else if (field === 'type') {
+        cmp = invMovementTypeRank(a.dataset.invType) - invMovementTypeRank(b.dataset.invType);
+        if (!cmp) cmp = String(a.dataset.invDate || '').localeCompare(String(b.dataset.invDate || ''));
+    } else if (field === 'item') {
+        cmp = String(a.dataset.invItem || '').localeCompare(String(b.dataset.invItem || ''), undefined, { sensitivity: 'base' });
+    } else if (field === 'gl') {
+        cmp = String(a.dataset.invGl || '').localeCompare(String(b.dataset.invGl || ''));
+        if (!cmp) cmp = String(a.dataset.invDate || '').localeCompare(String(b.dataset.invDate || ''));
+    } else if (field === 'party') {
+        cmp = String(a.dataset.invParty || '').localeCompare(String(b.dataset.invParty || ''), undefined, { sensitivity: 'base' });
+    } else if (field === 'serial') {
+        cmp = normalizeStockSerialOrZa(a.dataset.invSerial || '').localeCompare(
+            normalizeStockSerialOrZa(b.dataset.invSerial || ''),
+            undefined,
+            { sensitivity: 'base' }
+        );
+    } else if (field === 'voucher') {
+        cmp = String(a.dataset.invVoucher || '').localeCompare(String(b.dataset.invVoucher || ''), undefined, { sensitivity: 'base' });
+    } else if (field === 'by') {
+        cmp = String(a.dataset.invBy || '').localeCompare(String(b.dataset.invBy || ''), undefined, { sensitivity: 'base' });
+    } else {
+        cmp = (Number(a.dataset.invSeq) || 0) - (Number(b.dataset.invSeq) || 0);
+    }
+
+    if (!cmp) cmp = (Number(a.dataset.invSeq) || 0) - (Number(b.dataset.invSeq) || 0);
+    return cmp * mul;
+}
+
+function renumberInvMovementRows(tbody) {
+    if (!tbody) return;
+    let n = 0;
+    tbody.querySelectorAll('tr').forEach((tr) => {
+        if (tr.classList.contains('empty-inv-row')) return;
+        n += 1;
+        const cell = tr.querySelector('td:first-child');
+        if (cell) cell.textContent = String(n);
+    });
+}
+
+function applyInvMovementSortFromBar(filterRoot, opts = {}) {
+    const tbody = resolveInvMovementTbody(filterRoot);
+    if (!tbody || !filterRoot) return;
+    const sortKey = filterRoot.querySelector('[data-inv-sort]')?.value || 'entry-desc';
+    const rows = [...tbody.querySelectorAll('tr')].filter((tr) => !tr.classList.contains('empty-inv-row'));
+    if (rows.length < 2) return;
+    rows.sort((a, b) => compareInvMovementRows(a, b, sortKey));
+    rows.forEach((tr) => tbody.appendChild(tr));
+    renumberInvMovementRows(tbody);
+    if (!opts.skipPeerSync) syncInvMovementFilterPeers(filterRoot, null, sortKey);
+}
+
+function syncInvMovementFilterPeers(fromBar, values, sortKey) {
+    if (!fromBar) return;
+    const selector = fromBar.dataset.invFiltersFor
+        ? `[data-inv-filters-for="${fromBar.dataset.invFiltersFor}"]`
+        : (fromBar.dataset.invFiltersTarget
+            ? `[data-inv-filters-target="${fromBar.dataset.invFiltersTarget}"]`
+            : '');
+    if (!selector) return;
+    document.querySelectorAll(selector).forEach((bar) => {
+        if (bar === fromBar) return;
+        if (values) {
+            const map = {
+                date: '[data-inv-filter="date"]',
+                type: '[data-inv-filter="type"]',
+                item: '[data-inv-filter="item"]',
+                gl: '[data-inv-filter="gl"]',
+                serialOrZa: '[data-inv-filter="serialOrZa"]',
+                description: '[data-inv-filter="description"]'
+            };
+            Object.entries(map).forEach(([key, sel]) => {
+                if (values[key] == null) return;
+                const el = bar.querySelector(sel);
+                if (el && el.value !== values[key]) el.value = values[key];
+            });
+        }
+        if (sortKey != null) {
+            const sortEl = bar.querySelector('[data-inv-sort]');
+            if (sortEl && sortEl.value !== sortKey) sortEl.value = sortKey;
+        }
+        applyInvMovementFiltersFromBar(bar, { skipPeerSync: true });
+    });
+}
+
+function getInvMovementPanelKey(filterRoot) {
+    const target = filterRoot?.dataset?.invFiltersTarget || '';
+    const m = target.match(/^voucher-inv-body-(.+)$/);
+    return m ? m[1] : '';
+}
+
+function describeInvMovementFilterMiss(filterRoot, filters, serialKey) {
+    const panelKey = getInvMovementPanelKey(filterRoot);
+    const panel = (VOUCHER_INVENTORY_CATEGORIES || []).find((c) => c.key === panelKey);
+    const panelLabel = panel?.label || panelKey || 'this ledger';
+    const parts = [];
+
+    if (serialKey) {
+        const zaNorm = normalizeStockSerialOrZa(serialKey).toUpperCase();
+        const ictHit = (Array.isArray(appState?.ictAccountability) ? appState.ictAccountability : [])
+            .find((rec) => normalizeStockSerialOrZa(rec.zaNumber).toUpperCase() === zaNorm
+                || normalizeStockSerialOrZa(rec.serialNo).toUpperCase() === zaNorm);
+        if (ictHit) {
+            const ledgerKey = ictHit.inventoryLedger || '';
+            const ledger = (VOUCHER_INVENTORY_CATEGORIES || []).find((c) => c.key === ledgerKey);
+            const where = ledger && ledgerKey !== panelKey
+                ? `Try the ${ledger.label} ledger tab`
+                : (ledgerKey === panelKey ? 'It is on ICT Asset Register but has no RV/IV movement with that ZA yet' : 'Open ICT Asset Register');
+            parts.push(`${zaNorm} is ${ictHit.designation || 'an ICT asset'} (${where})`);
+        }
+
+        const txnHits = [];
+        (ensureStoresInventory().transactions || []).forEach((t) => {
+            if (normalizeStockSerialOrZa(t.serialOrZa).toLowerCase() !== serialKey) return;
+            if (t.category === panelKey || (panel?.sourceKeys || []).includes(t.category)) return;
+            const cat = (VOUCHER_INVENTORY_CATEGORIES || []).find((c) => c.key === t.category || (c.sourceKeys || []).includes(t.category));
+            if (cat && !txnHits.some((h) => h.key === cat.key)) txnHits.push({ key: cat.key, label: cat.label });
+        });
+        if (txnHits.length) {
+            parts.push(`RV/IV for ${zaNorm.toUpperCase()} is on ${txnHits.map((h) => h.label).join(', ')}`);
+        }
+
+        if (!parts.length) {
+            parts.push(`${zaNorm} has no receive/issue movement on ${panelLabel} — older bulk posts may not have ZA recorded`);
+        }
+    }
+
+    if (filters.gl && panel) {
+        const panelGl = String(panel.gl || panel.defaultGl || '').toLowerCase();
+        if (panelGl && filters.gl !== panelGl) {
+            parts.push(`${panelLabel} normally uses GL ${panel.gl || panel.defaultGl}, not ${filters.gl.toUpperCase()}`);
+        }
+    }
+
+    if (!parts.length) {
+        return 'No movements match the current filters. Try Clear filters or another ledger tab.';
+    }
+    return `${parts.join('. ')}. Clear filters or switch ledger tab.`;
+}
+
+function updateInvMovementFilterHint(filterRoot, stats) {
+    const hintId = filterRoot?.dataset?.invFiltersHint;
+    let hint = hintId ? document.getElementById(hintId) : null;
+    if (!hint && filterRoot?.closest('.table-focus-body')) {
+        hint = filterRoot.parentElement?.querySelector('.inv-movement-filter-hint-modal');
+        if (!hint) {
+            hint = document.createElement('p');
+            hint.className = 'table-search-hint inv-movement-filter-hint-modal';
+            hint.hidden = true;
+            filterRoot.insertAdjacentElement('afterend', hint);
+        }
+    }
+    if (!hint) return;
+    const active = stats?.active;
+    if (!active) {
+        hint.hidden = true;
+        hint.textContent = '';
+        hint.className = hint.className.replace(' is-empty', '').trim();
+        if (hint.classList.contains('inv-movement-filter-hint-modal')) {
+            hint.className = 'table-search-hint inv-movement-filter-hint-modal';
+        } else {
+            hint.className = 'table-search-hint';
+        }
+        return;
+    }
+    hint.hidden = false;
+    if (!stats.total || stats.visible === 0) {
+        const filters = getInvMovementFilterValues(filterRoot);
+        const serialKey = filters.serialOrZa ? normalizeStockSerialOrZa(filters.serialOrZa).toLowerCase() : '';
+        hint.textContent = describeInvMovementFilterMiss(filterRoot, filters, serialKey);
+        hint.className = `${hint.classList.contains('inv-movement-filter-hint-modal') ? 'table-search-hint inv-movement-filter-hint-modal' : 'table-search-hint'} is-empty`;
+    } else if (stats.visible < stats.total) {
+        hint.textContent = `Showing ${stats.visible} of ${stats.total} movement(s) matching filters.`;
+        hint.className = hint.classList.contains('inv-movement-filter-hint-modal')
+            ? 'table-search-hint inv-movement-filter-hint-modal'
+            : 'table-search-hint';
+    } else {
+        hint.textContent = `${stats.visible} movement(s) match filters.`;
+        hint.className = hint.classList.contains('inv-movement-filter-hint-modal')
+            ? 'table-search-hint inv-movement-filter-hint-modal'
+            : 'table-search-hint';
+    }
+}
+
+function getInvMovementFilterValues(filterRoot) {
+    if (!filterRoot) {
+        return { date: '', type: '', item: '', gl: '', serialOrZa: '', description: '' };
+    }
+    return {
+        date: filterRoot.querySelector('[data-inv-filter="date"]')?.value.trim().toLowerCase() || '',
+        type: filterRoot.querySelector('[data-inv-filter="type"]')?.value.trim().toLowerCase() || '',
+        item: filterRoot.querySelector('[data-inv-filter="item"]')?.value.trim().toLowerCase() || '',
+        gl: filterRoot.querySelector('[data-inv-filter="gl"]')?.value.trim().toLowerCase() || '',
+        serialOrZa: filterRoot.querySelector('[data-inv-filter="serialOrZa"]')?.value.trim().toLowerCase() || '',
+        description: filterRoot.querySelector('[data-inv-filter="description"]')?.value.trim().toLowerCase() || ''
+    };
+}
+
+function movementFiltersActive(filters) {
+    return Boolean(filters.date || filters.type || filters.item || filters.gl || filters.serialOrZa || filters.description);
+}
+
+function applyInvMovementFiltersFromBar(filterRoot, opts = {}) {
+    const tbody = resolveInvMovementTbody(filterRoot);
+    if (!tbody || !filterRoot) return { visible: 0, total: 0, active: false };
+
+    const filters = getInvMovementFilterValues(filterRoot);
+    const active = movementFiltersActive(filters);
+    const serialKey = filters.serialOrZa ? normalizeStockSerialOrZa(filters.serialOrZa).toLowerCase() : '';
+    let visible = 0;
+    const rows = tbody.querySelectorAll('tr');
+
+    rows.forEach((tr) => {
+        if (tr.classList.contains('empty-inv-row')) {
+            tr.style.display = active ? 'none' : '';
+            return;
+        }
+        const date = (tr.dataset.invDate || '').toLowerCase();
+        const type = (tr.dataset.invType || '').toLowerCase();
+        const item = (tr.dataset.invItem || '').toLowerCase();
+        const gl = (tr.dataset.invGl || '').toLowerCase();
+        const serial = normalizeStockSerialOrZa(tr.dataset.invSerial || '').toLowerCase();
+        const desc = (tr.dataset.invDesc || '').toLowerCase();
+        const show = (!filters.date || date.includes(filters.date))
+            && (!filters.type || type === filters.type)
+            && (!filters.item || item.includes(filters.item))
+            && (!filters.gl || gl === filters.gl)
+            && (!serialKey || serial.includes(serialKey))
+            && (!filters.description || desc.includes(filters.description));
+        tr.style.display = show ? '' : 'none';
+        if (show) visible += 1;
+    });
+
+    const stats = { visible, total: rows.length, active };
+    updateInvMovementFilterHint(filterRoot, stats);
+    filterRoot.classList.toggle('inv-movement-filters-active', active);
+    applyInvMovementSortFromBar(filterRoot, { skipPeerSync: true });
+    if (!opts.skipPeerSync) {
+        const sortKey = filterRoot.querySelector('[data-inv-sort]')?.value || 'entry-desc';
+        syncInvMovementFilterPeers(filterRoot, filters, sortKey);
+    }
+    return stats;
+}
+
+function bindInvMovementFilters(root = document) {
+    root.querySelectorAll('.inv-movement-filters').forEach((bar) => {
+        if (bar.dataset.invFiltersBound === '1') return;
+        bar.dataset.invFiltersBound = '1';
+
+        const run = () => applyInvMovementFiltersFromBar(bar);
+        bar.querySelectorAll('[data-inv-filter]').forEach((el) => {
+            el.addEventListener('input', run);
+            el.addEventListener('change', run);
+        });
+        bar.querySelector('[data-inv-sort]')?.addEventListener('change', run);
+        bar.querySelector('.inv-movement-filter-clear')?.addEventListener('click', () => {
+            bar.querySelectorAll('[data-inv-filter]').forEach((el) => { el.value = ''; });
+            applyInvMovementFiltersFromBar(bar);
+            bar.querySelector('[data-inv-filter="date"]')?.focus();
+        });
+        applyInvMovementFiltersFromBar(bar, { skipPeerSync: true });
+    });
+}
+
+function setInvMovementFilters(catKey, filters = {}) {
+    const bar = document.querySelector(`[data-inv-filters-target="voucher-inv-body-${catKey}"]`);
+    if (!bar) return;
+    const map = {
+        date: '[data-inv-filter="date"]',
+        type: '[data-inv-filter="type"]',
+        item: '[data-inv-filter="item"]',
+        gl: '[data-inv-filter="gl"]',
+        serialOrZa: '[data-inv-filter="serialOrZa"]',
+        description: '[data-inv-filter="description"]'
+    };
+    Object.entries(map).forEach(([key, sel]) => {
+        if (filters[key] == null) return;
+        const el = bar.querySelector(sel);
+        if (el) el.value = filters[key];
+    });
+    applyInvMovementFiltersFromBar(bar);
+}
+
+function buildInvMovementGlFilterOptionsHtml() {
+    const rows = ['<option value="">All GL</option>'];
+    Object.entries(typeof GL_ACCOUNTS !== 'undefined' ? GL_ACCOUNTS : {}).forEach(([code, info]) => {
+        rows.push(`<option value="${invHtmlEscape(code)}">${invHtmlEscape(code)} — ${invHtmlEscape(info.name)}</option>`);
+    });
+    return rows.join('');
+}
+
+function invMovementFiltersHtml(cat) {
+    return `
+            <div class="inv-movement-filters module-toolbar" data-inv-filters-target="voucher-inv-body-${cat.key}"
+                data-inv-filters-for="#voucher-inv-table-${cat.key}"
+                data-inv-filters-hint="voucher-inv-search-hint-${cat.key}">
+                <label class="inv-filter-field inv-filter-field-date">
+                    <span>Date</span>
+                    <input type="date" class="form-control inv-filter-control" data-inv-filter="date" title="Filter by date">
+                </label>
+                <label class="inv-filter-field inv-filter-field-type">
+                    <span>Type</span>
+                    <select class="form-control inv-filter-control" data-inv-filter="type">
+                        <option value="">All</option>
+                        <option value="receive">Receive</option>
+                        <option value="issue">Issue</option>
+                    </select>
+                </label>
+                <label class="inv-filter-field inv-filter-field-item">
+                    <span>Item</span>
+                    <input type="text" class="form-control inv-filter-control" data-inv-filter="item" placeholder="Item" autocomplete="off">
+                </label>
+                <label class="inv-filter-field inv-filter-field-serial">
+                    <span>ZA / Serial</span>
+                    <input type="text" class="form-control inv-filter-control" data-inv-filter="serialOrZa" placeholder="ZA820" autocomplete="off">
+                </label>
+                <label class="inv-filter-field inv-filter-field-gl">
+                    <span>GL</span>
+                    <select class="form-control inv-filter-control" data-inv-filter="gl">${buildInvMovementGlFilterOptionsHtml()}</select>
+                </label>
+                <label class="inv-filter-field inv-filter-field-desc">
+                    <span>Description</span>
+                    <input type="text" class="form-control inv-filter-control" data-inv-filter="description" placeholder="Description" autocomplete="off">
+                </label>
+                <label class="inv-filter-field inv-filter-field-sort">
+                    <span>Order by</span>
+                    <select class="form-control inv-filter-control" data-inv-sort title="Sort movement rows">${buildInvMovementSortOptionsHtml()}</select>
+                </label>
+                <button type="button" class="btn btn-ghost btn-sm inv-movement-filter-clear">Clear filters</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-table-focus="#voucher-inv-table-${cat.key}"
+                    data-table-focus-title="Receive / Issue Movements — ${invHtmlEscape(cat.label)}" title="Expand table">⛶ Expand</button>
+            </div>`;
+}
+
 /** Softwares / licence purchases are expended (not held as stock on hand). */
 function isSoftwareLicenceCategory(categoryKey, gl, itemId) {
     if (typeof isSoftwareCatalogCategory === 'function' && isSoftwareCatalogCategory(categoryKey)) return true;
@@ -361,6 +827,9 @@ function getItemStockSummary(itemId, options = {}) {
         item: catalog?.name || allTxns[0]?.item || itemId,
         category: catalog?.category || allTxns[0]?.category || '',
         gl: catalog?.gl || allTxns[0]?.gl || '',
+        abcClass: catalog?.abcClass || '',
+        minStock: Number(catalog?.minStock) || 0,
+        highDemand: !!catalog?.highDemand,
         opening,
         openingBase,
         received,
@@ -471,7 +940,18 @@ function getStoresItemDepletionAlerts() {
                 target: 'voucher-module',
                 text: `STOCK DEPLETED: ${row.item} on hand is 0. Restock or stop further issues.`
             });
-        } else if (row.onHand > 0) {
+        } else if (row.onHand >= 0) {
+            const min = Number(row.minStock) || (typeof getCatalogItemById === 'function'
+                ? Number(getCatalogItemById(itemId)?.minStock) || 0
+                : 0);
+            const tracked = row.openingBase > 0 || row.received > 0 || row.issued > 0;
+            if (tracked && min > 0 && row.onHand < min) {
+                alerts.push({
+                    type: 'warning',
+                    target: 'voucher-module',
+                    text: `BELOW MINIMUM: ${row.item} has ${row.onHand} on hand (min ${min}${row.abcClass ? ` · class ${row.abcClass}` : ''}). Restock.`
+                });
+            } else if (row.onHand > 0) {
             const base = row.openingBase + row.received;
             if (base > 0 && row.onHand / base <= 0.2) {
                 alerts.push({
@@ -479,6 +959,7 @@ function getStoresItemDepletionAlerts() {
                     target: 'voucher-module',
                     text: `LOW STOCK: ${row.item} has only ${row.onHand} on hand.`
                 });
+            }
             }
         }
     });
@@ -570,7 +1051,55 @@ function postStockTransaction(payload) {
         return null;
     }
 
+    const serialErr = validateStockSerialOrZa({
+        category,
+        itemId,
+        item: itemName,
+        serialOrZa: payload.serialOrZa,
+        qty
+    }, type);
+    if (serialErr) {
+        if (!silent) showToast(serialErr, 'error');
+        return null;
+    }
+
+    if (typeof validateIctLaptopIssueCustody === 'function') {
+        const custodyErr = validateIctLaptopIssueCustody({
+            type,
+            party: payload.party,
+            itemId,
+            item: itemName,
+            category,
+            allowDuplicateCustody: payload.allowDuplicateCustody
+        });
+        if (custodyErr) {
+            if (!silent) showToast(custodyErr, 'error');
+            return null;
+        }
+    }
+
+    if (type === 'receipt' && typeof validateWorkshopCertForIctReceipt === 'function') {
+        const wrcErr = validateWorkshopCertForIctReceipt({
+            type,
+            category,
+            item: itemName,
+            poNumber: payload.poNumber,
+            deliveryNoteRef: payload.deliveryNoteRef,
+            party: payload.party,
+            description: payload.description,
+            wrcId: payload.wrcId,
+            wrcBypass: payload.wrcBypass,
+            laptopReturn: payload.laptopReturn,
+            source: payload.source
+        });
+        if (wrcErr) {
+            if (!silent) showToast(wrcErr, 'error');
+            return null;
+        }
+    }
+
     const inv = ensureStoresInventory();
+    const serialOrZa = normalizeStockSerialOrZa(payload.serialOrZa);
     const txn = {
         id: `stk-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         date: txnDate,
@@ -582,8 +1111,10 @@ function postStockTransaction(payload) {
         qty,
         uom: (payload.uom || 'EA').trim() || 'EA',
         gl,
+        serialOrZa,
         voucherNo: (payload.voucherNo || '').trim(),
         party: (payload.party || '').trim(),
+        appointment: (payload.appointment || '').trim(),
         source: (payload.source || 'manual').trim(),
         sourceRef: (payload.sourceRef || '').trim(),
         dpRef: (payload.dpRef || '').trim(),
@@ -597,6 +1128,15 @@ function postStockTransaction(payload) {
         const code = getOrAssignDisplayItemId(itemId, itemName, category);
         txn.displayItemId = code;
     }
+
+    const isLaptopReturn = type === 'receipt' && payload.party && (
+        payload.laptopReturn
+        || /\b(return|returned)\b/i.test(`${payload.description || ''} ${txn.description || ''}`)
+    );
+    if (isLaptopReturn && typeof closeIctCustodyOnLaptopReturn === 'function') {
+        closeIctCustodyOnLaptopReturn(payload.party);
+    }
+
     saveState();
 
     const after = getItemStockSummary(itemId, { mode: 'cumulative' });
@@ -1183,6 +1723,15 @@ function openReceiveIssueModal(type) {
             </div>
             <div class="form-col"></div>
         </div>
+        <div class="form-row" id="stockTxnSerialBox" hidden>
+            <div class="form-col">
+                <label class="form-label" for="stockTxnSerialOrZa">ZA No / Serial number</label>
+                <input type="text" class="form-control" id="stockTxnSerialOrZa" placeholder="e.g. ZA820 or manufacturer S/N" autocomplete="off">
+                <p class="modal-help stock-txn-serial-hint" id="stockTxnSerialHint">
+                    Required for laptops &amp; ICT equipment — one unit per ZA/Serial; blocks duplicate receipt of the same asset.
+                </p>
+            </div>
+        </div>
         <div class="stock-licence-panel" id="stockTxnLicencePanel" hidden>
             <div class="stock-licence-panel-head">
                 <strong>Software licence (expended)</strong>
@@ -1247,7 +1796,11 @@ function openReceiveIssueModal(type) {
         </div>
         <div class="form-group">
             <label class="form-label" id="stockTxnPartyLabel">${isReceipt ? 'Received From / Supplier' : 'Issued To'}</label>
-            <input type="text" class="form-control" id="stockTxnParty" placeholder="${isReceipt ? 'Supplier / consignor' : 'Unit / person'}">
+            <input type="text" class="form-control" id="stockTxnParty" placeholder="${isReceipt ? 'Supplier / consignor' : 'Rank and name'}">
+        </div>
+        <div class="form-group" id="stockTxnAppointmentBox" ${isReceipt ? 'hidden' : ''}>
+            <label class="form-label">Appointment</label>
+            <input type="text" class="form-control" id="stockTxnAppointment" placeholder="Appointment of person issued / signing (e.g. TSO, OC DBA)">
         </div>
         <div class="stock-onhand-hint" id="stockTxnOnHandHint">Select a catalog item to see on-hand quantity.</div>
     `;
@@ -1277,6 +1830,7 @@ function openReceiveIssueModal(type) {
         const qtyLabel = document.getElementById('stockTxnQtyLabel');
         const partyLabel = document.getElementById('stockTxnPartyLabel');
         const party = document.getElementById('stockTxnParty');
+        const apptBox = document.getElementById('stockTxnAppointmentBox');
         if (isSw) {
             if (title) title.textContent = 'Purchase Software Licence (Expended)';
             if (confirmBtn) confirmBtn.textContent = 'Confirm Licence Purchase';
@@ -1288,6 +1842,7 @@ function openReceiveIssueModal(type) {
             if (party && !party.placeholder.includes('Anthropic')) {
                 party.placeholder = 'Online vendor / account';
             }
+            if (apptBox) apptBox.hidden = true;
             const vendorEl = document.getElementById('stockTxnLicenceVendor');
             if (vendorEl && !vendorEl.value) {
                 const itemName = document.getElementById('stockTxnItemName')?.value || '';
@@ -1306,7 +1861,33 @@ function openReceiveIssueModal(type) {
             if (qtyLabel) qtyLabel.textContent = 'Quantity';
             if (partyLabel) partyLabel.textContent = 'Received From / Supplier';
             if (party) party.placeholder = 'Supplier / consignor';
+            if (apptBox) apptBox.hidden = true;
+        } else {
+            if (apptBox) apptBox.hidden = false;
         }
+        syncStockTxnSerialUi();
+    };
+
+    const syncStockTxnSerialUi = () => {
+        const cat = document.getElementById('stockTxnCategory')?.value || category;
+        const itemId = document.getElementById('stockTxnItemId')?.value || '';
+        const typed = (document.getElementById('stockTxnItemName')?.value || '').trim();
+        const gl = document.getElementById('stockTxnGl')?.value || '';
+        const box = document.getElementById('stockTxnSerialBox');
+        const serialEl = document.getElementById('stockTxnSerialOrZa');
+        const qtyEl = document.getElementById('stockTxnQty');
+        const isSw = isReceipt && isSoftwareLicenceCategory(cat, gl, itemId);
+        const needs = !isSw && requiresStockSerialOrZa(cat, itemId, typed);
+        if (box) box.hidden = !needs;
+        if (needs && qtyEl) {
+            qtyEl.value = '1';
+            qtyEl.max = '1';
+            qtyEl.readOnly = true;
+        } else if (qtyEl) {
+            qtyEl.removeAttribute('max');
+            qtyEl.readOnly = false;
+        }
+        if (!needs && serialEl) serialEl.value = '';
     };
 
     function hintSoftwareHelp(helpEl) {
@@ -1412,6 +1993,7 @@ function openReceiveIssueModal(type) {
         if (glEl && meta?.gl) glEl.value = meta.gl;
         syncTypedCatalogItem();
         syncSoftwareLicenceUi();
+        syncStockTxnSerialUi();
         refreshHint();
     };
 
@@ -1425,6 +2007,7 @@ function openReceiveIssueModal(type) {
     body.querySelector('#stockTxnItemName')?.addEventListener('input', () => {
         syncTypedCatalogItem();
         syncSoftwareLicenceUi();
+        syncStockTxnSerialUi();
         refreshHint();
         // Suggest vendor from typed software name
         const vendorEl = document.getElementById('stockTxnLicenceVendor');
@@ -1439,10 +2022,12 @@ function openReceiveIssueModal(type) {
     body.querySelector('#stockTxnItemName')?.addEventListener('change', () => {
         syncTypedCatalogItem();
         syncSoftwareLicenceUi();
+        syncStockTxnSerialUi();
         refreshHint();
     });
     body.querySelector('#stockTxnGl')?.addEventListener('change', () => {
         syncSoftwareLicenceUi();
+        syncStockTxnSerialUi();
         refreshHint();
     });
     body.querySelector('#stockTxnLicenceTerm')?.addEventListener('change', () => {
@@ -1456,6 +2041,7 @@ function openReceiveIssueModal(type) {
     body.querySelector('#stockTxnLicenceExpiry')?.addEventListener('change', refreshHint);
     refillItems();
     syncSoftwareLicenceUi();
+    syncStockTxnSerialUi();
 
     openStockTxnModal();
     setTimeout(() => document.getElementById('stockTxnItemName')?.focus(), 50);
@@ -1537,6 +2123,7 @@ function confirmStockTxnModal() {
     }
 
     const party = document.getElementById('stockTxnParty')?.value || '';
+    const serialOrZa = document.getElementById('stockTxnSerialOrZa')?.value || '';
     const descParts = [
         document.getElementById('stockTxnDesc')?.value || '',
         isLicencePurchase ? `${getLicencePackageMeta(licenceTerm).label} · ${paymentMethod}` : ''
@@ -1554,6 +2141,8 @@ function confirmStockTxnModal() {
         gl,
         voucherNo: document.getElementById('stockTxnVoucherNo')?.value || '',
         party: licenceVendor || party,
+        appointment: document.getElementById('stockTxnAppointment')?.value || '',
+        serialOrZa,
         licenceTerm: isLicencePurchase ? licenceTerm : '',
         licenceStart: isLicencePurchase ? licenceStart : '',
         licenceExpiry: isLicencePurchase ? (licenceExpiry || computeLicenceExpiryFromStart(licenceStart, licenceTerm)) : '',
@@ -1727,7 +2316,7 @@ function updateDaySessionBanner() {
 function buildVoucherInventorySection() {
     const host = document.getElementById('voucherInventorySection');
     if (!host) return;
-    if (host.dataset.built === '1' && host.dataset.invUi === '3') {
+    if (host.dataset.built === '1' && host.dataset.invUi === '10') {
         const tabCount = host.querySelectorAll('.voucher-inv-tab').length;
         if (tabCount === (VOUCHER_INVENTORY_CATEGORIES || []).length) return;
         host.dataset.built = '0';
@@ -1785,25 +2374,24 @@ function buildVoucherInventorySection() {
             </div>
 
             <h5 class="voucher-inv-subtitle" data-inv-movements-title>Receive / Issue Movements (Daily)</h5>
-            <div class="module-toolbar">
-                <input type="search" class="form-control table-search" data-search-target="voucher-inv-body-${cat.key}" placeholder="Search movements...">
-                <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
-                <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
-            </div>
-            <div class="form-table-wrapper">
-                <table class="overview-table voucher-inv-table">
+            ${invMovementFiltersHtml(cat)}
+            <p class="table-search-hint" id="voucher-inv-search-hint-${cat.key}" hidden></p>
+            <div class="form-table-wrapper voucher-inv-movements-wrap">
+                <table class="overview-table voucher-inv-table" id="voucher-inv-table-${cat.key}">
                     <thead>
                         <tr>
                             <th>#</th>
                             <th>Date</th>
                             <th>Type</th>
                             <th>Item</th>
+                            <th>ZA / Serial</th>
                             <th>Description</th>
                             <th>Qty</th>
                             <th>UoM</th>
                             <th>GL</th>
                             <th>RV/IV No.</th>
-                            <th>Party</th>
+                            <th>Issued To / From</th>
+                            <th>Appointment</th>
                             <th>By</th>
                         </tr>
                     </thead>
@@ -1849,7 +2437,9 @@ function buildVoucherInventorySection() {
         <div class="voucher-inv-panels" id="voucherInvPanels">${panels}</div>
     `;
     host.dataset.built = '1';
-    host.dataset.invUi = '3';
+    host.dataset.invUi = '10';
+
+    bindInvMovementFilters(host);
 
     host.querySelectorAll('.voucher-inv-tab').forEach((tab) => {
         tab.addEventListener('click', () => {
@@ -2024,7 +2614,7 @@ function renderVoucherInventoryTables() {
         if (tbody) {
             const rows = summary.transactions;
             if (!rows.length) {
-                tbody.innerHTML = `<tr class="empty-inv-row"><td colspan="11">No receive/issue movements yet for ${invHtmlEscape(cat.label)}${mode === 'daily' ? ` on ${invHtmlEscape(focusDate)}` : ''}.</td></tr>`;
+                tbody.innerHTML = `<tr class="empty-inv-row"><td colspan="13">No receive/issue movements yet for ${invHtmlEscape(cat.label)}${mode === 'daily' ? ` on ${invHtmlEscape(focusDate)}` : ''}.</td></tr>`;
             } else {
                 tbody.innerHTML = rows.map((txn, idx) => {
                     const isReceipt = txn.type === 'receipt';
@@ -2032,17 +2622,30 @@ function renderVoucherInventoryTables() {
                         ? ` <span class="txn-source">(${invHtmlEscape(txn.source)})</span>`
                         : '';
                     return `
-                        <tr>
+                        <tr data-inv-seq="${idx}"
+                            data-inv-date="${invAttrEscape(txn.date || '')}"
+                            data-inv-type="${isReceipt ? 'receive' : 'issue'}"
+                            data-inv-item="${invAttrEscape(txn.item || '')}"
+                            data-inv-gl="${invAttrEscape(txn.gl || '')}"
+                            data-inv-serial="${invAttrEscape(txn.serialOrZa || '')}"
+                            data-inv-desc="${invAttrEscape(txn.description || '')}"
+                            data-inv-party="${invAttrEscape(txn.party || '')}"
+                            data-inv-appointment="${invAttrEscape(txn.appointment || '')}"
+                            data-inv-voucher="${invAttrEscape(txn.voucherNo || '')}"
+                            data-inv-qty="${Number(txn.qty) || 0}"
+                            data-inv-by="${invAttrEscape(txn.by || '')}">
                             <td>${idx + 1}</td>
                             <td>${invHtmlEscape(txn.date || '—')}</td>
                             <td><span class="txn-badge ${isReceipt ? 'txn-receipt' : 'txn-issue'}">${isReceipt ? 'Receive' : 'Issue'}</span>${src}</td>
                             <td>${invHtmlEscape(txn.item)}</td>
+                            <td>${txn.serialOrZa ? `<strong>${invHtmlEscape(txn.serialOrZa)}</strong>` : '—'}</td>
                             <td>${invHtmlEscape(txn.description || '—')}</td>
                             <td>${txn.qty || 0}</td>
                             <td>${invHtmlEscape(txn.uom || 'EA')}</td>
                             <td>${invHtmlEscape(txn.gl || '—')}</td>
                             <td>${invHtmlEscape(txn.voucherNo || '—')}</td>
                             <td>${invHtmlEscape(txn.party || '—')}</td>
+                            <td>${invHtmlEscape(txn.appointment || '—')}</td>
                             <td>${invHtmlEscape(txn.by || '—')}</td>
                         </tr>
                     `;
@@ -2056,8 +2659,21 @@ function renderVoucherInventoryTables() {
         };
         setMetric(`[data-inv-received="${cat.key}"]`, summary.received);
         setMetric(`[data-inv-issued="${cat.key}"]`, summary.issued);
+
+        const filterBar = host.querySelector(
+            `[data-inv-filters-target="voucher-inv-body-${cat.key}"]`
+        );
+        if (filterBar) applyInvMovementFiltersFromBar(filterBar);
     });
+    if (typeof refreshTableFocusViewIfOpen === 'function') refreshTableFocusViewIfOpen();
 }
+
+window.applyInvMovementFiltersFromBar = applyInvMovementFiltersFromBar;
+window.applyInvMovementSortFromBar = applyInvMovementSortFromBar;
+window.bindInvMovementFilters = bindInvMovementFilters;
+window.setInvMovementFilters = setInvMovementFilters;
+window.normalizeStockSerialOrZa = normalizeStockSerialOrZa;
+window.getStockSerialOrZaBalance = getStockSerialOrZaBalance;
 
 function attachVoucherInventoryRowWatch(tr) {
     if (!tr || tr.dataset.invWatch === '1') return;

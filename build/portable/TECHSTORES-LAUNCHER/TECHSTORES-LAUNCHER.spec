@@ -32,8 +32,8 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    version='c:/Users/DelMashiry/Documents/TECHSTORESys/scripts/version-info.txt',
-    icon=['c:/Users/DelMashiry/Documents/TECHSTORESys/assets/techstores.ico'],
+    version='C:/Users/DelMashiry/OneDrive/Documents/TECHSTORESys/scripts/version-info.txt',
+    icon=['C:/Users/DelMashiry/OneDrive/Documents/TECHSTORESys/assets/techstores.ico'],
 )
 coll = COLLECT(
     exe,

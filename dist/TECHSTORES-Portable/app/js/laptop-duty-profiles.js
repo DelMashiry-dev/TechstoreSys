@@ -172,9 +172,29 @@ const LAPTOP_DUTY_PROFILES = [
     }
 ];
 
+function dutyProfileDeviceHint(profile, category) {
+    const type = !category || category === 'all' ? 'laptop' : category;
+    if (!profile) return '';
+    if (type === 'server') {
+        return profile.key === 'server-room'
+            ? 'Rack-mount servers (HPE ProLiant, Dell PowerEdge, Lenovo ThinkSystem); Xeon, ECC RAM, iLO/iDRAC — not laptops.'
+            : 'Rack or tower servers for this duty. Comparison articles and laptops are excluded.';
+    }
+    if (type === 'desktop') {
+        return 'Tower / SFF / workstation desktops (OptiPlex, ThinkCentre, Precision) — not notebooks.';
+    }
+    if (type === 'tablet') {
+        return 'Tablets and 2-in-1 slates (iPad, Surface, rugged tablet) — not rack servers.';
+    }
+    if (type === 'printer') {
+        return 'Printers and MFPs (LaserJet, office inkjet) — not PCs.';
+    }
+    return profile.deviceHint || '';
+}
+
 function dutyProfileWebQuery(profile, category) {
     const type = !category || category === 'all' ? 'laptop' : category;
-    const queries = {
+    const laptopQueries = {
         'command-control': 'rugged military laptop MIL-STD-810 command control Toughbook sunlight',
         'drone-robot': 'rugged laptop UAV ground control station Toughbook WWAN',
         'secure-comms': 'enterprise security laptop TPM smart card Windows 11 Pro',
@@ -185,7 +205,7 @@ function dutyProfileWebQuery(profile, category) {
         'architecture': 'CAD workstation laptop NVIDIA RTX ZBook Precision ThinkPad P',
         'graphic-design': 'creator laptop OLED 32GB RTX MacBook Studio display',
         'database-design': 'mobile workstation 32GB RAM database developer laptop',
-        'server-room': '14 inch enterprise laptop Ethernet dock ThinkPad EliteBook',
+        'server-room': '14 inch enterprise laptop Ethernet dock ThinkPad EliteBook crash cart',
         'pay-run': 'secure business laptop TPM Windows 11 Pro 16GB',
         'secretariat': 'office laptop 16GB FHD EliteBook Latitude',
         'typing-pool': '15.6 inch office laptop ProBook Vostro keyboard',
@@ -194,8 +214,28 @@ function dutyProfileWebQuery(profile, category) {
         'gis-mapping': 'GIS laptop ArcGIS rugged sunlight mapping 16GB',
         'cyber-ew': 'secure rugged laptop TPM encryption military cybersecurity'
     };
-    const hint = (profile && (queries[profile.key] || profile.label)) || 'laptop';
-    return `${hint} ${type}`.replace(/\s+/g, ' ').trim();
+    const otherQueries = {
+        server: {
+            'server-room': 'rack server HPE ProLiant Dell PowerEdge Lenovo ThinkSystem 1U 2U Xeon ECC',
+            default: 'rack server ProLiant PowerEdge ThinkSystem Xeon'
+        },
+        desktop: {
+            default: 'business desktop workstation OptiPlex ThinkCentre Precision tower'
+        },
+        tablet: {
+            default: 'business tablet iPad Surface Pro rugged tablet'
+        },
+        printer: {
+            default: 'office printer MFP LaserJet inkjet'
+        }
+    };
+    if (type !== 'laptop') {
+        const map = otherQueries[type] || {};
+        const hint = (profile && (map[profile.key] || map.default)) || type;
+        return String(hint).replace(/\s+/g, ' ').trim();
+    }
+    const hint = (profile && (laptopQueries[profile.key] || profile.label)) || 'laptop';
+    return `${hint}`.replace(/\s+/g, ' ').trim();
 }
 
 function getLaptopDutyProfile(key) {

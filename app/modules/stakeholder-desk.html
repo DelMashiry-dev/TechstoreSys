@@ -5,15 +5,92 @@
                 </div>
                 <p class="stk-desk-intro" id="stkDeskIntro"></p>
                 <div id="stkDeskSwitch" class="stk-desk-switch" hidden></div>
-                <div class="stk-desk-layout">
-                    <div class="stk-desk-list-col">
-                        <div class="module-toolbar">
-                            <input type="search" class="form-control" id="stkDeskSearch" placeholder="Search cases...">
+                <div id="stkDafTabs" class="stk-daf-tabs" hidden role="tablist" aria-label="DAF portal views">
+                    <button type="button" class="stk-daf-tab is-active" data-stk-daf-tab="procurement" role="tab" aria-selected="true">Procurement cycle</button>
+                    <button type="button" class="stk-daf-tab" data-stk-daf-tab="creditors" role="tab" aria-selected="false">Creditors &amp; payment <span class="stk-daf-tab-badge" id="stkDafCreditorsBadge" hidden></span></button>
+                </div>
+                <div id="stkDafProcPanel" class="stk-daf-panel">
+                    <div class="stk-desk-layout">
+                        <div class="stk-desk-list-col">
+                            <div id="stkDeskSummary" class="stk-desk-summary-host"></div>
+                            <div class="module-toolbar">
+                                <input type="search" class="form-control" id="stkDeskSearch" placeholder="Search cases...">
+                            </div>
+                            <div id="stkDeskList" class="stk-desk-list"></div>
                         </div>
-                        <div id="stkDeskList" class="stk-desk-list"></div>
+                        <div class="stk-desk-detail-col dashboard-panel" id="stkDeskDetail">
+                            <p class="muted">Select a procurement case.</p>
+                        </div>
                     </div>
-                    <div class="stk-desk-detail-col dashboard-panel" id="stkDeskDetail">
-                        <p class="muted">Select a procurement case.</p>
+                </div>
+                <div id="stkDafCreditorsPanel" class="stk-daf-panel" hidden>
+                    <p class="muted stk-daf-creditors-lead">Goods delivered to IT Dir but not yet paid. Import registers, apply DAF paid lists, and chase outstanding creditors from this window.</p>
+                    <div class="req-aging-strip sd-aging-strip stk-daf-creditors-stats" aria-label="Creditors summary">
+                        <div class="req-stat"><span class="req-stat-value" id="stkDafStatOpen">0</span><span class="req-stat-label">Open cases</span></div>
+                        <div class="req-stat"><span class="req-stat-value" id="stkDafStatUsd">0</span><span class="req-stat-label">USD owed</span></div>
+                        <div class="req-stat"><span class="req-stat-value req-stat-overdue" id="stkDafStatOld">0</span><span class="req-stat-label">1 year+</span></div>
+                        <div class="req-stat"><span class="req-stat-value" id="stkDafStatChased">0</span><span class="req-stat-label">Chased DAF</span></div>
+                        <div class="req-stat"><span class="req-stat-value" id="stkDafStatSuppliers">0</span><span class="req-stat-label">Suppliers owed</span></div>
+                    </div>
+                    <div class="module-actions stk-daf-creditors-actions">
+                        <button type="button" class="btn btn-primary btn-sm" id="stkDafOpenCreditorsBtn">Open full Creditors register</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="stkDafOpenBidsBtn">Financial year bids</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="stkDafOpenProcBtn">Back to procurement cycle</button>
+                    </div>
+                    <div class="dashboard-panel">
+                        <div class="section-heading section-heading-compact"><h3>Intelligence — priority chase</h3></div>
+                        <div id="stkDafIntelligencePanel"></div>
+                    </div>
+                    <div class="stk-daf-import-grid">
+                        <div class="dashboard-panel">
+                            <div class="section-heading section-heading-compact"><h3>Import creditors register</h3></div>
+                            <div class="sd-creditors-drop" id="stkDafCreditorsDropZone" tabindex="0" role="button" aria-label="Drop creditors Excel file here">
+                                <strong>Drop IT DIR creditors Excel here</strong>
+                                <span class="muted">or click to browse · .xlsx</span>
+                                <input type="file" id="stkDafCreditorsFileInput" accept=".xlsx,.xls" hidden>
+                            </div>
+                            <div id="stkDafCreditorsPreview" class="sd-creditors-preview" hidden></div>
+                            <div class="module-toolbar">
+                                <select class="form-control" id="stkDafCreditorsLoadMode" style="max-width:240px;">
+                                    <option value="merge">Merge — add new, refresh existing</option>
+                                    <option value="merge-skip">Merge — skip existing</option>
+                                    <option value="replace-imported">Replace imported register only</option>
+                                </select>
+                                <button type="button" class="btn btn-primary btn-sm" id="stkDafLoadCreditorsBtn">Load built-in register (05 Nov 2025)</button>
+                            </div>
+                            <p id="stkDafCreditorsImportStatus" class="muted" hidden></p>
+                        </div>
+                        <div class="dashboard-panel">
+                            <div class="section-heading section-heading-compact"><h3>Apply DAF payment proof</h3></div>
+                            <div class="sd-creditors-drop sd-paid-drop" id="stkDafPaidDropZone" tabindex="0" role="button" aria-label="Drop DAF paid list Excel here">
+                                <strong>Drop DAF paid-list Excel here</strong>
+                                <span class="muted">or click to browse · marks matched cases paid</span>
+                                <input type="file" id="stkDafPaidFileInput" accept=".xlsx,.xls" hidden>
+                            </div>
+                            <div id="stkDafPaidPreview" class="sd-creditors-preview" hidden></div>
+                        </div>
+                    </div>
+                    <div class="dashboard-panel">
+                        <div class="section-heading section-heading-compact"><h3>Priority creditors in-tray</h3></div>
+                        <div class="form-table-wrapper">
+                            <table class="overview-table req-table">
+                                <thead>
+                                    <tr>
+                                        <th>Supplier</th>
+                                        <th>USD owed</th>
+                                        <th>Age</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stkDafCreditorsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="dashboard-panel">
+                        <div class="section-heading section-heading-compact"><h3>Awaiting payment — procurement cycle</h3></div>
+                        <p class="muted">Live DP cases where goods are received or P/O is pending DAF payment. Select to record payment ref and voucher.</p>
+                        <div id="stkDafPayQueue" class="stk-daf-pay-queue"></div>
                     </div>
                 </div>
             </div>

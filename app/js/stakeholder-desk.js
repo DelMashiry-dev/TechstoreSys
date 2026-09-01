@@ -5,25 +5,25 @@ const STK_DESK_DEFS = {
         title: 'DP Window — Directorate Procurement',
         blurb: 'Call for quotations, adjudicate, pick the winning vendor, raise the P/O, and invite the supplier. Upload RFQ packs and the issued P/O.',
         actor: 'dp',
-        queueHint: 'Cases after GS + DAF endorsement, plus live awards.'
+        queueHint: 'Full DP in-tray: F1 lodged with DP through supply, AIAD return, and P/O issue.'
     },
     gs: {
         title: 'GS Branch Window — Colonel SD',
         blurb: 'Endorse DP F1s from IT Dir. Upload the signed endorsement. You do not see supplier quotes or DAF payment screens.',
         actor: 'gs',
-        queueHint: 'F1s waiting for Colonel SD endorsement.'
+        queueHint: 'All procurement cases from spec/F1 raise through GS endorsement and beyond — action required flagged first.'
     },
     daf: {
-        title: 'DAF Window — MANAC / payment',
-        blurb: 'Endorse the DP F1 for funds (MANAC). After IT Dir inspects delivery, record payment and upload the payment voucher.',
+        title: 'DAF Window — MANAC / payment / creditors',
+        blurb: 'Endorse DP F1s for funds (MANAC), record supplier payment after inspection, manage the Creditors register, and apply DAF paid-list imports.',
         actor: 'daf',
-        queueHint: 'Awaiting MANAC endorsement, or goods received awaiting pay.'
+        queueHint: 'Procurement awaiting MANAC or pay · open creditor balances · payment proof import.'
     },
     aiad: {
         title: 'Due Diligence Window — AIAD',
         blurb: 'Evaluate endorsed F1 + IT Dir spec + supplier quotation. Issue the Price Due Diligence certificate and upload the signed form.',
         actor: 'aiad',
-        queueHint: 'Cases sent for AIAD pre-audit.'
+        queueHint: 'All AIAD due-diligence cases — from spec return through certificate issue.'
     },
     supplier: {
         title: 'Supplier Window',
@@ -125,22 +125,94 @@ function stkCaseVisibleToSupplier(rec, key) {
     return Object.keys(rec.stakeholder?.suppliers || {}).some((id) => id.includes(k) || k.includes(id));
 }
 
-function stkQueueForDesk(desk, rec) {
-    const st = typeof normalizeDpProcStatus === 'function' ? normalizeDpProcStatus(rec.status) : rec.status;
-    if (desk === 'gs') {
-        return ['requisition', 'spec_raise_f1', 'awaiting_gs'].includes(st) || !!rec.stakeholder?.gs?.endorsedAt;
-    }
-    if (desk === 'daf') {
-        return ['awaiting_manac', 'po_manual_pending_daf', 'delivery_verified', 'supply_delivery'].includes(st)
-            || !!rec.stakeholder?.daf?.endorsedAt;
-    }
+function stkStageOrders() {
+    const orders = [];
+    if (typeof DP_PROC_STAGE_ORDER_BUDGETED !== 'undefined') orders.push(DP_PROC_STAGE_ORDER_BUDGETED);
+    if (typeof DP_PROC_STAGE_ORDER_MANUAL !== 'undefined') orders.push(DP_PROC_STAGE_ORDER_MANUAL);
+    return orders.filter((order) => order.length);
+}
+
+function stkStatusesAtOrAfter(anchor) {
+    const norm = typeof normalizeDpProcStatus === 'function' ? normalizeDpProcStatus(anchor) : anchor;
+    const out = new Set([norm]);
+    stkStageOrders().forEach((order) => {
+        const idx = order.indexOf(norm);
+        if (idx >= 0) order.slice(idx).forEach((s) => out.add(s));
+    });
+    return out;
+}
+
+function stkStatusesForGroup(group) {
+    if (typeof DP_PROC_STATUSES === 'undefined') return new Set();
+    return new Set(DP_PROC_STATUSES.filter((s) => s.group === group).map((s) => s.value));
+}
+
+function stkDeskStakeholderTouch(rec, desk) {
+    const slot = rec.stakeholder?.[desk];
+    if (!slot) return false;
     if (desk === 'dp') {
-        return st !== 'cancelled';
+        return !!(slot.invited || slot.notes || (Array.isArray(slot.files) && slot.files.length));
+    }
+    if (desk === 'gs') return !!(slot.endorsedAt || slot.notes || (Array.isArray(slot.files) && slot.files.length));
+    if (desk === 'daf') {
+        return !!(slot.endorsedAt || slot.paidAt || slot.paymentRef || slot.notes || (Array.isArray(slot.files) && slot.files.length));
     }
     if (desk === 'aiad') {
-        return ['aiad_due_diligence', 'aiad_certificate', 'spec_returned_dp'].includes(st)
-            || !!rec.stakeholder?.aiad?.certNo
-            || !!rec.dueDiligenceCert;
+        return !!(slot.certNo || slot.certifiedAt || slot.notes || (Array.isArray(slot.files) && slot.files.length));
+    }
+    return !!(slot.notes || (Array.isArray(slot.files) && slot.files.length));
+}
+
+function stkDeskNeedsAction(desk, rec) {
+    const st = typeof normalizeDpProcStatus === 'function' ? normalizeDpProcStatus(rec.status) : rec.status;
+    const stake = rec.stakeholder || {};
+    if (desk === 'gs') {
+        return st === 'awaiting_gs' && !stake.gs?.endorsedAt;
+    }
+    if (desk === 'daf') {
+        if (st === 'awaiting_manac' && !stake.daf?.endorsedAt) return true;
+        if (st === 'po_manual_pending_daf') return true;
+        if ((st === 'delivery_verified' || st === 'supply_delivery') && !rec.paymentRef && !stake.daf?.paidAt) return true;
+        return false;
+    }
+    if (desk === 'dp') {
+        if (['f1_with_dp', 'spec_returned_dp', 'quotes_itdir_eval'].includes(st)) return true;
+        if (st === 'aiad_certificate' && !rec.poNumber) return true;
+        return false;
+    }
+    if (desk === 'aiad') {
+        return st === 'aiad_due_diligence' && !stake.aiad?.certNo && !rec.dueDiligenceCert;
+    }
+    return false;
+}
+
+function stkQueueForDesk(desk, rec) {
+    const st = typeof normalizeDpProcStatus === 'function' ? normalizeDpProcStatus(rec.status) : rec.status;
+    if (st === 'cancelled') return false;
+    const touch = stkDeskStakeholderTouch(rec, desk);
+
+    if (desk === 'gs') {
+        return stkStatusesAtOrAfter('awaiting_gs').has(st)
+            || st === 'spec_raise_f1'
+            || touch;
+    }
+    if (desk === 'daf') {
+        return stkStatusesAtOrAfter('awaiting_manac').has(st)
+            || stkStatusesForGroup('daf').has(st)
+            || touch;
+    }
+    if (desk === 'dp') {
+        return stkStatusesAtOrAfter('f1_with_dp').has(st)
+            || stkStatusesForGroup('dp').has(st)
+            || st === 'quotes_itdir_eval'
+            || touch;
+    }
+    if (desk === 'aiad') {
+        return stkStatusesAtOrAfter('aiad_due_diligence').has(st)
+            || st === 'spec_returned_dp'
+            || stkStatusesForGroup('aiad').has(st)
+            || !!rec.dueDiligenceCert
+            || touch;
     }
     if (desk === 'supplier') {
         return stkCaseVisibleToSupplier(rec, stkSupplierKey());
@@ -148,15 +220,60 @@ function stkQueueForDesk(desk, rec) {
     return true;
 }
 
+function stkSortDeskCases(desk, cases) {
+    return cases.slice().sort((a, b) => {
+        const aAct = stkDeskNeedsAction(desk, a) ? 0 : 1;
+        const bAct = stkDeskNeedsAction(desk, b) ? 0 : 1;
+        if (aAct !== bAct) return aAct - bAct;
+        const aSt = typeof normalizeDpProcStatus === 'function' ? normalizeDpProcStatus(a.status) : a.status;
+        const bSt = typeof normalizeDpProcStatus === 'function' ? normalizeDpProcStatus(b.status) : b.status;
+        const aMeta = typeof getDpProcStatusMeta === 'function' ? getDpProcStatusMeta(aSt) : { step: 99 };
+        const bMeta = typeof getDpProcStatusMeta === 'function' ? getDpProcStatusMeta(bSt) : { step: 99 };
+        if ((aMeta.step || 99) !== (bMeta.step || 99)) return (aMeta.step || 99) - (bMeta.step || 99);
+        return String(a.refNo || a.poNumber || '').localeCompare(String(b.refNo || b.poNumber || ''));
+    });
+}
+
 function stkCasesForDesk(desk) {
     const list = typeof ensureDpProcurements === 'function' ? ensureDpProcurements() : [];
     const q = stkNorm(document.getElementById('stkDeskSearch')?.value);
-    return list.filter((rec) => {
+    const filtered = list.filter((rec) => {
         if (!stkQueueForDesk(desk, rec)) return false;
         if (!q) return true;
         const hay = `${rec.refNo} ${rec.poNumber} ${rec.itemSummary} ${rec.awardedSupplier} ${rec.requisitionRef}`.toLowerCase();
         return hay.includes(q);
     });
+    return stkSortDeskCases(desk, filtered);
+}
+
+function renderStakeholderDeskSummary(desk, cases) {
+    const host = document.getElementById('stkDeskSummary');
+    if (!host) return;
+    const action = cases.filter((rec) => stkDeskNeedsAction(desk, rec)).length;
+    const open = cases.filter((rec) => {
+        const st = typeof normalizeDpProcStatus === 'function' ? normalizeDpProcStatus(rec.status) : rec.status;
+        return st !== 'payment_complete';
+    }).length;
+    const done = cases.length - open;
+    host.innerHTML = `
+        <div class="stk-desk-summary" aria-label="Portal in-tray summary">
+            <div class="stk-desk-stat is-action${action ? ' has-count' : ''}">
+                <span class="stk-desk-stat-value">${action}</span>
+                <span class="stk-desk-stat-label">Action required</span>
+            </div>
+            <div class="stk-desk-stat is-all">
+                <span class="stk-desk-stat-value">${cases.length}</span>
+                <span class="stk-desk-stat-label">All issues</span>
+            </div>
+            <div class="stk-desk-stat is-pipeline${open ? ' has-count' : ''}">
+                <span class="stk-desk-stat-value">${open}</span>
+                <span class="stk-desk-stat-label">In pipeline</span>
+            </div>
+            <div class="stk-desk-stat is-done${done ? ' has-count' : ''}">
+                <span class="stk-desk-stat-value">${done}</span>
+                <span class="stk-desk-stat-label">Completed</span>
+            </div>
+        </div>`;
 }
 
 function stkPublicCaseView(rec, desk) {
@@ -427,6 +544,7 @@ function renderStakeholderDeskList() {
     if (!host) return;
     const desk = getStakeholderDeskKey();
     const cases = stkCasesForDesk(desk);
+    renderStakeholderDeskSummary(desk, cases);
     if (!cases.length) {
         host.innerHTML = '<p class="muted">No cases in this window yet.</p>';
         return;
@@ -434,8 +552,9 @@ function renderStakeholderDeskList() {
     const selected = host.getAttribute('data-stk-selected') || '';
     host.innerHTML = cases.map((rec) => {
         const st = typeof getDpProcStatusLabel === 'function' ? getDpProcStatusLabel(rec.status) : rec.status;
-        return `<button type="button" class="stk-case-btn${rec.id === selected ? ' is-active' : ''}" data-stk-open="${stkEscape(rec.id)}">
-            <strong>${stkEscape(rec.refNo || rec.poNumber || 'Case')}</strong>
+        const needs = stkDeskNeedsAction(desk, rec);
+        return `<button type="button" class="stk-case-btn${rec.id === selected ? ' is-active' : ''}${needs ? ' is-action' : ''}" data-stk-open="${stkEscape(rec.id)}">
+            <strong>${stkEscape(rec.refNo || rec.poNumber || 'Case')}${needs ? ' · Action' : ''}</strong>
             <span>${stkEscape(rec.itemSummary || '')}</span>
             <em>${stkEscape(st)}</em>
         </button>`;
@@ -474,6 +593,155 @@ function renderStakeholderDeskDetail(id) {
     });
 }
 
+function stkDafActiveTab() {
+    return window._stkDafTab || 'procurement';
+}
+
+function stkSetDafTab(tab) {
+    window._stkDafTab = tab === 'creditors' ? 'creditors' : 'procurement';
+    const tabs = document.getElementById('stkDafTabs');
+    const proc = document.getElementById('stkDafProcPanel');
+    const cred = document.getElementById('stkDafCreditorsPanel');
+    if (!tabs || !proc || !cred) return;
+    tabs.querySelectorAll('[data-stk-daf-tab]').forEach((btn) => {
+        const active = btn.getAttribute('data-stk-daf-tab') === window._stkDafTab;
+        btn.classList.toggle('is-active', active);
+        btn.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    const isCred = window._stkDafTab === 'creditors';
+    proc.hidden = isCred;
+    cred.hidden = !isCred;
+    if (isCred) renderStkDafCreditorsPanel();
+    else renderStakeholderDeskList();
+}
+
+function stkSyncDafChrome() {
+    const desk = getStakeholderDeskKey();
+    const isDaf = desk === 'daf';
+    const tabs = document.getElementById('stkDafTabs');
+    if (tabs) tabs.hidden = !isDaf;
+    if (!isDaf) {
+        const proc = document.getElementById('stkDafProcPanel');
+        const cred = document.getElementById('stkDafCreditorsPanel');
+        if (proc) proc.hidden = false;
+        if (cred) cred.hidden = true;
+        return;
+    }
+    stkSetDafTab(stkDafActiveTab());
+}
+
+function renderStkDafCreditorsPanel() {
+    if (getStakeholderDeskKey() !== 'daf') return;
+    if (typeof ensureSupplierDebts === 'function') ensureSupplierDebts();
+
+    const summary = typeof renderSupplierDebtSummaryStrip === 'function'
+        ? renderSupplierDebtSummaryStrip({
+            open: 'stkDafStatOpen',
+            usd: 'stkDafStatUsd',
+            old: 'stkDafStatOld',
+            chased: 'stkDafStatChased',
+            suppliers: 'stkDafStatSuppliers'
+        })
+        : null;
+
+    const badge = document.getElementById('stkDafCreditorsBadge');
+    if (badge) {
+        if (summary?.openCount) {
+            badge.hidden = false;
+            badge.textContent = String(summary.openCount);
+        } else {
+            badge.hidden = true;
+            badge.textContent = '';
+        }
+    }
+
+    if (typeof renderSdIntelligencePanel === 'function') renderSdIntelligencePanel('stkDafIntelligencePanel');
+
+    const body = document.getElementById('stkDafCreditorsTableBody');
+    if (body && typeof sdBuildChasePriorityList === 'function') {
+        const rows = sdBuildChasePriorityList(12);
+        if (!rows.length) {
+            body.innerHTML = '<tr><td colspan="5" class="req-empty-row">No open creditor cases.</td></tr>';
+        } else {
+            body.innerHTML = rows.map(({ rec, age, usd }) => `<tr>
+                <td>${stkEscape(rec.supplier || rec.caseNo)}</td>
+                <td>USD ${stkEscape(typeof sdFmtUsd === 'function' ? sdFmtUsd(usd) : usd)}</td>
+                <td>${stkEscape(typeof sdAgeLabel === 'function' ? sdAgeLabel(age) : `${age}d`)}</td>
+                <td>${stkEscape(typeof sdStatusLabel === 'function' ? sdStatusLabel(rec.status) : rec.status)}</td>
+                <td><button type="button" class="btn btn-ghost btn-sm" data-stk-daf-creditor="${stkEscape(rec.id)}">Open</button></td>
+            </tr>`).join('');
+            body.querySelectorAll('[data-stk-daf-creditor]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    if (typeof navigateToModule === 'function') {
+                        navigateToModule('supplier-debts', { sdId: btn.getAttribute('data-stk-daf-creditor') });
+                    }
+                });
+            });
+        }
+    }
+
+    const payHost = document.getElementById('stkDafPayQueue');
+    if (payHost) {
+        const payCases = (typeof ensureDpProcurements === 'function' ? ensureDpProcurements() : [])
+            .filter((rec) => stkQueueForDesk('daf', rec))
+            .slice(0, 8);
+        if (!payCases.length) {
+            payHost.innerHTML = '<p class="muted">No procurement cases currently awaiting DAF action.</p>';
+        } else {
+            payHost.innerHTML = payCases.map((rec) => {
+                const st = typeof getDpProcStatusLabel === 'function' ? getDpProcStatusLabel(rec.status) : rec.status;
+                return `<button type="button" class="stk-daf-pay-item" data-stk-daf-pay-id="${stkEscape(rec.id)}">
+                    <strong>${stkEscape(rec.refNo || rec.poNumber || 'Case')}</strong>
+                    <span>${stkEscape(rec.awardedSupplier || rec.itemSummary || '')}</span>
+                    <em>${stkEscape(st)}${rec.paymentRef ? ` · paid ${stkEscape(rec.paymentRef)}` : ''}</em>
+                </button>`;
+            }).join('');
+            payHost.querySelectorAll('[data-stk-daf-pay-id]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    stkSetDafTab('procurement');
+                    renderStakeholderDeskDetail(btn.getAttribute('data-stk-daf-pay-id'));
+                    renderStakeholderDeskList();
+                });
+            });
+        }
+    }
+
+    if (typeof initStkDafCreditorsDropZone === 'function') initStkDafCreditorsDropZone();
+}
+
+function initStkDafPortalExtras() {
+    const root = document.getElementById('stakeholder-desk');
+    if (!root || root.dataset.stkDafInit === '1') return;
+    root.dataset.stkDafInit = '1';
+
+    document.getElementById('stkDafTabs')?.addEventListener('click', (e) => {
+        const tab = e.target.closest('[data-stk-daf-tab]');
+        if (!tab) return;
+        stkSetDafTab(tab.getAttribute('data-stk-daf-tab'));
+    });
+    document.getElementById('stkDafOpenCreditorsBtn')?.addEventListener('click', () => {
+        if (typeof navigateToModule === 'function') navigateToModule('supplier-debts');
+    });
+    document.getElementById('stkDafOpenBidsBtn')?.addEventListener('click', () => {
+        if (typeof navigateToModule === 'function') navigateToModule('financial-year-bids');
+    });
+    document.getElementById('stkDafOpenProcBtn')?.addEventListener('click', () => stkSetDafTab('procurement'));
+    document.getElementById('stkDafLoadCreditorsBtn')?.addEventListener('click', () => {
+        if (typeof requireEditAccess === 'function' && !requireEditAccess()) return;
+        if (typeof loadItDirCreditorsRegister !== 'function') return;
+        const mode = document.getElementById('stkDafCreditorsLoadMode')?.value || 'merge';
+        const result = loadItDirCreditorsRegister({ mode });
+        const statusEl = document.getElementById('stkDafCreditorsImportStatus');
+        if (statusEl && result) {
+            statusEl.hidden = false;
+            statusEl.textContent = `Built-in register: ${result.added} added · ${result.updated} updated · ${result.skipped} skipped.`;
+        }
+        if (typeof sdRefreshCreditorsViews === 'function') sdRefreshCreditorsViews();
+        else renderStkDafCreditorsPanel();
+        if (typeof showToast === 'function') showToast('Built-in Nov 2025 creditors register loaded.', 'success');
+    });
+}
+
 function renderStakeholderDeskChrome() {
     const desk = getStakeholderDeskKey();
     const def = STK_DESK_DEFS[desk];
@@ -487,6 +755,7 @@ function renderStakeholderDeskChrome() {
         sw.hidden = true;
         sw.innerHTML = '';
     }
+    stkSyncDafChrome();
 }
 
 function renderStakeholderDesk() {
@@ -505,6 +774,7 @@ function initStakeholderDeskModule() {
     const root = document.getElementById('stakeholder-desk');
     if (!root || root.dataset.stkInit === '1') return;
     root.dataset.stkInit = '1';
+    initStkDafPortalExtras();
     document.getElementById('stkDeskSearch')?.addEventListener('input', () => renderStakeholderDeskList());
     document.getElementById('stkDeskList')?.addEventListener('click', (e) => {
         const btn = e.target.closest('[data-stk-open]');
@@ -519,4 +789,5 @@ window.getStakeholderDeskKey = getStakeholderDeskKey;
 window.initStakeholderDeskModule = initStakeholderDeskModule;
 window.renderStakeholderDesk = renderStakeholderDesk;
 window.renderStakeholderDeskChrome = renderStakeholderDeskChrome;
+window.renderStkDafCreditorsPanel = renderStkDafCreditorsPanel;
 window.STK_DESK_DEFS = STK_DESK_DEFS;

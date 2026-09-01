@@ -440,7 +440,70 @@ function renderUndeliveredTable() {
 function renderUndeliveredModule() {
     populateUndeliveredSelects();
     renderUndeliveredSummary();
+    renderUndIntelligencePanel();
     renderUndeliveredTable();
+}
+
+function renderUndIntelligencePanel() {
+    const el = document.getElementById('undIntelligencePanel');
+    if (!el) return;
+
+    const open = ensureUndelivered().filter((row) => UNDELIVERED_OPEN.has(row.status));
+    const priorities = open
+        .map((row) => ({
+            row,
+            age: getUndeliveredAgeDays(row),
+            bal: getUndeliveredBalance(row),
+            score: getUndeliveredAgeDays(row) * 0.7 + getUndeliveredBalance(row) * 0.3 + (row.status === 'awaiting' ? 10 : 0)
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 6);
+
+    const bySupplier = new Map();
+    open.forEach((row) => {
+        const key = (row.supplier || 'Unknown').trim();
+        bySupplier.set(key, (bySupplier.get(key) || 0) + getUndeliveredBalance(row));
+    });
+    const topSuppliers = Array.from(bySupplier.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+    const priorityHtml = priorities.length
+        ? `<ul class="sd-insight-list">${priorities.map(({ row, age, bal }) => `
+            <li><button type="button" class="sd-insight-link" data-und-priority-id="${undEscape(row.id)}">
+                <strong>${undEscape(row.supplier || '—')} · ${undEscape(row.poNo || '—')}</strong>
+                <span>${undEscape(row.item || 'Item')} · bal ${bal} · ${age}d · ${undEscape(getUndeliveredStatusLabel(row.status))}</span>
+            </button></li>`).join('')}</ul>`
+        : '<p class="muted">No open undelivered lines.</p>';
+
+    const supplierHtml = topSuppliers.length
+        ? `<ul class="sd-insight-list">${topSuppliers.map(([name, qty]) => `
+            <li><span><strong>${undEscape(name)}</strong> · ${qty} unit(s) outstanding</span></li>
+        `).join('')}</ul>`
+        : '<p class="muted">No supplier backlog.</p>';
+
+    el.innerHTML = `
+        <div class="sd-insight-grid">
+            <div class="sd-insight-card">
+                <h4>Priority supplier follow-up</h4>
+                <p class="muted">Oldest / highest-balance PO lines awaiting delivery.</p>
+                ${priorityHtml}
+            </div>
+            <div class="sd-insight-card">
+                <h4>Supplier backlog</h4>
+                <ul class="sd-insight-stats">
+                    <li><span>Open lines</span><strong>${open.length}</strong></li>
+                    <li><span>Overdue 31d+</span><strong>${open.filter((r) => getUndeliveredAgeDays(r) >= 31).length}</strong></li>
+                    <li><span>Part delivered</span><strong>${open.filter((r) => r.status === 'partial').length}</strong></li>
+                </ul>
+                ${supplierHtml}
+            </div>
+        </div>
+    `;
+
+    el.querySelectorAll('[data-und-priority-id]').forEach((btn) => {
+        btn.addEventListener('click', () => editUndelivered(btn.getAttribute('data-und-priority-id')));
+    });
 }
 
 function populateUndeliveredSelects() {

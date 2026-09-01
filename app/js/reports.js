@@ -488,12 +488,12 @@ function buildModuleReportData(moduleId) {
     if (moduleId === 'supplier-debts') {
         return typeof buildSupplierDebtsReportData === 'function'
             ? buildSupplierDebtsReportData()
-            : { title: 'Supplier Debts', summary: ['Module not loaded.'], fields: [], tables: [] };
+            : { title: 'Creditors', summary: ['Module not loaded.'], fields: [], tables: [] };
     }
     if (moduleId === 'supplier-debt-chase') {
         return typeof buildSupplierDebtChaseReportData === 'function'
             ? buildSupplierDebtChaseReportData()
-            : { title: 'DAF chase — supplier debt', summary: ['Module not loaded.'], fields: [], tables: [] };
+            : { title: 'DAF chase — creditor', summary: ['Module not loaded.'], fields: [], tables: [] };
     }
     if (moduleId === 'techstores-period') {
         return typeof buildTechStoresPeriodReportData === 'function'
@@ -963,7 +963,7 @@ function generateModuleReport(moduleId, options = {}) {
         return null;
     }
     if (moduleId === 'supplier-debt-chase' && !canAccessModule('supplier-debts')) {
-        showToast('You do not have access to supplier debt chase minutes.', 'error');
+        showToast('You do not have access to creditor chase minutes.', 'error');
         return null;
     }
     if ((moduleId === 'stores-inventory' || moduleId === 'stock-take' || moduleId === 'inventory-accountability') && !canAccessModule('voucher-module') && !canAccessModule('stock-take') && !canAccessModule('reports-module')) {

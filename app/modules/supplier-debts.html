@@ -1,6 +1,6 @@
 <div id="supplier-debts" class="form-container">
                 <div class="form-header">
-                    <h2 class="form-title">Supplier Debts — Non-paid goods received</h2>
+                    <h2 class="form-title">Creditors — Non-paid goods received</h2>
                     <button class="close-btn">&times;</button>
                 </div>
 
@@ -12,7 +12,50 @@
                     Opposite of Undelivered Items (ordered, not yet received).
                 </p>
 
-                <div class="req-aging-strip sd-aging-strip" aria-label="Supplier debt summary">
+                <div class="dashboard-panel sd-creditors-import-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>Import creditors register</h3>
+                    </div>
+                    <p class="muted">Suppliers who delivered but are <strong>yet to be paid</strong>. Drop a creditors Excel return here, or load the built-in Nov 2025 register.</p>
+                    <div class="sd-creditors-drop" id="sdCreditorsDropZone" tabindex="0" role="button" aria-label="Drop creditors Excel file here">
+                        <strong>Drop IT DIR creditors Excel here</strong>
+                        <span class="muted">or click to browse · .xlsx · vendor codes merged automatically</span>
+                        <input type="file" id="sdCreditorsFileInput" accept=".xlsx,.xls" hidden>
+                    </div>
+                    <p id="sdCreditorsPackSummary" class="muted">Loading register summary…</p>
+                    <div id="sdCreditorsPreview" class="sd-creditors-preview" hidden></div>
+                    <div class="module-toolbar">
+                        <select class="form-control" id="sdCreditorsLoadMode" style="max-width:240px;">
+                            <option value="merge">Merge — add new, refresh existing</option>
+                            <option value="merge-skip">Merge — skip existing</option>
+                            <option value="replace-imported">Replace imported register only</option>
+                        </select>
+                        <button type="button" class="btn btn-primary btn-sm" id="sdLoadCreditorsBtn">Load built-in register (05 Nov 2025)</button>
+                    </div>
+                    <p id="sdCreditorsImportStatus" class="muted" hidden></p>
+                </div>
+
+                <div class="dashboard-panel sd-paid-import-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>Apply DAF payment proof</h3>
+                    </div>
+                    <p class="muted">When DAF has paid, drop their paid-list Excel here. The system matches supplier / PO / invoice and marks creditor cases <strong>paid</strong>.</p>
+                    <div class="sd-creditors-drop sd-paid-drop" id="sdPaidDropZone" tabindex="0" role="button" aria-label="Drop DAF paid list Excel here">
+                        <strong>Drop DAF paid-list Excel here</strong>
+                        <span class="muted">or click to browse · matches open creditor cases automatically</span>
+                        <input type="file" id="sdPaidFileInput" accept=".xlsx,.xls" hidden>
+                    </div>
+                    <div id="sdPaidPreview" class="sd-creditors-preview" hidden></div>
+                </div>
+
+                <div class="dashboard-panel sd-intelligence-panel-wrap">
+                    <div class="section-heading section-heading-compact">
+                        <h3>Intelligence — who to chase first</h3>
+                    </div>
+                    <div id="sdIntelligencePanel" class="sd-intelligence-panel"></div>
+                </div>
+
+                <div class="req-aging-strip sd-aging-strip" aria-label="Creditors summary">
                     <div class="req-stat"><span class="req-stat-value" id="sdStatOpen">0</span><span class="req-stat-label">Open cases</span></div>
                     <div class="req-stat"><span class="req-stat-value" id="sdStatUsd">0</span><span class="req-stat-label">USD owed</span></div>
                     <div class="req-stat"><span class="req-stat-value req-stat-overdue" id="sdStatOld">0</span><span class="req-stat-label">1 year+</span></div>

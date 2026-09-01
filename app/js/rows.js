@@ -173,20 +173,10 @@ function normalizeUnitEquipmentRow(row) {
 function attachUnitEquipmentRow(tr) {
     if (!tr) return;
     const holding = tr.querySelector('select.ue-holding-unit');
-    if (holding && typeof fillZnaUnitSelect === 'function') {
+    if (holding && typeof wireZnaUnitPicker === 'function') {
+        wireZnaUnitPicker(holding, null, { includeBlank: true, includeOther: true, blankLabel: '— Select holding unit —' });
+    } else if (holding && typeof fillZnaUnitSelect === 'function') {
         fillZnaUnitSelect(holding, holding.value || '', { includeBlank: true, includeOther: true, blankLabel: '— Select holding unit —' });
-        if (holding.dataset.znaWired !== '1') {
-            holding.dataset.znaWired = '1';
-            holding.addEventListener('change', () => {
-                if (holding.value !== '__other__') return;
-                const custom = window.prompt('Enter holding unit / formation:', '');
-                if (custom && custom.trim()) {
-                    fillZnaUnitSelect(holding, custom.trim(), { includeBlank: true, includeOther: true, blankLabel: '— Select holding unit —' });
-                } else {
-                    holding.value = '';
-                }
-            });
-        }
     }
     const loc = tr.querySelector('select.ue-location');
     if (loc && !loc.options.length) {
@@ -390,15 +380,8 @@ function renderUnitEquipmentView() {
         if ([...locationFilterEl.options].some((o) => o.value === prev)) locationFilterEl.value = prev;
     }
 
-    if (holdingFilterEl) {
-        const prev = holdingFilterEl.value || 'all';
-        const holdings = [...new Set(rows.map((r) => r.holdingUnit).filter(Boolean))];
-        holdingFilterEl.innerHTML = `<option value="all">All holding units</option>`
-            + holdings.map((h) => {
-                const label = typeof resolveZnaUnitLabel === 'function' ? resolveZnaUnitLabel(h) : h;
-                return `<option value="${ueEscapeAttr(h)}">${ueEscape(label)}</option>`;
-            }).join('');
-        if ([...holdingFilterEl.options].some((o) => o.value === prev)) holdingFilterEl.value = prev;
+    if (holdingFilterEl && holdingFilterEl.dataset.znaFilterReady !== '1') {
+        initUeHoldingFilter();
     }
 
     const filtered = rows.filter((row) => {
@@ -481,11 +464,26 @@ function setUnitEquipmentMode(mode) {
     if (isView) renderUnitEquipmentView();
 }
 
+function initUeHoldingFilter() {
+    const hf = document.getElementById('ueHoldingFilter');
+    if (!hf || hf.dataset.znaFilterReady === '1') return;
+    hf.dataset.znaFilterReady = '1';
+    const znaOpts = typeof buildZnaUnitOptionsHtml === 'function'
+        ? buildZnaUnitOptionsHtml('', { includeBlank: false, includeOther: false })
+        : '';
+    hf.innerHTML = `<option value="all">All holding units</option>${znaOpts}`;
+    hf.value = 'all';
+    if (typeof mountTypeableSelect === 'function') {
+        mountTypeableSelect(hf, { placeholder: 'All holding units', allowCustom: false, maxItems: 220 });
+    }
+}
+
 function initUnitEquipmentModule() {
     const moduleEl = document.getElementById('unit-equipment');
     if (!moduleEl || moduleEl.dataset.ueInit === '1') return;
     moduleEl.dataset.ueInit = '1';
 
+    initUeHoldingFilter();
     document.getElementById('unit-equipment-table-body')?.querySelectorAll('tr').forEach(attachUnitEquipmentRow);
 
     document.getElementById('ueViewModeBtn')?.addEventListener('click', () => setUnitEquipmentMode('view'));

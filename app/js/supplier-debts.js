@@ -9,7 +9,8 @@ const SD_STATUSES = [
 ];
 
 const SD_OPEN_STATUSES = new Set(['open', 'chased_daf', 'part_paid']);
-const SD_SEED_REV = 2;
+const SD_SEED_REV = 3;
+const SD_CREDITORS_IMPORT_SOURCE = 'it-dir-creditors-2025-11';
 
 function sdEscape(value) {
     return String(value ?? '')
@@ -215,6 +216,224 @@ function sdNixzimoDp3478SeedCase() {
     };
 }
 
+function sdNormRef(value) {
+    return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function sdPaidEntryMatchesCase(rec, entry) {
+    if (!rec || !entry || rec.status === 'paid') return false;
+    const entryPo = sdNormRef(entry.poNo);
+    const entryInv = sdNormRef(entry.invoiceNo);
+    const entrySup = sdSupplierNormKey(entry.supplier);
+    const lines = rec.lines || [];
+
+    for (const line of lines) {
+        const linePo = sdNormRef(line.poNo);
+        const lineInv = sdNormRef(line.invoiceNo);
+        if (entryInv && lineInv && entryInv === lineInv) return true;
+        if (entryPo && linePo && entryPo === linePo && (!entryInv || !lineInv)) return true;
+        if (entryPo && linePo && entryInv && lineInv && entryPo === linePo && entryInv === lineInv) return true;
+    }
+
+    if (entrySup && sdSupplierNormKey(rec.supplier) === entrySup) {
+        const amt = sdParseNum(entry.amountUsd);
+        if (amt > 0 && Math.abs(sdCaseUsd(rec) - amt) <= Math.max(1, amt * 0.02)) return true;
+        if (!entryInv && !entryPo) return true;
+    }
+    return false;
+}
+
+function previewCreditorsPaidList(entries) {
+    const list = ensureSupplierDebts();
+    const open = list.filter((rec) => SD_OPEN_STATUSES.has(rec.status));
+    const matched = [];
+    const usedIds = new Set();
+
+    (entries || []).forEach((entry) => {
+        const hit = open.find((rec) => !usedIds.has(rec.id) && sdPaidEntryMatchesCase(rec, entry));
+        if (hit) {
+            usedIds.add(hit.id);
+            matched.push({ entry, rec: hit });
+        }
+    });
+
+    return {
+        matched,
+        unmatchedEntries: (entries || []).filter((entry) => !matched.some((m) => m.entry === entry)),
+        unmatchedCases: open.filter((rec) => !usedIds.has(rec.id))
+    };
+}
+
+function applyCreditorsPaidList(entries, { force = false } = {}) {
+    if (typeof requireEditAccess === 'function' && !requireEditAccess()) return null;
+    const preview = previewCreditorsPaidList(entries);
+    if (!preview.matched.length) {
+        showToast('No open creditor cases matched the paid list.', 'warning');
+        return preview;
+    }
+    if (!force) {
+        const ok = confirm(
+            `Mark ${preview.matched.length} creditor case(s) as paid?\n\n` +
+            preview.matched.slice(0, 8).map(({ rec, entry }) =>
+                `• ${rec.supplier || rec.caseNo}${entry.paidDate ? ` · paid ${entry.paidDate}` : ''}`
+            ).join('\n') +
+            (preview.matched.length > 8 ? `\n…and ${preview.matched.length - 8} more` : '')
+        );
+        if (!ok) return preview;
+    }
+
+    const now = new Date().toISOString();
+    preview.matched.forEach(({ rec, entry }) => {
+        rec.status = 'paid';
+        rec.paidDate = entry.paidDate || sdToday();
+        rec.notes = [rec.notes, `Marked paid from ${entry.source || 'DAF paid list'}${entry.invoiceNo ? ` · inv ${entry.invoiceNo}` : ''}`]
+            .filter(Boolean).join(' · ');
+        rec.updatedAt = now;
+    });
+    if (typeof saveState === 'function') saveState();
+    showToast(`Marked ${preview.matched.length} creditor case(s) as paid.`, 'success');
+    renderSupplierDebtsModule();
+    if (typeof updateDashboard === 'function') updateDashboard();
+    return preview;
+}
+
+function sdIsCreditorsSummarySupplier(name) {
+    const n = String(name || '').trim().toLowerCase();
+    return !n || n === 'grand total' || n === 'total' || n.includes('grand total');
+}
+
+function sdNormalizeCreditorsCase(raw) {
+    if (sdIsCreditorsSummarySupplier(raw?.supplier)) return null;
+    const now = new Date().toISOString();
+    const lines = (raw.lines || []).map((line) => ({
+        ...emptySdLine(),
+        ...line,
+        costCentre: line.costCentre || 'IT DIR'
+    }));
+    const totalUsd = raw.totalUsd != null
+        ? Math.round(sdParseNum(raw.totalUsd) * 100) / 100
+        : Math.round(lines.reduce((sum, line) => sum + sdLineUsd(line), 0) * 100) / 100;
+    const receivedDate = raw.receivedDate || '2025-11-05';
+    return {
+        id: raw.id || sdNewId(),
+        caseNo: raw.caseNo || sdNextCaseNo(),
+        minuteRef: raw.minuteRef || '',
+        receivedDate,
+        accumulatedFrom: raw.accumulatedFrom || sdEarliestSupplyDate({ lines, receivedDate }),
+        supplier: raw.supplier || '',
+        costCentre: raw.costCentre || 'IT DIR',
+        description: raw.description || `Creditors register — ${raw.supplier || 'supplier'}`,
+        actionTo: raw.actionTo || 'DAF',
+        infoTo: raw.infoTo || 'IT Dir, File',
+        status: raw.status || 'open',
+        currency: 'USD',
+        totalUsd,
+        attachments: raw.attachments || '',
+        notes: raw.notes || '',
+        dafChasedAt: '',
+        dafChasedRef: '',
+        paidDate: '',
+        createdAt: now,
+        updatedAt: now,
+        importSource: SD_CREDITORS_IMPORT_SOURCE,
+        lines
+    };
+}
+
+function getItDirCreditorsPack() {
+    return typeof IT_DIR_CREDITORS_SEED !== 'undefined' ? IT_DIR_CREDITORS_SEED : null;
+}
+
+function sdIsImportedCreditorsCase(rec) {
+    return rec?.importSource === SD_CREDITORS_IMPORT_SOURCE
+        || String(rec?.id || '').startsWith('sd-it-cred-');
+}
+
+function importItDirCreditorsCases(rawCases, { mode = 'merge' } = {}) {
+    if (!appState) return { added: 0, updated: 0, skipped: 0, total: 0 };
+    if (!Array.isArray(appState.supplierDebts)) {
+        appState.supplierDebts = createDefaultSupplierDebts();
+    }
+    const cases = (rawCases || []).map(sdNormalizeCreditorsCase).filter(Boolean);
+    if (mode === 'replace-imported') {
+        appState.supplierDebts = appState.supplierDebts.filter((rec) => !sdIsImportedCreditorsCase(rec));
+    }
+    let added = 0;
+    let updated = 0;
+    let skipped = 0;
+    cases.forEach((rec) => {
+        const idx = appState.supplierDebts.findIndex((row) => row.id === rec.id);
+        if (idx >= 0) {
+            if (mode === 'merge-skip') {
+                skipped += 1;
+                return;
+            }
+            const prev = appState.supplierDebts[idx];
+            appState.supplierDebts[idx] = {
+                ...rec,
+                status: prev.status && prev.status !== 'open' ? prev.status : rec.status,
+                dafChasedAt: prev.dafChasedAt || rec.dafChasedAt,
+                dafChasedRef: prev.dafChasedRef || rec.dafChasedRef,
+                paidDate: prev.paidDate || rec.paidDate,
+                minuteRef: prev.minuteRef || rec.minuteRef,
+                description: prev.description || rec.description,
+                notes: prev.notes || rec.notes,
+                attachments: prev.attachments || rec.attachments,
+                createdAt: prev.createdAt || rec.createdAt,
+                updatedAt: new Date().toISOString()
+            };
+            updated += 1;
+            return;
+        }
+        appState.supplierDebts.push(rec);
+        added += 1;
+    });
+    if (typeof saveState === 'function') saveState();
+    return { added, updated, skipped, total: cases.length };
+}
+
+function updateSdCreditorsPackSummary() {
+    const el = document.getElementById('sdCreditorsPackSummary');
+    const pack = getItDirCreditorsPack();
+    if (!el || !pack) return;
+    el.innerHTML = `<strong>${sdEscape(pack.title || 'IT DIR creditors register')}</strong> — ` +
+        `${pack.caseCount} supplier case(s) · ${pack.lineCount} invoice line(s) · USD ${sdFmtUsd(pack.totalUsd)}` +
+        (pack.source ? ` · source: ${sdEscape(pack.source)}` : '');
+}
+
+function loadItDirCreditorsRegister(options = {}) {
+    if (typeof requireEditAccess === 'function' && !requireEditAccess()) return false;
+    const pack = getItDirCreditorsPack();
+    if (!pack || !Array.isArray(pack.cases) || !pack.cases.length) {
+        showToast('IT DIR creditors register pack not found.', 'error');
+        return false;
+    }
+    const mode = options.mode || document.getElementById('sdCreditorsLoadMode')?.value || 'merge';
+    const force = options.force === true;
+    if (!force && mode === 'replace-imported') {
+        const ok = confirm(
+            `Replace the imported IT DIR creditors register?\n\n` +
+            `${pack.caseCount} supplier case(s) · ${pack.lineCount} invoice line(s) · USD ${sdFmtUsd(pack.totalUsd)}\n\n` +
+            `Manual cases (Dampack detail, Nixzimo, etc.) are kept. Only register-imported cases are removed first.`
+        );
+        if (!ok) return false;
+    }
+    const result = importItDirCreditorsCases(pack.cases, { mode });
+    updateSdCreditorsPackSummary();
+    const statusEl = document.getElementById('sdCreditorsImportStatus');
+    if (statusEl) {
+        statusEl.hidden = false;
+        statusEl.textContent = `Last load: ${result.added} added · ${result.updated} updated · ${result.skipped} skipped (${result.total} in register).`;
+    }
+    if (typeof renderSupplierDebtsModule === 'function') renderSupplierDebtsModule();
+    if (typeof updateDashboard === 'function') updateDashboard();
+    showToast(
+        `Loaded IT DIR creditors register — ${result.added} added, ${result.updated} updated${result.skipped ? `, ${result.skipped} skipped` : ''}.`,
+        'success'
+    );
+    return true;
+}
+
 function ensureSupplierDebts() {
     if (!appState) return [];
     if (!Array.isArray(appState.supplierDebts)) {
@@ -222,10 +441,22 @@ function ensureSupplierDebts() {
     }
     const rev = Number(appState.supplierDebtSeedRev) || 0;
     if (rev < SD_SEED_REV) {
-        const hasDampack = appState.supplierDebts.some((rec) => rec.id === 'sd-seed-dampack-2022');
-        if (!hasDampack) appState.supplierDebts.push(sdDampackSeedCase());
-        const hasNixzimo = appState.supplierDebts.some((rec) => rec.id === 'sd-seed-nixzimo-dp3478-2026');
-        if (!hasNixzimo) appState.supplierDebts.push(sdNixzimoDp3478SeedCase());
+        if (rev < 2) {
+            const hasDampack = appState.supplierDebts.some((rec) => rec.id === 'sd-seed-dampack-2022');
+            if (!hasDampack) appState.supplierDebts.push(sdDampackSeedCase());
+            const hasNixzimo = appState.supplierDebts.some((rec) => rec.id === 'sd-seed-nixzimo-dp3478-2026');
+            if (!hasNixzimo) appState.supplierDebts.push(sdNixzimoDp3478SeedCase());
+        }
+        if (rev < 3) {
+            const hasCreditors = appState.supplierDebts.some((rec) => sdIsImportedCreditorsCase(rec));
+            const pack = getItDirCreditorsPack();
+            if (!hasCreditors && pack?.cases?.length) {
+                pack.cases.forEach((raw) => {
+                    const rec = sdNormalizeCreditorsCase(raw);
+                    if (rec) appState.supplierDebts.push(rec);
+                });
+            }
+        }
         appState.supplierDebtSeedRev = SD_SEED_REV;
         if (typeof saveState === 'function') saveState();
     }
@@ -627,7 +858,7 @@ function saveSupplierDebtFromForm() {
             updatedAt: now
         };
         if (typeof saveState === 'function') saveState();
-        showToast('Supplier debt case updated.', 'success');
+        showToast('Creditor case updated.', 'success');
         renderSupplierDebtsModule();
         return list[idx];
     }
@@ -718,17 +949,18 @@ function rollupSupplierDebts() {
     return Array.from(map.values()).sort((a, b) => b.usd - a.usd || a.supplier.localeCompare(b.supplier));
 }
 
-function renderSupplierDebtSummaryStrip() {
+function renderSupplierDebtSummaryStrip(ids = {}) {
     const s = getSupplierDebtSummary();
     const set = (id, text) => {
         const el = document.getElementById(id);
         if (el) el.textContent = text;
     };
-    set('sdStatOpen', String(s.openCount));
-    set('sdStatUsd', sdFmtUsd(s.usdOwed));
-    set('sdStatOld', String(s.yearPlus));
-    set('sdStatChased', String(s.chased));
-    set('sdStatSuppliers', String(s.suppliers));
+    set(ids.open || 'sdStatOpen', String(s.openCount));
+    set(ids.usd || 'sdStatUsd', sdFmtUsd(s.usdOwed));
+    set(ids.old || 'sdStatOld', String(s.yearPlus));
+    set(ids.chased || 'sdStatChased', String(s.chased));
+    set(ids.suppliers || 'sdStatSuppliers', String(s.suppliers));
+    return s;
 }
 
 function renderSupplierDebtRollup() {
@@ -813,10 +1045,159 @@ function renderSupplierDebtsTable() {
     }).join('');
 }
 
+function sdSupplierNormKey(name) {
+    return String(name || '')
+        .toLowerCase()
+        .replace(/\b(pvt\.?\s*ltd|private limited|investments?|enterprises?|enterp|inv\.?|trading|technologies?|tech|distributors?|impressions?)\b/gi, '')
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
+}
+
+function sdSupplierVendorKey(rec) {
+    const vendors = (rec?.lines || [])
+        .map((line) => String(line.vendor || '').trim())
+        .filter((v) => /^\d+$/.test(v));
+    if (vendors.length) return `vendor-${vendors[0]}`;
+    return `name-${sdSupplierNormKey(rec?.supplier)}`;
+}
+
+function sdFindDuplicateSupplierGroups() {
+    const open = ensureSupplierDebts().filter((r) => SD_OPEN_STATUSES.has(r.status));
+    const byKey = new Map();
+    open.forEach((rec) => {
+        const key = sdSupplierVendorKey(rec);
+        if (!key || key === 'name-') return;
+        if (!byKey.has(key)) byKey.set(key, []);
+        byKey.get(key).push(rec);
+    });
+    return Array.from(byKey.values()).filter((group) => {
+        if (group.length < 2) return false;
+        const names = new Set(group.map((r) => String(r.supplier || '').trim().toLowerCase()));
+        return names.size > 1;
+    });
+}
+
+function sdMergeCreditorCases(keepId, mergeIds) {
+    if (typeof requireEditAccess === 'function' && !requireEditAccess()) return false;
+    const keep = getSupplierDebtById(keepId);
+    if (!keep) {
+        showToast('Keep case not found.', 'error');
+        return false;
+    }
+    const ids = (mergeIds || []).filter((id) => id && id !== keepId);
+    if (!ids.length) return false;
+    ids.forEach((id) => {
+        const rec = getSupplierDebtById(id);
+        if (!rec) return;
+        keep.lines = [...(keep.lines || []), ...(rec.lines || [])];
+        keep.totalUsd = Math.round((keep.lines || []).reduce((s, line) => s + sdLineUsd(line), 0) * 100) / 100;
+        keep.accumulatedFrom = sdEarliestSupplyDate(keep);
+        keep.notes = [keep.notes, rec.notes].filter(Boolean).join(' · ');
+        keep.updatedAt = new Date().toISOString();
+        appState.supplierDebts = appState.supplierDebts.filter((row) => row.id !== id);
+    });
+    if (typeof saveState === 'function') saveState();
+    showToast(`Merged ${ids.length} duplicate case(s) into ${keep.supplier || keep.caseNo}.`, 'success');
+    renderSupplierDebtsModule();
+    if (typeof renderStkDafCreditorsPanel === 'function') renderStkDafCreditorsPanel();
+    return true;
+}
+
+function sdBuildChasePriorityList(limit = 8) {
+    return ensureSupplierDebts()
+        .filter((r) => SD_OPEN_STATUSES.has(r.status))
+        .map((rec) => ({
+            rec,
+            age: sdAgeDays(rec),
+            usd: sdCaseUsd(rec),
+            chased: Boolean(rec.dafChasedAt),
+            score: sdCaseUsd(rec) * 0.4 + sdAgeDays(rec) * 0.6 + (rec.dafChasedAt ? -120 : 80)
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit);
+}
+
+function renderSdIntelligencePanel(hostId = 'sdIntelligencePanel') {
+    const el = document.getElementById(hostId);
+    if (!el) return;
+
+    const priorities = sdBuildChasePriorityList(6);
+    const dupes = sdFindDuplicateSupplierGroups();
+    const staleChased = ensureSupplierDebts()
+        .filter((r) => SD_OPEN_STATUSES.has(r.status) && r.dafChasedAt)
+        .filter((r) => {
+            const chased = new Date(`${String(r.dafChasedAt).slice(0, 10)}T00:00:00`);
+            const now = new Date(`${sdToday()}T00:00:00`);
+            return (now - chased) / 86400000 >= 90;
+        });
+
+    const priorityHtml = priorities.length
+        ? `<ul class="sd-insight-list">${priorities.map(({ rec, age, usd, chased }) => `
+            <li>
+                <button type="button" class="sd-insight-link" data-sd-priority-id="${sdEscape(rec.id)}">
+                    <strong>${sdEscape(rec.supplier || rec.caseNo)}</strong>
+                    <span>USD ${sdEscape(sdFmtUsd(usd))} · ${sdEscape(sdAgeLabel(age))}${chased ? ' · chased' : ' · not chased'}</span>
+                </button>
+            </li>`).join('')}</ul>`
+        : '<p class="muted">No open creditor cases.</p>';
+
+    const dupeHtml = dupes.length
+        ? `<ul class="sd-insight-list">${dupes.slice(0, 5).map((group) => {
+            const keep = group.slice().sort((a, b) => sdCaseUsd(b) - sdCaseUsd(a))[0];
+            const names = group.map((r) => r.supplier).join(' / ');
+            return `<li class="sd-insight-dupe">
+                <span><strong>Possible duplicate:</strong> ${sdEscape(names)}</span>
+                <button type="button" class="btn btn-ghost btn-sm" data-sd-merge-keep="${sdEscape(keep.id)}" data-sd-merge-ids="${sdEscape(group.filter((r) => r.id !== keep.id).map((r) => r.id).join(','))}">Merge into ${sdEscape(keep.supplier || keep.caseNo)}</button>
+            </li>`;
+        }).join('')}</ul>`
+        : '<p class="muted">No duplicate supplier names detected.</p>';
+
+    el.innerHTML = `
+        <div class="sd-insight-grid">
+            <div class="sd-insight-card">
+                <h4>Priority DAF chase</h4>
+                <p class="muted">Ranked by age, USD owed, and whether DAF was already chased.</p>
+                ${priorityHtml}
+            </div>
+            <div class="sd-insight-card">
+                <h4>Smart checks</h4>
+                <ul class="sd-insight-stats">
+                    <li><span>Duplicate name groups</span><strong>${dupes.length}</strong></li>
+                    <li><span>Chased 90+ days, still open</span><strong>${staleChased.length}</strong></li>
+                    <li><span>1 year+ unpaid</span><strong>${getSupplierDebtSummary().yearPlus}</strong></li>
+                </ul>
+                ${dupeHtml}
+            </div>
+        </div>
+    `;
+
+    el.querySelectorAll('[data-sd-priority-id]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-sd-priority-id');
+            if (hostId === 'stkDafIntelligencePanel' && typeof navigateToModule === 'function') {
+                navigateToModule('supplier-debts', { sdId: id });
+                return;
+            }
+            editSupplierDebt(id);
+        });
+    });
+    el.querySelectorAll('[data-sd-merge-keep]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const keepId = btn.getAttribute('data-sd-merge-keep');
+            const mergeIds = (btn.getAttribute('data-sd-merge-ids') || '').split(',').filter(Boolean);
+            if (!mergeIds.length) return;
+            const ok = confirm(`Merge ${mergeIds.length} duplicate case(s) into the selected supplier record?\n\nInvoice lines will be combined. This cannot be undone automatically.`);
+            if (!ok) return;
+            sdMergeCreditorCases(keepId, mergeIds);
+        });
+    });
+}
+
 function renderSupplierDebtsModule() {
     ensureSupplierDebts();
     populateSdStatusSelect();
     renderSupplierDebtSummaryStrip();
+    renderSdIntelligencePanel();
     renderSupplierDebtRollup();
     renderSupplierDebtsTable();
 }
@@ -841,7 +1222,15 @@ function getSupplierDebtAlerts(options = {}) {
         alerts.push({
             type: 'warning',
             target: 'supplier-debts',
-            text: `${unchased.length} unpaid supplier case(s) not yet chased with DAF.`
+            text: `${unchased.length} unpaid creditor case(s) not yet chased with DAF.`
+        });
+    }
+    const dupes = typeof sdFindDuplicateSupplierGroups === 'function' ? sdFindDuplicateSupplierGroups() : [];
+    if (dupes.length) {
+        alerts.push({
+            type: 'warning',
+            target: 'supplier-debts',
+            text: `${dupes.length} possible duplicate supplier group(s) in Creditors — review and merge.`
         });
     }
     return alerts;
@@ -898,7 +1287,7 @@ function buildSupplierDebtChaseMemoHtml(rec) {
       <div><span class="daf-memo-label">Date</span> ${memoEscapeFn(dateDisplay)}</div>
     </div>
   </div>
-  <div class="daf-memo-subject"><u>REQUEST FOR SETTLEMENT OF OUTSTANDING SUPPLIER DEBT — ${memoEscapeFn((rec.supplier || 'SUPPLIER').toUpperCase())} — USD ${memoEscapeFn(usd)}</u></div>
+  <div class="daf-memo-subject"><u>REQUEST FOR SETTLEMENT OF OUTSTANDING CREDITOR — ${memoEscapeFn((rec.supplier || 'SUPPLIER').toUpperCase())} — USD ${memoEscapeFn(usd)}</u></div>
   <div class="daf-memo-body">
     <p>1.&nbsp;&nbsp;IT Dir, as cost centre, records that goods/services have been received from ${memoEscapeFn(rec.supplier || 'the supplier')} but remain unpaid. The outstanding amount is USD ${memoEscapeFn(usd)}. Debt has accumulated from ${memoEscapeFn(from)} (age ${memoEscapeFn(age)}).</p>
     <p>2.&nbsp;&nbsp;${memoEscapeFn(rec.description || 'See invoice / PO register attached.')}</p>
@@ -932,7 +1321,7 @@ function buildSupplierDebtsReportData() {
         rec.dafChasedAt || '—'
     ]);
     return {
-        title: 'Supplier Debts — Non-paid goods received',
+        title: 'Creditors — Non-paid goods received',
         summary: [
             `Open cases: ${summary.openCount}`,
             `USD owed: ${sdFmtUsd(summary.usdOwed)}`,
@@ -945,7 +1334,7 @@ function buildSupplierDebtsReportData() {
         ],
         tables: [{
             tbodyId: 'supplier-debts-report',
-            title: 'Supplier debt cases',
+            title: 'Creditor cases',
             headers: ['Case', 'Date in', 'Supplier', 'Cost centre', 'Ref', 'USD owed', 'Age', 'Status', 'DAF chased'],
             rows
         }]
@@ -957,8 +1346,8 @@ function buildSupplierDebtChaseReportData() {
     const rec = getSupplierDebtById(id) || ensureSupplierDebts().find((r) => SD_OPEN_STATUSES.has(r.status));
     if (!rec) {
         return {
-            title: 'DAF chase — supplier debt',
-            summary: ['No supplier debt case selected.'],
+            title: 'DAF chase — creditor',
+            summary: ['No creditor case selected.'],
             fields: [],
             tables: []
         };
@@ -1058,6 +1447,10 @@ function initSupplierDebtsModule() {
         if (action === 'chase') chaseSupplierDebtDaf(id);
         if (action === 'paid') markSupplierDebtPaid(id);
     });
+
+    updateSdCreditorsPackSummary();
+    document.getElementById('sdLoadCreditorsBtn')?.addEventListener('click', () => loadItDirCreditorsRegister());
+    if (typeof initSdCreditorsDropZone === 'function') initSdCreditorsDropZone();
 
     renderSupplierDebtsModule();
 }

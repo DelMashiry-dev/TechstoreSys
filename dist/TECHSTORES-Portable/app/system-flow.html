@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TECHSTORESys — System Flow</title>
+    <style>
+        :root {
+            --navy: #173b67;
+            --navy-dark: #102b4d;
+            --blue: #168ac4;
+            --green: #1c8a4b;
+            --green-dark: #14683a;
+            --teal: #087e83;
+            --gold: #d49100;
+            --ink: #172b4d;
+            --muted: #62748a;
+            --line: #c9d5e3;
+            --line-dark: #91a6bd;
+            --surface: #ffffff;
+            --surface-soft: #f5f8fb;
+            --surface-blue: #eaf4fb;
+            --surface-green: #edf8f1;
+            --surface-gold: #fff7e5;
+            --shadow: 0 8px 22px rgba(27, 55, 86, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-width: 320px;
+            color: var(--ink);
+            background: #eef3f8;
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        .page {
+            width: min(100% - 32px, 1680px);
+            margin: 0 auto;
+            padding: 24px 0 44px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 24px 28px;
+            color: #fff;
+            background: var(--navy-dark);
+            border-radius: 14px;
+        }
+
+        .eyebrow {
+            margin: 0 0 6px;
+            color: #a9d8f2;
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        h1, h2, h3, p { margin-top: 0; }
+        h1 { margin-bottom: 8px; font-size: clamp(1.55rem, 2.8vw, 2.35rem); }
+        h2 { margin-bottom: 6px; color: var(--navy-dark); font-size: 1.28rem; }
+        h3 { margin-bottom: 5px; font-size: 1rem; }
+
+        .header-copy p {
+            max-width: 860px;
+            margin-bottom: 0;
+            color: #d9e6f3;
+            line-height: 1.5;
+        }
+
+        .header-actions {
+            display: flex;
+            flex: 0 0 auto;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .button,
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 36px;
+            padding: 8px 14px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font: inherit;
+            font-size: 0.84rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .button {
+            color: var(--navy-dark);
+            background: #fff;
+            border-color: #c8d6e5;
+        }
+
+        .button:hover,
+        .back-link:hover { filter: brightness(0.96); }
+
+        .back-link {
+            color: #fff;
+            background: var(--green);
+            border-color: #69c38e;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .summary-item,
+        .detail-panel,
+        .boundary-panel {
+            padding: 16px 18px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+        }
+
+        .summary-item strong {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--navy);
+            font-size: 0.9rem;
+        }
+
+        .summary-item span,
+        .detail-panel p,
+        .boundary-panel p {
+            color: var(--muted);
+            font-size: 0.86rem;
+            line-height: 1.45;
+        }
+
+        .flow-section {
+            margin-top: 18px;
+        }
+
+        .section-intro {
+            margin-bottom: 12px;
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        .flow-scroll {
+            padding: 12px;
+            overflow: auto;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+        }
+
+        .flow-board {
+            position: relative;
+            width: 1640px;
+            height: 880px;
+            background:
+                linear-gradient(var(--surface-soft), var(--surface-soft)) 0 0 / 100% 176px no-repeat,
+                linear-gradient(var(--surface), var(--surface));
+            border: 1px solid #dce5ee;
+            border-radius: 8px;
+        }
+
+        .phase-label {
+            position: absolute;
+            top: 14px;
+            z-index: 2;
+            color: var(--navy);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.11em;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .phase-label::after {
+            display: block;
+            width: 100%;
+            height: 2px;
+            margin-top: 8px;
+            background: var(--line);
+            content: "";
+        }
+
+        .phase-entry { left: 30px; width: 250px; }
+        .phase-intake { left: 360px; width: 280px; }
+        .phase-decision { left: 730px; width: 235px; }
+        .phase-procure { left: 1040px; width: 310px; }
+        .phase-close { left: 1420px; width: 190px; }
+
+        .flow-lines {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .flow-lines path,
+        .flow-lines line {
+            fill: none;
+            stroke: var(--line-dark);
+            stroke-width: 2;
+            marker-end: url("#arrow");
+        }
+
+        .flow-lines .main-line {
+            stroke: var(--blue);
+            stroke-width: 2.5;
+        }
+
+        .flow-lines .loop-line {
+            stroke: var(--gold);
+            stroke-dasharray: 7 6;
+        }
+
+        .flow-node {
+            position: absolute;
+            z-index: 3;
+            width: 220px;
+            min-height: 90px;
+            padding: 12px 14px;
+            color: var(--ink);
+            text-align: left;
+            background: var(--surface);
+            border: 2px solid var(--line);
+            border-radius: 9px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: border-color 140ms ease, transform 140ms ease;
+        }
+
+        .flow-node:hover,
+        .flow-node:focus-visible {
+            border-color: var(--blue);
+            outline: none;
+            transform: translateY(-2px);
+        }
+
+        .flow-node.is-selected {
+            border-color: var(--blue);
+            background: var(--surface-blue);
+        }
+
+        .flow-node.phase-control { border-left: 5px solid var(--navy); }
+        .flow-node.phase-intake { border-left: 5px solid var(--teal); }
+        .flow-node.phase-review { border-left: 5px solid var(--blue); }
+        .flow-node.phase-decision { border-left: 5px solid var(--gold); }
+        .flow-node.phase-fulfilment { border-left: 5px solid var(--green); }
+        .flow-node.phase-procurement { border-left: 5px solid var(--navy); }
+        .flow-node.phase-close { border-left: 5px solid var(--green-dark); }
+
+        .node-phase {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--muted);
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .flow-node strong {
+            display: block;
+            font-size: 0.95rem;
+            line-height: 1.2;
+        }
+
+        .flow-node small {
+            display: block;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 0.73rem;
+            line-height: 1.3;
+        }
+
+        .n-entry { left: 44px; top: 82px; }
+        .n-auth { left: 44px; top: 220px; }
+        .n-dashboard { left: 44px; top: 358px; }
+        .n-orderly { left: 44px; top: 516px; }
+        .n-messages { left: 44px; top: 690px; }
+
+        .n-import { left: 390px; top: 82px; }
+        .n-review { left: 390px; top: 242px; }
+        .n-forms { left: 390px; top: 406px; }
+        .n-requisitions { left: 390px; top: 586px; }
+
+        .n-stock { left: 735px; top: 270px; width: 225px; }
+        .n-q1033 { left: 735px; top: 470px; }
+        .n-dpf1 { left: 735px; top: 650px; }
+
+        .n-supporting { left: 1060px; top: 122px; width: 250px; }
+        .n-po { left: 1060px; top: 330px; width: 250px; }
+        .n-delivery { left: 1060px; top: 538px; width: 250px; }
+        .n-close { left: 1430px; top: 438px; width: 180px; }
+        .n-reports { left: 1430px; top: 600px; width: 180px; }
+        .n-controls { left: 1430px; top: 756px; width: 180px; }
+
+        .detail-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+            gap: 16px;
+            align-items: start;
+            margin-top: 16px;
+        }
+
+        .detail-panel {
+            min-height: 180px;
+        }
+
+        .detail-kicker {
+            margin-bottom: 5px;
+            color: var(--blue);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+        }
+
+        .detail-panel h3 { color: var(--navy-dark); font-size: 1.25rem; }
+        .detail-list { margin: 0; padding-left: 18px; color: var(--muted); }
+        .detail-list li { margin: 6px 0; font-size: 0.86rem; }
+
+        .boundary-panel {
+            background: var(--surface-gold);
+            border-color: #e7d4a2;
+        }
+
+        .boundary-panel h3 { color: #765300; }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            margin-top: 14px;
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        .legend-item { display: inline-flex; align-items: center; gap: 7px; }
+        .legend-swatch { width: 22px; height: 4px; border-radius: 3px; background: var(--blue); }
+        .legend-swatch.loop { background: var(--gold); }
+        .legend-swatch.intake { background: var(--teal); }
+        .legend-swatch.fulfilment { background: var(--green); }
+
+        .footer-note {
+            margin: 18px 0 0;
+            padding-top: 12px;
+            color: var(--muted);
+            border-top: 1px solid var(--line);
+            font-size: 0.76rem;
+            line-height: 1.45;
+        }
+
+        @media (max-width: 760px) {
+            .page { width: min(100% - 20px, 1680px); padding-top: 10px; }
+            .page-header { flex-direction: column; padding: 20px; }
+            .header-actions { justify-content: flex-start; }
+            .summary-grid,
+            .detail-layout { grid-template-columns: 1fr; }
+        }
+
+        @media print {
+            @page { size: A3 landscape; margin: 10mm; }
+            body { background: #fff; }
+            .page { width: 100%; padding: 0; }
+            .page-header { color: #000; background: #fff; border: 2px solid var(--navy); }
+            .header-copy p,
+            .eyebrow { color: #000; }
+            .header-actions,
+            .detail-layout,
+            .legend { display: none; }
+            .flow-scroll { overflow: visible; border: 0; padding: 0; }
+            .flow-board { break-inside: avoid; }
+            .summary-grid { margin-top: 10px; }
+            .summary-item { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header class="page-header">
+            <div class="header-copy">
+                <p class="eyebrow">Zimbabwe National Army · IT Directorate</p>
+                <h1>TECHSTORESys — Complete System Flow</h1>
+                <p>End-to-end overview of how documents, requisitions, stock decisions, procurement, fulfilment, reporting and governance move through the system.</p>
+            </div>
+            <div class="header-actions">
+                <button class="button" type="button" id="printFlow">Print / Save PDF</button>
+                <a class="back-link" href="index.html">Open TECHSTORESys</a>
+            </div>
+        </header>
+
+        <section class="summary-grid" aria-label="System flow summary">
+            <div class="summary-item">
+                <strong>Intake channels</strong>
+                <span>Orderly Room Daily File, Unit Requisitions in-tray and Import document.</span>
+            </div>
+            <div class="summary-item">
+                <strong>Decision gate</strong>
+                <span>Stock available routes to Q 1033; a shortfall routes to DP F1 and procurement.</span>
+            </div>
+            <div class="summary-item">
+                <strong>Completion path</strong>
+                <span>Purchase order, delivery note, receipt, status close and reporting.</span>
+            </div>
+        </section>
+
+        <section class="flow-section">
+            <h2>Operational flow</h2>
+            <p class="section-intro">Select a node to view its responsibility. Solid arrows show the main operating path; dashed arrows show mirroring, notification and governance feedback.</p>
+            <div class="flow-scroll">
+                <div class="flow-board" id="flowBoard">
+                    <div class="phase-label phase-entry">Entry &amp; control</div>
+                    <div class="phase-label phase-intake">Intake &amp; review</div>
+                    <div class="phase-label phase-decision">Decision &amp; issue</div>
+                    <div class="phase-label phase-procure">Procurement &amp; fulfilment</div>
+                    <div class="phase-label phase-close">Close &amp; control</div>
+
+                    <svg class="flow-lines" viewBox="0 0 1640 880" aria-hidden="true">
+                        <defs>
+                            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z"></path>
+                            </marker>
+                        </defs>
+                        <path class="main-line" d="M154 172 C154 194 154 198 154 220"></path>
+                        <path class="main-line" d="M154 310 C154 334 154 334 154 358"></path>
+                        <path class="main-line" d="M264 403 C310 403 336 146 390 146"></path>
+                        <path d="M264 561 C318 561 338 451 390 451"></path>
+                        <path class="main-line" d="M610 541 C668 541 679 315 735 315"></path>
+                        <path class="main-line" d="M845 360 C845 418 845 418 845 470"></path>
+                        <path class="main-line" d="M845 560 C845 600 845 610 845 650"></path>
+                        <path d="M610 146 C790 146 864 164 1060 164"></path>
+                        <path d="M610 451 C780 451 881 164 1060 164"></path>
+                        <path d="M960 695 C1008 695 1015 164 1060 164"></path>
+                        <path class="main-line" d="M1185 212 C1185 280 1185 280 1185 330"></path>
+                        <path class="main-line" d="M1185 426 C1185 488 1185 488 1185 538"></path>
+                        <path class="main-line" d="M1310 583 C1360 583 1380 483 1430 483"></path>
+                        <path class="main-line" d="M955 515 C1120 515 1260 483 1430 483"></path>
+                        <path class="main-line" d="M1520 528 C1520 574 1520 574 1520 600"></path>
+                        <path class="main-line" d="M1520 696 C1520 730 1520 730 1520 756"></path>
+                        <path class="loop-line" d="M1430 804 C1310 860 1170 850 1000 850 C760 850 500 830 154 780 C90 770 80 720 154 690"></path>
+                        <path class="loop-line" d="M154 690 C260 650 300 610 390 631"></path>
+                        <path class="loop-line" d="M264 561 C330 530 330 530 390 541"></path>
+                    </svg>
+
+                    <button class="flow-node phase-control n-entry" type="button" data-node="entry">
+                        <span class="node-phase">Entry</span><strong>Start TECHSTORESys</strong><small>Online server or offline shell</small>
+                    </button>
+                    <button class="flow-node phase-control n-auth" type="button" data-node="auth">
+                        <span class="node-phase">Entry</span><strong>Login &amp; role gate</strong><small>Identity, access and permissions</small>
+                    </button>
+                    <button class="flow-node phase-control n-dashboard is-selected" type="button" data-node="dashboard">
+                        <span class="node-phase">Control</span><strong>Dashboard</strong><small>Operational home and navigation</small>
+                    </button>
+                    <button class="flow-node phase-intake n-orderly" type="button" data-node="orderly">
+                        <span class="node-phase">Intake</span><strong>Orderly Room</strong><small>Daily File / First Sight</small>
+                    </button>
+                    <button class="flow-node phase-control n-messages" type="button" data-node="messages">
+                        <span class="node-phase">Control</span><strong>Office messages &amp; alerts</strong><small>Cross-department notifications</small>
+                    </button>
+
+                    <button class="flow-node phase-intake n-import" type="button" data-node="import">
+                        <span class="node-phase">Intake</span><strong>Import document</strong><small>Typed, PDF, scan or handwriting</small>
+                    </button>
+                    <button class="flow-node phase-review n-review" type="button" data-node="review">
+                        <span class="node-phase">Review</span><strong>Review extracted data</strong><small>Human verification before save</small>
+                    </button>
+                    <button class="flow-node phase-review n-forms" type="button" data-node="forms">
+                        <span class="node-phase">Review</span><strong>Target forms</strong><small>One import path, several destinations</small>
+                    </button>
+                    <button class="flow-node phase-intake n-requisitions" type="button" data-node="requisitions">
+                        <span class="node-phase">Intake</span><strong>Unit Requisitions in-tray</strong><small>Capture, review and ageing</small>
+                    </button>
+
+                    <button class="flow-node phase-decision n-stock" type="button" data-node="stock">
+                        <span class="node-phase">Decision</span><strong>Stock lookup &amp; decision</strong><small>Availability gate</small>
+                    </button>
+                    <button class="flow-node phase-fulfilment n-q1033" type="button" data-node="q1033">
+                        <span class="node-phase">Fulfilment</span><strong>Q 1033 issue / receipt</strong><small>Stock movement</small>
+                    </button>
+                    <button class="flow-node phase-procurement n-dpf1" type="button" data-node="dpf1">
+                        <span class="node-phase">Procurement</span><strong>DP F1 / procurement</strong><small>Funded procurement route</small>
+                    </button>
+
+                    <button class="flow-node phase-procurement n-supporting" type="button" data-node="supporting">
+                        <span class="node-phase">Procurement</span><strong>Market evidence</strong><small>Specs, quotations and comparison</small>
+                    </button>
+                    <button class="flow-node phase-procurement n-po" type="button" data-node="po">
+                        <span class="node-phase">Procurement</span><strong>Official purchase order</strong><small>ZNA / Directorate of Procurement form</small>
+                    </button>
+                    <button class="flow-node phase-fulfilment n-delivery" type="button" data-node="delivery">
+                        <span class="node-phase">Fulfilment</span><strong>Delivery &amp; receipt</strong><small>Goods received control</small>
+                    </button>
+                    <button class="flow-node phase-close n-close" type="button" data-node="close">
+                        <span class="node-phase">Close</span><strong>Satisfy / close requirement</strong><small>Status and source update</small>
+                    </button>
+                    <button class="flow-node phase-control n-reports" type="button" data-node="reports">
+                        <span class="node-phase">Control</span><strong>Reports &amp; registers</strong><small>Operational outputs</small>
+                    </button>
+                    <button class="flow-node phase-control n-controls" type="button" data-node="controls">
+                        <span class="node-phase">Control</span><strong>Governance loop</strong><small>Audit, roles, GL and alerts</small>
+                    </button>
+                </div>
+            </div>
+            <div class="legend" aria-label="Flow legend">
+                <span class="legend-item"><i class="legend-swatch"></i>Main operating path</span>
+                <span class="legend-item"><i class="legend-swatch loop"></i>Feedback / mirroring loop</span>
+                <span class="legend-item"><i class="legend-swatch intake"></i>Intake and filing</span>
+                <span class="legend-item"><i class="legend-swatch fulfilment"></i>Issue and receipt</span>
+            </div>
+        </section>
+
+        <section class="detail-layout" aria-live="polite">
+            <article class="detail-panel">
+                <div class="detail-kicker" id="detailPhase">Control</div>
+                <h3 id="detailTitle">Dashboard</h3>
+                <p id="detailText">The dashboard brings together alerts, GL buying power, stock overview, workflow portals, shortcuts and universal search.</p>
+                <ul class="detail-list" id="detailList">
+                    <li>Alerts and ageing watch</li>
+                    <li>GL accounts and procurement workflow</li>
+                    <li>Sidebar modules and universal search</li>
+                </ul>
+            </article>
+            <aside class="boundary-panel">
+                <h3>System boundary</h3>
+                <p>The current application flow is centred on local TECHSTORESys state, configured AI document services and its own modules. Pension Payroll and PFMS SignalR connections are not part of this application flow.</p>
+                <p>Use this page as a functional overview rather than a deployment or network diagram.</p>
+            </aside>
+        </section>
+
+        <p class="footer-note">Source: current TECHSTORESys workspace modules and integration code · Snapshot: 31 August 2026. Imported documents remain subject to human review before saving.</p>
+    </main>
+
+    <script>
+        const details = {
+            entry: {
+                phase: "Entry",
+                title: "Start TECHSTORESys",
+                text: "The application can be started through the local server or the offline static shell.",
+                items: ["server.py", "offline_static_server.py", "Browser-based interface"]
+            },
+            auth: {
+                phase: "Entry",
+                title: "Login & role gate",
+                text: "Users enter through role-based access control. Module visibility and edit rights are applied before work begins.",
+                items: ["Admin and departmental roles", "Viewer / edit access modes", "Role-specific module access"]
+            },
+            dashboard: {
+                phase: "Control",
+                title: "Dashboard",
+                text: "The dashboard brings together alerts, GL buying power, stock overview, workflow portals, shortcuts and universal search.",
+                items: ["Alerts and ageing watch", "GL accounts and procurement workflow", "Sidebar modules and universal search"]
+            },
+            orderly: {
+                phase: "Intake",
+                title: "Orderly Room",
+                text: "Incoming correspondence and requisition letters are filed, classified, authorised and referred to TechStores or other IT Directorate offices.",
+                items: ["Daily File reference and status", "GS authorisation and priority", "Alert TechStores and notify departments"]
+            },
+            messages: {
+                phase: "Control",
+                title: "Office messages & alerts",
+                text: "Orderly Room actions can create messages for selected IT Directorate offices. Dashboard alerts keep open work visible.",
+                items: ["Recipients and due dates", "Immediate / normal priority", "Alert trail back to source work"]
+            },
+            import: {
+                phase: "Intake",
+                title: "Import document",
+                text: "Documents can be uploaded or pasted, classified, extracted and reviewed before being applied to the matching system form.",
+                items: ["PDF, Word, image and text input", "AI vision when configured", "Heuristic fallback for typed text"]
+            },
+            review: {
+                phase: "Review",
+                title: "Review extracted data",
+                text: "Imported values are presented for correction. The user chooses the correct destination instead of committing an unverified document automatically.",
+                items: ["Document type and confidence", "Fields and line items", "Open matching module"]
+            },
+            forms: {
+                phase: "Review",
+                title: "Target forms",
+                text: "The import path supports the operational paperwork used across the procurement cycle.",
+                items: ["Loose minute / requisition", "Quotation / purchase order", "DP F1 / tech spec / delivery note / CCS"]
+            },
+            requisitions: {
+                phase: "Intake",
+                title: "Unit Requisitions in-tray",
+                text: "A requisition is recorded with its unit, requester, subject, quantities, costs, priority, status and minute-sheet approvals.",
+                items: ["Open / closed status tracking", "Ageing and urgent work", "Minute sheet and IT Dir stamp"]
+            },
+            stock: {
+                phase: "Decision",
+                title: "Stock lookup & decision",
+                text: "The Route action checks the inventory catalogue and separates a requirement into an issue path or a procurement path.",
+                items: ["Sufficient stock", "Partial stock and shortfall", "No stock or funding exception"]
+            },
+            q1033: {
+                phase: "Fulfilment",
+                title: "Q 1033 issue / receipt",
+                text: "Available stock is issued through the Q 1033 workflow and posted to the relevant inventory movement records.",
+                items: ["Issue available quantity", "Receipt / voucher movement", "Close when fully satisfied"]
+            },
+            dpf1: {
+                phase: "Procurement",
+                title: "DP F1 / procurement",
+                text: "When stock is unavailable or insufficient, the requirement moves through DP F1 and procurement controls, subject to GL buying power and approvals.",
+                items: ["GL and estimated cost", "DAF / replenishment exception", "AIAD due-diligence trail"]
+            },
+            supporting: {
+                phase: "Procurement",
+                title: "Market evidence",
+                text: "Technical and commercial evidence supports a defensible buying decision before a purchase order is issued.",
+                items: ["Technical specification", "Supplier quotations", "Cost comparative schedule"]
+            },
+            po: {
+                phase: "Procurement",
+                title: "Official purchase order",
+                text: "The system produces a print-ready purchase order with the official visual treatment, supplier details, requisition reference, GL and line values.",
+                items: ["Coat of Arms / ZNA identity", "Purchase order and requisition numbers", "Supplier, delivery and payment details"]
+            },
+            delivery: {
+                phase: "Fulfilment",
+                title: "Delivery & receipt",
+                text: "Delivery documentation records what arrived and links the receipt back to the purchase order and supplier.",
+                items: ["Delivery note", "Item, quantity and serial details", "Received-by record"]
+            },
+            close: {
+                phase: "Close",
+                title: "Satisfy / close requirement",
+                text: "Issue, procurement and receipt actions converge on a completed or exception-marked requirement.",
+                items: ["Issued / part issued", "Actioned / closed", "Remaining shortfall or exception"]
+            },
+            reports: {
+                phase: "Control",
+                title: "Reports & registers",
+                text: "The system supports reporting and register views around stock, equipment, returns, loans, accountability and procurement records.",
+                items: ["Monthly returns and stock views", "Equipment and accountability registers", "Loans, delivery and supplier records"]
+            },
+            controls: {
+                phase: "Control",
+                title: "Governance loop",
+                text: "Recorded actions feed back into alerts, dashboards, permissions and review queues so work can be monitored and corrected.",
+                items: ["Role and edit controls", "GL buying-power checks", "Ageing, alerts and activity trail"]
+            }
+        };
+
+        const detailPhase = document.getElementById("detailPhase");
+        const detailTitle = document.getElementById("detailTitle");
+        const detailText = document.getElementById("detailText");
+        const detailList = document.getElementById("detailList");
+
+        document.querySelectorAll("[data-node]").forEach((node) => {
+            node.addEventListener("click", () => {
+                const item = details[node.dataset.node];
+                if (!item) return;
+                document.querySelectorAll(".flow-node").forEach((button) => button.classList.remove("is-selected"));
+                node.classList.add("is-selected");
+                detailPhase.textContent = item.phase;
+                detailTitle.textContent = item.title;
+                detailText.textContent = item.text;
+                detailList.innerHTML = item.items.map((entry) => `<li>${entry}</li>`).join("");
+            });
+        });
+
+        document.getElementById("printFlow").addEventListener("click", () => window.print());
+    </script>
+</body>
+</html>

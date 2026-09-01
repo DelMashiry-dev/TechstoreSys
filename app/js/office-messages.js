@@ -1012,7 +1012,7 @@ function renderOfficeComposePane() {
                 </label>
                 <label class="ad-field" id="omUnitWrap" hidden>
                     <span>Unit / Formation</span>
-                    <select class="form-control" id="omToUnit">
+                    <select class="form-control zna-unit-select" id="omToUnit">
                         <option value="">Select unit / formation…</option>
                         ${unitCommanderOptionsHtml()}
                     </select>
@@ -1058,6 +1058,7 @@ function renderOfficeComposePane() {
 
     const pane = document.getElementById('systemComposePane') || document;
     wireOfficeComposeRecipientFields(pane);
+    if (typeof wireAllZnaUnitFields === 'function') wireAllZnaUnitFields(pane);
     const msgDate = document.getElementById('omMsgDate');
     if (msgDate && !msgDate.value && typeof todayIsoLocal === 'function') {
         msgDate.value = todayIsoLocal();

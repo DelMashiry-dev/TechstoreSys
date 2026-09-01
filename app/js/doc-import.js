@@ -353,7 +353,16 @@ async function runDocImportParse() {
 function setFieldValue(id, value) {
     if (value == null || value === '') return;
     const el = document.getElementById(id);
-    if (el) el.value = value;
+    if (!el) return;
+    if (el.classList.contains('zna-unit-select') && typeof fillZnaUnitSelect === 'function') {
+        fillZnaUnitSelect(el, value, { includeBlank: true, includeOther: true });
+        return;
+    }
+    if (typeof setZnaUnitField === 'function' && (el.classList.contains('zna-unit-select') || el.dataset.znaWired === '1')) {
+        setZnaUnitField(el, value);
+        return;
+    }
+    el.value = value;
 }
 
 function guessReqCategory(text) {

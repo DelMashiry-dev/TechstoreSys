@@ -157,6 +157,7 @@ function demoVoucherRow({
             demoCell('input', 'text', ''),
             demoCell('input', 'text', ''),
             demoCell('input', 'text', ''),
+            demoCell('input', 'text', ''),
             demoCell('input', 'text', 'ST')
         ]
     };

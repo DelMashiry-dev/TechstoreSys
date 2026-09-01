@@ -18,9 +18,11 @@ const ROLE_LABELS = {
     director: 'Director IT Dir (Col)',
     deputy_director: 'Deputy Director (Lt Col)',
     aqso2: 'GSO2 / AQSO2 (Maj)',
-    dir_aiad: 'Director AIAD',
-    dir_daf: 'Director DAF',
-    dir_dp: 'Director DP',
+    dir_aiad: 'Director AIAD — Due Diligence window',
+    dir_daf: 'Director DAF — DAF window',
+    dir_dp: 'Director DP — DP window',
+    gs_sd: 'Colonel SD (GS Branch) — GS window',
+    supplier: 'Registered supplier — Supplier window',
     techstores_officer: 'TechStores Officer',
     rq: 'Regimental Quartermaster (RQ)',
     store_officer: 'Store Officer',
@@ -49,7 +51,7 @@ const MODULES_DEPT_DESKS = [
 const MODULES_STORES_LEDGERS = [
     'gl-2200600002', 'gl-2200600003', 'gl-220200002', 'gl-2201900002', 'gl-3112210001',
     'voucher-module', 'stock-take', 'unit-checks', 'financial-year-bids', 'unit-equipment',
-    'ict-accountability', 'ict-distribution', 'temporary-loans', 'monthly-returns', 'undelivered-orders',
+    'ict-accountability', 'ict-distribution', 'temporary-loans', 'permanent-loans', 'monthly-returns', 'undelivered-orders', 'supplier-debts',
     'workshop-receipt-cert', 'delivery-note', 'purchase-orders', 'accommodation-stores',
     'zna-q-982', 'zna-q-178', 'zna-q-1033', 'zna-q-1043', 'zna-q-80', 'zna-svcs-890',
     'zna-q-1179', 'zna-q-987', 'zna-q-3977', 'zna-q-1157', 'zna-q-985', 'zna-q-1',
@@ -61,9 +63,9 @@ const MODULES_FULL_OPS = [
     'dashboard', 'orderly-room', 'it-dir-comms',
     ...MODULES_DEPT_DESKS,
     ...MODULES_STORES_LEDGERS,
-    'unit-requisitions',
-    'spec-evaluation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'zna-svcs-1045',
-    'workshop-repairs', 'workshop-receipt-cert', 'ict-compare', 'gate-register', 'techstores-equipment-register',
+    'unit-requisitions', 'doc-import',
+    'spec-evaluation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'portals-board', 'stakeholder-desk', 'zna-svcs-1045',
+    'workshop-repairs', 'workshop-receipt-cert', 'ict-compare', 'guide-quotation', 'gate-register', 'techstores-equipment-register',
     'suppliers-contracts', 'duties-roles', 'process-guides', 'system-help', 'reports-module'
 ];
 
@@ -71,15 +73,15 @@ const MODULES_FULL_OPS = [
 const MODULES_RQ = [
     'dashboard', 'it-dir-comms',
     ...MODULES_STORES_LEDGERS,
-    'unit-requisitions', 'spec-evaluation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'zna-svcs-1045',
-    'techstores-equipment-register', 'workshop-repairs', 'workshop-receipt-cert', 'ict-compare',
+    'unit-requisitions', 'doc-import', 'spec-evaluation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'portals-board', 'stakeholder-desk', 'zna-svcs-1045',
+    'techstores-equipment-register', 'workshop-repairs', 'workshop-receipt-cert', 'ict-compare', 'guide-quotation',
     'suppliers-contracts', 'duties-roles', 'process-guides', 'system-help', 'reports-module'
 ];
 
 const MODULES_STORE_OFFICER = MODULES_RQ.slice();
 
 function modulesForDeptDesk(deskId, extras = []) {
-    return ['dashboard', deskId, 'it-dir-comms', 'unit-requisitions', ...extras, 'process-guides', 'system-help'];
+    return ['dashboard', deskId, 'it-dir-comms', 'unit-requisitions', 'doc-import', ...extras, 'process-guides', 'system-help'];
 }
 
 /** Orderly Room — removed duplicate; see MODULES_ORDERLY below. */
@@ -96,13 +98,13 @@ const MODULES_ZNA_Q = [
 const MODULES_STOREMAN = [
     'dashboard',
     'voucher-module', 'delivery-note', 'stock-take', 'techstores-equipment-register',
-    'temporary-loans', 'system-help',
+    'temporary-loans', 'permanent-loans', 'doc-import', 'system-help',
     ...MODULES_ZNA_Q
 ];
 
 /** Workshop IC / 2IC / Senior Technician — repairs register, spec eval, comms only. */
 const MODULES_WORKSHOP = [
-    'dashboard', 'workshop-repairs', 'workshop-receipt-cert', 'ict-compare', 'spec-evaluation', 'it-dir-comms'
+    'dashboard', 'workshop-repairs', 'workshop-receipt-cert', 'ict-compare', 'spec-evaluation', 'guide-quotation', 'doc-import', 'it-dir-comms'
 ];
 
 /** RP Gate — gate register only (no stores / GL / comms module). */
@@ -112,7 +114,7 @@ const MODULES_RP = [
 
 /** Orderly Room / Admin Officer / Chief Clerk. */
 const MODULES_ORDERLY = [
-    'dashboard', 'orderly-room', 'it-dir-comms'
+    'dashboard', 'orderly-room', 'it-dir-comms', 'doc-import'
 ];
 
 /** DBA / ITTS / Software Eng / ICT Sec / Sys Admin — comms portal only. */
@@ -121,6 +123,35 @@ const MODULES_COMMS_ONLY = [
 ];
 
 const MODULES_COMMON = ['dashboard', 'process-guides', 'system-help'];
+
+const MODULES_STAKEHOLDER_SHARED = [
+    'dashboard', 'portals-board', 'stakeholder-desk', 'doc-import', 'process-guides', 'system-help'
+];
+
+const MODULES_DESK_DP = [
+    ...MODULES_STAKEHOLDER_SHARED, 'it-dir-comms',
+    'dp-procurement', 'dp-f1-form', 'cost-comparative-schedule', 'spec-evaluation',
+    'purchase-orders', 'suppliers-contracts', 'undelivered-orders'
+];
+
+const MODULES_DESK_GS = [
+    ...MODULES_STAKEHOLDER_SHARED, 'it-dir-comms',
+    'unit-requisitions', 'dp-f1-form', 'dp-procurement'
+];
+
+const MODULES_DESK_DAF = [
+    ...MODULES_STAKEHOLDER_SHARED, 'it-dir-comms',
+    'dp-procurement', 'supplier-debts', 'financial-year-bids'
+];
+
+const MODULES_DESK_AIAD = [
+    ...MODULES_STAKEHOLDER_SHARED, 'it-dir-comms',
+    'dp-procurement', 'cost-comparative-schedule', 'spec-evaluation'
+];
+
+const MODULES_DESK_SUPPLIER = [
+    ...MODULES_STAKEHOLDER_SHARED
+];
 
 /** Oversight: view every module; cannot alter quantities / save data. */
 function roleOversightViewAll() {
@@ -159,19 +190,29 @@ const ROLE_PERMISSIONS = {
     aqso2: roleOversightViewAll(),
     techstores_officer: roleOversightViewAll(),
     dir_aiad: {
-        modules: [...MODULES_COMMON, 'it-dir-comms', 'reports-module', 'dp-procurement', 'cost-comparative-schedule', 'duties-roles'],
-        canEdit: false, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: true,
-        accessMode: 'oversight_view'
+        modules: MODULES_DESK_AIAD,
+        canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: true,
+        accessMode: 'desk_aiad'
     },
     dir_daf: {
-        modules: [...MODULES_COMMON, 'it-dir-comms', 'reports-module', 'financial-year-bids', 'duties-roles'],
-        canEdit: false, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: true,
-        accessMode: 'oversight_view'
+        modules: MODULES_DESK_DAF,
+        canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: true,
+        accessMode: 'desk_daf'
     },
     dir_dp: {
-        modules: [...MODULES_COMMON, 'it-dir-comms', 'reports-module', 'dp-procurement', 'dp-f1-form', 'cost-comparative-schedule', 'spec-evaluation', 'suppliers-contracts', 'duties-roles'],
-        canEdit: false, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: true,
-        accessMode: 'oversight_view'
+        modules: MODULES_DESK_DP,
+        canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: true,
+        accessMode: 'desk_dp'
+    },
+    gs_sd: {
+        modules: MODULES_DESK_GS,
+        canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: false,
+        accessMode: 'desk_gs'
+    },
+    supplier: {
+        modules: MODULES_DESK_SUPPLIER,
+        canEdit: true, canReleaseCut: false, canManageUsers: false, canBackup: false, canReports: false,
+        accessMode: 'desk_supplier'
     },
     rq: roleSuperOversight(),
     store_officer: {
@@ -261,8 +302,10 @@ function createDefaultUsers() {
         { id: 'u-dd', username: 'dd', password: 'dd123', name: 'Deputy Director', role: 'deputy_director', department: "IT DIR DD'S OFFICE", active: true, mustChangePassword: false },
         { id: 'u-aqso2', username: 'aqso2', password: 'aqso2123', name: 'AQSO2', role: 'aqso2', department: "IT DIR AQSO2'S OFFICE", active: true, mustChangePassword: false },
         { id: 'u-aiad', username: 'aiad', password: 'aiad123', name: 'Director AIAD', role: 'dir_aiad', department: 'AIAD', active: true, mustChangePassword: false },
-        { id: 'u-daf', username: 'daf', password: 'daf123', name: 'Director DAF', role: 'dir_daf', department: 'DAF', active: true, mustChangePassword: false },
+        { id: 'u-daf', username: 'daf', password: 'daf123', name: 'Director DAF / MANAC', role: 'dir_daf', department: 'DAF', active: true, mustChangePassword: false },
         { id: 'u-dp', username: 'dp', password: 'dp123', name: 'Director DP', role: 'dir_dp', department: 'DP', active: true, mustChangePassword: false },
+        { id: 'u-gssd', username: 'gsdesk', password: 'gsdesk123', name: 'Colonel SD (GS Branch)', role: 'gs_sd', department: 'GS BRANCH', active: true, mustChangePassword: false },
+        { id: 'u-nixzimo', username: 'nixzimo', password: 'nixzimo123', name: 'Nixzimo Pvt Ltd', role: 'supplier', department: 'SUPPLIER', supplierKey: 'Nixzimo', active: true, mustChangePassword: false },
         { id: 'u-tso', username: 'tso', password: 'tso123', name: 'TechStores Officer', role: 'techstores_officer', department: 'IT DIR TECHSTORES OFFICE', active: true, mustChangePassword: false },
         { id: 'u-rq', username: 'rq', password: 'rq123', name: 'Regimental Quartermaster', role: 'rq', department: 'IT DIR TECHSTORES OFFICE', active: true, mustChangePassword: false },
         { id: 'u-store', username: 'store', password: 'store123', name: 'Store Officer', role: 'store_officer', department: 'IT DIR TECHSTORES OFFICE', active: true, mustChangePassword: false },
@@ -292,7 +335,16 @@ const LOGIN_USERNAME_ALIASES = {
     'regimental police': 'rp',
     'gate desk': 'gate',
     'gate rp': 'gate',
-    'gaterp': 'gate'
+    'gaterp': 'gate',
+    'gs branch': 'gsdesk',
+    'gsdesk': 'gsdesk',
+    'colonel sd': 'gsdesk',
+    'col sd': 'gsdesk',
+    'manac': 'daf',
+    'due diligence': 'aiad',
+    'aiad': 'aiad',
+    'nixzimo': 'nixzimo',
+    'supplier': 'nixzimo'
 };
 
 /** Extra passwords accepted for a resolved username (demo convenience). */
@@ -366,15 +418,18 @@ const GL_ACCOUNTS = {
 const VOUCHER_ROW_LAYOUT = {
     hasCategory: {
         category: 1, item: 2, desc: 3, qty: 4, uom: 5, gl: 6,
-        unitCost: 7, lineTotal: 8, rvIv: 9, purchase: 10, supplied: 11, issued: 12, initials: 13
+        unitCost: 7, lineTotal: 8, rvIv: 9, purchase: 10, supplied: 11, issued: 12,
+        appointment: 13, initials: 14
     },
     hasGl: {
         category: -1, item: 1, desc: 2, qty: 3, uom: 4, gl: 5,
-        unitCost: 6, lineTotal: 7, rvIv: 8, purchase: 9, supplied: 10, issued: 11, initials: 12
+        unitCost: 6, lineTotal: 7, rvIv: 8, purchase: 9, supplied: 10, issued: 11,
+        appointment: 12, initials: 13
     },
     legacy: {
         category: -1, item: 1, desc: 2, qty: 3, uom: 4, gl: -1,
-        unitCost: -1, lineTotal: -1, rvIv: 5, purchase: 6, supplied: 7, issued: 8, initials: 9
+        unitCost: -1, lineTotal: -1, rvIv: 5, purchase: 6, supplied: 7, issued: 8,
+        appointment: -1, initials: 9
     }
 };
 
@@ -382,15 +437,15 @@ const VOUCHER_ROW_LAYOUT = {
 
 const MODULE_IDS = [
     'gl-2200600002', 'gl-2200600003', 'gl-220200002', 'gl-2201900002', 'gl-3112210001',
-    'voucher-module', 'stock-take', 'unit-checks', 'financial-year-bids', 'unit-equipment', 'ict-accountability', 'ict-distribution', 'temporary-loans',
+    'voucher-module', 'stock-take', 'unit-checks', 'financial-year-bids', 'unit-equipment', 'ict-accountability', 'ict-distribution', 'temporary-loans', 'permanent-loans',
     'monthly-returns',
     'spec-evaluation', 'ict-compare', 'guide-quotation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'zna-q-982', 'zna-q-178', 'zna-q-1033', 'zna-q-1043',
     'zna-q-80', 'zna-svcs-890', 'zna-q-1179', 'zna-q-987', 'zna-q-3977', 'zna-svcs-1045', 'zna-q-1157',
     'zna-q-985', 'zna-q-1', 'zna-q-998', 'zna-q-1680',
     'zna-q-forms-index', 'zna-q-3', 'zna-q-31', 'zna-q-40', 'zna-q-1049', 'zna-q-1229', 'zna-q-1571', 'zna-q-1954',
     'accommodation-stores',
-    'delivery-note', 'purchase-orders', 'undelivered-orders', 'workshop-receipt-cert', 'workshop-repairs', 'ict-compare', 'gate-register', 'techstores-equipment-register', 'suppliers-contracts',
-    'orderly-room', 'it-dir-comms', 'duties-roles', 'process-guides', 'system-help', 'reports-module', 'user-management', 'release-cut'
+    'delivery-note', 'purchase-orders', 'undelivered-orders', 'supplier-debts', 'portals-board', 'stakeholder-desk', 'doc-import', 'workshop-receipt-cert', 'workshop-repairs', 'ict-compare', 'gate-register', 'techstores-equipment-register', 'suppliers-contracts',
+    'orderly-room', 'it-dir-comms', 'unit-requisitions', 'duties-roles', 'process-guides', 'system-help', 'reports-module', 'user-management', 'release-cut'
 ];
 
 const ROW_BUILDERS = {

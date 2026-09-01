@@ -43,7 +43,11 @@
                             </div>
                             <div class="form-col">
                                 <label class="form-label" for="orFrom">From (Unit / Branch)</label>
-                                <input type="text" class="form-control" id="orFrom" list="znaUnitDatalist" placeholder="Unit or GS Branch">
+                                <div class="zna-unit-picker">
+                                    <select class="form-control zna-unit-select" id="orFrom" title="Unit or GS Branch">
+                                        <option value="">— Select unit / formation —</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="form-col">
                                 <label class="form-label" for="orDocType">Document type</label>

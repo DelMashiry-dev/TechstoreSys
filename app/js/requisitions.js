@@ -324,10 +324,11 @@ function clearRequisitionForm() {
     set('reqEditId', '');
     set('reqReceivedDate', todayIsoLocal());
     set('reqNo', nextRequisitionNo());
-    if (typeof fillZnaUnitSelect === 'function') {
+    if (typeof setZnaUnitField === 'function') {
+        setZnaUnitField('reqUnit', '');
+        setZnaUnitField('reqOriginUnitDetail', '');
+    } else if (typeof fillZnaUnitSelect === 'function') {
         fillZnaUnitSelect(document.getElementById('reqUnit'), '', { includeBlank: true, includeOther: true });
-        const uf = document.getElementById('reqUnitFilter');
-        if (uf) uf.value = '';
     } else {
         set('reqUnit', '');
     }
@@ -366,10 +367,11 @@ function fillRequisitionForm(req) {
     set('reqEditId', req.id);
     set('reqReceivedDate', req.receivedDate || todayIsoLocal());
     set('reqNo', req.reqNo || '');
-    if (typeof fillZnaUnitSelect === 'function') {
+    if (typeof setZnaUnitField === 'function') {
+        setZnaUnitField('reqUnit', req.unit || '');
+        setZnaUnitField('reqOriginUnitDetail', req.originUnitDetail || '');
+    } else if (typeof fillZnaUnitSelect === 'function') {
         fillZnaUnitSelect(document.getElementById('reqUnit'), req.unit || '', { includeBlank: true, includeOther: true });
-        const uf = document.getElementById('reqUnitFilter');
-        if (uf) uf.value = '';
     } else {
         set('reqUnit', req.unit || '');
     }
@@ -759,7 +761,67 @@ function renderRequisitionsTable() {
 function renderRequisitionsModule() {
     populateRequisitionSelects();
     renderRequisitionAgingStrip();
+    renderReqIntelligencePanel();
     renderRequisitionsTable();
+}
+
+function renderReqIntelligencePanel() {
+    const el = document.getElementById('reqIntelligencePanel');
+    if (!el || typeof ensureRequisitions !== 'function') return;
+
+    const open = ensureRequisitions().filter((req) => REQ_OPEN_STATUSES.has(req.status));
+    const priorities = open
+        .map((req) => ({
+            req,
+            age: getRequisitionAgeDays(req),
+            urgent: req.priority === 'urgent',
+            score: getRequisitionAgeDays(req) * 0.6 + (req.priority === 'urgent' ? 40 : 0)
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 6);
+
+    const overdue = open.filter((req) => getRequisitionAgeDays(req) >= 8).length;
+    const urgent = open.filter((req) => req.priority === 'urgent').length;
+    const outOfStock = open.filter((req) => {
+        const split = typeof getRequisitionStockSplit === 'function' ? getRequisitionStockSplit(req) : null;
+        return split && split.outQty > 0;
+    }).length;
+
+    const priorityHtml = priorities.length
+        ? `<ul class="sd-insight-list">${priorities.map(({ req, age, urgent }) => {
+            const item = typeof getRequisitionItemCell === 'function' ? getRequisitionItemCell(req) : { primary: req.itemDescription || '—' };
+            const unit = typeof resolveZnaUnitLabel === 'function' ? resolveZnaUnitLabel(req.unit) : req.unit;
+            return `<li><button type="button" class="sd-insight-link" data-req-priority-id="${reqEscape(req.id)}">
+                <strong>${reqEscape(unit || '—')} · ${reqEscape(item.primary)}</strong>
+                <span>${reqEscape(req.reqNo || '—')} · ${age}d${urgent ? ' · URGENT' : ''} · ${reqEscape(getRequisitionStatusLabel(req.status))}</span>
+            </button></li>`;
+        }).join('')}</ul>`
+        : '<p class="muted">No open requisitions.</p>';
+
+    el.innerHTML = `
+        <div class="sd-insight-grid">
+            <div class="sd-insight-card">
+                <h4>Respond first</h4>
+                <p class="muted">Urgent and oldest open requisitions in the in-tray.</p>
+                ${priorityHtml}
+            </div>
+            <div class="sd-insight-card">
+                <h4>In-tray checks</h4>
+                <ul class="sd-insight-stats">
+                    <li><span>Open</span><strong>${open.length}</strong></li>
+                    <li><span>Overdue 8d+</span><strong>${overdue}</strong></li>
+                    <li><span>Urgent</span><strong>${urgent}</strong></li>
+                    <li><span>Out of stock</span><strong>${outOfStock}</strong></li>
+                </ul>
+            </div>
+        </div>
+    `;
+
+    el.querySelectorAll('[data-req-priority-id]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            if (typeof editRequisition === 'function') editRequisition(btn.getAttribute('data-req-priority-id'));
+        });
+    });
 }
 
 function populateRequisitionSelects() {
@@ -815,11 +877,12 @@ function initRequisitionsModule() {
 
     populateRequisitionSelects();
     if (typeof wireZnaUnitPicker === 'function') {
-        wireZnaUnitPicker(
-            document.getElementById('reqUnit'),
-            document.getElementById('reqUnitFilter'),
-            { includeBlank: true, includeOther: true }
-        );
+        wireZnaUnitPicker(document.getElementById('reqUnit'), null, { includeBlank: true, includeOther: true });
+        wireZnaUnitPicker(document.getElementById('reqOriginUnitDetail'), null, {
+            includeBlank: true,
+            includeOther: true,
+            blankLabel: '— Optional detail —'
+        });
     }
     clearRequisitionForm();
 

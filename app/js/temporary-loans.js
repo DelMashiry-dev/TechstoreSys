@@ -345,20 +345,10 @@ function attachTemporaryLoanRow(tr) {
     if (!tr || tr.dataset.loanBound === '1') return;
     tr.dataset.loanBound = '1';
     const unitSelect = tr.querySelector('select.loan-unit, select.zna-unit-select');
-    if (unitSelect && typeof fillZnaUnitSelect === 'function') {
+    if (unitSelect && typeof wireZnaUnitPicker === 'function') {
+        wireZnaUnitPicker(unitSelect, null, { includeBlank: true, includeOther: true });
+    } else if (unitSelect && typeof fillZnaUnitSelect === 'function') {
         fillZnaUnitSelect(unitSelect, unitSelect.value || '', { includeBlank: true, includeOther: true });
-        if (!unitSelect.dataset.znaWired) {
-            unitSelect.dataset.znaWired = '1';
-            unitSelect.addEventListener('change', () => {
-                if (unitSelect.value !== '__other__') return;
-                const custom = window.prompt('Enter unit / formation / directorate:', '');
-                if (custom && custom.trim()) {
-                    fillZnaUnitSelect(unitSelect, custom.trim(), { includeBlank: true, includeOther: true });
-                } else {
-                    unitSelect.value = '';
-                }
-            });
-        }
     }
     applyLoanDueDateDefault(tr);
 }

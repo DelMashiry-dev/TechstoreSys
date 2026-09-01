@@ -1,0 +1,753 @@
+{
+  "generated": "2026-09-01",
+  "base_url": "http://127.0.0.1:8080/app/",
+  "screenshots": {
+    "00-login": {
+      "file": "00-login.jpg",
+      "label": "Login screen",
+      "ok": true
+    },
+    "01-app-shell": {
+      "file": "01-app-shell.jpg",
+      "label": "Application shell (sidebar + header)",
+      "module_id": "dashboard",
+      "ok": true,
+      "error": ""
+    },
+    "dashboard": {
+      "file": "dashboard.jpg",
+      "label": "Dashboard Overview",
+      "module_id": "dashboard",
+      "ok": true,
+      "error": ""
+    },
+    "orderly-room": {
+      "file": "orderly-room.jpg",
+      "label": "Orderly Room - DF & Correspondence Files",
+      "module_id": "orderly-room",
+      "ok": true,
+      "error": ""
+    },
+    "it-dir-comms": {
+      "file": "it-dir-comms.jpg",
+      "label": "IT Directorate - Communications Portal",
+      "module_id": "it-dir-comms",
+      "ok": true,
+      "error": ""
+    },
+    "dept-sysadmin": {
+      "file": "dept-sysadmin.jpg",
+      "label": "Dept Desk - Systems Administration",
+      "module_id": "dept-sysadmin",
+      "ok": true,
+      "error": ""
+    },
+    "dept-workshop": {
+      "file": "dept-workshop.jpg",
+      "label": "Dept Desk - Workshop",
+      "module_id": "dept-workshop",
+      "ok": true,
+      "error": ""
+    },
+    "dept-compengr": {
+      "file": "dept-compengr.jpg",
+      "label": "Dept Desk - Computer Engineering",
+      "module_id": "dept-compengr",
+      "ok": true,
+      "error": ""
+    },
+    "dept-swengr": {
+      "file": "dept-swengr.jpg",
+      "label": "Dept Desk - Software Engineering",
+      "module_id": "dept-swengr",
+      "ok": true,
+      "error": ""
+    },
+    "dept-ictsec": {
+      "file": "dept-ictsec.jpg",
+      "label": "Dept Desk - ICT Security",
+      "module_id": "dept-ictsec",
+      "ok": true,
+      "error": ""
+    },
+    "dept-itts": {
+      "file": "dept-itts.jpg",
+      "label": "Dept Desk - ITTS",
+      "module_id": "dept-itts",
+      "ok": true,
+      "error": ""
+    },
+    "dept-admin": {
+      "file": "dept-admin.jpg",
+      "label": "Dept Desk - Admin Office",
+      "module_id": "dept-admin",
+      "ok": true,
+      "error": ""
+    },
+    "dept-gate": {
+      "file": "dept-gate.jpg",
+      "label": "Dept Desk - Gate / RP",
+      "module_id": "dept-gate",
+      "ok": true,
+      "error": ""
+    },
+    "gl-2200600002": {
+      "file": "gl-2200600002.jpg",
+      "label": "GL 6122100009 - ZOFF / Office Supplies & Services",
+      "module_id": "gl-2200600002",
+      "ok": true,
+      "error": ""
+    },
+    "gl-2200600003": {
+      "file": "gl-2200600003.jpg",
+      "label": "GL 2200600003 - Software Licenses",
+      "module_id": "gl-2200600003",
+      "ok": true,
+      "error": ""
+    },
+    "gl-220200002": {
+      "file": "gl-220200002.jpg",
+      "label": "GL 220200002 - Tech Equipment Maintenance",
+      "module_id": "gl-220200002",
+      "ok": true,
+      "error": ""
+    },
+    "gl-2201900002": {
+      "file": "gl-2201900002.jpg",
+      "label": "GL 2201900002 - Spare Parts",
+      "module_id": "gl-2201900002",
+      "ok": true,
+      "error": ""
+    },
+    "gl-3112210001": {
+      "file": "gl-3112210001.jpg",
+      "label": "GL 3112210001 - ICT Equipment",
+      "module_id": "gl-3112210001",
+      "ok": true,
+      "error": ""
+    },
+    "voucher-module": {
+      "file": "voucher-module.jpg",
+      "label": "Issue Voucher / ZNA-Q-1033",
+      "module_id": "voucher-module",
+      "ok": true,
+      "error": ""
+    },
+    "stock-take": {
+      "file": "stock-take.jpg",
+      "label": "Stock Take - Full Stores Inventory",
+      "module_id": "stock-take",
+      "ok": true,
+      "error": ""
+    },
+    "unit-checks": {
+      "file": "unit-checks.jpg",
+      "label": "Unit Check Log - ASO Ch 28",
+      "module_id": "unit-checks",
+      "ok": true,
+      "error": ""
+    },
+    "financial-year-bids": {
+      "file": "financial-year-bids.jpg",
+      "label": "Financial Year Bids",
+      "module_id": "financial-year-bids",
+      "ok": true,
+      "error": ""
+    },
+    "unit-equipment": {
+      "file": "unit-equipment.jpg",
+      "label": "Unit Equipment",
+      "module_id": "unit-equipment",
+      "ok": true,
+      "error": ""
+    },
+    "ict-accountability": {
+      "file": "ict-accountability.jpg",
+      "label": "ZNA ICT Asset Register",
+      "module_id": "ict-accountability",
+      "ok": true,
+      "error": ""
+    },
+    "ict-distribution": {
+      "file": "ict-distribution.jpg",
+      "label": "ICT Equipment Distribution Lists",
+      "module_id": "ict-distribution",
+      "ok": true,
+      "error": ""
+    },
+    "temporary-loans": {
+      "file": "temporary-loans.jpg",
+      "label": "Temporary Loans - Controlled Stores",
+      "module_id": "temporary-loans",
+      "ok": true,
+      "error": ""
+    },
+    "permanent-loans": {
+      "file": "permanent-loans.jpg",
+      "label": "Permanent Loans - Laptops & iPads",
+      "module_id": "permanent-loans",
+      "ok": true,
+      "error": ""
+    },
+    "monthly-returns": {
+      "file": "monthly-returns.jpg",
+      "label": "Monthly Returns - Unit ICT Equipment",
+      "module_id": "monthly-returns",
+      "ok": true,
+      "error": ""
+    },
+    "undelivered-orders": {
+      "file": "undelivered-orders.jpg",
+      "label": "Undelivered Items",
+      "module_id": "undelivered-orders",
+      "ok": true,
+      "error": ""
+    },
+    "supplier-debts": {
+      "file": "supplier-debts.jpg",
+      "label": "Creditors - non-paid goods / DAF payment register",
+      "module_id": "supplier-debts",
+      "ok": true,
+      "error": ""
+    },
+    "workshop-receipt-cert": {
+      "file": "workshop-receipt-cert.jpg",
+      "label": "Workshop Receipt Certificate",
+      "module_id": "workshop-receipt-cert",
+      "ok": true,
+      "error": ""
+    },
+    "delivery-note": {
+      "file": "delivery-note.jpg",
+      "label": "Delivery Note",
+      "module_id": "delivery-note",
+      "ok": true,
+      "error": ""
+    },
+    "purchase-orders": {
+      "file": "purchase-orders.jpg",
+      "label": "Purchase Orders",
+      "module_id": "purchase-orders",
+      "ok": true,
+      "error": ""
+    },
+    "accommodation-stores": {
+      "file": "accommodation-stores.jpg",
+      "label": "Inventory of Accommodation Stores",
+      "module_id": "accommodation-stores",
+      "ok": true,
+      "error": ""
+    },
+    "unit-requisitions": {
+      "file": "unit-requisitions.jpg",
+      "label": "Requisitions - In-tray",
+      "module_id": "unit-requisitions",
+      "ok": true,
+      "error": ""
+    },
+    "doc-import": {
+      "file": "doc-import.jpg",
+      "label": "Import Document",
+      "module_id": "doc-import",
+      "ok": true,
+      "error": ""
+    },
+    "spec-evaluation": {
+      "file": "spec-evaluation.jpg",
+      "label": "Spec/Tech Evaluation",
+      "module_id": "spec-evaluation",
+      "ok": true,
+      "error": ""
+    },
+    "laptop-compare": {
+      "file": "laptop-compare.jpg",
+      "label": "Laptop Compare - buy the winner",
+      "module_id": "laptop-compare",
+      "ok": true,
+      "error": ""
+    },
+    "ict-compare": {
+      "file": "ict-compare.jpg",
+      "label": "H2H ICT Comparison - crawl & compare",
+      "module_id": "ict-compare",
+      "ok": true,
+      "error": ""
+    },
+    "guide-quotation": {
+      "file": "guide-quotation.jpg",
+      "label": "Rough Guide Quotation",
+      "module_id": "guide-quotation",
+      "ok": true,
+      "error": ""
+    },
+    "dp-f1-form": {
+      "file": "dp-f1-form.jpg",
+      "label": "DP F1 Form",
+      "module_id": "dp-f1-form",
+      "ok": true,
+      "error": ""
+    },
+    "cost-comparative-schedule": {
+      "file": "cost-comparative-schedule.jpg",
+      "label": "Cost Comparative Schedule",
+      "module_id": "cost-comparative-schedule",
+      "ok": true,
+      "error": ""
+    },
+    "dp-procurement": {
+      "file": "dp-procurement.jpg",
+      "label": "ICT Procurement Cycle",
+      "module_id": "dp-procurement",
+      "ok": true,
+      "error": ""
+    },
+    "portals-board": {
+      "file": "portals-board.jpg",
+      "label": "Portals - procurement workflow dashboard",
+      "module_id": "portals-board",
+      "ok": true,
+      "error": ""
+    },
+    "workshop-repairs": {
+      "file": "workshop-repairs.jpg",
+      "label": "Workshop Register",
+      "module_id": "workshop-repairs",
+      "ok": true,
+      "error": ""
+    },
+    "gate-register": {
+      "file": "gate-register.jpg",
+      "label": "Gate Register (RP)",
+      "module_id": "gate-register",
+      "ok": true,
+      "error": ""
+    },
+    "techstores-equipment-register": {
+      "file": "techstores-equipment-register.jpg",
+      "label": "TechStores Equipment Register",
+      "module_id": "techstores-equipment-register",
+      "ok": true,
+      "error": ""
+    },
+    "suppliers-contracts": {
+      "file": "suppliers-contracts.jpg",
+      "label": "Suppliers and Contracts",
+      "module_id": "suppliers-contracts",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-forms-index": {
+      "file": "zna-q-forms-index.jpg",
+      "label": "SUMMARY OF Q FORMS - Index",
+      "module_id": "zna-q-forms-index",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-982": {
+      "file": "zna-q-982.jpg",
+      "label": "ZNA Q 982 - Combined Indent",
+      "module_id": "zna-q-982",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-178": {
+      "file": "zna-q-178.jpg",
+      "label": "ZNA Q 178 - Sub Ledger Sheet",
+      "module_id": "zna-q-178",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-1033": {
+      "file": "zna-q-1033.jpg",
+      "label": "ZNA Q 1033 - Issue & Receipt Voucher",
+      "module_id": "zna-q-1033",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-1043": {
+      "file": "zna-q-1043.jpg",
+      "label": "ZNA Q 1043 - Condemnation Certificate",
+      "module_id": "zna-q-1043",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-80": {
+      "file": "zna-q-80.jpg",
+      "label": "ZNA Q 80 - Ledger Sheet",
+      "module_id": "zna-q-80",
+      "ok": true,
+      "error": ""
+    },
+    "zna-svcs-890": {
+      "file": "zna-svcs-890.jpg",
+      "label": "ZNA SVCS/890 - Demand / Issue",
+      "module_id": "zna-svcs-890",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-1179": {
+      "file": "zna-q-1179.jpg",
+      "label": "ZNA Q 1179 - Clothing Issue Voucher",
+      "module_id": "zna-q-1179",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-987": {
+      "file": "zna-q-987.jpg",
+      "label": "ZNA Q 987 - Stocktaking Certificate",
+      "module_id": "zna-q-987",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-3977": {
+      "file": "zna-q-3977.jpg",
+      "label": "ZNA Q 3977 - Neglect / Damage Report",
+      "module_id": "zna-q-3977",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-1157": {
+      "file": "zna-q-1157.jpg",
+      "label": "ZNA Q 1157 - Clothing & Equipment Record",
+      "module_id": "zna-q-1157",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-985": {
+      "file": "zna-q-985.jpg",
+      "label": "ZNA Q 985 - Discrepancy Report",
+      "module_id": "zna-q-985",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-1": {
+      "file": "zna-q-1.jpg",
+      "label": "ZNA Q 1 - Stores lost/damaged write-off",
+      "module_id": "zna-q-1",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-998": {
+      "file": "zna-q-998.jpg",
+      "label": "ZNA Q 998 - Loss / Damage / Destruction",
+      "module_id": "zna-q-998",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-1680": {
+      "file": "zna-q-1680.jpg",
+      "label": "ZNA Q 1680 - Miscellaneous credit/debit voucher",
+      "module_id": "zna-q-1680",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-3": {
+      "file": "zna-q-3.jpg",
+      "label": "ZNA Q 3 - Issue on repayment",
+      "module_id": "zna-q-3",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-31": {
+      "file": "zna-q-31.jpg",
+      "label": "ZNA Q 31 - Cash purchase / receipt",
+      "module_id": "zna-q-31",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-40": {
+      "file": "zna-q-40.jpg",
+      "label": "ZNA Q 40 - Artisan tools list",
+      "module_id": "zna-q-40",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-1049": {
+      "file": "zna-q-1049.jpg",
+      "label": "ZNA Q 1049 - Transfer voucher",
+      "module_id": "zna-q-1049",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-1229": {
+      "file": "zna-q-1229.jpg",
+      "label": "ZNA Q 1229 - Accidental breakage certificate",
+      "module_id": "zna-q-1229",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-1571": {
+      "file": "zna-q-1571.jpg",
+      "label": "ZNA Q 1571 - Debit voucher",
+      "module_id": "zna-q-1571",
+      "ok": true,
+      "error": ""
+    },
+    "zna-q-1954": {
+      "file": "zna-q-1954.jpg",
+      "label": "ZNA Q 1954 - Recoveries from individuals",
+      "module_id": "zna-q-1954",
+      "ok": true,
+      "error": ""
+    },
+    "zna-svcs-1045": {
+      "file": "zna-svcs-1045.jpg",
+      "label": "ZNA SVCS 1045 - Workshop Indent",
+      "module_id": "zna-svcs-1045",
+      "ok": true,
+      "error": ""
+    },
+    "duties-roles": {
+      "file": "duties-roles.jpg",
+      "label": "Duties & Roles",
+      "module_id": "duties-roles",
+      "ok": true,
+      "error": ""
+    },
+    "process-guides": {
+      "file": "process-guides.jpg",
+      "label": "Learning Centre - Process & Charts",
+      "module_id": "process-guides",
+      "ok": true,
+      "error": ""
+    },
+    "system-help": {
+      "file": "system-help.jpg",
+      "label": "System Help / Dictionary",
+      "module_id": "system-help",
+      "ok": true,
+      "error": ""
+    },
+    "reports-module": {
+      "file": "reports-module.jpg",
+      "label": "Reports",
+      "module_id": "reports-module",
+      "ok": true,
+      "error": ""
+    },
+    "user-management": {
+      "file": "user-management.jpg",
+      "label": "User Management",
+      "module_id": "user-management",
+      "ok": true,
+      "error": ""
+    },
+    "release-cut": {
+      "file": "release-cut.jpg",
+      "label": "Release Cut",
+      "module_id": "release-cut",
+      "ok": true,
+      "error": ""
+    },
+    "stakeholder-desk-dp": {
+      "file": "stakeholder-desk-dp.jpg",
+      "label": "DP Window - procurement portal",
+      "module_id": "stakeholder-desk",
+      "ok": true,
+      "error": ""
+    },
+    "stakeholder-desk-gs": {
+      "file": "stakeholder-desk-gs.jpg",
+      "label": "GS Branch Window - F1 endorsement",
+      "module_id": "stakeholder-desk",
+      "ok": true,
+      "error": ""
+    },
+    "stakeholder-desk-daf-procurement": {
+      "file": "stakeholder-desk-daf-procurement.jpg",
+      "label": "DAF Window - MANAC / supplier payment",
+      "module_id": "stakeholder-desk",
+      "ok": true,
+      "error": ""
+    },
+    "stakeholder-desk-daf-creditors": {
+      "file": "stakeholder-desk-daf-creditors.jpg",
+      "label": "DAF Window - Creditors import & chase",
+      "module_id": "stakeholder-desk",
+      "ok": true,
+      "error": ""
+    },
+    "stakeholder-desk-aiad": {
+      "file": "stakeholder-desk-aiad.jpg",
+      "label": "Due Diligence Window - AIAD",
+      "module_id": "stakeholder-desk",
+      "ok": true,
+      "error": ""
+    },
+    "stakeholder-desk-supplier": {
+      "file": "stakeholder-desk-supplier.jpg",
+      "label": "Supplier Window",
+      "module_id": "stakeholder-desk",
+      "ok": true,
+      "error": ""
+    },
+    "role-home-gate": {
+      "file": "role-home-gate.jpg",
+      "label": "RP Gate - home dashboard",
+      "login": "rp",
+      "ok": true,
+      "error": ""
+    },
+    "role-nav-gate": {
+      "file": "role-nav-gate.jpg",
+      "label": "RP Gate - sidebar navigation",
+      "login": "rp",
+      "ok": true,
+      "error": ""
+    },
+    "role-home-storeman": {
+      "file": "role-home-storeman.jpg",
+      "label": "Storeman - home dashboard",
+      "login": "storeman",
+      "ok": true,
+      "error": ""
+    },
+    "role-nav-storeman": {
+      "file": "role-nav-storeman.jpg",
+      "label": "Storeman - sidebar navigation",
+      "login": "storeman",
+      "ok": true,
+      "error": ""
+    },
+    "role-home-workshop": {
+      "file": "role-home-workshop.jpg",
+      "label": "Workshop - home dashboard",
+      "login": "workshop",
+      "ok": true,
+      "error": ""
+    },
+    "role-nav-workshop": {
+      "file": "role-nav-workshop.jpg",
+      "label": "Workshop - sidebar navigation",
+      "login": "workshop",
+      "ok": true,
+      "error": ""
+    },
+    "role-home-orderly": {
+      "file": "role-home-orderly.jpg",
+      "label": "Orderly Room - home dashboard",
+      "login": "orderly",
+      "ok": true,
+      "error": ""
+    },
+    "role-nav-orderly": {
+      "file": "role-nav-orderly.jpg",
+      "label": "Orderly Room - sidebar navigation",
+      "login": "orderly",
+      "ok": true,
+      "error": ""
+    },
+    "role-home-comms": {
+      "file": "role-home-comms.jpg",
+      "label": "Department comms (SysAdmin) - home dashboard",
+      "login": "sysadmin",
+      "ok": true,
+      "error": ""
+    },
+    "role-nav-comms": {
+      "file": "role-nav-comms.jpg",
+      "label": "Department comms (SysAdmin) - sidebar navigation",
+      "login": "sysadmin",
+      "ok": true,
+      "error": ""
+    },
+    "role-home-dp": {
+      "file": "role-home-dp.jpg",
+      "label": "Directorate Procurement (DP) - home dashboard",
+      "login": "dp",
+      "ok": true,
+      "error": ""
+    },
+    "role-nav-dp": {
+      "file": "role-nav-dp.jpg",
+      "label": "Directorate Procurement (DP) - sidebar navigation",
+      "login": "dp",
+      "ok": true,
+      "error": ""
+    },
+    "role-home-gs": {
+      "file": "role-home-gs.jpg",
+      "label": "GS Branch - home dashboard",
+      "login": "gsdesk",
+      "ok": true,
+      "error": ""
+    },
+    "role-nav-gs": {
+      "file": "role-nav-gs.jpg",
+      "label": "GS Branch - sidebar navigation",
+      "login": "gsdesk",
+      "ok": true,
+      "error": ""
+    },
+    "role-home-daf": {
+      "file": "role-home-daf.jpg",
+      "label": "DAF / MANAC - home dashboard",
+      "login": "daf",
+      "ok": true,
+      "error": ""
+    },
+    "role-nav-daf": {
+      "file": "role-nav-daf.jpg",
+      "label": "DAF / MANAC - sidebar navigation",
+      "login": "daf",
+      "ok": true,
+      "error": ""
+    },
+    "role-home-aiad": {
+      "file": "role-home-aiad.jpg",
+      "label": "AIAD Due Diligence - home dashboard",
+      "login": "aiad",
+      "ok": true,
+      "error": ""
+    },
+    "role-nav-aiad": {
+      "file": "role-nav-aiad.jpg",
+      "label": "AIAD Due Diligence - sidebar navigation",
+      "login": "aiad",
+      "ok": true,
+      "error": ""
+    },
+    "role-home-supplier": {
+      "file": "role-home-supplier.jpg",
+      "label": "Supplier (Nixzimo) - home dashboard",
+      "login": "nixzimo",
+      "ok": true,
+      "error": ""
+    },
+    "role-nav-supplier": {
+      "file": "role-nav-supplier.jpg",
+      "label": "Supplier (Nixzimo) - sidebar navigation",
+      "login": "nixzimo",
+      "ok": true,
+      "error": ""
+    },
+    "role-home-store_officer": {
+      "file": "role-home-store_officer.jpg",
+      "label": "Store Officer (full ledgers) - home dashboard",
+      "login": "store",
+      "ok": true,
+      "error": ""
+    },
+    "role-nav-store_officer": {
+      "file": "role-nav-store_officer.jpg",
+      "label": "Store Officer (full ledgers) - sidebar navigation",
+      "login": "store",
+      "ok": true,
+      "error": ""
+    },
+    "role-home-viewer": {
+      "file": "role-home-viewer.jpg",
+      "label": "Viewer (read-only) - home dashboard",
+      "login": "viewer",
+      "ok": true,
+      "error": ""
+    },
+    "role-nav-viewer": {
+      "file": "role-nav-viewer.jpg",
+      "label": "Viewer (read-only) - sidebar navigation",
+      "login": "viewer",
+      "ok": true,
+      "error": ""
+    }
+  }
+}

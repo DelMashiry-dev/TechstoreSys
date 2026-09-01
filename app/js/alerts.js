@@ -336,7 +336,7 @@ function buildWatchAlertSections() {
     const sdFmt = typeof sdFmtUsd === 'function' ? sdFmtUsd : ((n) => Number(n || 0).toFixed(2));
     sections.push({
         key: 'supplier-debts',
-        title: 'SUPPLIER DEBTS (NON-PAID GOODS RECEIVED)',
+        title: 'CREDITORS (NON-PAID GOODS RECEIVED)',
         count: supplierDebtsOpen.length,
         target: 'supplier-debts',
         tone: supplierDebtsOpen.some((row) => row.age >= 365) ? 'danger' : (supplierDebtsOpen.length ? 'warning' : 'ok'),

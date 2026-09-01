@@ -141,6 +141,66 @@ function ensureOrderlyDailyFile() {
     return appState.orderlyDailyFile;
 }
 
+function syncUnitRequisitionsToOrderlyRoom() {
+    if (typeof ensureRequisitions !== 'function') return;
+    const requisitions = ensureRequisitions();
+    const dailyFile = ensureOrderlyDailyFile();
+    const requisitionIds = new Set(requisitions.map((req) => req.id));
+
+    // Remove only the mirrored rows whose source requisition no longer exists.
+    for (let i = dailyFile.length - 1; i >= 0; i -= 1) {
+        const row = dailyFile[i];
+        if (row.source === 'unit-requisitions' && !requisitionIds.has(row.linkedReqId)) {
+            dailyFile.splice(i, 1);
+        }
+    }
+
+    requisitions.forEach((req) => {
+        let row = dailyFile.find((entry) => entry.linkedReqId === req.id);
+        if (!row && req.reqNo) {
+            row = dailyFile.find((entry) =>
+                entry.docType === 'requisition'
+                && (entry.refNo === req.reqNo || entry.refNo === req.fileRef)
+                && !entry.linkedReqId
+            );
+        }
+
+        const isOpen = typeof REQ_OPEN_STATUSES !== 'undefined'
+            ? REQ_OPEN_STATUSES.has(req.status)
+            : !['issued', 'cancelled'].includes(req.status);
+        const nextStatus = isOpen
+            ? (row?.status === 'seen_hod' ? 'seen_hod' : 'alerted_techstores')
+            : 'actioned';
+        const now = new Date().toISOString();
+        const mirrored = {
+            ...(row || {}),
+            id: row?.id || `or-req-${req.id}`,
+            dateIn: req.receivedDate || (req.createdAt || '').slice(0, 10) || orTodayIso(),
+            refNo: req.reqNo || req.fileRef || `REQ-${req.id}`,
+            fromUnit: req.unit || req.originUnitDetail || 'Unit / Formation',
+            docType: 'requisition',
+            subject: req.subject || req.itemDescription || 'Unit requisition',
+            fileAs: row?.fileAs || 'df',
+            gsAuth: row?.gsAuth || 'pending',
+            priority: req.priority || 'normal',
+            receivedBy: row?.receivedBy || 'IT Dir Orderly Room',
+            status: nextStatus,
+            remarks: req.notes || req.justification || 'Unit Requisitions in-tray item.',
+            alertTechStores: isOpen,
+            linkedReqId: req.id,
+            fileRef: req.fileRef || '',
+            source: 'unit-requisitions',
+            updatedAt: now
+        };
+
+        if (row) {
+            Object.assign(row, mirrored);
+        } else {
+            dailyFile.unshift(mirrored);
+        }
+    });
+}
+
 function orTodayIso() {
     const d = new Date();
     const pad = (n) => String(n).padStart(2, '0');
@@ -156,6 +216,7 @@ function orEscape(v) {
 }
 
 function getOrderlyOpenForTechStores() {
+    syncUnitRequisitionsToOrderlyRoom();
     return ensureOrderlyDailyFile()
         .filter((row) => {
             if (row.docType !== 'requisition' && !row.alertTechStores) return false;
@@ -525,6 +586,14 @@ function markOrderlyActioned(id) {
     row.status = 'actioned';
     row.updatedAt = new Date().toISOString();
     row.updatedBy = currentUser?.username || '';
+    if (row.linkedReqId && typeof ensureRequisitions === 'function') {
+        const req = ensureRequisitions().find((entry) => entry.id === row.linkedReqId);
+        if (req && typeof REQ_OPEN_STATUSES !== 'undefined' && REQ_OPEN_STATUSES.has(req.status)) {
+            req.status = 'issued';
+            req.actionedDate = orTodayIso();
+            req.updatedAt = row.updatedAt;
+        }
+    }
     if (typeof saveState === 'function') saveState();
     renderOrderlyRoomModule();
     if (typeof updateSystemAlerts === 'function') updateSystemAlerts();
@@ -564,6 +633,10 @@ function alertOrderlyTechStores(id) {
 function deleteOrderlyEntry(id) {
     if (typeof requireEditAccess === 'function' && !requireEditAccess()) return;
     if (!confirm('Remove this entry from the Daily File?')) return;
+    const row = ensureOrderlyDailyFile().find((r) => r.id === id);
+    if (row?.linkedReqId && typeof ensureRequisitions === 'function') {
+        appState.requisitions = ensureRequisitions().filter((req) => req.id !== row.linkedReqId);
+    }
     appState.orderlyDailyFile = ensureOrderlyDailyFile().filter((r) => r.id !== id);
     if (typeof saveState === 'function') saveState();
     renderOrderlyRoomModule();
@@ -601,6 +674,7 @@ function updateOrderlyStats() {
 function renderOrderlyRoomModule() {
     const tbody = document.getElementById('orderlyRoomBody');
     if (!tbody) return;
+    syncUnitRequisitionsToOrderlyRoom();
     updateOrderlyStats();
     const rows = getFilteredOrderlyRows();
     const canEdit = typeof canEditData === 'function' ? canEditData() : true;
@@ -619,12 +693,14 @@ function renderOrderlyRoomModule() {
                 const meta = typeof getMessagePriorityMeta === 'function' ? getMessagePriorityMeta(row.priority) : null;
                 return orEscape(meta ? `${meta.icon ? meta.icon + ' ' : ''}${meta.label}` : (row.priority || 'Normal'));
             })()}</td>
-            <td class="qm-screen-only">
+            <td class="qm-screen-only or-action-cell">
                 ${canEdit ? `
-                <button type="button" class="btn btn-ghost btn-sm" data-or-edit="${orEscape(row.id)}">Edit</button>
-                ${row.status !== 'alerted_techstores' && row.status !== 'actioned' ? `<button type="button" class="btn btn-primary btn-sm" data-or-alert="${orEscape(row.id)}">Alert TS</button>` : ''}
-                ${row.status !== 'actioned' ? `<button type="button" class="btn btn-success btn-sm" data-or-done="${orEscape(row.id)}">Done</button>` : ''}
-                <button type="button" class="btn btn-ghost btn-sm" data-or-del="${orEscape(row.id)}">Del</button>
+                <div class="or-action-bar" role="group" aria-label="Daily File actions">
+                    <button type="button" class="btn btn-primary btn-sm or-action-edit" data-or-edit="${orEscape(row.id)}">Edit</button>
+                    ${row.status !== 'alerted_techstores' && row.status !== 'actioned' ? `<button type="button" class="btn btn-primary btn-sm or-action-alert" data-or-alert="${orEscape(row.id)}">Alert TS</button>` : ''}
+                    ${row.status !== 'actioned' ? `<button type="button" class="btn btn-success btn-sm or-action-done" data-or-done="${orEscape(row.id)}">Done</button>` : ''}
+                    <button type="button" class="btn btn-ghost btn-sm or-action-delete" data-or-del="${orEscape(row.id)}">Del</button>
+                </div>
                 ` : '—'}
             </td>
         </tr>
@@ -708,8 +784,19 @@ function initOrderlyRoomModule() {
         if (editId) {
             const row = ensureOrderlyDailyFile().find((r) => r.id === editId);
             if (row) {
-                fillOrderlyRoomForm(row);
-                root.querySelector('.dashboard-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const linkedReq = row.linkedReqId
+                    && typeof ensureRequisitions === 'function'
+                    ? ensureRequisitions().find((req) => req.id === row.linkedReqId)
+                    : null;
+                if (linkedReq && typeof editRequisition === 'function') {
+                    const navigation = typeof navigateToModule === 'function'
+                        ? navigateToModule('unit-requisitions')
+                        : null;
+                    Promise.resolve(navigation).then(() => editRequisition(linkedReq.id));
+                } else {
+                    fillOrderlyRoomForm(row);
+                    root.querySelector('.dashboard-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             }
         }
         if (alertId) alertOrderlyTechStores(alertId);

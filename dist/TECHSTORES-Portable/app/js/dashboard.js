@@ -16,20 +16,22 @@ function getModuleLabel(moduleId) {
         'ict-accountability': 'ZNA ICT Asset Register',
         'ict-distribution': 'ICT Equipment Distribution Lists',
         'temporary-loans': 'Temporary Loans — Controlled Stores',
+        'permanent-loans': 'Permanent Loans — Laptops & iPads',
         'orderly-room': 'Orderly Room — DF & Correspondence Files',
         'it-dir-comms': 'IT Directorate — Communications Portal',
-        'unit-requisitions': 'Unit / Formation Requisitions',
+        'unit-requisitions': 'Requisitions — In-tray',
         'monthly-target-proposal': 'IT Dir Monthly Target / Priority List',
         'daf-fund-request-memo': 'DAF Fund Request Memo',
         'monthly-returns': 'Monthly Returns — Unit ICT Equipment',
         'spec-evaluation': 'Spec/Tech Evaluation',
-        'ict-compare': 'Workshop — Head-to-head ICT comparison',
+        'ict-compare': 'Workshop — ICT Equipment Compare',
         'guide-quotation': 'Rough Guide Quotation',
         'dp-f1-form': 'DP F1 Form',
         'cost-comparative-schedule': 'Cost Comparative Schedule',
         'stores-inventory': 'Stores Inventory',
         'inventory-accountability': 'Inventory Accountability',
-        'dp-procurement': 'ICT Procurement Cycle',
+        'stakeholder-desk': 'Portals — DP / GS Branch / DAF / Due Diligence / Supplier',
+        'portals-board': 'Portals — procurement workflow dashboard',
         'zna-q-982': 'ZNA Q 982 — Combined Indent',
         'zna-q-178': 'ZNA Q 178 — Sub Ledger Sheet',
         'zna-q-1033': 'ZNA Q 1033 — Issue & Receipt Voucher',
@@ -57,6 +59,7 @@ function getModuleLabel(moduleId) {
         'delivery-note': 'Delivery Note',
         'purchase-orders': 'Purchase Orders',
         'undelivered-orders': 'Undelivered Items',
+        'supplier-debts': 'Supplier Debts — Non-paid goods received',
         'workshop-repairs': 'Workshop Register',
         'gate-register': 'Gate Register (RP)',
         'techstores-equipment-register': 'TechStores Equipment Register',
@@ -1028,6 +1031,7 @@ function getActiveModuleId() {
 
 async function navigateToModule(targetId, options = {}) {
     if (!targetId) return;
+    if (typeof restoreModuleMaximize === 'function') restoreModuleMaximize();
     if (typeof hideFieldHelp === 'function') hideFieldHelp();
     if (!currentUser) {
         document.body.classList.add('app-locked');
@@ -1063,6 +1067,10 @@ async function navigateToModule(targetId, options = {}) {
         }
     }
 
+    if (options.stkDesk) {
+        window._stkDeskOverride = options.stkDesk;
+    }
+
     document.querySelectorAll('.content-section, .form-container').forEach((section) => {
         section.style.display = 'none';
         section.classList.remove('is-open');
@@ -1074,9 +1082,14 @@ async function navigateToModule(targetId, options = {}) {
         targetSection.classList.remove('is-open');
     }
     document.querySelectorAll('.sidebar-menu a').forEach((link) => link.classList.remove('active'));
+    const deskKey = options.stkDesk
+        || (targetId === 'stakeholder-desk' && typeof getStakeholderDeskKey === 'function' ? getStakeholderDeskKey() : '');
     const menuLink = options.deptPanel
         ? document.querySelector(`.sidebar-menu a[data-target="${targetId}"][data-dept-panel="${options.deptPanel}"]`)
-        : document.querySelector(`.sidebar-menu a[data-target="${targetId}"]:not([data-dept-panel])`)
+        : (deskKey
+            ? document.querySelector(`.sidebar-menu a[data-target="${targetId}"][data-stk-desk="${deskKey}"]`)
+            : document.querySelector(`.sidebar-menu a[data-target="${targetId}"]:not([data-dept-panel]):not([data-stk-desk])`))
+            || document.querySelector(`.sidebar-menu a[data-target="${targetId}"]:not([data-dept-panel])`)
             || document.querySelector(`.sidebar-menu a[data-target="${targetId}"]`);
     if (menuLink) {
         menuLink.classList.add('active');
@@ -1105,8 +1118,9 @@ async function navigateToModule(targetId, options = {}) {
         if (typeof initUnitChecksModule === 'function') initUnitChecksModule();
         if (typeof renderUnitChecksModule === 'function') renderUnitChecksModule();
     }
-    if (targetId === 'unit-requisitions' && typeof renderRequisitionsModule === 'function') {
-        renderRequisitionsModule();
+    if (targetId === 'unit-requisitions') {
+        if (typeof initRequisitionsModule === 'function') initRequisitionsModule();
+        if (typeof renderRequisitionsModule === 'function') renderRequisitionsModule();
     }
     if (typeof GL_MODULE_CODE !== 'undefined' && GL_MODULE_CODE[targetId] && typeof injectGlModuleProcurementButtons === 'function') {
         injectGlModuleProcurementButtons();
@@ -1139,6 +1153,9 @@ async function navigateToModule(targetId, options = {}) {
         setTemporaryLoansMode('view');
         renderTemporaryLoansView();
     }
+    if (targetId === 'permanent-loans' && typeof initPermanentLoansModule === 'function') {
+        initPermanentLoansModule();
+    }
     if (targetId === 'ict-accountability' && typeof renderIctAccountabilityTable === 'function') {
         if (typeof initIctAccountabilityModule === 'function') initIctAccountabilityModule();
         renderIctAccountabilityTable();
@@ -1160,6 +1177,10 @@ async function navigateToModule(targetId, options = {}) {
     if (targetId === 'undelivered-orders' && typeof renderUndeliveredModule === 'function') {
         renderUndeliveredModule();
     }
+    if (targetId === 'supplier-debts') {
+        if (typeof initSupplierDebtsModule === 'function') initSupplierDebtsModule();
+        if (typeof renderSupplierDebtsModule === 'function') renderSupplierDebtsModule();
+    }
     if (targetId === 'zna-q-forms-index' && typeof renderZnaQFormsIndex === 'function') {
         renderZnaQFormsIndex();
     }
@@ -1169,7 +1190,11 @@ async function navigateToModule(targetId, options = {}) {
     }
     if (targetId === 'process-guides') {
         if (typeof initProcessGuidesModule === 'function') initProcessGuidesModule();
-        if (typeof renderProcessGuidesContent === 'function') renderProcessGuidesContent();
+        if (options.pgTab && typeof openProcessGuideTab === 'function') {
+            openProcessGuideTab(options.pgTab);
+        } else if (typeof renderProcessGuidesContent === 'function') {
+            renderProcessGuidesContent();
+        }
     }
     if (targetId === 'system-help') {
         if (typeof initRetentionReminder === 'function') initRetentionReminder();
@@ -1183,6 +1208,16 @@ async function navigateToModule(targetId, options = {}) {
     }
     if (targetId === 'cost-comparative-schedule' && typeof initCostComparativeScheduleModule === 'function') {
         initCostComparativeScheduleModule();
+    }
+    if (targetId === 'portals-board') {
+        if (typeof initPortalsBoardModule === 'function') initPortalsBoardModule();
+    }
+    if (targetId === 'stakeholder-desk') {
+        if (typeof initStakeholderDeskModule === 'function') initStakeholderDeskModule();
+        if (typeof renderStakeholderDesk === 'function') renderStakeholderDesk();
+    }
+    if (targetId === 'doc-import' && typeof initDocImportModule === 'function') {
+        initDocImportModule();
     }
     if (targetId === 'dp-procurement' && typeof renderDpProcurementModule === 'function') {
         renderDpProcurementModule();

@@ -98,9 +98,10 @@ function defaultDepartmentForAlert(alert) {
         return 'DP';
     }
     if (t === 'undelivered-orders' || t === 'purchase-orders') return 'DP';
+    if (t === 'supplier-debts') return 'IT DIR TECHSTORES OFFICE';
     if (t === 'workshop-repairs' || t === 'zna-svcs-1045') return 'IT ENGINEERING SUPPORT DEPT (WORKSHOP)';
     if (t === 'gate-register') return 'IT DIR GATE / RP';
-    if (t === 'temporary-loans' || t === 'voucher-module' || t === 'stock-take') return 'IT DIR TECHSTORES OFFICE';
+    if (t === 'temporary-loans' || t === 'permanent-loans' || t === 'voucher-module' || t === 'stock-take') return 'IT DIR TECHSTORES OFFICE';
     if (t === 'suppliers-contracts') return 'DP';
     return 'IT DIR TECHSTORES OFFICE';
 }
@@ -241,7 +242,7 @@ function renderAlertDeskCard(alert) {
     const canManage = canManageAlertDesk();
     const unread = typeof isAlertUnread === 'function' ? isAlertUnread(alert.deskId) : false;
     const clickAttrs = alert.target
-        ? `data-alert-target="${escapeAlertText(alert.target)}"${alert.reqId ? ` data-alert-req-id="${escapeAlertText(alert.reqId)}"` : ''}${alert.undId ? ` data-alert-und-id="${escapeAlertText(alert.undId)}"` : ''}${alert.dpId ? ` data-alert-dp-id="${escapeAlertText(alert.dpId)}"` : ''}${alert.loanId ? ` data-alert-loan-id="${escapeAlertText(alert.loanId)}"` : ''}${alert.orId ? ` data-alert-or-id="${escapeAlertText(alert.orId)}"` : ''}${alert.focus ? ` data-alert-focus="${escapeAlertText(alert.focus)}"` : ''}`
+        ? `data-alert-target="${escapeAlertText(alert.target)}"${alert.reqId ? ` data-alert-req-id="${escapeAlertText(alert.reqId)}"` : ''}${alert.undId ? ` data-alert-und-id="${escapeAlertText(alert.undId)}"` : ''}${alert.sdId ? ` data-alert-sd-id="${escapeAlertText(alert.sdId)}"` : ''}${alert.dpId ? ` data-alert-dp-id="${escapeAlertText(alert.dpId)}"` : ''}${alert.loanId ? ` data-alert-loan-id="${escapeAlertText(alert.loanId)}"` : ''}${alert.orId ? ` data-alert-or-id="${escapeAlertText(alert.orId)}"` : ''}${alert.focus ? ` data-alert-focus="${escapeAlertText(alert.focus)}"` : ''}`
         : '';
     const commentsHtml = (alert.comments || []).slice(-3).map((c) => `
         <div class="ad-comment">

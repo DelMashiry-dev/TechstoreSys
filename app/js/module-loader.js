@@ -58,7 +58,7 @@ async function loadModuleHtml(moduleId) {
     }
 
     MODULE_LOAD_PROMISES[moduleId] = (async () => {
-        const url = `modules/${encodeURIComponent(moduleId)}.html?v=20260828imp`;
+        const url = `modules/${encodeURIComponent(moduleId)}.html?v=20260901dafportal`;
         const res = await fetchAppAsset(url);
         if (!res.ok) throw new Error(`Module HTML not found: ${moduleId} (${res.status})`);
         const html = await res.text();
@@ -110,6 +110,7 @@ async function ensureModuleLoaded(moduleId) {
     if (typeof applyDateInputConstraints === 'function') applyDateInputConstraints(el);
     if (typeof enhanceFieldHelp === 'function') enhanceFieldHelp(el);
     if (typeof initHowItWorks === 'function') initHowItWorks(el);
+    if (typeof wireAllZnaUnitFields === 'function') wireAllZnaUnitFields(el);
 
     return el;
 }

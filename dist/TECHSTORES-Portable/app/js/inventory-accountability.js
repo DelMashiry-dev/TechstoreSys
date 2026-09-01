@@ -108,6 +108,24 @@ function postProcurementDeliveryToStock(rec, options = {}) {
         return null;
     }
 
+    if (typeof procurementRequiresWorkshopCert === 'function' && procurementRequiresWorkshopCert(rec)) {
+        const wrcErr = typeof validateWorkshopCertForIctReceipt === 'function'
+            ? validateWorkshopCertForIctReceipt({
+                type: 'receipt',
+                category: 'ict-equipment',
+                item: rec.itemSummary || '',
+                poNumber: rec.poNumber || '',
+                deliveryNoteRef: rec.deliveryNoteRef || '',
+                party: rec.awardedSupplier || '',
+                wrcId: rec.workshopCertId || ''
+            })
+            : '';
+        if (wrcErr) {
+            showToast(wrcErr, 'error');
+            return null;
+        }
+    }
+
     const summary = lines.map((l) => `• ${l.qty} × ${l.itemName}`).join('\n');
     if (!options.silentConfirm) {
         const ok = confirm(
@@ -275,18 +293,36 @@ function getInventoryAccountabilitySummary(dateFrom, dateTo) {
 
 function updateDpProcurementStockStatus(rec) {
     const el = document.getElementById('dpProcStockStatus');
+    const wrcEl = document.getElementById('dpProcWrcStatus');
     if (!el) return;
     if (!rec) {
         el.textContent = 'Not posted to Stores Inventory.';
         el.className = 'dp-proc-stock-status';
+        if (wrcEl) wrcEl.textContent = '';
         return;
     }
     if (rec.stockPostedAt) {
         el.textContent = `Posted to Stores Inventory on ${(rec.stockPostedAt || '').replace('T', ' ').slice(0, 19)} (${rec.stockPostedQty || '?'} units).`;
         el.className = 'dp-proc-stock-status is-posted';
     } else {
-        el.textContent = 'Not yet posted to Stores Inventory — post after delivery is verified.';
+        el.textContent = 'Not yet posted to Stores Inventory — post after delivery is verified and MLG engraving complete (ICT).';
         el.className = 'dp-proc-stock-status is-pending';
+    }
+    if (wrcEl && typeof procurementRequiresWorkshopCert === 'function' && procurementRequiresWorkshopCert(rec)) {
+        const cert = typeof findWorkshopReceiptCert === 'function'
+            ? findWorkshopReceiptCert({ id: rec.workshopCertId, poNo: rec.poNumber, dnRef: rec.deliveryNoteRef, supplier: rec.awardedSupplier })
+            : null;
+        if (!cert) {
+            wrcEl.textContent = 'Workshop certification: required — not started.';
+            wrcEl.className = 'dp-proc-wrc-status is-pending';
+        } else {
+            const label = typeof getWrcStatusLabel === 'function' ? getWrcStatusLabel(cert.status) : cert.status;
+            wrcEl.textContent = `Workshop certification: ${cert.inspectionSerial} — ${label}`;
+            wrcEl.className = `dp-proc-wrc-status wrc-status-${cert.status}`;
+        }
+    } else if (wrcEl) {
+        wrcEl.textContent = '';
+        wrcEl.className = 'dp-proc-wrc-status';
     }
 }
 
@@ -360,6 +396,7 @@ function buildInventoryAccountabilityReportData(dateFrom, dateTo) {
         t.item || '',
         String(t.qty ?? ''),
         t.party || '',
+        t.appointment || '',
         t.by || ''
     ]);
 
@@ -402,7 +439,7 @@ function buildInventoryAccountabilityReportData(dateFrom, dateTo) {
             {
                 tbodyId: 'acct-movements',
                 title: 'Stock movements (procure / receive / issue trail)',
-                headers: ['Date', 'Movement', 'Source', 'Cycle/Req Ref', 'PO', 'DN / Voucher', 'Item', 'Qty', 'Party', 'By'],
+                headers: ['Date', 'Movement', 'Source', 'Cycle/Req Ref', 'PO', 'DN / Voucher', 'Item', 'Qty', 'Party', 'Appointment', 'By'],
                 rows: movementRows
             }
         ]

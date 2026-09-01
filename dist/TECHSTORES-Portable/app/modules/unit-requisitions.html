@@ -1,17 +1,14 @@
 <div id="unit-requisitions" class="form-container">
                 <div class="form-header">
-                    <h2 class="form-title">Unit / Formation Requisitions</h2>
+                    <h2 class="form-title">Requisitions — In-tray</h2>
                     <button class="close-btn">&times;</button>
                 </div>
 
                 <p class="req-intro">
-                    Capture <strong>Loose Minutes</strong> and unit/formation requisitions as they arrive at IT Dir.
-                    On save / <strong>Route</strong>, the system checks <strong>inventory</strong>:
-                    in stock → <strong>ZNA Q 1033</strong> issue;
-                    not in stock + GL buying power → raise <strong>DP F1</strong> (electronic procurement);
-                    otherwise flag <em>await replenishment</em> or seek <strong>DAF funds manually</strong>.
-                    Computer equipment correspondence is filed under
-                    <strong>IT/34/1 COMPUTER EQUIPMENT AND MEDIA</strong>.
+                    Independent <strong>Requisitions</strong> in-tray: list requests as they come in.
+                    Age counts days from <strong>date in</strong> until the request is responded to and
+                    <strong>satisfied</strong> (issued / closed). In-stock and out-of-stock are taken from current inventory.
+                    Route still issues on <strong>ZNA Q 1033</strong> or raises <strong>DP F1</strong> when buying power exists.
                 </p>
 
                 <div class="req-aging-strip" aria-label="Requisition aging summary">
@@ -23,9 +20,60 @@
                     <div class="req-stat"><span class="req-stat-value" id="reqStatUrgent">0</span><span class="req-stat-label">Urgent</span></div>
                 </div>
 
-                <div class="dashboard-panel req-capture-panel">
+                <div class="dashboard-panel req-intray-panel">
                     <div class="section-heading section-heading-compact">
-                        <h3 id="reqFormTitle">Capture Loose Minute / Requisition</h3>
+                        <h3>In-tray — as they come in</h3>
+                        <button type="button" class="btn btn-ghost btn-sm" id="reqTableExpandBtn"
+                            data-table-focus="#unit-requisitions .req-intray-table"
+                            data-table-focus-title="Requisitions in-tray"
+                            title="Expand table to full screen">⛶ Expand table</button>
+                    </div>
+                    <div class="module-toolbar">
+                        <input type="search" class="form-control table-search" id="reqTableSearch" data-search-history-key="unit-requisitions" data-search-history="1" placeholder="Search unit, item, req no…">
+                        <select class="form-control" id="reqFilterStatus" title="Status filter" style="max-width:170px;">
+                            <option value="open">In-tray (open)</option>
+                            <option value="all">All statuses</option>
+                            <option value="received">Not yet responded</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="part_issued">Part Issued</option>
+                            <option value="issued">Satisfied / Closed</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="closed">Closed (issued/cancelled)</option>
+                        </select>
+                        <select class="form-control" id="reqFilterStock" title="Stock filter" style="max-width:160px;">
+                            <option value="all">All stock</option>
+                            <option value="in">Fully in stock</option>
+                            <option value="out">Has shortfall</option>
+                        </select>
+                        <select class="form-control" id="reqFilterAge" title="Age filter" style="max-width:170px;">
+                            <option value="all">All ages</option>
+                            <option value="new">New 0–1d</option>
+                            <option value="attention">Attention 2–3d</option>
+                            <option value="aging">Aging 4–7d</option>
+                            <option value="overdue">Overdue 8d+</option>
+                        </select>
+                        <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
+                        <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
+                    </div>
+                    <div class="form-table-wrapper">
+                        <table class="overview-table req-table req-intray-table">
+                            <thead>
+                                <tr>
+                                    <th>Date in</th>
+                                    <th>Unit</th>
+                                    <th>Item(s) requested</th>
+                                    <th>Age</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="requisitions-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="dashboard-panel req-capture-panel" id="reqCapturePanel">
+                    <div class="section-heading section-heading-compact">
+                        <h3 id="reqFormTitle">Book in a requisition</h3>
                     </div>
                     <input type="hidden" id="reqEditId" value="">
                     <div class="form-row">
@@ -127,6 +175,18 @@
                             <input type="number" class="form-control" id="reqQty" min="1" step="1" value="1">
                         </div>
                         <div class="form-col">
+                            <label class="form-label">Unit price (est.)</label>
+                            <input type="number" class="form-control" id="reqUnitPrice" min="0" step="0.01" placeholder="For target proposal">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Est. total cost</label>
+                            <input type="number" class="form-control" id="reqEstimatedCost" min="0" step="0.01" placeholder="Qty × unit price">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Target month</label>
+                            <input type="month" class="form-control" id="reqTargetMonth" title="Month this need rolls into DAF target proposal">
+                        </div>
+                        <div class="form-col">
                             <label class="form-label">Priority</label>
                             <select class="form-control" id="reqPriority"></select>
                         </div>
@@ -168,48 +228,5 @@
                         <button type="button" class="btn btn-success" id="reqSaveBtn">Save Requisition</button>
                         <button type="button" class="btn btn-ghost" id="reqClearBtn">Clear Form</button>
                     </div>
-                </div>
-
-                <div class="module-toolbar">
-                    <input type="search" class="form-control table-search" id="reqTableSearch" data-search-history-key="unit-requisitions" data-search-history="1" placeholder="Search requisitions...">
-                    <select class="form-control" id="reqFilterStatus" title="Status filter" style="max-width:180px;">
-                        <option value="open">Open only</option>
-                        <option value="all">All statuses</option>
-                        <option value="received">Received</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="part_issued">Part Issued</option>
-                        <option value="issued">Issued / Closed</option>
-                        <option value="cancelled">Cancelled</option>
-                        <option value="closed">Closed (issued/cancelled)</option>
-                    </select>
-                    <select class="form-control" id="reqFilterAge" title="Age filter" style="max-width:180px;">
-                        <option value="all">All ages</option>
-                        <option value="new">New 0–1d</option>
-                        <option value="attention">Attention 2–3d</option>
-                        <option value="aging">Aging 4–7d</option>
-                        <option value="overdue">Overdue 8d+</option>
-                    </select>
-                    <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
-                    <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
-                </div>
-
-                <div class="form-table-wrapper">
-                    <table class="overview-table req-table">
-                        <thead>
-                            <tr>
-                                <th>Received</th>
-                                <th>Req No.</th>
-                                <th>Unit / Formation</th>
-                                <th>Item / Subject</th>
-                                <th>Qty</th>
-                                <th>Priority</th>
-                                <th>Status</th>
-                                <th>Age</th>
-                                <th>Requested By</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="requisitions-table-body"></tbody>
-                    </table>
                 </div>
             </div>

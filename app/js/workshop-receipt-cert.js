@@ -237,7 +237,11 @@ function clearWrcForm() {
     document.getElementById('wrcOfficerNo').value = '';
     document.getElementById('wrcOfficerRank').value = '';
     document.getElementById('wrcOfficerName').value = '';
-    document.getElementById('wrcOfficerUnit').value = 'IT Directorate';
+    if (typeof setZnaUnitField === 'function') {
+        setZnaUnitField('wrcOfficerUnit', 'IT Dir');
+    } else {
+        document.getElementById('wrcOfficerUnit').value = 'IT Directorate';
+    }
     document.getElementById('wrcTrade').value = 'IT';
     document.getElementById('wrcExpertise').value = 'ICT equipment / computers';
     document.getElementById('wrcRemarks').value = '';
@@ -428,7 +432,11 @@ function fillWrcForm(rec) {
     document.getElementById('wrcOfficerNo').value = rec.officer?.forceNo || '';
     document.getElementById('wrcOfficerRank').value = rec.officer?.rank || '';
     document.getElementById('wrcOfficerName').value = rec.officer?.name || '';
-    document.getElementById('wrcOfficerUnit').value = rec.officer?.unit || 'IT Directorate';
+    if (typeof setZnaUnitField === 'function') {
+        setZnaUnitField('wrcOfficerUnit', rec.officer?.unit || 'IT Dir');
+    } else {
+        document.getElementById('wrcOfficerUnit').value = rec.officer?.unit || 'IT Directorate';
+    }
     document.getElementById('wrcTrade').value = rec.trade || 'IT';
     document.getElementById('wrcExpertise').value = rec.expertise || '';
     document.getElementById('wrcRemarks').value = rec.remarks || '';

@@ -107,6 +107,7 @@ function wireLoginForm() {
                 return;
             }
             try {
+                if (typeof ensureRealDpPurchaseOrders === 'function') ensureRealDpPurchaseOrders();
                 restoreAllModules();
                 updateDashboard();
                 updateVoucherSummary();
@@ -140,9 +141,24 @@ async function runHeavyBootInit() {
             console.info('Physical stock count applied:', stockResult.lines);
         }
     }
+    if (typeof applyLaptopDistributionAug2026 === 'function') {
+        const laptopIv = applyLaptopDistributionAug2026();
+        if (laptopIv?.ok && (laptopIv.issues || laptopIv.receipts || laptopIv.patched)) {
+            if (typeof saveStateNow === 'function') await saveStateNow();
+            else saveState();
+            console.info('Laptop distribution IVs applied:', laptopIv);
+        }
+    }
     if (typeof ensureExampleMidLaptopRequisition === 'function') {
         const ex = ensureExampleMidLaptopRequisition();
         if (ex) {
+            if (typeof saveStateNow === 'function') await saveStateNow();
+            else saveState();
+        }
+    }
+    if (typeof ensureRealDpPurchaseOrders === 'function') {
+        const dpPo = ensureRealDpPurchaseOrders();
+        if (dpPo.added > 0) {
             if (typeof saveStateNow === 'function') await saveStateNow();
             else saveState();
         }
@@ -151,7 +167,7 @@ async function runHeavyBootInit() {
     if (typeof initInventoryLedgersUi === 'function') initInventoryLedgersUi();
     if (typeof buildVoucherInventorySection === 'function') buildVoucherInventorySection();
     if (typeof preloadAllModules === 'function') {
-        await preloadAllModules();
+        preloadAllModules().catch((e) => console.warn('Background module preload', e));
     }
     restoreAllModules();
     if (typeof initFinancialYearBidsImport === 'function') initFinancialYearBidsImport();
@@ -163,16 +179,26 @@ async function runHeavyBootInit() {
     initTableSearch();
     initReportsModule();
     if (typeof initGlTargetMonthControls === 'function') initGlTargetMonthControls();
+    if (typeof initMonthlyTargetProposalControls === 'function') initMonthlyTargetProposalControls();
     initSpecEvaluationModule();
     if (typeof initAiAssistant === 'function') initAiAssistant();
+    if (typeof initDocImportModule === 'function') initDocImportModule();
+    if (typeof initStoresQueryEngine === 'function') initStoresQueryEngine();
+    if (typeof initWindowChrome === 'function') initWindowChrome();
     if (typeof initRequisitionsModule === 'function') initRequisitionsModule();
     if (typeof initOrderlyRoomModule === 'function') initOrderlyRoomModule();
     if (typeof initCorrespondenceFilesModule === 'function') initCorrespondenceFilesModule();
     if (typeof initMonthlyReturnsModule === 'function') initMonthlyReturnsModule();
     if (typeof initUndeliveredModule === 'function') initUndeliveredModule();
+    if (typeof initSupplierDebtsModule === 'function') initSupplierDebtsModule();
+    if (typeof initStakeholderDeskModule === 'function') initStakeholderDeskModule();
+    if (typeof initPortalsBoardModule === 'function') initPortalsBoardModule();
+    if (typeof initWorkshopReceiptCertModule === 'function') initWorkshopReceiptCertModule();
+    if (typeof initDeliveryNoteModule === 'function') initDeliveryNoteModule();
     if (typeof initDpProcurementModule === 'function') initDpProcurementModule();
     if (typeof initUnitEquipmentModule === 'function') initUnitEquipmentModule();
     if (typeof initTemporaryLoansModule === 'function') initTemporaryLoansModule();
+    if (typeof initPermanentLoansModule === 'function') initPermanentLoansModule();
     if (typeof initIctAccountabilityModule === 'function') initIctAccountabilityModule();
     if (typeof initIctDistributionModule === 'function') initIctDistributionModule();
     if (typeof initStockTakeModule === 'function') initStockTakeModule();
@@ -196,79 +222,96 @@ async function runHeavyBootInit() {
     }
     if (typeof initPersistentDatabaseHooks === 'function') initPersistentDatabaseHooks();
     if (typeof initFieldHelpSystem === 'function') initFieldHelpSystem();
+    if (typeof initNavReorder === 'function') initNavReorder();
 }
 window.runHeavyBootInit = runHeavyBootInit;
 
-document.addEventListener('DOMContentLoaded', async function() {
-    // Attach login first so a later init error cannot block Sign In
-    wireLoginForm();
-    if (typeof initStorageModeUi === 'function') initStorageModeUi();
-    if (typeof probeStorageMode === 'function') {
-        probeStorageMode({ attempts: 2, timeoutMs: 900 }).then(() => {
-            if (typeof updateDbStatusBadge === 'function') updateDbStatusBadge();
-            if (typeof syncModeToggleUi === 'function') syncModeToggleUi();
-            if (typeof autoStartAppServerIfNeeded === 'function') {
-                autoStartAppServerIfNeeded();
-            }
-        }).catch(() => { /* ignore */ });
+async function finalizeBootState(state) {
+    appState = state || appState;
+    if (!appState) {
+        try { appState = loadState(); } catch (_) { appState = createDefaultState(); }
     }
-    if (typeof initPwaInstall === 'function') initPwaInstall();
-    // Sync fallback so a fast Sign In never hits a null appState
+    updateDbStatusBadge();
+    if (typeof initStorageModeUi === 'function') initStorageModeUi();
+    if (!appState.users || !appState.users.length) {
+        appState.users = createDefaultUsers();
+        saveState();
+    } else if (typeof ensureSeedUsersPresent === 'function') {
+        const before = appState.users.length;
+        appState.users = ensureSeedUsersPresent(appState.users);
+        if (appState.users.length !== before) {
+            if (typeof saveStateNow === 'function') await saveStateNow();
+            else saveState();
+        }
+    }
+    if (!Array.isArray(appState.orderlyDailyFile)) {
+        appState.orderlyDailyFile = [];
+    }
+    applyTheme(appState.theme);
+    if (typeof initNavReorder === 'function') initNavReorder();
+    const bootSession = typeof loadSession === 'function' ? loadSession() : null;
+    if (bootSession) {
+        await runHeavyBootInit();
+    }
+    if (typeof initFieldHelpSystem === 'function') initFieldHelpSystem();
+    if (typeof initStorageModeUi === 'function') initStorageModeUi();
+}
+
+function bootStorageAndState() {
+    if (typeof ensureOnlinePreferredByDefault === 'function') ensureOnlinePreferredByDefault();
+    if (typeof initStorageModeUi === 'function') initStorageModeUi();
+    if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
+
+    const probe = typeof quickProbeStorageMode === 'function'
+        ? quickProbeStorageMode()
+        : (typeof probeStorageMode === 'function'
+            ? probeStorageMode({ attempts: 1, timeoutMs: 650, delayMs: 0 })
+            : Promise.resolve());
+
+    probe.then(() => {
+        if (typeof updateLoginStorageLabel === 'function') updateLoginStorageLabel();
+        if (typeof syncModeToggleUi === 'function') syncModeToggleUi();
+        if (typeof updateDbStatusBadge === 'function') updateDbStatusBadge();
+        if (typeof autoStartAppServerIfNeeded === 'function') {
+            autoStartAppServerIfNeeded();
+        }
+    }).catch(() => { /* ignore */ });
+
+    const hydrate = typeof hydrateAppStateFromDatabase === 'function'
+        ? hydrateAppStateFromDatabase()
+        : loadStateFromDatabase();
+
+    hydrate.then((state) => finalizeBootState(state)).catch((bootError) => {
+        console.error('Boot hydrate failed (login still available)', bootError);
+        finalizeBootState(appState);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    wireLoginForm();
     try {
         if (!appState) appState = loadState();
     } catch (_) {
         appState = createDefaultState();
     }
-
-    try {
-        appState = await loadStateFromDatabase();
-        updateDbStatusBadge();
-        if (typeof initStorageModeUi === 'function') initStorageModeUi();
-        if (!appState.users || !appState.users.length) {
-            appState.users = createDefaultUsers();
-            saveState();
-        } else if (typeof ensureSeedUsersPresent === 'function') {
-            const before = appState.users.length;
-            appState.users = ensureSeedUsersPresent(appState.users);
-            if (appState.users.length !== before) {
-                if (typeof saveStateNow === 'function') await saveStateNow();
-                else saveState();
-            }
-        }
-        if (!Array.isArray(appState.orderlyDailyFile)) {
-            appState.orderlyDailyFile = [];
-        }
-        applyTheme(appState.theme);
-        const bootSession = typeof loadSession === 'function' ? loadSession() : null;
-        if (bootSession) {
-            await runHeavyBootInit();
-        } else if (typeof initFieldHelpSystem === 'function') {
-            initFieldHelpSystem();
-        }
-        if (typeof initStorageModeUi === 'function') initStorageModeUi();
-    } catch (bootError) {
-        console.error('Boot init failed (login still available)', bootError);
-        if (bootError && bootError.stack) console.error(bootError.stack);
-        if (!appState) {
-            try { appState = loadState(); } catch (_) { appState = createDefaultState(); }
-        }
-        try { updateDbStatusBadge(); } catch (_) { /* ignore */ }
-        try { if (typeof initFieldHelpSystem === 'function') initFieldHelpSystem(); } catch (_) { /* ignore */ }
-    }
-
+    bootStorageAndState();
+    if (typeof initPwaInstall === 'function') initPwaInstall();
     document.getElementById('logoutBtn')?.addEventListener('click', logoutUser);
 
     if (document.body.dataset.targetNavWired !== '1') {
         document.body.dataset.targetNavWired = '1';
         document.addEventListener('click', (e) => {
-            const target = e.target.closest('[data-target-nav]')?.getAttribute('data-target-nav');
+            const btn = e.target.closest('[data-target-nav]');
+            const target = btn?.getAttribute('data-target-nav');
             if (!target || typeof navigateToModule !== 'function') return;
             e.preventDefault();
-            navigateToModule(target);
+            const pgTab = btn.getAttribute('data-pg-tab');
+            navigateToModule(target, pgTab ? { pgTab } : {});
         });
     }
 
     document.getElementById('saveUserBtn')?.addEventListener('click', saveUserFromForm);
+    document.getElementById('newUserRole')?.addEventListener('change', stkToggleSupplierField);
     document.getElementById('resetUserFormBtn')?.addEventListener('click', function() {
         document.getElementById('newUserPassword').placeholder = 'Password';
         resetUserForm();
@@ -294,6 +337,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         const opts = {};
         const panel = link.getAttribute('data-dept-panel');
         if (panel) opts.deptPanel = panel;
+        const desk = link.getAttribute('data-stk-desk');
+        if (desk) opts.stkDesk = desk;
         navigateToModule(targetId, opts);
     }, true);
 
@@ -305,6 +350,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             const opts = {};
             const panel = this.getAttribute('data-dept-panel');
             if (panel) opts.deptPanel = panel;
+            const desk = this.getAttribute('data-stk-desk');
+            if (desk) opts.stkDesk = desk;
             navigateToModule(targetId, opts);
         });
     });
@@ -383,6 +430,11 @@ document.addEventListener('DOMContentLoaded', async function() {
             const li = this.closest('li');
             const submenu = li?.querySelector(':scope > .submenu');
             if (!submenu) return;
+            if (this.getAttribute('data-target')) {
+                submenu.classList.add('active');
+                this.classList.add('is-open');
+                return;
+            }
             submenu.classList.toggle('active');
             this.classList.toggle('is-open', submenu.classList.contains('active'));
         });

@@ -70,10 +70,13 @@ function getPurchaseOrderSnapshot() {
         date: poFieldValue('poDate'),
         dateDisplay: formatPoSapDate(poFieldValue('poDate')),
         vendorNo: poFieldValue('poVendorNo'),
+        reqNo: poFieldValue('poReqNo'),
         deliverTo: poFieldValue('poDeliverTo'),
         deliveryDate: poFieldValue('poDeliveryDate'),
         deliveryDateDisplay: formatPoSapDate(poFieldValue('poDeliveryDate')),
         paymentTerms: poFieldValue('poPaymentTerms'),
+        contact: poFieldValue('poContact') || 'Dir of Procurement',
+        telephone: poFieldValue('poTelephone') || '0242-790016',
         currency,
         gl: poFieldValue('poGl'),
         glLabel: document.getElementById('poGl')?.selectedOptions?.[0]?.text || poFieldValue('poGl'),
@@ -285,6 +288,24 @@ function syncPurchaseOrderSupplierPickFromName() {
     }
 }
 
+function reloadRealDpPurchaseOrders({ force = false } = {}) {
+    if (typeof requireEditAccess === 'function' && !requireEditAccess()) return;
+    if (typeof ensureRealDpPurchaseOrders !== 'function') return;
+    const result = ensureRealDpPurchaseOrders({ force });
+    if (typeof restoreModule === 'function' && appState?.modules?.['purchase-orders']) {
+        restoreModule('purchase-orders', appState.modules['purchase-orders']);
+    }
+    if (typeof saveState === 'function') saveState();
+    if (typeof updateDashboard === 'function') updateDashboard();
+    if (typeof showToast === 'function') {
+        const msg = result.added
+            ? `Loaded ${result.added} real DP purchase order(s) into register (${result.total} total).`
+            : `IT DIR DP register already has all ${REAL_DP_PURCHASE_ORDERS?.length || 0} purchase orders.`;
+        showToast(msg);
+    }
+    return result;
+}
+
 function bindPurchaseOrderModule() {
     const container = document.getElementById('purchase-orders');
     if (!container) return;
@@ -292,9 +313,30 @@ function bindPurchaseOrderModule() {
     document.querySelectorAll('#purchase-orders-lines-body tr').forEach(attachPurchaseOrderLineRow);
     refreshPurchaseOrderSupplierOptions();
     updatePurchaseOrderDocumentTotal();
+    markRealDpPurchaseOrderRegisterRows();
 
     if (container.dataset.poBound === '1') return;
     container.dataset.poBound = '1';
+
+    document.getElementById('purchase-orders-table-body')?.addEventListener('click', (event) => {
+        if (event.target.closest('button')) return;
+        const tr = event.target.closest('tr');
+        if (!tr) return;
+        const poNo = tr.querySelector('td:nth-child(3) input')?.value?.trim();
+        if (!poNo || typeof loadRealDpPurchaseOrderIntoForm !== 'function') return;
+        if (!findRealDpPurchaseOrder?.(poNo)) return;
+        loadRealDpPurchaseOrderIntoForm(poNo);
+        tr.classList.add('po-register-row-active');
+        tr.parentElement?.querySelectorAll('tr.po-register-row-active').forEach((row) => {
+            if (row !== tr) row.classList.remove('po-register-row-active');
+        });
+    });
+
+    document.getElementById('poLoadRealDpBtn')?.addEventListener('click', () => reloadRealDpPurchaseOrders());
+    document.getElementById('poReloadRealDpBtn')?.addEventListener('click', () => {
+        if (!window.confirm('Reload all scanned IT DIR DP purchase orders into the register? Existing matching PO rows will be replaced.')) return;
+        reloadRealDpPurchaseOrders({ force: true });
+    });
 
     container.addEventListener('input', (event) => {
         if (event.target.matches('#poCurrency, #poGl, #poSupplierName, #poNumber, #poDate')) {
@@ -321,9 +363,12 @@ function clearPurchaseOrderDocument() {
     set('poNumber', '');
     set('poDate', '');
     set('poVendorNo', '');
+    set('poReqNo', '');
     set('poDeliverTo', 'IT DIR / 04 731831');
     set('poDeliveryDate', '');
     set('poPaymentTerms', '');
+    set('poContact', 'Dir of Procurement');
+    set('poTelephone', '0242-790016');
     set('poCurrency', 'ZiG');
     set('poGl', '2200600002');
     set('poSignature', '');
@@ -404,24 +449,33 @@ function buildPurchaseOrderOfficialHtml() {
                 <div class="po-official-vendor-name">${esc(snap.supplierName || '')}</div>
                 <div class="po-official-vendor-addr">${addressHtml}</div>
             </div>
+            <div class="po-official-brand">
+                <img src="../assets/zna-logo.png" alt="Zimbabwe National Army Coat of Arms">
+                <div class="po-official-country">REPUBLIC OF ZIMBABWE</div>
+                <div class="po-official-department">DIRECTORATE OF PROCUREMENT</div>
+            </div>
             <div class="po-official-title-block">
                 <div class="po-official-title">Purchase Order</div>
                 <table class="po-official-ref-box">
                     <tbody>
-                        <tr><td>Our Ref</td><td>${esc(snap.poNumber || '')}</td></tr>
-                        <tr><td>Date</td><td>${esc(snap.dateDisplay || snap.date || '')}</td></tr>
+                        <tr><td>Purchase order number</td><td>${esc(snap.poNumber || '')}</td></tr>
+                        <tr><td>Purchase order date</td><td>${esc(snap.dateDisplay || snap.date || '')}</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
         <div class="po-official-meta">
             <div class="po-official-meta-row"><span class="po-official-meta-label">Vendor</span><span class="po-official-meta-value">${esc(snap.vendorNo || '')}</span></div>
+            <div class="po-official-meta-row"><span class="po-official-meta-label">Requisition No.</span><span class="po-official-meta-value">${esc(snap.reqNo || '')}</span></div>
             <div class="po-official-meta-row"><span class="po-official-meta-label">Deliver to</span><span class="po-official-meta-value">${esc(snap.deliverTo || '')}</span></div>
             <div class="po-official-meta-row"><span class="po-official-meta-label">Delivery Date</span><span class="po-official-meta-value">${esc(snap.deliveryDateDisplay || snap.deliveryDate || '')}</span></div>
             <div class="po-official-meta-row"><span class="po-official-meta-label">Payment Terms</span><span class="po-official-meta-value">${esc(snap.paymentTerms || '')}</span></div>
+            <div class="po-official-meta-row"><span class="po-official-meta-label">Contact</span><span class="po-official-meta-value">${esc(snap.contact)}</span></div>
+            <div class="po-official-meta-row"><span class="po-official-meta-label">Telephone</span><span class="po-official-meta-value">${esc(snap.telephone)}</span></div>
             <div class="po-official-meta-row"><span class="po-official-meta-label">Currency</span><span class="po-official-meta-value">${esc(snap.currency || '')}</span></div>
             <div class="po-official-meta-row"><span class="po-official-meta-label">GL Account</span><span class="po-official-meta-value">${esc(snap.glLabel || snap.gl || '')}</span></div>
         </div>
+        <div class="po-official-note">Your requisition number should be quoted with any enquiry regarding this order.</div>
         <table class="po-official-lines">
             <thead>
                 <tr>
@@ -430,14 +484,14 @@ function buildPurchaseOrderOfficialHtml() {
                     <th>Order Qty</th>
                     <th>Unit</th>
                     <th>Description</th>
-                    <th>Price Per Unit</th>
-                    <th>Net Value</th>
+                    <th>Price / Unit</th>
+                    <th>Amount</th>
                 </tr>
             </thead>
             <tbody>${lineRows}</tbody>
             <tfoot>
                 <tr>
-                    <td colspan="6" class="po-official-total-label">Total net value excl. tax ${esc(snap.currency || 'ZiG')}</td>
+                    <td colspan="6" class="po-official-total-label">Total net value incl. tax ${esc(snap.currency || 'ZiG')}</td>
                     <td class="po-official-total-value num">${esc(formatPoMoneyPlain(snap.total))}</td>
                 </tr>
             </tfoot>
@@ -472,9 +526,22 @@ function printPurchaseOrderOfficialForm() {
     window.print();
 }
 
+function markRealDpPurchaseOrderRegisterRows() {
+    document.querySelectorAll('#purchase-orders-table-body tr').forEach((tr) => {
+        const poNo = tr.querySelector('td:nth-child(3) input')?.value?.trim();
+        const isReal = poNo && typeof findRealDpPurchaseOrder === 'function' && findRealDpPurchaseOrder(poNo);
+        tr.classList.toggle('po-register-row-real-dp', Boolean(isReal));
+        const sig = tr.querySelector('td:nth-child(7) input')?.value || '';
+        tr.classList.toggle('po-register-row-cancelled', /cancelled/i.test(sig));
+        if (isReal) tr.title = 'Real IT DIR DP purchase order — click to load document';
+    });
+}
+
 function initPurchaseOrderModuleDefaults() {
+    if (typeof ensureRealDpPurchaseOrders === 'function') ensureRealDpPurchaseOrders();
     bindPurchaseOrderModule();
     refreshPurchaseOrderSupplierOptions();
+    markRealDpPurchaseOrderRegisterRows();
     const dateEl = document.getElementById('poDate');
     if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
     const vendorEl = document.getElementById('poVendorNo');

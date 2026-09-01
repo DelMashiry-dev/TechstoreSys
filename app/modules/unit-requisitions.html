@@ -20,6 +20,13 @@
                     <div class="req-stat"><span class="req-stat-value" id="reqStatUrgent">0</span><span class="req-stat-label">Urgent</span></div>
                 </div>
 
+                <div class="dashboard-panel sd-intelligence-panel-wrap">
+                    <div class="section-heading section-heading-compact">
+                        <h3>Intelligence — respond first</h3>
+                    </div>
+                    <div id="reqIntelligencePanel" class="sd-intelligence-panel"></div>
+                </div>
+
                 <div class="dashboard-panel req-intray-panel">
                     <div class="section-heading section-heading-compact">
                         <h3>In-tray — as they come in</h3>
@@ -118,15 +125,17 @@
                         </div>
                         <div class="form-col">
                             <label class="form-label">Origin wing / office (detail)</label>
-                            <input type="text" class="form-control" id="reqOriginUnitDetail" placeholder="e.g. Mapping and Research (MID)">
+                            <div class="zna-unit-picker">
+                                <select class="form-control zna-unit-select" id="reqOriginUnitDetail" title="Origin wing / office">
+                                    <option value="">— Optional detail —</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-col">
                             <label class="form-label" for="reqUnit">Unit / Formation (from)</label>
                             <div class="zna-unit-picker">
-                                <input type="search" class="form-control zna-unit-filter" id="reqUnitFilter"
-                                    placeholder="Type to filter units…" autocomplete="off" aria-label="Filter units">
                                 <select class="form-control zna-unit-select" id="reqUnit" title="Requesting unit / formation">
                                     <option value="">— Select unit / formation —</option>
                                 </select>

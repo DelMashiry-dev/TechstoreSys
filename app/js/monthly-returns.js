@@ -324,8 +324,6 @@ function fillMonthlyReturnForm(rec) {
     set('mrPeriod', r.periodYm || mrDefaultPeriodYm());
     if (typeof fillZnaUnitSelect === 'function') {
         fillZnaUnitSelect(document.getElementById('mrUnit'), r.unit || '', { includeBlank: true, includeOther: true });
-        const uf = document.getElementById('mrUnitFilter');
-        if (uf) uf.value = '';
     } else {
         set('mrUnit', r.unit || '');
     }
@@ -711,7 +709,7 @@ function initMonthlyReturnsModule() {
     if (typeof fillZnaUnitSelect === 'function') {
         fillZnaUnitSelect(document.getElementById('mrUnit'), '', { includeBlank: true, includeOther: true });
         if (typeof wireZnaUnitPicker === 'function') {
-            wireZnaUnitPicker(document.getElementById('mrUnit'), document.getElementById('mrUnitFilter'));
+            wireZnaUnitPicker(document.getElementById('mrUnit'), null, { includeBlank: true, includeOther: true });
         }
     }
 

@@ -16,6 +16,208 @@ function formatYmLabel(ym) {
     return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 }
 
+function getGlTargetPeriodMode() {
+    const el = document.getElementById('glTargetPeriodMode');
+    const v = el?.value || appState?.glTargetPeriodMode || 'month';
+    return (v === 'quarter' || v === 'year') ? v : 'month';
+}
+
+function setGlTargetPeriodMode(mode) {
+    const next = (mode === 'quarter' || mode === 'year') ? mode : 'month';
+    if (appState) appState.glTargetPeriodMode = next;
+    const el = document.getElementById('glTargetPeriodMode');
+    if (el && el.value !== next) el.value = next;
+    syncGlTargetPeriodUi();
+    return next;
+}
+
+function getGlTargetPeriodBounds(focusYm, mode) {
+    const ym = (/^\d{4}-\d{2}$/.test(focusYm) ? focusYm : null)
+        || getSelectedGlTargetMonth();
+    const mmode = mode || getGlTargetPeriodMode();
+    const [y, m] = ym.split('-').map(Number);
+
+    if (mmode === 'month') {
+        return {
+            mode: 'month',
+            months: [ym],
+            label: formatYmLabel(ym),
+            focusYm: ym
+        };
+    }
+
+    if (mmode === 'quarter') {
+        const q = Math.floor((m - 1) / 3) + 1;
+        const startM = (q - 1) * 3 + 1;
+        const months = [0, 1, 2].map((i) => `${y}-${String(startM + i).padStart(2, '0')}`);
+        const monthNames = months.map((mo) => formatYmLabel(mo).split(' ')[0]);
+        return {
+            mode: 'quarter',
+            months,
+            label: `Q${q} ${y} (${monthNames[0]}–${monthNames[2]} ${y})`,
+            focusYm: ym,
+            quarter: q,
+            year: y
+        };
+    }
+
+    const months = Array.from({ length: 12 }, (_, i) => `${y}-${String(i + 1).padStart(2, '0')}`);
+    return {
+        mode: 'year',
+        months,
+        label: `Year ${y}`,
+        focusYm: ym,
+        year: y
+    };
+}
+
+function getSelectedGlTargetPeriod() {
+    return getGlTargetPeriodBounds(getSelectedGlTargetMonth(), getGlTargetPeriodMode());
+}
+
+function syncGlTargetPeriodUi() {
+    const period = getSelectedGlTargetPeriod();
+    const label = document.getElementById('glTargetMonthLabel');
+    if (label) label.textContent = period.label;
+
+    const monthWrap = document.getElementById('glTargetMonthWrap');
+    const mode = period.mode;
+    if (monthWrap) {
+        monthWrap.classList.toggle('is-quarter-mode', mode === 'quarter');
+        monthWrap.classList.toggle('is-year-mode', mode === 'year');
+    }
+
+    const monthLabel = document.querySelector('label[for="glTargetMonth"]');
+    if (monthLabel) {
+        monthLabel.textContent = mode === 'month'
+            ? 'Target month'
+            : (mode === 'quarter' ? 'Pick any month in the quarter' : 'Pick any month in the year');
+    }
+
+    const monthEl = document.getElementById('glTargetMonth');
+    if (monthEl) {
+        monthEl.title = mode === 'month'
+            ? 'Month of the DAF vote'
+            : (mode === 'quarter'
+                ? 'Choose Jan/Mar/Apr/Jun etc. — dashboard shows that quarter’s totals'
+                : 'Choose any month — dashboard shows the full calendar year totals');
+    }
+
+    const readOnlyNote = document.getElementById('glTargetPeriodNote');
+    if (readOnlyNote) {
+        readOnlyNote.hidden = mode === 'month';
+        readOnlyNote.textContent = mode === 'quarter'
+            ? 'Quarterly view — targets and spend are summed for all three months. Switch to Monthly to edit or enter each month’s DAF vote.'
+            : 'Yearly view — targets and spend are summed for all twelve months. Switch to Monthly to edit a specific month.';
+    }
+
+    document.querySelectorAll('.gl-target-month-only').forEach((el) => {
+        el.hidden = mode !== 'month';
+    });
+
+    renderGlTargetPeriodBreakdown(period);
+}
+
+function sumGlMaps(mapFn, months) {
+    const total = {};
+    Object.keys(GL_ACCOUNTS || {}).forEach((gl) => { total[gl] = 0; });
+    (months || []).forEach((ym) => {
+        const part = mapFn(ym) || {};
+        Object.keys(total).forEach((gl) => {
+            total[gl] += Number(part[gl]) || 0;
+        });
+    });
+    return total;
+}
+
+function getGlPeriodTarget(gl, period) {
+    if (!gl || gl === '_daf') return 0;
+    const p = period || getSelectedGlTargetPeriod();
+    return p.months.reduce((sum, ym) => sum + getGlMonthlyTarget(gl, ym), 0);
+}
+
+function getVoucherImpactByGlForPeriod(period) {
+    const p = period || getSelectedGlTargetPeriod();
+    return sumGlMaps(getVoucherImpactByGlForMonth, p.months);
+}
+
+function getPurchaseOrderCommittedByGlForPeriod(period) {
+    const p = period || getSelectedGlTargetPeriod();
+    return sumGlMaps(getPurchaseOrderCommittedByGlForMonth, p.months);
+}
+
+function getBaseCommittedByGlForPeriod(period) {
+    const p = period || getSelectedGlTargetPeriod();
+    return sumGlMaps(getBaseCommittedByGlForMonth, p.months);
+}
+
+function getGlPeriodExpended(gl, period) {
+    const p = period || getSelectedGlTargetPeriod();
+    const vouchers = getVoucherImpactByGlForPeriod(p)[gl] || 0;
+    const committed = getBaseCommittedByGlForPeriod(p)[gl] || 0;
+    return { vouchers, committed, expended: committed + vouchers };
+}
+
+function getGlPeriodBalance(gl, period) {
+    const p = period || getSelectedGlTargetPeriod();
+    const target = getGlPeriodTarget(gl, p);
+    const { expended } = getGlPeriodExpended(gl, p);
+    return target - expended;
+}
+
+function getProposalAmountForGlPeriod(gl, period) {
+    const p = period || getSelectedGlTargetPeriod();
+    if (typeof getProposalAmountForGl !== 'function') return 0;
+    return p.months.reduce((sum, ym) => sum + (getProposalAmountForGl(gl, ym) || 0), 0);
+}
+
+function getGlPeriodFundingNote(gl, period) {
+    const p = period || getSelectedGlTargetPeriod();
+    if (p.mode === 'month' && typeof getGlFundingNote === 'function') {
+        return getGlFundingNote(gl, p.focusYm);
+    }
+    const target = getGlPeriodTarget(gl, p);
+    const power = getGlPeriodBalance(gl, p);
+    if (!(target > 0) && power <= 0) return `No DAF vote recorded in ${p.label}`;
+    if (power < 0) return `${p.label} — overdrawn by ${formatCurrency(Math.abs(power))}`;
+    return `${p.label} · Target ${formatCurrency(target)} · Buying power ${formatCurrency(power)}`;
+}
+
+function renderGlTargetPeriodBreakdown(period) {
+    const host = document.getElementById('glTargetPeriodBreakdown');
+    if (!host) return;
+    const p = period || getSelectedGlTargetPeriod();
+    if (p.mode === 'month') {
+        host.hidden = true;
+        host.innerHTML = '';
+        return;
+    }
+    host.hidden = false;
+    const rows = p.months.map((ym) => {
+        let target = 0;
+        let expended = 0;
+        Object.keys(GL_ACCOUNTS || {}).forEach((gl) => {
+            target += getGlMonthlyTarget(gl, ym);
+            expended += getGlMonthlyExpended(gl, ym).expended;
+        });
+        const balance = target - expended;
+        return `<tr>
+            <td>${formatYmLabel(ym)}</td>
+            <td>${formatCurrency(target)}</td>
+            <td>${formatCurrency(expended)}</td>
+            <td><strong class="${balance < 0 ? 'buying-power-neg' : 'buying-power-ok'}">${formatCurrency(balance)}</strong></td>
+        </tr>`;
+    }).join('');
+    host.innerHTML = `
+        <details class="gl-period-breakdown" open>
+            <summary>Month-by-month breakdown — ${p.label}</summary>
+            <table class="overview-table gl-period-breakdown-table">
+                <thead><tr><th>Month</th><th>DAF target</th><th>Expended</th><th>Buying power</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </details>`;
+}
+
 function ensureGlMonthlyTargets() {
     if (!appState) return {};
     if (!appState.glMonthlyTargets || typeof appState.glMonthlyTargets !== 'object') {
@@ -36,8 +238,11 @@ function setSelectedGlTargetMonth(ym) {
     if (appState) appState.glTargetViewMonth = month;
     const el = document.getElementById('glTargetMonth');
     if (el && el.value !== month) el.value = month;
-    const label = document.getElementById('glTargetMonthLabel');
-    if (label) label.textContent = formatYmLabel(month);
+    if (typeof syncGlTargetPeriodUi === 'function') syncGlTargetPeriodUi();
+    else {
+        const label = document.getElementById('glTargetMonthLabel');
+        if (label) label.textContent = formatYmLabel(month);
+    }
     return month;
 }
 
@@ -327,10 +532,16 @@ function initGlTargetMonthControls() {
     const monthEl = document.getElementById('glTargetMonth');
     if (!monthEl) return;
     if (!monthEl.value) monthEl.value = appState?.glTargetViewMonth || currentYmIso();
+
+    const periodEl = document.getElementById('glTargetPeriodMode');
+    if (periodEl && appState?.glTargetPeriodMode) periodEl.value = appState.glTargetPeriodMode;
     setSelectedGlTargetMonth(monthEl.value);
+    setGlTargetPeriodMode(getGlTargetPeriodMode());
 
     const syncDafMetaFields = () => {
-        const meta = getMonthDafMeta(getSelectedGlTargetMonth());
+        const period = getSelectedGlTargetPeriod();
+        const ym = getSelectedGlTargetMonth();
+        const meta = getMonthDafMeta(ym);
         const ref = document.getElementById('dafTargetRef');
         const received = document.getElementById('dafTargetReceived');
         const notes = document.getElementById('dafTargetNotes');
@@ -339,7 +550,13 @@ function initGlTargetMonthControls() {
         if (notes) notes.value = meta.notes || '';
         const banner = document.getElementById('dafTargetBanner');
         if (banner) {
-            const ym = getSelectedGlTargetMonth();
+            if (period.mode !== 'month') {
+                const funded = Object.keys(GL_ACCOUNTS || {}).filter((gl) => getGlPeriodTarget(gl, period) > 0).length;
+                banner.innerHTML = `<strong>${period.label}</strong> — aggregated DAF targets &amp; spend` +
+                    ` · ${funded} GL(s) with vote in period` +
+                    ` · <em>Switch to Monthly to edit individual months</em>`;
+                return;
+            }
             const funded = Object.keys(GL_ACCOUNTS || {}).filter((gl) => getGlMonthlyTarget(gl, ym) > 0).length;
             banner.innerHTML = meta.ref
                 ? `<strong>DAF monthly targets</strong> for ${formatYmLabel(ym)}` +
@@ -353,6 +570,14 @@ function initGlTargetMonthControls() {
 
     monthEl.addEventListener('change', () => {
         setSelectedGlTargetMonth(monthEl.value);
+        syncDafMetaFields();
+        if (typeof syncProposalMemoFormFields === 'function') syncProposalMemoFormFields();
+        if (typeof renderTargetProposalBanner === 'function') renderTargetProposalBanner();
+        if (typeof updateDashboard === 'function') updateDashboard();
+    });
+
+    periodEl?.addEventListener('change', () => {
+        setGlTargetPeriodMode(periodEl.value);
         syncDafMetaFields();
         if (typeof updateDashboard === 'function') updateDashboard();
     });

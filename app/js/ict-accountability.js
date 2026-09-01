@@ -1319,12 +1319,21 @@ function populateIctAccUnitFilterSelect() {
     const sel = document.getElementById('ictAccUnitFilterSelect');
     if (!sel) return;
     const keep = sel.value;
-    if (typeof buildZnaUnitOptionsHtml === 'function') {
+    if (typeof fillZnaUnitSelect === 'function') {
+        fillZnaUnitSelect(sel, keep, {
+            includeBlank: true,
+            blankLabel: 'Any unit',
+            allowCustom: false
+        });
+    } else if (typeof buildZnaUnitOptionsHtml === 'function') {
         sel.innerHTML = buildZnaUnitOptionsHtml(keep, {
             includeBlank: true,
             blankLabel: 'Any unit',
             includeOther: false
         });
+    }
+    if (sel.dataset.znaWired !== '1' && typeof wireZnaUnitPicker === 'function') {
+        wireZnaUnitPicker(sel, null, { includeBlank: true, blankLabel: 'Any unit', allowCustom: false });
     }
 }
 
@@ -1519,8 +1528,6 @@ function clearIctAccForm() {
     set('ictAccForce', '');
     if (typeof fillZnaUnitSelect === 'function') {
         fillZnaUnitSelect(document.getElementById('ictAccUnit'), '', { includeBlank: true, includeOther: true });
-        const unitFilter = document.getElementById('ictAccUnitFilter');
-        if (unitFilter) unitFilter.value = '';
     } else {
         set('ictAccUnit', '');
     }
@@ -1566,8 +1573,6 @@ function fillIctAccForm(rec) {
     set('ictAccForce', rec.forceNo);
     if (typeof fillZnaUnitSelect === 'function') {
         fillZnaUnitSelect(document.getElementById('ictAccUnit'), rec.unit || '', { includeBlank: true, includeOther: true });
-        const unitFilter = document.getElementById('ictAccUnitFilter');
-        if (unitFilter) unitFilter.value = '';
     } else {
         set('ictAccUnit', rec.unit);
     }
@@ -1794,11 +1799,7 @@ function initIctAccountabilityModule() {
     if (struckEl) struckEl.innerHTML = buildIctAccStruckOffOptions('');
 
     if (typeof wireZnaUnitPicker === 'function') {
-        wireZnaUnitPicker(
-            document.getElementById('ictAccUnit'),
-            document.getElementById('ictAccUnitFilter'),
-            { includeBlank: true, includeOther: true }
-        );
+        wireZnaUnitPicker(document.getElementById('ictAccUnit'), null, { includeBlank: true, includeOther: true });
     }
     populateIctAccUnitFilterSelect();
     document.getElementById('ictAccUnitFilterSelect')?.addEventListener('change', renderIctAccountabilityTable);

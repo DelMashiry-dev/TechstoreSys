@@ -256,7 +256,11 @@ function clearOrderlyRoomForm() {
     set('orEditId', '');
     set('orDateIn', orTodayIso());
     set('orRefNo', '');
-    set('orFrom', '');
+    if (typeof setZnaUnitField === 'function') {
+        setZnaUnitField('orFrom', '');
+    } else {
+        set('orFrom', '');
+    }
     set('orDocType', 'requisition');
     set('orSubject', '');
     set('orFileAs', 'df');
@@ -281,7 +285,11 @@ function fillOrderlyRoomForm(row) {
     set('orEditId', row.id);
     set('orDateIn', row.dateIn || orTodayIso());
     set('orRefNo', row.refNo || '');
-    set('orFrom', row.fromUnit || '');
+    if (typeof setZnaUnitField === 'function') {
+        setZnaUnitField('orFrom', row.fromUnit || '');
+    } else {
+        set('orFrom', row.fromUnit || '');
+    }
     set('orDocType', row.docType || 'requisition');
     set('orSubject', row.subject || '');
     set('orFileAs', row.fileAs || 'df');

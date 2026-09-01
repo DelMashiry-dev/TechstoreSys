@@ -9,13 +9,16 @@ function riEscape(v) {
 }
 
 function buildEquipmentCustodyRow(data = {}) {
+    const unitOptions = typeof buildZnaUnitOptionsHtml === 'function'
+        ? buildZnaUnitOptionsHtml(data.unit || '', { includeBlank: true, includeOther: true, blankLabel: '— Unit —' })
+        : '<option value="">— Unit —</option>';
     const tr = document.createElement('tr');
     tr.className = 'ri-custody-row';
     tr.innerHTML = `
         <td><input type="date" class="form-control ri-date-in" data-date-rule="not-future" data-date-label="Date In" value="${riEscape(data.dateIn || '')}"></td>
         <td><input type="text" class="form-control ri-eq-type" value="${riEscape(data.equipmentType || '')}" placeholder="Laptop / desktop / …"></td>
         <td><input type="text" class="form-control ri-serial" value="${riEscape(data.serialOrZa || '')}" placeholder="S/N or ZA"></td>
-        <td><input type="text" class="form-control ri-unit zna-unit-select" value="${riEscape(data.unit || '')}" list="znaUnitDatalist"></td>
+        <td><select class="form-control ri-unit zna-unit-select" title="Unit / Formation / Dir">${unitOptions}</select></td>
         <td><input type="text" class="form-control ri-received-by" value="${riEscape(data.receivedBy || '')}"></td>
         <td><input type="text" class="form-control ri-remark" value="${riEscape(data.remark || '')}" placeholder="Repair / upgrade / antivirus…"></td>
         <td><input type="date" class="form-control ri-date-out" data-date-rule="not-future" data-date-label="Date Out" value="${riEscape(data.dateOut || '')}"></td>
@@ -30,10 +33,14 @@ function buildEquipmentCustodyRow(data = {}) {
             </label>
             <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button>
         </td>`;
+    attachRepairIntakeRow(tr);
     return tr;
 }
 
 function buildWorkshopRegisterRow(data = {}) {
+    const unitOptions = typeof buildZnaUnitOptionsHtml === 'function'
+        ? buildZnaUnitOptionsHtml(data.unit || '', { includeBlank: true, includeOther: true, blankLabel: '— Unit —' })
+        : '<option value="">— Unit —</option>';
     const tr = document.createElement('tr');
     tr.className = 'ri-workshop-row';
     const serial = data.serial != null && data.serial !== ''
@@ -43,7 +50,7 @@ function buildWorkshopRegisterRow(data = {}) {
         <td><input type="text" class="form-control ri-ws-serial" value="${riEscape(serial)}" readonly title="Workshop serial"></td>
         <td><input type="text" class="form-control ri-eq-type" value="${riEscape(data.equipmentType || '')}"></td>
         <td><input type="text" class="form-control ri-serial" value="${riEscape(data.serialOrZa || '')}" placeholder="S/N or ZA"></td>
-        <td><input type="text" class="form-control ri-unit" value="${riEscape(data.unit || '')}" list="znaUnitDatalist"></td>
+        <td><select class="form-control ri-unit zna-unit-select" title="Unit / Formation / Dir">${unitOptions}</select></td>
         <td><input type="text" class="form-control ri-diagnosis" value="${riEscape(data.diagnosis || '')}" placeholder="Fault / work required"></td>
         <td><input type="text" class="form-control ri-remark" value="${riEscape(data.remark || '')}"></td>
         <td><input type="date" class="form-control ri-date-in" data-date-rule="not-future" data-date-label="Date In" value="${riEscape(data.dateIn || '')}"></td>
@@ -55,7 +62,22 @@ function buildWorkshopRegisterRow(data = {}) {
             <button type="button" class="btn btn-secondary btn-sm" data-ws-stores-request title="Indent / request stores for this job">Stores</button>
             <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button>
         </td>`;
+    attachRepairIntakeRow(tr);
     return tr;
+}
+
+function attachRepairIntakeRow(tr) {
+    if (!tr) return;
+    let unitSel = tr.querySelector('select.ri-unit.zna-unit-select');
+    if (!unitSel) {
+        const legacy = tr.querySelector('input.ri-unit');
+        if (legacy && typeof upgradeInputToZnaUnitSelect === 'function') {
+            unitSel = upgradeInputToZnaUnitSelect(legacy, { blankLabel: '— Unit —' });
+        }
+    }
+    if (unitSel && typeof wireZnaUnitPicker === 'function') {
+        wireZnaUnitPicker(unitSel, null, { includeBlank: true, includeOther: true, blankLabel: '— Unit —' });
+    }
 }
 
 /** Keep legacy name used by tables.js / ROW_BUILDERS */
@@ -277,6 +299,8 @@ function ensureRepairIntakeTables() {
     if (ws && !ws.children.length) {
         ws.appendChild(buildWorkshopRegisterRow({ dateIn: new Date().toISOString().slice(0, 10) }));
     }
+    ['gate-register-table-body', 'techstores-equipment-register-table-body', 'workshop-repairs-table-body']
+        .forEach((id) => document.getElementById(id)?.querySelectorAll('tr').forEach(attachRepairIntakeRow));
 }
 
 window.buildEquipmentCustodyRow = buildEquipmentCustodyRow;

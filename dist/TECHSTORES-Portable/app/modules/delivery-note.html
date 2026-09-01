@@ -4,6 +4,14 @@
                     <button class="close-btn">&times;</button>
                 </div>
 
+                <p class="req-intro dn-intro">
+                    Record supplier deliveries (D-Note). <strong>ICT equipment</strong> must pass
+                    <strong>IT Dir Workshop</strong> spec assessment before Tech Stores acceptance or MLG engraving.
+                    Use <strong>Workshop cert</strong> on each ICT line to open Receipt Certification — supplier then
+                    carries the signed cert with <strong>PO + D-Note</strong> to MLG. Stores receipt is blocked until
+                    workshop certification and MLG engraving are complete.
+                </p>
+
                 <div class="module-toolbar">
                     <input type="search" class="form-control table-search" data-search-target="delivery-table-body" placeholder="Search delivery notes...">
                     <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
@@ -24,22 +32,27 @@
                             <th>Supplied By</th>
                             <th>Received By (Force Number, Rank, Name, Appointment)</th>
                             <th>Initials</th>
+                            <th>Workshop cert</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="delivery-table-body">
-                        <tr>
+                        <tr class="dn-row">
                             <td><input type="date" class="form-control"></td>
                             <td><input type="text" class="form-control"></td>
                             <td><input type="text" class="form-control"></td>
-                            <td><input type="number" class="form-control"></td>
+                            <td><input type="number" class="form-control" min="1" step="1" value="1"></td>
+                            <td><input type="text" class="form-control" value="ea"></td>
+                            <td><input type="text" class="form-control" placeholder="S/N if ICT"></td>
+                            <td><input type="text" class="form-control" placeholder="PO no."></td>
+                            <td><input type="text" class="form-control" placeholder="Supplier"></td>
+                            <td><input type="text" class="form-control" placeholder="Received by"></td>
                             <td><input type="text" class="form-control"></td>
-                            <td><input type="text" class="form-control"></td>
-                            <td><input type="text" class="form-control"></td>
-                            <td><input type="text" class="form-control"></td>
-                            <td><input type="text" class="form-control"></td>
-                            <td><input type="text" class="form-control"></td>
-                            <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>
+                            <td class="dn-wrc-badge"><span class="muted">—</span></td>
+                            <td class="dn-actions">
+                                <button type="button" class="btn btn-secondary btn-sm" data-dn-wrc title="IT Dir Workshop receipt certification">Workshop cert</button>
+                                <button class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>

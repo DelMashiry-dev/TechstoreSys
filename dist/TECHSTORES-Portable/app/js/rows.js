@@ -47,9 +47,20 @@ function buildJobCardRow() {
 
 function buildVoucherRow() {
     const defaultGl = document.getElementById('voucherDefaultGl')?.value || '2200600002';
+    const catSelect = typeof buildVoucherCategorySelectHtml === 'function'
+        ? buildVoucherCategorySelectHtml('ict-equipment')
+        : `<select class="form-control voucher-item-category">
+            <option value="consumables-toners">Toners &amp; Ink</option>
+            <option value="consumables-media">Storage Media</option>
+            <option value="spares-parts">Parts / Spares</option>
+            <option value="maintenance-equipment">Maint. Equipment</option>
+            <option value="software-licences">Software</option>
+            <option value="ict-equipment" selected>ICT Equipment</option>
+        </select>`;
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td><input type="date" class="form-control voucher-date" data-date-rule="not-future" data-date-label="Voucher date"></td>
+        <td>${catSelect}</td>
         <td><input type="text" class="form-control voucher-item-name" placeholder="Item name"></td>
         <td><input type="text" class="form-control" placeholder="Description"></td>
         <td><input type="number" class="form-control voucher-qty" min="0" step="1"></td>
@@ -57,10 +68,11 @@ function buildVoucherRow() {
         <td>${buildGlSelectHtml('voucher-gl', defaultGl)}</td>
         <td><input type="number" class="form-control voucher-unit-cost" min="0" step="0.01"></td>
         <td><input type="number" class="form-control voucher-line-total" readonly></td>
+        <td><input type="text" class="form-control" placeholder="IV / RV No."></td>
         <td><input type="text" class="form-control"></td>
         <td><input type="text" class="form-control"></td>
-        <td><input type="text" class="form-control"></td>
-        <td><input type="text" class="form-control"></td>
+        <td><input type="text" class="form-control" placeholder="Name"></td>
+        <td><input type="text" class="form-control voucher-appointment" placeholder="e.g. TSO, OC DBA"></td>
         <td><input type="text" class="form-control"></td>
         <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>
     `;
@@ -821,18 +833,23 @@ function buildAccommodationStoreRow() {
 
 function buildDeliveryRow() {
     const tr = document.createElement('tr');
+    tr.className = 'dn-row';
     tr.innerHTML = `
         <td><input type="date" class="form-control"></td>
         <td><input type="text" class="form-control"></td>
         <td><input type="text" class="form-control"></td>
-        <td><input type="number" class="form-control"></td>
+        <td><input type="number" class="form-control" min="1" step="1" value="1"></td>
+        <td><input type="text" class="form-control" value="ea"></td>
+        <td><input type="text" class="form-control" placeholder="S/N if ICT"></td>
+        <td><input type="text" class="form-control" placeholder="PO no."></td>
+        <td><input type="text" class="form-control" placeholder="Supplier"></td>
+        <td><input type="text" class="form-control" placeholder="Received by"></td>
         <td><input type="text" class="form-control"></td>
-        <td><input type="text" class="form-control"></td>
-        <td><input type="text" class="form-control"></td>
-        <td><input type="text" class="form-control"></td>
-        <td><input type="text" class="form-control"></td>
-        <td><input type="text" class="form-control"></td>
-        <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>
+        <td class="dn-wrc-badge"><span class="muted">—</span></td>
+        <td class="dn-actions">
+            <button type="button" class="btn btn-secondary btn-sm" data-dn-wrc title="IT Dir Workshop receipt certification">Workshop cert</button>
+            <button class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button>
+        </td>
     `;
     return tr;
 }
@@ -1311,12 +1328,41 @@ function getRowSearchText(tr) {
 
 function filterTableRows(tbodyId, query) {
     const tbody = document.getElementById(tbodyId);
-    if (!tbody) return;
+    if (!tbody) return { visible: 0, total: 0, query: '' };
     const normalized = query.trim().toLowerCase();
-    tbody.querySelectorAll('tr').forEach((tr) => {
+    let visible = 0;
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((tr) => {
         const text = getRowSearchText(tr);
-        tr.style.display = !normalized || text.includes(normalized) ? '' : 'none';
+        const show = !normalized || text.includes(normalized);
+        tr.style.display = show ? '' : 'none';
+        if (show) visible += 1;
     });
+    return { visible, total: rows.length, query: normalized };
+}
+
+function updateTableSearchHint(input, stats) {
+    const hintId = input?.dataset?.searchHintId;
+    if (!hintId) return;
+    const hint = document.getElementById(hintId);
+    if (!hint) return;
+    const q = stats?.query || '';
+    if (!q) {
+        hint.hidden = true;
+        hint.textContent = '';
+        return;
+    }
+    hint.hidden = false;
+    if (!stats.total || stats.visible === 0) {
+        hint.textContent = `No rows match “${q}”. Try Clear, another ledger tab (e.g. Laptops), or Cumulative view.`;
+        hint.className = 'table-search-hint is-empty';
+    } else if (stats.visible < stats.total) {
+        hint.textContent = `Showing ${stats.visible} of ${stats.total} rows matching “${q}”.`;
+        hint.className = 'table-search-hint';
+    } else {
+        hint.textContent = `${stats.visible} row(s) match “${q}”.`;
+        hint.className = 'table-search-hint';
+    }
 }
 
 function filterSearchScope(scopeId, itemSelector, query) {
@@ -1332,7 +1378,8 @@ function filterSearchScope(scopeId, itemSelector, query) {
 function runTableSearch(input) {
     if (!input) return;
     if (input.dataset.searchTarget) {
-        filterTableRows(input.dataset.searchTarget, input.value);
+        const stats = filterTableRows(input.dataset.searchTarget, input.value);
+        updateTableSearchHint(input, stats);
     }
     if (input.dataset.searchScope) {
         filterSearchScope(

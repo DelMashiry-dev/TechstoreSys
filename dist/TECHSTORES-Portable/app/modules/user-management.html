@@ -39,9 +39,11 @@
                                     <option value="director">Director IT Dir (Col) — whole system</option>
                                     <option value="deputy_director">Deputy Director (Lt Col) — whole system</option>
                                     <option value="aqso2">AQSO2 (Maj) — whole system</option>
-                                    <option value="dir_aiad">Director AIAD — command messages</option>
-                                    <option value="dir_daf">Director DAF — command messages</option>
-                                    <option value="dir_dp">Director DP — command messages</option>
+                                    <option value="dir_aiad">AIAD — Due Diligence window (edit + upload)</option>
+                                    <option value="dir_daf">DAF — DAF window (MANAC + pay)</option>
+                                    <option value="dir_dp">DP — DP window (quotes, P/O)</option>
+                                    <option value="gs_sd">GS Branch — Colonel SD window</option>
+                                    <option value="supplier">Supplier — quote, D-Note, banking</option>
                                     <option value="techstores_officer">TechStores Officer — whole system</option>
                                     <option value="rq">RQ — whole system</option>
                                     <option value="store_officer" selected>Store Officer — ops modules</option>
@@ -51,6 +53,12 @@
                                     <option value="workshop">Workshop — workshop module related</option>
                                     <option value="viewer">Viewer — read / reports only</option>
                                 </select>
+                            </div>
+                        </div>
+                        <div class="form-row" id="newUserSupplierWrap" hidden>
+                            <div class="form-col">
+                                <label class="form-label">Supplier registered name</label>
+                                <input type="text" class="form-control" id="newUserSupplierKey" placeholder="Must match the suppliers register, e.g. Nixzimo">
                             </div>
                         </div>
                         <div class="module-actions" style="margin-top: 8px;">

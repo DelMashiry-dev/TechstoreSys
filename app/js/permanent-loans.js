@@ -799,17 +799,10 @@ function initPermanentLoansModule() {
         plFillSelect(document.getElementById('plCategory'), PL_CATEGORIES, 'laptop');
 
         const unitSelect = document.getElementById('plUnit');
-        if (unitSelect && typeof fillZnaUnitSelect === 'function') {
+        if (unitSelect && typeof wireZnaUnitPicker === 'function') {
+            wireZnaUnitPicker(unitSelect, null, { includeBlank: true, includeOther: true });
+        } else if (unitSelect && typeof fillZnaUnitSelect === 'function') {
             fillZnaUnitSelect(unitSelect, '', { includeBlank: true, includeOther: true });
-            unitSelect.addEventListener('change', () => {
-                if (unitSelect.value !== '__other__') return;
-                const custom = window.prompt('Enter unit / formation / directorate:', '');
-                if (custom && custom.trim()) {
-                    fillZnaUnitSelect(unitSelect, custom.trim(), { includeBlank: true, includeOther: true });
-                } else {
-                    unitSelect.value = '';
-                }
-            });
         }
 
         document.getElementById('plViewModeBtn')?.addEventListener('click', () => setPermanentLoansMode('view'));

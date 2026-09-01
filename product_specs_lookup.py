@@ -570,7 +570,15 @@ def _image_title_matches(query: str, title: str, extra: str = "") -> bool:
         return False
     if distinctive and not any(bit in blob for bit in distinctive):
         return False
-    return any(bit in blob for bit in bits)
+    overlap = sum(1 for bit in bits if bit in blob)
+    if distinctive:
+        return overlap >= 1
+    ict_hint = re.search(
+        r"laptop|notebook|thinkpad|macbook|computer|processor|workstation|"
+        r"intel|amd|hp|dell|lenovo|asus|server|rack",
+        blob,
+    )
+    return overlap >= 2 and bool(ict_hint)
 
 
 def is_public_http_url(url: str) -> bool:
@@ -669,22 +677,27 @@ def product_image_lookup(title: str, page_url: str = "") -> str:
     title = re.sub(r"\s+", " ", (title or "").strip())
     if not title and not page_url:
         return ""
-    cache_q = f"img6::{(title or page_url)[:90]}"
+    cache_q = f"img7::{(title or page_url)[:90]}"
     cached = read_cached_enrich(cache_q)
     if cached and cached.get("imageUrl"):
         return str(cached["imageUrl"])
-    img = listing_page_image(page_url) if page_url else ""
-    if not img and title:
+    junk_title = is_store_landing_listing(title, page_url) or is_benchmark_or_review_listing(
+        title, "", page_url, "laptop"
+    )
+    img = ""
+    if page_url and not is_store_landing_listing(title, page_url):
+        img = listing_page_image(page_url)
+    if not img and title and not junk_title:
         img = wikipedia_thumb_lookup(title)
-    if not img and title:
+    if not img and title and not junk_title:
         img = commons_image_lookup(title)
-    if not img and title:
+    if not img and title and not junk_title:
         family_parts = [
             tok for tok in re.findall(r"[A-Za-z][A-Za-z\-]{2,}", title)
             if tok.lower() not in _IMAGE_QUERY_STOP
         ][:3]
         family = " ".join(family_parts)
-        if family:
+        if family and len(family) >= 8:
             img = commons_image_lookup(family) or wikipedia_thumb_lookup(family)
     if img:
         write_cached_enrich(cache_q, {"ok": True, "imageUrl": img})
@@ -1102,6 +1115,51 @@ def is_roundup_listing(title: str, snippet: str = "") -> bool:
     ))
 
 
+def is_store_landing_listing(title: str, url: str = "") -> bool:
+    title_l = (title or "").lower().strip()
+    url_l = (url or "").lower()
+    if re.search(r"^amazon\.com:|^ebay\.|^walmart\.|^best buy", title_l):
+        return True
+    if re.search(r"\bfind .+ designed for|\bchoose from\b|\bshop (for|online)\b|\bcategory page\b", title_l):
+        return True
+    if "amazon." in url_l and re.search(r"/(?:s\?|gp/browse|stores/|b/ref=|b\?node=)", url_l):
+        return True
+    if re.search(r"/(?:search|browse|category|results)\?", url_l) and not re.search(
+        r"/(?:product|dp/|p/|item/)", url_l
+    ):
+        return True
+    return False
+
+
+def is_benchmark_or_review_listing(title: str, snippet: str = "", url: str = "", category: str = "") -> bool:
+    blob = f"{title} {snippet} {url}".lower()
+    if re.search(
+        r"benchmark|notebookcheck|cpu-monkey|nanoreview|techpowerup|anandtech|"
+        r"tom'?s hardware|passmark|cinebench|geekbench|cpubenchmark|hardware times",
+        blob,
+    ):
+        return True
+    if re.search(r"\bprocessor\b|\bcpu\b|\bsoc\b|\bchip\b", title or "", re.I):
+        laptopish = re.search(
+            r"\blaptop\b|\bnotebook\b|\bmacbook\b|\bmobile\b|\bultrabook\b|\bchromebook\b",
+            blob,
+            re.I,
+        )
+        if not laptopish and (category or "laptop") in ("laptop", "all"):
+            return True
+    return False
+
+
+def is_junk_market_listing(title: str, snippet: str = "", url: str = "", category: str = "laptop") -> bool:
+    if is_roundup_listing(title, snippet):
+        return True
+    if is_store_landing_listing(title, url):
+        return True
+    if is_benchmark_or_review_listing(title, snippet, url, category):
+        return True
+    return False
+
+
 def extract_nearby_image(html: str, anchor_end: int) -> str:
     window = html[max(0, anchor_end - 400): anchor_end + 900]
     for pattern in (
@@ -1448,7 +1506,7 @@ def parse_ddg_lite_products(
             continue
         if re.search(r"\b(login|sign in|support|driver|download only|careers|contact us)\b", title, re.I):
             continue
-        if is_roundup_listing(title):
+        if is_junk_market_listing(title, snippet="", url=url, category=category or "laptop"):
             continue
         if category and category != "all" and not category_matches_text(category, f"{title} {url}"):
             continue
@@ -1678,7 +1736,7 @@ def lookup_market_catalog(query: str, category: str = "laptop", force: bool = Fa
     brand = parsed.get("brand") or ""
     keywords = parsed.get("keywords") or parsed.get("display") or query
     mode = parsed["mode"]
-    cache_q = f"market:{mode}:{keywords.lower()}:{brand.lower()}:{category}:v2"
+    cache_q = f"market:{mode}:{keywords.lower()}:{brand.lower()}:{category}:v3"
     if not force:
         cached = read_cached_enrich(cache_q)
         if cached:
@@ -1749,7 +1807,12 @@ def lookup_market_catalog(query: str, category: str = "laptop", force: bool = Fa
 
     items = [
         row for row in items
-        if not is_roundup_listing(row.get("title") or "", row.get("snippet") or "")
+        if not is_junk_market_listing(
+            row.get("title") or "",
+            row.get("snippet") or "",
+            row.get("url") or "",
+            category,
+        )
         and (category == "all" or category_matches_text(
             category,
             f"{row.get('title', '')} {row.get('snippet', '')} {row.get('url', '')}",

@@ -43,8 +43,17 @@ for /f "delims=" %%P in ('where python 2^>nul') do (
   )
 )
 
+REM Windows Python install manager (pythoncore-3.14-64, etc.)
+for /d %%D in ("%LocalAppData%\Python\pythoncore-*") do (
+  if exist "%%D\python.exe" (
+    set "TECHSTORES_PYEXE=%%D\python.exe"
+    set "TECHSTORES_PY_ARGS="
+    exit /b 0
+  )
+)
+
 REM Common per-user installs
-for %%V in (313 312 311 310 39 38) do (
+for %%V in (314 313 312 311 310 39 38) do (
   if exist "%LocalAppData%\Programs\Python\Python%%V\python.exe" (
     set "TECHSTORES_PYEXE=%LocalAppData%\Programs\Python\Python%%V\python.exe"
     set "TECHSTORES_PY_ARGS="

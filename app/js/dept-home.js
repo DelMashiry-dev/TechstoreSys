@@ -78,7 +78,7 @@ const DEPT_HOME_PRESETS = {
     dp: {
         kicker: 'Directorate Procurement',
         title: 'DP Window',
-        blurb: 'Your desk for IT Dir ICT buys: call for quotations, adjudicate, pick the winning vendor, raise the P/O, and upload scans. You do not see TechStores stock ledgers.',
+        blurb: 'Your desk for IT Dir ICT buys: quotations, adjudication, winning vendor, P/O, and AIAD handoff. The portal lists all DP issues from F1 surrender through supply.',
         shortcuts: [
             { target: 'portals-board', label: 'Portals dashboard' },
             { target: 'stakeholder-desk', desk: 'dp', label: 'Open DP Window', primary: true },
@@ -91,7 +91,7 @@ const DEPT_HOME_PRESETS = {
     gs: {
         kicker: 'GS Branch · Colonel SD',
         title: 'GS Branch Window',
-        blurb: 'Endorse DP F1s from IT Dir and upload the signed endorsement. Next in the cycle is MANAC (DAF).',
+        blurb: 'Endorse DP F1s from IT Dir and upload signed endorsements. The portal lists all procurement cases from F1 raise through GS endorsement and the full pipeline beyond.',
         shortcuts: [
             { target: 'portals-board', label: 'Portals dashboard' },
             { target: 'stakeholder-desk', desk: 'gs', label: 'Open GS Window', primary: true },
@@ -103,19 +103,20 @@ const DEPT_HOME_PRESETS = {
     daf: {
         kicker: 'Directorate of Army Finance',
         title: 'DAF Window',
-        blurb: 'MANAC endorsement of DP F1s for funds, then payment of suppliers after IT Dir inspects delivery. Upload payment vouchers here.',
+        blurb: 'MANAC endorsement, supplier payment, Creditors register, and DAF paid-list import — all from the DAF portal.',
         shortcuts: [
             { target: 'portals-board', label: 'Portals dashboard' },
             { target: 'stakeholder-desk', desk: 'daf', label: 'Open DAF Window', primary: true },
+            { target: 'stakeholder-desk', desk: 'daf', label: 'Creditors & payment', stkDafTab: 'creditors' },
+            { target: 'supplier-debts', label: 'Full Creditors register' },
             { target: 'doc-import', label: 'Import document' },
-            { target: 'supplier-debts', label: 'Supplier Debts' },
             { target: 'financial-year-bids', label: 'Financial Year Bids' }
         ]
     },
     aiad: {
         kicker: 'Army Internal Audit Directorate',
         title: 'Due Diligence Window',
-        blurb: 'Pre-audit of procurement contracts. Review F1, spec and quotation, then issue the Price Due Diligence certificate and upload the signed form.',
+        blurb: 'Pre-audit of procurement contracts. The portal lists all AIAD due-diligence cases — spec return, certificate issue, and completed audits.',
         shortcuts: [
             { target: 'portals-board', label: 'Portals dashboard' },
             { target: 'stakeholder-desk', desk: 'aiad', label: 'Open Due Diligence Window', primary: true },
@@ -173,7 +174,7 @@ function renderRoleScopedHome() {
             <div class="role-scoped-home-actions">
                 ${shortcuts.map((s) => `
                     <button type="button" class="btn ${s.primary ? 'btn-primary' : 'btn-secondary'}"
-                        data-target="${escapeHtml(s.target)}"${s.desk ? ` data-stk-desk="${escapeHtml(s.desk)}"` : ''}>${escapeHtml(s.label)}</button>
+                        data-target="${escapeHtml(s.target)}"${s.desk ? ` data-stk-desk="${escapeHtml(s.desk)}"` : ''}${s.stkDafTab ? ` data-stk-daf-tab="${escapeHtml(s.stkDafTab)}"` : ''}>${escapeHtml(s.label)}</button>
                 `).join('')}
             </div>
         </div>`;
@@ -182,8 +183,12 @@ function renderRoleScopedHome() {
         btn.addEventListener('click', () => {
             const target = btn.getAttribute('data-target');
             const desk = btn.getAttribute('data-stk-desk');
+            const dafTab = btn.getAttribute('data-stk-daf-tab');
             if (target && typeof navigateToModule === 'function') {
-                navigateToModule(target, desk ? { stkDesk: desk } : {});
+                const opts = {};
+                if (desk) opts.stkDesk = desk;
+                if (dafTab) opts.stkDafTab = dafTab;
+                navigateToModule(target, opts);
             }
         });
     });

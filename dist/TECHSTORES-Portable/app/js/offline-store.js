@@ -72,6 +72,36 @@ function idbGetAll(store) {
     });
 }
 
+function waitTxComplete(tx) {
+    return new Promise((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error || new Error('IndexedDB transaction failed'));
+        tx.onabort = () => reject(tx.error || new Error('IndexedDB transaction aborted'));
+    });
+}
+
+async function setOfflinePendingSyncMeta(pending) {
+    const { tx } = await idbTx(['kv'], 'readwrite');
+    await idbPut(tx.objectStore('kv'), {
+        pendingSync: !!pending,
+        updatedAt: new Date().toISOString()
+    }, OFFLINE_META_KEY);
+    await waitTxComplete(tx);
+}
+
+async function readOfflineSyncQueue() {
+    const { tx } = await idbTx(['syncQueue'], 'readonly');
+    const rows = await idbGetAll(tx.objectStore('syncQueue'));
+    await waitTxComplete(tx);
+    return rows;
+}
+
+async function deleteOfflineSyncQueueItem(id) {
+    const { tx } = await idbTx(['syncQueue'], 'readwrite');
+    await idbDelete(tx.objectStore('syncQueue'), id);
+    await waitTxComplete(tx);
+}
+
 async function sha256Hex(text) {
     if (!window.crypto?.subtle) {
         return String(text);
@@ -104,6 +134,7 @@ async function saveOfflineAppState(state) {
             durable: true,
             updatedAt: new Date().toISOString()
         }, OFFLINE_META_KEY);
+        await waitTxComplete(tx);
         offlineDurable = true;
         return true;
     } catch (err) {
@@ -171,8 +202,9 @@ async function queueOfflineSync(payload) {
             payload,
             queuedAt: new Date().toISOString()
         });
-        pendingServerSync = true;
         await idbPut(tx.objectStore('kv'), { pendingSync: true, updatedAt: new Date().toISOString() }, OFFLINE_META_KEY);
+        await waitTxComplete(tx);
+        pendingServerSync = true;
     } catch (err) {
         console.warn('Failed to queue offline sync', err);
     }
@@ -181,19 +213,20 @@ async function queueOfflineSync(payload) {
 async function flushOfflineSyncQueue(syncFn) {
     if (typeof syncFn !== 'function') return false;
     try {
-        const { tx } = await idbTx(['syncQueue', 'kv'], 'readwrite');
-        const store = tx.objectStore('syncQueue');
-        const rows = await idbGetAll(store);
+        const rows = await readOfflineSyncQueue();
         if (!rows.length) {
             pendingServerSync = false;
+            try {
+                await setOfflinePendingSyncMeta(false);
+            } catch (_) { /* ignore meta write */ }
             return true;
         }
         for (const row of rows) {
             await syncFn(row.payload);
-            await idbDelete(store, row.id);
+            await deleteOfflineSyncQueueItem(row.id);
         }
         pendingServerSync = false;
-        await idbPut(tx.objectStore('kv'), { pendingSync: false, updatedAt: new Date().toISOString() }, OFFLINE_META_KEY);
+        await setOfflinePendingSyncMeta(false);
         return true;
     } catch (err) {
         console.warn('Offline sync flush failed', err);
