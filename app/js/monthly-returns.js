@@ -210,7 +210,7 @@ function readMonthlyReturnForm() {
     });
 
     const approvals = MR_APPROVAL_ROLES.map((role, i) => {
-        const row = document.querySelector(`#mrApprovalsBody tr[data-role-idx="${i}"]`);
+        const row = document.querySelector(`#monthly-returns tr[data-role-idx="${i}"]`);
         return {
             role,
             signed: !!row?.querySelector('.mr-appr-signed')?.checked,
@@ -300,17 +300,28 @@ function renderMonthlyReturnMisc(misc) {
 }
 
 function renderMonthlyReturnApprovals(approvals) {
-    const tbody = document.getElementById('mrApprovalsBody');
-    if (!tbody) return;
+    const col1 = document.getElementById('mrApprovalsBodyCol1');
+    const col2 = document.getElementById('mrApprovalsBodyCol2');
+    const legacy = document.getElementById('mrApprovalsBody');
+    if (!col1 && !col2 && !legacy) return;
     const list = approvals?.length ? approvals : MR_APPROVAL_ROLES.map((role) => ({ role, signed: false, date: '', initials: '' }));
-    tbody.innerHTML = list.map((a, i) => `
+    const renderRows = (items, offset) => items.map((a, j) => {
+        const i = offset + j;
+        return `
         <tr data-role-idx="${i}">
-            <td><strong>${mrEscape(a.role)}</strong></td>
-            <td style="text-align:center"><input type="checkbox" class="mr-appr-signed"${a.signed ? ' checked' : ''}></td>
-            <td><input type="date" class="form-control mr-appr-date" value="${mrEscape(a.date || '')}"></td>
-            <td><input type="text" class="form-control mr-appr-init" value="${mrEscape(a.initials || '')}" placeholder="Sig / SD"></td>
-        </tr>
-    `).join('');
+            <td class="mr-appr-role"><strong>${mrEscape(a.role)}</strong></td>
+            <td class="mr-appr-check"><input type="checkbox" class="mr-appr-signed"${a.signed ? ' checked' : ''} aria-label="Signed ${mrEscape(a.role)}"></td>
+            <td class="mr-appr-date-cell"><input type="date" class="form-control mr-appr-date" value="${mrEscape(a.date || '')}" aria-label="Date ${mrEscape(a.role)}"></td>
+            <td class="mr-appr-init-cell"><input type="text" class="form-control mr-appr-init" value="${mrEscape(a.initials || '')}" placeholder="Sig / SD" aria-label="Initials ${mrEscape(a.role)}"></td>
+        </tr>`;
+    }).join('');
+    if (col1 && col2) {
+        const splitAt = Math.ceil(list.length / 2);
+        col1.innerHTML = renderRows(list.slice(0, splitAt), 0);
+        col2.innerHTML = renderRows(list.slice(splitAt), splitAt);
+        return;
+    }
+    if (legacy) legacy.innerHTML = renderRows(list, 0);
 }
 
 function fillMonthlyReturnForm(rec) {

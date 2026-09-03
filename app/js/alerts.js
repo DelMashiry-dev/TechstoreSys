@@ -376,7 +376,7 @@ function buildWatchAlertSections() {
         target: 'orderly-room',
         tone: orderlyOpen.length ? 'warning' : 'ok',
         summary: orderlyOpen.length
-            ? `${orderlyOpen.length} requisition letter(s) filed in DF / First Sight awaiting TechStores / RQ action (GS Branch often authorises).`
+            ? `${orderlyOpen.length} GS Branch loose minute(s) filed First Sight / DF awaiting TechStores / RQ action.`
             : 'None — no Orderly Room requisitions pending for TechStores.',
         items: orderlyItems
     });

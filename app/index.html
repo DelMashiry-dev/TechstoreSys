@@ -13,7 +13,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" type="image/png" href="../assets/favicon.png">
     <link rel="apple-touch-icon" href="../assets/pwa-icon-180.png">
-    <link rel="stylesheet" href="css/main.css?v=20260901stksummary">
+    <link rel="stylesheet" href="css/main.css?v=20260903gsminute">
 
 </head>
 <body class="app-locked">
@@ -514,7 +514,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="nav-btn" data-target="unit-requisitions" title="Requisitions in-tray — incoming unit / formation requests">
+                    <a href="#" class="nav-btn" data-target="unit-requisitions" title="First Sight / DF in-tray — GS Branch loose minutes from units">
                         <img class="nav-ico-img" src="../assets/nav-icons/unit-requisitions.png" alt="" width="46" height="46" loading="lazy">
                         <span class="nav-label">Requisitions</span>
                     </a>
@@ -844,6 +844,23 @@
                             <div class="command-panel-body sa-pane-hidden" id="systemMessagesList" role="tabpanel" hidden></div>
                             <div class="command-panel-body sa-pane-hidden" id="systemComposePane" role="tabpanel" hidden></div>
                         </div>
+                    </div>
+                </section>
+
+                <section class="dashboard-panel dashboard-panel-wide dash-collapse req-tracker-panel" id="reqTrackerPanel" data-collapse-key="requisition-tracker" aria-label="Requisition tracker">
+                    <button type="button" class="dash-collapse-toggle" aria-expanded="true">
+                        <div class="dash-collapse-titles">
+                            <h3>Requisition Tracker</h3>
+                            <p>Loose minutes via GS Branch → First Sight / DF at IT Dir → Colonel SD → MANAC → DP → Due Diligence → Supplier → DAF → funding</p>
+                        </div>
+                        <span class="dash-collapse-caret" aria-hidden="true">▾</span>
+                    </button>
+                    <div class="dash-collapse-body">
+                        <div class="req-track-toolbar">
+                            <div class="req-track-summary" id="reqTrackerSummary" aria-label="Cases per stage"></div>
+                            <button type="button" class="btn btn-ghost btn-sm" id="reqTrackerRefreshBtn">Refresh tracker</button>
+                        </div>
+                        <div id="reqTrackerList" class="req-track-list" aria-live="polite"></div>
                     </div>
                 </section>
 
@@ -1672,7 +1689,7 @@
     <script src="js/offline-store.js"></script>
     <script src="js/offline-precache.js"></script>
     <script src="js/org-profile.js?v=20260828cyc"></script>
-    <script src="js/zna-units.js?v=20260901znaunits2"></script>
+    <script src="js/zna-units.js?v=20260901znaunits3"></script>
     <script src="js/catalog.js"></script>
     <script src="js/ict-spares-accessories.js?v=20260827spa"></script>
     <script src="js/inventory-ledgers.js"></script>
@@ -1680,28 +1697,29 @@
     <script src="js/product-specs-catalog.js"></script>
     <script src="js/laptop-duty-profiles.js?v=20260828cat"></script>
     <script src="js/suppliers-seed.js"></script>
-    <script src="js/state.js?v=20260823dblabel"></script>
+    <script src="js/state.js?v=20260902portalseed2"></script>
     <script src="js/storage-mode.js?v=20260823dblabel"></script>
     <script src="js/gl-targets.js"></script>
     <script src="js/monthly-target-proposals.js"></script>
     <script src="js/auth.js?v=20260828imp"></script>
     <script src="js/dept-home.js?v=20260828imp"></script>
-    <script src="js/utils.js?v=20260901typeablefix"></script>
+    <script src="js/utils.js?v=20260901typeablefix2"></script>
     <script src="js/window-chrome.js?v=20260827max"></script>
-    <script src="js/module-loader.js?v=20260901smart2"></script>
+    <script src="js/module-loader.js?v=20260903priority"></script>
     <script src="js/how-it-works.js?v=20260826hiw"></script>
     <script src="js/search-history.js"></script>
     <script src="js/universal-search.js?v=20260828imp"></script>
     <script src="js/duties-roles.js?v=20260827duty2"></script>
     <script src="js/it-dir-departments.js"></script>
     <script src="js/it-dir-establishment.js"></script>
-    <script src="js/process-guides.js?v=20260828board"></script>
-    <script src="js/system-dictionary.js?v=20260828imp"></script>
-    <script src="js/field-help.js"></script>
+    <script src="js/process-guides.js?v=20260903gsminute"></script>
+    <script src="js/system-dictionary.js?v=20260903gsminute"></script>
+    <script src="js/field-help.js?v=20260903gsminute"></script>
     <script src="js/ui-preferences.js"></script>
     <script src="js/nav-reorder.js?v=20260828port"></script>
     <script src="js/modules-data.js"></script>
-    <script src="js/dashboard.js?v=20260828imp"></script>
+    <script src="js/requisition-tracker.js?v=20260903gsminute"></script>
+    <script src="js/dashboard.js?v=20260903gsminute"></script>
     <script src="js/inventory.js"></script>
     <script src="js/gl-inventory-view.js"></script>
     <script src="js/voucher-inventory.js?v=20260826sort"></script>
@@ -1721,10 +1739,10 @@
     <script src="js/laptop-distribution-aug2026.js"></script>
     <script src="js/board-schedule-2023.js"></script>
     <script src="js/ict-distribution.js"></script>
-    <script src="js/requisitions.js?v=20260901smart2"></script>
+    <script src="js/requisitions.js?v=20260903gsminute"></script>
     <script src="js/requisition-procurement.js"></script>
     <script src="js/dept-desk.js"></script>
-    <script src="js/orderly-room.js?v=20260831reqmirror"></script>
+    <script src="js/orderly-room.js?v=20260903gsminute"></script>
     <script src="js/correspondence-files-seed.js"></script>
     <script src="js/correspondence-files.js"></script>
     <script src="js/monthly-returns.js"></script>
@@ -1752,8 +1770,8 @@
     <script src="js/dp-f1.js"></script>
     <script src="js/purchase-orders.js?v=20260829official"></script>
     <script src="js/cost-comparative-schedule.js"></script>
-    <script src="js/dp-procurement.js?v=20260828cyc"></script>
-    <script src="js/stakeholder-desk.js?v=20260901stksummary"></script>
+    <script src="js/dp-procurement.js?v=20260902portalseed2"></script>
+    <script src="js/stakeholder-desk.js?v=20260903gsminute"></script>
     <script src="js/portals-board.js?v=20260828tiles"></script>
     <script src="js/doc-import.js?v=20260828imp"></script>
     <script src="js/zna-q-982.js"></script>
@@ -1767,7 +1785,7 @@
     <script src="js/reports.js"></script>
     <script src="js/techstores-period-report.js"></script>
     <script src="js/backup.js"></script>
-    <script src="js/alerts.js"></script>
+    <script src="js/alerts.js?v=20260903gsminute"></script>
     <script src="js/alert-desk.js"></script>
     <script src="js/message-priority.js"></script>
     <script src="js/office-messages.js"></script>

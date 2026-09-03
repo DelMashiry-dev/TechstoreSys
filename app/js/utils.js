@@ -555,24 +555,15 @@ document.addEventListener('DOMContentLoaded', () => {
 /** Turn a <select> into a type-to-filter combobox; keeps the native select as the value source. */
 function typeableSelectOptions(selectEl) {
     const out = [];
-    if (!selectEl) return out;
-    selectEl.childNodes.forEach((node) => {
-        if (node.tagName === 'OPTGROUP') {
-            const group = String(node.label || '').trim();
-            [...node.options].forEach((opt) => {
-                out.push({
-                    value: opt.value,
-                    label: String(opt.textContent || '').trim(),
-                    group
-                });
-            });
-        } else if (node.tagName === 'OPTION') {
-            out.push({
-                value: node.value,
-                label: String(node.textContent || '').trim(),
-                group: ''
-            });
-        }
+    if (!selectEl?.options) return out;
+    [...selectEl.options].forEach((opt) => {
+        const parent = opt.parentElement;
+        const group = parent?.tagName === 'OPTGROUP' ? String(parent.label || '').trim() : '';
+        out.push({
+            value: opt.value,
+            label: String(opt.textContent || '').trim(),
+            group
+        });
     });
     return out;
 }
@@ -791,7 +782,7 @@ function mountTypeableSelect(selectEl, { placeholder = 'Type or pick…', allowC
         showTypeableSelectList(selectEl, '');
     });
     input.addEventListener('click', () => {
-        if (ui.list.hidden) showTypeableSelectList(selectEl, '');
+        if (list.hidden) showTypeableSelectList(selectEl, '');
         else showTypeableSelectList(selectEl, input.value);
     });
     input.addEventListener('input', () => {

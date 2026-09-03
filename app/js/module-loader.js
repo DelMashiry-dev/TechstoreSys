@@ -58,7 +58,7 @@ async function loadModuleHtml(moduleId) {
     }
 
     MODULE_LOAD_PROMISES[moduleId] = (async () => {
-        const url = `modules/${encodeURIComponent(moduleId)}.html?v=20260901dafportal`;
+        const url = `modules/${encodeURIComponent(moduleId)}.html?v=20260903priority`;
         const res = await fetchAppAsset(url);
         if (!res.ok) throw new Error(`Module HTML not found: ${moduleId} (${res.status})`);
         const html = await res.text();
@@ -114,6 +114,110 @@ async function ensureModuleLoaded(moduleId) {
 
     return el;
 }
+
+/** Wire module buttons after lazy HTML load (boot init may have run before markup existed). */
+function ensureModuleInitialized(moduleId) {
+    if (!moduleId || moduleId === 'dashboard') return;
+
+    const call = (fn) => {
+        if (typeof fn === 'function') fn();
+    };
+
+    switch (moduleId) {
+        case 'unit-requisitions':
+            call(window.initRequisitionsModule);
+            break;
+        case 'orderly-room':
+            call(window.initOrderlyRoomModule);
+            call(window.initCorrespondenceFilesModule);
+            break;
+        case 'monthly-returns':
+            call(window.initMonthlyReturnsModule);
+            break;
+        case 'temporary-loans':
+            call(window.initTemporaryLoansModule);
+            break;
+        case 'permanent-loans':
+            call(window.initPermanentLoansModule);
+            break;
+        case 'unit-equipment':
+            call(window.initUnitEquipmentModule);
+            break;
+        case 'ict-accountability':
+            call(window.initIctAccountabilityModule);
+            break;
+        case 'ict-distribution':
+            call(window.initIctDistributionModule);
+            break;
+        case 'stock-take':
+            call(window.initStockTakeModule);
+            break;
+        case 'unit-checks':
+            call(window.initUnitChecksModule);
+            break;
+        case 'undelivered-orders':
+            call(window.initUndeliveredModule);
+            break;
+        case 'supplier-debts':
+            call(window.initSupplierDebtsModule);
+            break;
+        case 'spec-evaluation':
+            call(window.initSpecEvaluationModule);
+            break;
+        case 'laptop-compare':
+            call(window.initLaptopCompareModule);
+            break;
+        case 'ict-compare':
+            call(window.initIctCompareModule);
+            break;
+        case 'guide-quotation':
+            call(window.initGuideQuotationModule);
+            break;
+        case 'duties-roles':
+            call(window.initDutiesRolesModule);
+            break;
+        case 'process-guides':
+            call(window.initProcessGuidesModule);
+            break;
+        case 'doc-import':
+            call(window.initDocImportModule);
+            break;
+        case 'portals-board':
+            call(window.initPortalsBoardModule);
+            break;
+        case 'stakeholder-desk':
+            call(window.initStakeholderDeskModule);
+            break;
+        case 'cost-comparative-schedule':
+            call(window.initCostComparativeScheduleModule);
+            break;
+        case 'delivery-note':
+            call(window.initDeliveryNoteModule);
+            break;
+        case 'workshop-receipt-cert':
+            call(window.initWorkshopReceiptCertModule);
+            break;
+        case 'dp-procurement':
+            call(window.initDpProcurementModule);
+            break;
+        case 'suppliers-contracts':
+            call(window.initSuppliersModule);
+            break;
+        case 'it-dir-comms':
+            call(window.initItDirCommsModule);
+            break;
+        case 'financial-year-bids':
+            call(window.initFinancialYearBidsImport);
+            break;
+        default:
+            if (typeof getDeptDeskDef === 'function' && getDeptDeskDef(moduleId)) {
+                call(() => window.initDeptDeskModule?.(moduleId));
+            }
+            break;
+    }
+}
+
+window.ensureModuleInitialized = ensureModuleInitialized;
 
 async function preloadAllModules(options = {}) {
     const ids = options.ids || await fetchModuleManifest();

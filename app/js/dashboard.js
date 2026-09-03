@@ -19,7 +19,7 @@ function getModuleLabel(moduleId) {
         'permanent-loans': 'Permanent Loans — Laptops & iPads',
         'orderly-room': 'Orderly Room — DF & Correspondence Files',
         'it-dir-comms': 'IT Directorate — Communications Portal',
-        'unit-requisitions': 'Requisitions — In-tray',
+        'unit-requisitions': 'Requisitions — First Sight / DF',
         'monthly-target-proposal': 'IT Dir Monthly Target / Priority List',
         'daf-fund-request-memo': 'DAF Fund Request Memo',
         'monthly-returns': 'Monthly Returns — Unit ICT Equipment',
@@ -1066,6 +1066,7 @@ async function navigateToModule(targetId, options = {}) {
             showToast(`Could not load module “${targetId}”.`, 'error');
             return;
         }
+        if (typeof ensureModuleInitialized === 'function') ensureModuleInitialized(targetId);
     }
 
     if (options.stkDesk) {
@@ -1073,6 +1074,15 @@ async function navigateToModule(targetId, options = {}) {
     }
     if (options.stkDafTab) {
         window._stkDafTab = options.stkDafTab;
+        window._stkDeskTab = window._stkDeskTab || {};
+        window._stkDeskTab.daf = options.stkDafTab === 'creditors' ? 'creditors' : 'manac';
+    }
+    if (options.stkDeskTab) {
+        const desk = options.stkDesk || (typeof getStakeholderDeskKey === 'function' ? getStakeholderDeskKey() : '');
+        if (desk) {
+            window._stkDeskTab = window._stkDeskTab || {};
+            window._stkDeskTab[desk] = options.stkDeskTab;
+        }
     }
 
     document.querySelectorAll('.content-section, .form-container').forEach((section) => {
@@ -1149,13 +1159,17 @@ async function navigateToModule(targetId, options = {}) {
         if (typeof initMonthlyReturnsModule === 'function') initMonthlyReturnsModule();
         if (typeof renderMonthlyReturnsModule === 'function') renderMonthlyReturnsModule();
     }
-    if (targetId === 'unit-equipment' && typeof renderUnitEquipmentView === 'function') {
-        setUnitEquipmentMode('view');
-        renderUnitEquipmentView();
+    if (targetId === 'unit-equipment') {
+        if (typeof initUnitEquipmentModule === 'function') initUnitEquipmentModule();
+        if (typeof renderUnitEquipmentView === 'function') {
+            setUnitEquipmentMode('view');
+            renderUnitEquipmentView();
+        }
     }
-    if (targetId === 'temporary-loans' && typeof renderTemporaryLoansView === 'function') {
-        setTemporaryLoansMode('view');
-        renderTemporaryLoansView();
+    if (targetId === 'temporary-loans') {
+        if (typeof initTemporaryLoansModule === 'function') initTemporaryLoansModule();
+        if (typeof setTemporaryLoansMode === 'function') setTemporaryLoansMode('view');
+        if (typeof renderTemporaryLoansView === 'function') renderTemporaryLoansView();
     }
     if (targetId === 'permanent-loans' && typeof initPermanentLoansModule === 'function') {
         initPermanentLoansModule();
@@ -1181,8 +1195,9 @@ async function navigateToModule(targetId, options = {}) {
     if (targetId === 'guide-quotation' && typeof initGuideQuotationModule === 'function') {
         initGuideQuotationModule();
     }
-    if (targetId === 'undelivered-orders' && typeof renderUndeliveredModule === 'function') {
-        renderUndeliveredModule();
+    if (targetId === 'undelivered-orders') {
+        if (typeof initUndeliveredModule === 'function') initUndeliveredModule();
+        if (typeof renderUndeliveredModule === 'function') renderUndeliveredModule();
     }
     if (targetId === 'supplier-debts') {
         if (typeof initSupplierDebtsModule === 'function') initSupplierDebtsModule();
@@ -1437,6 +1452,8 @@ function updateDashboard() {
     renderRecentTransfers();
     if (typeof initDashboardCollapsibles === 'function') initDashboardCollapsibles();
     if (typeof wireGlProcurementUi === 'function') wireGlProcurementUi();
+    if (typeof initRequisitionTrackerModule === 'function') initRequisitionTrackerModule();
+    if (typeof renderRequisitionTrackerDashboard === 'function') renderRequisitionTrackerDashboard();
 }
 
 function processReleaseCut() {

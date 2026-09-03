@@ -6,8 +6,8 @@
 
                 <p class="req-intro">
                     <span class="aso-ref">IT Dir Orderly Room · Unit Administration</span>
-                    Daily File / First Sight for incoming letters &amp; requisitions, plus the
-                    <strong>Correspondence Files Register</strong> kept and filed in the Orderly Room.
+                    Daily File / First Sight for incoming <strong>GS Branch loose minutes</strong> (unit requisitions)
+                    and other letters, plus the <strong>Correspondence Files Register</strong> kept in the Orderly Room.
                 </p>
 
                 <div class="or-chain" aria-label="IT Dir command / admin chain">
@@ -31,7 +31,7 @@
 
                 <div data-or-panel="df">
                     <div class="dashboard-panel" style="margin-bottom:14px;">
-                        <h3 style="margin-top:0;">File letter / requisition into DF</h3>
+                        <h3 style="margin-top:0;">File GS Branch loose minute / letter into DF</h3>
                         <div class="form-row">
                             <div class="form-col">
                                 <label class="form-label" for="orDateIn">Date received</label>
@@ -44,14 +44,16 @@
                             <div class="form-col">
                                 <label class="form-label" for="orFrom">From (Unit / Branch)</label>
                                 <div class="zna-unit-picker">
-                                    <select class="form-control zna-unit-select" id="orFrom" title="Unit or GS Branch">
-                                        <option value="">— Select unit / formation —</option>
-                                    </select>
+                                <select class="form-control zna-unit-select" id="orFrom" title="Unit or GS Branch">
+                                    <option value="">— Select unit / formation —</option>
+                                    <option value="GS BRANCH">GS BRANCH</option>
+                                </select>
                                 </div>
                             </div>
                             <div class="form-col">
                                 <label class="form-label" for="orDocType">Document type</label>
                                 <select class="form-control" id="orDocType">
+                                    <option value="loose_minute" selected>Loose Minute (via GS Branch)</option>
                                     <option value="requisition">Unit Requisition letter</option>
                                     <option value="routine">Routine correspondence</option>
                                     <option value="pass">Pass / movement</option>
@@ -68,8 +70,8 @@
                             <div class="form-col">
                                 <label class="form-label" for="orFileAs">File as</label>
                                 <select class="form-control" id="orFileAs">
+                                    <option value="first_sight" selected>First Sight</option>
                                     <option value="df">Daily File (DF)</option>
-                                    <option value="first_sight">First Sight</option>
                                 </select>
                             </div>
                             <div class="form-col">

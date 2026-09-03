@@ -331,9 +331,7 @@ function fillZnaUnitSelect(selectEl, selected, opts = {}) {
 
 function ensureZnaUnitTypeable(selectEl, opts = {}) {
     if (!selectEl) return;
-    const placeholder = opts.typeablePlaceholder
-        || (opts.blankLabel ? String(opts.blankLabel).replace(/^—\s*/, 'Type or pick ') : '')
-        || 'Type or pick unit / formation…';
+    const placeholder = opts.typeablePlaceholder || 'Type or pick unit / formation…';
     if (selectEl.dataset.typeableMounted === '1') {
         if (typeof refreshTypeableSelect === 'function') refreshTypeableSelect(selectEl);
         return;
@@ -347,7 +345,7 @@ function ensureZnaUnitTypeable(selectEl, opts = {}) {
 }
 
 function wireZnaUnitPicker(selectEl, filterEl, opts = {}) {
-    if (!selectEl || selectEl.dataset.znaWired === '1') return;
+    if (!selectEl) return;
     selectEl.dataset.znaWired = '1';
     fillZnaUnitSelect(selectEl, selectEl.value || opts.selected || '', opts);
     if (filterEl) {
@@ -453,7 +451,8 @@ function wireAllZnaUnitFields(root = document, opts = {}) {
         ? [root]
         : [...root.querySelectorAll('select.zna-unit-select')];
     selects.forEach((sel) => {
-        if (sel.dataset.znaWired === '1' || sel.dataset.znaSkipAuto === '1') return;
+        if (sel.dataset.znaSkipAuto === '1') return;
+        if (sel.dataset.znaWired === '1' && sel.options.length > 1) return;
         const blankOpt = sel.querySelector('option[value=""]');
         wireZnaUnitPicker(sel, null, {
             includeBlank: true,

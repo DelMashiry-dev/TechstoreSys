@@ -5,11 +5,8 @@
                 </div>
                 <p class="stk-desk-intro" id="stkDeskIntro"></p>
                 <div id="stkDeskSwitch" class="stk-desk-switch" hidden></div>
-                <div id="stkDafTabs" class="stk-daf-tabs" hidden role="tablist" aria-label="DAF portal views">
-                    <button type="button" class="stk-daf-tab is-active" data-stk-daf-tab="procurement" role="tab" aria-selected="true">Procurement cycle</button>
-                    <button type="button" class="stk-daf-tab" data-stk-daf-tab="creditors" role="tab" aria-selected="false">Creditors &amp; payment <span class="stk-daf-tab-badge" id="stkDafCreditorsBadge" hidden></span></button>
-                </div>
-                <div id="stkDafProcPanel" class="stk-daf-panel">
+                <div id="stkDeskTabs" class="stk-desk-tabs" role="tablist" aria-label="Portal workspace"></div>
+                <div id="stkDeskCyclePanel" class="stk-desk-panel">
                     <div class="stk-desk-layout">
                         <div class="stk-desk-list-col">
                             <div id="stkDeskSummary" class="stk-desk-summary-host"></div>
@@ -23,7 +20,8 @@
                         </div>
                     </div>
                 </div>
-                <div id="stkDafCreditorsPanel" class="stk-daf-panel" hidden>
+                <div id="stkDeskModulePanel" class="stk-desk-panel" hidden></div>
+                <div id="stkDafCreditorsPanel" class="stk-desk-panel" hidden>
                     <p class="muted stk-daf-creditors-lead">Goods delivered to IT Dir but not yet paid. Import registers, apply DAF paid lists, and chase outstanding creditors from this window.</p>
                     <div class="req-aging-strip sd-aging-strip stk-daf-creditors-stats" aria-label="Creditors summary">
                         <div class="req-stat"><span class="req-stat-value" id="stkDafStatOpen">0</span><span class="req-stat-label">Open cases</span></div>

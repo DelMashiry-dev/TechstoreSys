@@ -247,6 +247,9 @@ async function finalizeBootState(state) {
     if (!Array.isArray(appState.orderlyDailyFile)) {
         appState.orderlyDailyFile = [];
     }
+    if (typeof ensureDpProcurements === 'function') ensureDpProcurements();
+    if (typeof ensureRequisitions === 'function') ensureRequisitions();
+    if (typeof ensureSupplierDebts === 'function') ensureSupplierDebts();
     applyTheme(appState.theme);
     if (typeof initNavReorder === 'function') initNavReorder();
     const bootSession = typeof loadSession === 'function' ? loadSession() : null;

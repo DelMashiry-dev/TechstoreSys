@@ -1,6 +1,7 @@
 /* orderly-room.js — Daily File / First Sight + TechStores requisition alerts */
 
 const OR_DOC_TYPES = {
+    loose_minute: 'Loose Minute (via GS Branch)',
     requisition: 'Unit Requisition',
     routine: 'Routine',
     pass: 'Pass / movement',
@@ -69,7 +70,7 @@ function setOrderlyNotifySelection(values) {
 
 function defaultOrderlyNotifySelection(docType) {
     const list = orNotifyDeptList();
-    if (docType === 'requisition') {
+    if (docType === 'requisition' || docType === 'loose_minute') {
         return list.filter((d) => d.key === 'techstores').map((d) => d.value);
     }
     if (docType === 'directive') {
@@ -159,7 +160,7 @@ function syncUnitRequisitionsToOrderlyRoom() {
         let row = dailyFile.find((entry) => entry.linkedReqId === req.id);
         if (!row && req.reqNo) {
             row = dailyFile.find((entry) =>
-                entry.docType === 'requisition'
+                (entry.docType === 'requisition' || entry.docType === 'loose_minute')
                 && (entry.refNo === req.reqNo || entry.refNo === req.fileRef)
                 && !entry.linkedReqId
             );
@@ -178,14 +179,14 @@ function syncUnitRequisitionsToOrderlyRoom() {
             dateIn: req.receivedDate || (req.createdAt || '').slice(0, 10) || orTodayIso(),
             refNo: req.reqNo || req.fileRef || `REQ-${req.id}`,
             fromUnit: req.unit || req.originUnitDetail || 'Unit / Formation',
-            docType: 'requisition',
-            subject: req.subject || req.itemDescription || 'Unit requisition',
-            fileAs: row?.fileAs || 'df',
-            gsAuth: row?.gsAuth || 'pending',
+            docType: req.docType === 'letter' || req.docType === 'requisition_letter' ? 'requisition' : 'loose_minute',
+            subject: req.subject || req.itemDescription || 'Unit requisition (loose minute)',
+            fileAs: row?.fileAs || req.fileAs || 'first_sight',
+            gsAuth: row?.gsAuth || (req.receivedThrough === 'direct' ? 'pending' : 'yes'),
             priority: req.priority || 'normal',
             receivedBy: row?.receivedBy || 'IT Dir Orderly Room',
             status: nextStatus,
-            remarks: req.notes || req.justification || 'Unit Requisitions in-tray item.',
+            remarks: req.notes || req.justification || 'Loose minute via GS Branch — First Sight / DF in-tray.',
             alertTechStores: isOpen,
             linkedReqId: req.id,
             fileRef: req.fileRef || '',
@@ -219,7 +220,7 @@ function getOrderlyOpenForTechStores() {
     syncUnitRequisitionsToOrderlyRoom();
     return ensureOrderlyDailyFile()
         .filter((row) => {
-            if (row.docType !== 'requisition' && !row.alertTechStores) return false;
+            if (row.docType !== 'requisition' && row.docType !== 'loose_minute' && !row.alertTechStores) return false;
             if (!OR_OPEN_FOR_TECHSTORES.has(row.status || 'filed')) return false;
             return true;
         })
@@ -261,10 +262,10 @@ function clearOrderlyRoomForm() {
     } else {
         set('orFrom', '');
     }
-    set('orDocType', 'requisition');
+    set('orDocType', 'loose_minute');
     set('orSubject', '');
-    set('orFileAs', 'df');
-    set('orGsAuth', 'pending');
+    set('orFileAs', 'first_sight');
+    set('orGsAuth', 'yes');
     set('orPriority', 'normal');
     set('orReceivedBy', currentUser?.name || '');
     set('orStatus', 'filed');
@@ -350,12 +351,14 @@ function linkOrderlyToUnitRequisition(entry) {
         contact: '',
         fileRef: entry.fileRef || (typeof REQ_FILE_IT_34_1 !== 'undefined' ? REQ_FILE_IT_34_1 : 'IT/34/1'),
         correspondenceFile: typeof REQ_FILE_IT_34_1 !== 'undefined' ? REQ_FILE_IT_34_1 : 'IT/34/1',
-        docType: 'requisition_letter',
-        actionInfo: entry.gsAuth === 'yes'
-            ? 'Action: TechStores (GS Branch authorised) · Info: Orderly Room DF'
-            : 'Action: TechStores · Info: Orderly Room DF / First Sight',
+        docType: 'loose_minute',
+        receivedThrough: 'gs_branch',
+        fileAs: entry.fileAs || 'first_sight',
+        actionInfo: typeof REQ_DEFAULT_ACTION_INFO !== 'undefined'
+            ? REQ_DEFAULT_ACTION_INFO
+            : 'Action: Brig Gen GS · Info: Col SD, IT Dir',
         subject: entry.subject || '',
-        justification: entry.remarks || 'Filed in Orderly Room Daily File — awaiting TechStores action.',
+        justification: entry.remarks || 'Loose minute via GS Branch — filed First Sight / DF, awaiting TechStores action.',
         category: 'ict-equipment',
         itemDescription: entry.subject || 'Unit requisition (see letter)',
         qty: 1,
@@ -513,6 +516,7 @@ function saveOrderlyRoomEntry(options = {}) {
     const alertTechStores = !!options.alertTechStores
         || wantsTechStores
         || data.docType === 'requisition'
+        || data.docType === 'loose_minute'
         || data.status === 'alerted_techstores';
 
     if (options.alertTechStores || (doNotify && wantsTechStores)) {
@@ -553,7 +557,7 @@ function saveOrderlyRoomEntry(options = {}) {
         list.unshift(saved);
     }
 
-    if (alertTechStores && (saved.docType === 'requisition' || options.alertTechStores || wantsTechStores)) {
+    if (alertTechStores && (saved.docType === 'requisition' || saved.docType === 'loose_minute' || options.alertTechStores || wantsTechStores)) {
         linkOrderlyToUnitRequisition(saved);
         const idx = list.findIndex((r) => r.id === saved.id);
         if (idx >= 0) list[idx] = saved;
@@ -668,7 +672,7 @@ function getFilteredOrderlyRows() {
 function updateOrderlyStats() {
     const all = ensureOrderlyDailyFile();
     const open = getOrderlyOpenForTechStores();
-    const reqs = all.filter((r) => r.docType === 'requisition');
+    const reqs = all.filter((r) => r.docType === 'requisition' || r.docType === 'loose_minute');
     const urgent = open.filter((r) => r.priority === 'urgent');
     const set = (id, n) => {
         const el = document.getElementById(id);

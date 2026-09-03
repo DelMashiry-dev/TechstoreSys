@@ -1,15 +1,26 @@
 <div id="unit-requisitions" class="form-container">
                 <div class="form-header">
-                    <h2 class="form-title">Requisitions — In-tray</h2>
+                    <h2 class="form-title">Requisitions — First Sight / DF in-tray</h2>
                     <button class="close-btn">&times;</button>
                 </div>
 
                 <p class="req-intro">
-                    Independent <strong>Requisitions</strong> in-tray: list requests as they come in.
+                    Unit / formation ICT needs reach IT Dir as a <strong>loose minute through GS Branch</strong>
+                    (Action: Brig Gen GS · Info: Col SD, IT Dir). The Orderly Room files them
+                    <strong>First Sight / Daily File (DF)</strong> — this in-tray is that first sight of the paper.
                     Age counts days from <strong>date in</strong> until the request is responded to and
-                    <strong>satisfied</strong> (issued / closed). In-stock and out-of-stock are taken from current inventory.
-                    Route still issues on <strong>ZNA Q 1033</strong> or raises <strong>DP F1</strong> when buying power exists.
+                    <strong>satisfied</strong> (issued / closed). Route still issues on <strong>ZNA Q 1033</strong>
+                    or raises <strong>DP F1</strong> when buying power exists.
                 </p>
+                <div class="or-chain req-gs-chain" aria-label="How a unit requisition arrives at IT Dir">
+                    <span class="or-chip">Unit / Formation loose minute</span>
+                    <span class="or-arrow">→</span>
+                    <span class="or-chip">GS Branch</span>
+                    <span class="or-arrow">→</span>
+                    <span class="or-chip">IT Dir Orderly Room — First Sight / DF</span>
+                    <span class="or-arrow">→</span>
+                    <span class="or-chip">TechStores in-tray</span>
+                </div>
 
                 <div class="req-aging-strip" aria-label="Requisition aging summary">
                     <div class="req-stat"><span class="req-stat-value" id="reqStatOpen">0</span><span class="req-stat-label">Open</span></div>
@@ -22,17 +33,17 @@
 
                 <div class="dashboard-panel sd-intelligence-panel-wrap">
                     <div class="section-heading section-heading-compact">
-                        <h3>Intelligence — respond first</h3>
+                        <h3>Priority — action first</h3>
                     </div>
                     <div id="reqIntelligencePanel" class="sd-intelligence-panel"></div>
                 </div>
 
                 <div class="dashboard-panel req-intray-panel">
                     <div class="section-heading section-heading-compact">
-                        <h3>In-tray — as they come in</h3>
+                        <h3>First Sight / DF — loose minutes via GS Branch</h3>
                         <button type="button" class="btn btn-ghost btn-sm" id="reqTableExpandBtn"
                             data-table-focus="#unit-requisitions .req-intray-table"
-                            data-table-focus-title="Requisitions in-tray"
+                            data-table-focus-title="Requisitions First Sight / DF"
                             title="Expand table to full screen">⛶ Expand table</button>
                     </div>
                     <div class="module-toolbar">
@@ -80,7 +91,7 @@
 
                 <div class="dashboard-panel req-capture-panel" id="reqCapturePanel">
                     <div class="section-heading section-heading-compact">
-                        <h3 id="reqFormTitle">Book in a requisition</h3>
+                        <h3 id="reqFormTitle">Book in a GS Branch loose minute</h3>
                     </div>
                     <input type="hidden" id="reqEditId" value="">
                     <div class="form-row">
@@ -98,7 +109,7 @@
                         </div>
                         <div class="form-col">
                             <label class="form-label">Originating unit letter Ref</label>
-                            <input type="text" class="form-control" id="reqOriginRef" placeholder="e.g. MR/4/5">
+                            <input type="text" class="form-control" id="reqOriginRef" placeholder="e.g. Ord/13/4 · GS/16">
                         </div>
                     </div>
                     <div class="form-row">
@@ -150,8 +161,23 @@
                             <input type="text" class="form-control" id="reqContact" placeholder="Phone / extension">
                         </div>
                         <div class="form-col">
-                            <label class="form-label">Action / Info</label>
-                            <input type="text" class="form-control" id="reqActionInfo" value="Action: IT Dir · Info: File" placeholder="Action: IT Dir · Info: GS Br, File">
+                            <label class="form-label">Received through</label>
+                            <select class="form-control" id="reqReceivedThrough" title="Unit requisitions normally come through GS Branch">
+                                <option value="gs_branch" selected>GS Branch (loose minute)</option>
+                                <option value="direct">Direct to IT Dir</option>
+                                <option value="other">Other channel</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Filed as (Orderly Room)</label>
+                            <select class="form-control" id="reqFileAs" title="First Sight / Daily File booking at IT Dir Orderly Room">
+                                <option value="first_sight" selected>First Sight</option>
+                                <option value="df">Daily File (DF)</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Action / Info (on the minute)</label>
+                            <input type="text" class="form-control" id="reqActionInfo" value="Action: Brig Gen GS · Info: Col SD, IT Dir" placeholder="Action: Brig Gen GS · Info: Col SD, IT Dir">
                         </div>
                     </div>
                     <div class="form-row">

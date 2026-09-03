@@ -72,12 +72,13 @@ const SYSTEM_DICTIONARY_GROUPS = [
         title: 'Procurement & requisitions',
         terms: [
             { t: 'Indent', d: 'Official written request for stores (often Q 982). Starts demand on the Cost Centre Directorate.', w: 'Q 982 · Learning Centre' },
-            { t: 'Requisition', d: 'Unit/formation written need captured with minute sheet. The Requisitions button opens an independent in-tray: date in, unit, items, in-stock / out-of-stock, and age in days until satisfied. On save/Route the system chooses Issue, DP F1, Await stock, or Manual DAF.', w: 'unit-requisitions' },
+            { t: 'Requisition', d: 'Unit/formation ICT need that arrives at IT Dir as a loose minute through GS Branch (Action: Brig Gen GS · Info: Col SD, IT Dir). The Requisitions button is the First Sight / Daily File in-tray: date in, originating unit, items, age until satisfied. On save/Route the system chooses Issue, DP F1, Await stock, or Manual DAF.', w: 'unit-requisitions' },
             { t: 'Route (button)', d: 'Runs stock + funds check for a requisition and opens Q 1033 or DP F1, or flags await/manual funds.', w: 'Unit Requisitions' },
             { t: 'Issue (Q 1033) path', d: 'Item is in stock (enough on hand) — issue from TechStores on ZNA Q 1033.', w: 'requisition-procurement' },
             { t: 'Raise DP F1 path', d: 'Not in stock (or shortfall) but GL has buying power — start electronic procurement with DP F1. Requires Requisition + Target, then Colonel SD (GS) and MANAC (DAF) endorsement and a PFMS requisition number on the F1 before surrender to DP Contracts.', w: 'requisition-procurement · Learning Centre cycle' },
             { t: 'PFMS', d: 'Public Financial Management System (Ministry of Finance). IT Dir RQ creates the requisition number here (e.g. Req 10080264) and writes it on the DP F1.', w: 'Learning Centre cycle · unit-requisitions' },
-            { t: 'Colonel SD (GS Branch)', d: 'Colonel Staff Duties, GS Branch — endorses the DP F1 after it is raised and before PFMS numbering / surrender to DP.', w: 'Learning Centre cycle' },
+            { t: 'Loose Minute', d: 'Standard Army correspondence used by units to request ICT. Routed Action Brig Gen GS, Info Col SD and IT Dir. GS Branch forwards it; IT Dir Orderly Room files it First Sight / Daily File for TechStores.', w: 'unit-requisitions · orderly-room' },
+            { t: 'Colonel SD (GS Branch)', d: 'Colonel Staff Duties, GS Branch — on the incoming loose minute as Info, and later endorses the DP F1 after it is raised and before PFMS numbering / surrender to DP.', w: 'Learning Centre cycle' },
             { t: 'MANAC', d: 'Deputy Director DAF. Endorses the DP F1 for funds / vote (target) so DP can proceed.', w: 'Learning Centre cycle · DAF' },
             { t: 'DP Contracts', d: 'Directorate Procurement — Contracts desk. Receives the endorsed DP F1 from IT Dir RQ, calls for quotations, runs adjudication, and raises the P/O.', w: 'dp-procurement' },
             { t: 'DP SO1', d: 'Staff Officer 1 at DP who highlights the best vendor after adjudication (value for money, not always cheapest).', w: 'cost-comparative-schedule · dp-procurement' },
@@ -101,7 +102,7 @@ const SYSTEM_DICTIONARY_GROUPS = [
             { t: 'Verification of delivery', d: 'Cost centre confirms quantity and condition before payment.', w: 'DP step 7' },
             { t: 'Non-paid goods received', d: 'Supplier delivered, Army still owes. Tracked in Creditors so IT Dir can push DAF for settlement. Age of debt counts from first supply date until paid.', w: 'supplier-debts' },
             { t: 'QS Br', d: 'Quartermaster / QS Branch — authority, distribution and supplier selection in the Army process chart.', w: 'Learning Centre' },
-            { t: 'GS Branch', d: 'Often authorises unit requisition letters to be actioned.', w: 'Orderly Room · GS auth' },
+            { t: 'GS Branch', d: 'Staff Branch through which unit ICT loose minutes are routed (Action: Brig Gen GS). IT Dir sees them after GS Branch as First Sight / Daily File.', w: 'Orderly Room · unit-requisitions' },
             { t: 'Minute sheet', d: 'Stamp rows (Dir, DD, AQSO2, OCs, Tech Stores Offr, etc.) for signature and date on a requisition.', w: 'Unit Requisitions' },
             { t: 'First Sight / DF (Daily File)', d: 'Orderly Room filing of incoming correspondence and requisitions.', w: 'orderly-room' }
         ]
@@ -141,9 +142,9 @@ const SYSTEM_DICTIONARY_GROUPS = [
         terms: [
             { t: 'Dashboard', d: 'KPIs, Notifications, GL cards, stock overview and navigation hub.', w: 'dashboard' },
             { t: 'Issue Voucher / ZNA-Q-1033', d: 'Post IV/RV stock movements by catalog category against GLs (official form ZNA-Q-1033).', w: 'voucher-module' },
-            { t: 'Unit / Formation Requisitions', d: 'Independent Requisitions button. In-tray lists incoming requests (date in, unit, items, in-stock, out-of-stock, age). Book in loose minutes, then Route to Q 1033 or DP F1.', w: 'unit-requisitions' },
+            { t: 'Unit / Formation Requisitions', d: 'IT Dir First Sight / Daily File in-tray of GS Branch loose minutes. Lists date in, originating unit, items, stock and age. Book the minute, then Route to Q 1033 or DP F1.', w: 'unit-requisitions' },
             { t: 'Import document', d: 'Upload or paste a typed PDF/Word file, or a photo of a written page. The system classifies it (loose minute, requisition, quotation, P/O, DP F1, tech spec, D-Note, cost comparative) and fills the related form. Review every field before save. Handwriting needs OPENAI_API_KEY on the server; typed text works without it.', w: 'doc-import' },
-            { t: 'Orderly Room', d: 'Daily File / First Sight correspondence and TechStores alerts.', w: 'orderly-room' },
+            { t: 'Orderly Room', d: 'IT Dir Daily File / First Sight. Incoming GS Branch loose minutes (unit requisitions) are stamped here before TechStores action.', w: 'orderly-room' },
             { t: 'Gate Register (RP)', d: 'Equipment in/out at the gate. Does not change inventory balances.', w: 'gate-register' },
             { t: 'TechStores Equipment Register', d: 'Storeman custody stage for repair intake (before Workshop).', w: 'techstores-equipment-register' },
             { t: 'Workshop Register', d: 'Repairs/upgrades booking; SVCS 1045 required; Stores Request for indent/QM.', w: 'workshop-repairs' },
@@ -206,7 +207,7 @@ const SYSTEM_DICTIONARY_GROUPS = [
         id: 'status',
         title: 'Statuses',
         terms: [
-            { t: 'Requisition: Received', d: 'Newly booked at IT Dir.', w: 'unit-requisitions' },
+            { t: 'Requisition: Received', d: 'GS Branch loose minute booked at IT Dir First Sight / DF.', w: 'unit-requisitions' },
             { t: 'Requisition: In Progress', d: 'Being actioned (often after Route).', w: 'unit-requisitions' },
             { t: 'Requisition: Part Issued', d: 'Partial stock issue against the request.', w: 'unit-requisitions' },
             { t: 'Requisition: Issued / Closed', d: 'Fully issued or closed.', w: 'unit-requisitions' },

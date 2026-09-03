@@ -598,10 +598,10 @@ function renderOrderlyRoomGuide() {
             <header class="pg-header">
                 <h3>Orderly Room → TechStores (Daily File)</h3>
                 <p class="pg-note">
-                    Unit administration and filing sit in the <strong>Orderly Room</strong>: Roll Call, establishment,
-                    personal files, typing pool, passes, and letter booking. Letters that originate at unit level are
-                    signed by the <strong>DD or Dir</strong>. Incoming Army / unit letters are filed in the
-                    <strong>Daily File (DF)</strong> or <strong>First Sight</strong> so HoDs stay updated.
+                    Unit administration and filing sit in the <strong>Orderly Room</strong>.
+                    Unit ICT needs arrive as a <strong>loose minute through GS Branch</strong>
+                    (Action: Brig Gen GS · Info: Col SD, IT Dir). The Orderly Room stamps them
+                    <strong>First Sight / Daily File (DF)</strong> so HoDs and TechStores see the paper the same day.
                 </p>
             </header>
             <ol class="pg-hd-steps">
@@ -610,8 +610,8 @@ function renderOrderlyRoomGuide() {
                     <p>Chief Clerk (WO1/WO2) supervises; NCMs (Cpl) dispatch outgoing letters. AO (Capt/Lt) → AQSO2 (Maj) → DD (Lt Col) → Dir (Col).</p>
                 </div></li>
                 <li class="pg-hd-step"><span class="pg-hd-num">2</span><div class="pg-hd-step-body">
-                    <h4>File requisition letters in DF</h4>
-                    <p>Unit requisitions (often via <strong>GS Branch</strong>) are put in DF so TechStores Officer / RQ see them. GS authorisation kick-starts the procurement cycle.</p>
+                    <h4>File GS Branch loose minutes in First Sight / DF</h4>
+                    <p>Unit requisitions come <strong>through GS Branch as loose minutes</strong>. File them First Sight / DF so TechStores / RQ see them in the in-tray. That booking kick-starts issue (Q 1033) or DP F1.</p>
                 </div></li>
                 <li class="pg-hd-step"><span class="pg-hd-num">3</span><div class="pg-hd-step-body">
                     <h4>Alert TechStores</h4>

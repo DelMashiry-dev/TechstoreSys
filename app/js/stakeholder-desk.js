@@ -33,6 +33,45 @@ const STK_DESK_DEFS = {
     }
 };
 
+/** Role-specific workspace tabs — each desk gets its own functions, not one shared in-tray. */
+const STK_DESK_TABS = {
+    daf: [
+        { id: 'manac', label: 'MANAC / DP F1', panel: 'cycle', cycleFilter: 'manac', blurb: 'Endorse DP F1 forms for funds release (MANAC). Upload signed endorsement scans.' },
+        { id: 'payment', label: 'Supplier payment', panel: 'cycle', cycleFilter: 'payment', blurb: 'Record payment vouchers after delivery inspection and goods received.' },
+        { id: 'creditors', label: 'Creditors register', panel: 'creditors', blurb: 'Open balances, DAF chase list, import creditors Excel and paid-list proof.' },
+        { id: 'targets', label: 'Vote / target allocation', panel: 'module', moduleId: 'financial-year-bids', blurb: 'Allocate DAF monthly targets and buying power across ZNA cost-centre GL votes.' },
+        { id: 'pfms', label: 'PFMS / procurement cycle', panel: 'module', moduleId: 'dp-procurement', blurb: 'ICT procurement cycle register — PFMS numbering, pipeline stages, and case history.' }
+    ],
+    dp: [
+        { id: 'requisitions', label: 'Unit requisitions', panel: 'module', moduleId: 'unit-requisitions', blurb: 'First Sight / DF in-tray — unit ICT loose minutes routed through GS Branch.' },
+        { id: 'cycle', label: 'Procurement cycle', panel: 'cycle', blurb: 'Full DP in-tray: quotations, adjudication, winner, P/O issue, and hand-off to AIAD.' },
+        { id: 'dpf1', label: 'DP F1 forms', panel: 'module', moduleId: 'dp-f1-form', blurb: 'Raise and track DP F1 procurement authority forms for IT Dir cases.' },
+        { id: 'quotes', label: 'Supplier quotations', panel: 'cycle', cycleFilter: 'quotes', blurb: 'Cases awaiting call for quotes, supplier responses, and IT Dir spec evaluation.' },
+        { id: 'po', label: 'Purchase orders', panel: 'module', moduleId: 'purchase-orders', blurb: 'Create and issue purchase orders after adjudication and due diligence.' },
+        { id: 'suppliers', label: 'Suppliers & contracts', panel: 'module', moduleId: 'suppliers-contracts', blurb: 'Registered suppliers, RFQ contacts, and contract references.' },
+        { id: 'creditors', label: 'Creditors awareness', panel: 'module', moduleId: 'supplier-debts', blurb: 'View creditor balances linked to DP cases (DAF owns payment).' }
+    ],
+    gs: [
+        { id: 'units', label: 'GS units & requisitions', panel: 'module', moduleId: 'unit-requisitions', blurb: 'Loose minutes from units under GS Branch — First Sight / DF at IT Dir before TechStores action.' },
+        { id: 'endorse', label: 'DP F1 endorsement', panel: 'cycle', cycleFilter: 'gs', blurb: 'Colonel SD endorsement queue — upload signed GS Branch endorsement on DP F1.' },
+        { id: 'distribution', label: 'ICT distribution', panel: 'module', moduleId: 'ict-distribution', blurb: 'Distribution lists for ICT equipment issued to GS Branch units and establishments.' },
+        { id: 'pipeline', label: 'Full pipeline view', panel: 'cycle', blurb: 'Read-only awareness of all procurement cases from F1 raise through supply (no quotes or payment).' }
+    ],
+    aiad: [
+        { id: 'benchmark', label: 'Market prevailing prices', panel: 'module', moduleId: 'cost-comparative-schedule', blurb: 'Government gazetted / benchmark prices for cost comparative — compare supplier quotes against prevailing market rates.' },
+        { id: 'diligence', label: 'Due diligence queue', panel: 'cycle', cycleFilter: 'aiad', blurb: 'Cases awaiting AIAD price audit before contract award.' },
+        { id: 'certificate', label: 'DD certificate issue', panel: 'cycle', cycleFilter: 'cert', blurb: 'Issue and upload signed Price Due Diligence certificates.' },
+        { id: 'spec', label: 'Spec / tech evaluation', panel: 'module', moduleId: 'spec-evaluation', blurb: 'Supporting spec evaluation reference for due diligence decisions.' }
+    ],
+    supplier: [
+        { id: 'rfq', label: 'RFQs / invitations', panel: 'cycle', cycleFilter: 'rfq', blurb: 'Open requests for quotation addressed to your company.' },
+        { id: 'quote', label: 'Quotation submission', panel: 'cycle', cycleFilter: 'quote', blurb: 'Submit quotation, spec compliance, and banking details for active RFQs.' },
+        { id: 'po', label: 'Purchase orders', panel: 'cycle', cycleFilter: 'po', blurb: 'Awarded P/Os — confirm supply against order lines.' },
+        { id: 'dnote', label: 'Delivery notes', panel: 'cycle', cycleFilter: 'dnote', blurb: 'Upload delivery notes and invoices after supply.' },
+        { id: 'docimport', label: 'Document upload', panel: 'module', moduleId: 'doc-import', blurb: 'Import and attach quotation packs, invoices, or banking letters from files.' }
+    ]
+};
+
 const STK_FILE_MAX = 2 * 1024 * 1024;
 
 function stkEscape(v) {
@@ -237,13 +276,47 @@ function stkSortDeskCases(desk, cases) {
 function stkCasesForDesk(desk) {
     const list = typeof ensureDpProcurements === 'function' ? ensureDpProcurements() : [];
     const q = stkNorm(document.getElementById('stkDeskSearch')?.value);
+    const cycleFilter = window._stkCycleFilter || '';
     const filtered = list.filter((rec) => {
         if (!stkQueueForDesk(desk, rec)) return false;
+        if (cycleFilter && !stkCycleFilterMatch(desk, cycleFilter, rec)) return false;
         if (!q) return true;
         const hay = `${rec.refNo} ${rec.poNumber} ${rec.itemSummary} ${rec.awardedSupplier} ${rec.requisitionRef}`.toLowerCase();
         return hay.includes(q);
     });
     return stkSortDeskCases(desk, filtered);
+}
+
+function stkCycleFilterMatch(desk, filter, rec) {
+    const st = typeof normalizeDpProcStatus === 'function' ? normalizeDpProcStatus(rec.status) : rec.status;
+    const stake = rec.stakeholder || {};
+    if (desk === 'daf') {
+        if (filter === 'manac') {
+            return st === 'awaiting_manac' || (st === 'awaiting_gs' && !stake.daf?.endorsedAt)
+                || (['spec_raise_f1', 'pfms_numbered'].includes(st) && !stake.daf?.endorsedAt);
+        }
+        if (filter === 'payment') {
+            return st === 'po_manual_pending_daf'
+                || ((st === 'delivery_verified' || st === 'supply_delivery') && !rec.paymentRef && !stake.daf?.paidAt);
+        }
+    }
+    if (desk === 'dp' && filter === 'quotes') {
+        return ['f1_with_dp', 'quotes_itdir_eval', 'spec_returned_dp'].includes(st);
+    }
+    if (desk === 'gs' && filter === 'gs') {
+        return st === 'awaiting_gs' && !stake.gs?.endorsedAt;
+    }
+    if (desk === 'aiad') {
+        if (filter === 'aiad') return st === 'aiad_due_diligence';
+        if (filter === 'cert') return st === 'aiad_certificate' || !!rec.dueDiligenceCert || !!stake.aiad?.certNo;
+    }
+    if (desk === 'supplier') {
+        if (filter === 'rfq') return !rec.poNumber && stkCaseVisibleToSupplier(rec, stkSupplierKey());
+        if (filter === 'quote') return ['f1_with_dp', 'quotes_itdir_eval'].includes(st);
+        if (filter === 'po') return !!rec.poNumber && !['supply_delivery', 'delivery_verified', 'payment_complete'].includes(st);
+        if (filter === 'dnote') return ['supply_delivery', 'delivery_verified', 'po_electronic', 'po_manual_pending_daf'].includes(st);
+    }
+    return true;
 }
 
 function renderStakeholderDeskSummary(desk, cases) {
@@ -546,7 +619,15 @@ function renderStakeholderDeskList() {
     const cases = stkCasesForDesk(desk);
     renderStakeholderDeskSummary(desk, cases);
     if (!cases.length) {
-        host.innerHTML = '<p class="muted">No cases in this window yet.</p>';
+        const canLoad = typeof loadPortalDemoExamples === 'function';
+        host.innerHTML = `<p class="muted">No cases in this window yet.</p>${canLoad ? `
+            <div class="module-actions stk-demo-load">
+                <button type="button" class="btn btn-primary" id="stkLoadDemoBtn">Load demo examples</button>
+                <span class="muted">Populates all five portal windows with sample F1s, RFQs, MANAC, AIAD, and supplier cases.</span>
+            </div>` : ''}`;
+        document.getElementById('stkLoadDemoBtn')?.addEventListener('click', () => {
+            if (typeof loadPortalDemoExamples === 'function') loadPortalDemoExamples();
+        });
         return;
     }
     const selected = host.getAttribute('data-stk-selected') || '';
@@ -593,41 +674,112 @@ function renderStakeholderDeskDetail(id) {
     });
 }
 
+function stkGetDeskTabs(desk) {
+    return STK_DESK_TABS[desk] || [{ id: 'cycle', label: 'In-tray', panel: 'cycle' }];
+}
+
+function stkActiveTabId(desk) {
+    if (!window._stkDeskTab) window._stkDeskTab = {};
+    const tabs = stkGetDeskTabs(desk);
+    const current = window._stkDeskTab[desk];
+    if (current && tabs.some((t) => t.id === current)) return current;
+    if (desk === 'daf' && window._stkDafTab === 'creditors') return 'creditors';
+    return tabs[0]?.id || 'cycle';
+}
+
+function stkTabDef(desk, tabId) {
+    return stkGetDeskTabs(desk).find((t) => t.id === tabId) || stkGetDeskTabs(desk)[0];
+}
+
+function stkSetDeskTab(desk, tabId) {
+    if (!window._stkDeskTab) window._stkDeskTab = {};
+    window._stkDeskTab[desk] = tabId;
+    if (desk === 'daf') {
+        window._stkDafTab = tabId === 'creditors' ? 'creditors' : 'procurement';
+    }
+    const tab = stkTabDef(desk, tabId);
+    window._stkCycleFilter = tab?.cycleFilter || '';
+    stkRenderDeskTabs(desk);
+    stkShowDeskPanel(desk, tab);
+}
+
+function stkRenderDeskTabs(desk) {
+    const host = document.getElementById('stkDeskTabs');
+    if (!host) return;
+    const tabs = stkGetDeskTabs(desk);
+    const active = stkActiveTabId(desk);
+    host.innerHTML = tabs.map((tab) => {
+        const badge = tab.id === 'creditors' && desk === 'daf'
+            ? '<span class="stk-desk-tab-badge" id="stkDafCreditorsBadge" hidden></span>'
+            : '';
+        return `<button type="button" class="stk-desk-tab${tab.id === active ? ' is-active' : ''}" data-stk-desk-tab="${stkEscape(tab.id)}" role="tab" aria-selected="${tab.id === active ? 'true' : 'false'}">${stkEscape(tab.label)}${badge}</button>`;
+    }).join('');
+}
+
+function stkShowDeskPanel(desk, tab) {
+    const cycle = document.getElementById('stkDeskCyclePanel');
+    const cred = document.getElementById('stkDafCreditorsPanel');
+    const mod = document.getElementById('stkDeskModulePanel');
+    if (cycle) cycle.hidden = tab.panel !== 'cycle';
+    if (cred) cred.hidden = tab.panel !== 'creditors';
+    if (mod) mod.hidden = tab.panel !== 'module';
+
+    if (tab.panel === 'cycle') {
+        renderStakeholderDeskList();
+        const selected = document.getElementById('stkDeskList')?.getAttribute('data-stk-selected');
+        if (selected) renderStakeholderDeskDetail(selected);
+    } else if (tab.panel === 'creditors') {
+        renderStkDafCreditorsPanel();
+    } else if (tab.panel === 'module') {
+        renderStkDeskModulePanel(tab);
+    }
+}
+
+function renderStkDeskModulePanel(tab) {
+    const host = document.getElementById('stkDeskModulePanel');
+    if (!host || !tab?.moduleId) return;
+    const canOpen = typeof canAccessModule === 'function' ? canAccessModule(tab.moduleId) : true;
+    host.innerHTML = `
+        <div class="stk-module-workspace dashboard-panel">
+            <div class="section-heading section-heading-compact"><h3>${stkEscape(tab.label)}</h3></div>
+            <p class="stk-module-blurb">${stkEscape(tab.blurb || '')}</p>
+            <div class="module-actions">
+                ${canOpen
+        ? `<button type="button" class="btn btn-primary" data-stk-open-module="${stkEscape(tab.moduleId)}">Open ${stkEscape(tab.label)}</button>`
+        : '<p class="muted">Your role does not have access to this register.</p>'}
+                <button type="button" class="btn btn-ghost" data-stk-back-cycle="">Back to in-tray</button>
+            </div>
+        </div>`;
+    host.querySelector('[data-stk-open-module]')?.addEventListener('click', () => {
+        if (typeof navigateToModule === 'function') navigateToModule(tab.moduleId);
+    });
+    host.querySelector('[data-stk-back-cycle]')?.addEventListener('click', () => {
+        const desk = getStakeholderDeskKey();
+        const cycleTab = stkGetDeskTabs(desk).find((t) => t.panel === 'cycle');
+        if (cycleTab) stkSetDeskTab(desk, cycleTab.id);
+    });
+}
+
 function stkDafActiveTab() {
-    return window._stkDafTab || 'procurement';
+    const desk = getStakeholderDeskKey();
+    return desk === 'daf' ? stkActiveTabId('daf') : 'procurement';
 }
 
 function stkSetDafTab(tab) {
-    window._stkDafTab = tab === 'creditors' ? 'creditors' : 'procurement';
-    const tabs = document.getElementById('stkDafTabs');
-    const proc = document.getElementById('stkDafProcPanel');
-    const cred = document.getElementById('stkDafCreditorsPanel');
-    if (!tabs || !proc || !cred) return;
-    tabs.querySelectorAll('[data-stk-daf-tab]').forEach((btn) => {
-        const active = btn.getAttribute('data-stk-daf-tab') === window._stkDafTab;
-        btn.classList.toggle('is-active', active);
-        btn.setAttribute('aria-selected', active ? 'true' : 'false');
-    });
-    const isCred = window._stkDafTab === 'creditors';
-    proc.hidden = isCred;
-    cred.hidden = !isCred;
-    if (isCred) renderStkDafCreditorsPanel();
-    else renderStakeholderDeskList();
+    const desk = getStakeholderDeskKey();
+    if (desk !== 'daf') return;
+    if (tab === 'creditors') stkSetDeskTab('daf', 'creditors');
+    else stkSetDeskTab('daf', 'manac');
 }
 
-function stkSyncDafChrome() {
+function stkSyncDeskTabs() {
     const desk = getStakeholderDeskKey();
-    const isDaf = desk === 'daf';
-    const tabs = document.getElementById('stkDafTabs');
-    if (tabs) tabs.hidden = !isDaf;
-    if (!isDaf) {
-        const proc = document.getElementById('stkDafProcPanel');
-        const cred = document.getElementById('stkDafCreditorsPanel');
-        if (proc) proc.hidden = false;
-        if (cred) cred.hidden = true;
-        return;
-    }
-    stkSetDafTab(stkDafActiveTab());
+    const tabsHost = document.getElementById('stkDeskTabs');
+    if (!desk || !tabsHost) return;
+    stkRenderDeskTabs(desk);
+    const tab = stkTabDef(desk, stkActiveTabId(desk));
+    window._stkCycleFilter = tab?.cycleFilter || '';
+    stkShowDeskPanel(desk, tab);
 }
 
 function renderStkDafCreditorsPanel() {
@@ -698,7 +850,7 @@ function renderStkDafCreditorsPanel() {
             }).join('');
             payHost.querySelectorAll('[data-stk-daf-pay-id]').forEach((btn) => {
                 btn.addEventListener('click', () => {
-                    stkSetDafTab('procurement');
+                    stkSetDeskTab('daf', 'payment');
                     renderStakeholderDeskDetail(btn.getAttribute('data-stk-daf-pay-id'));
                     renderStakeholderDeskList();
                 });
@@ -714,18 +866,13 @@ function initStkDafPortalExtras() {
     if (!root || root.dataset.stkDafInit === '1') return;
     root.dataset.stkDafInit = '1';
 
-    document.getElementById('stkDafTabs')?.addEventListener('click', (e) => {
-        const tab = e.target.closest('[data-stk-daf-tab]');
-        if (!tab) return;
-        stkSetDafTab(tab.getAttribute('data-stk-daf-tab'));
-    });
     document.getElementById('stkDafOpenCreditorsBtn')?.addEventListener('click', () => {
         if (typeof navigateToModule === 'function') navigateToModule('supplier-debts');
     });
     document.getElementById('stkDafOpenBidsBtn')?.addEventListener('click', () => {
         if (typeof navigateToModule === 'function') navigateToModule('financial-year-bids');
     });
-    document.getElementById('stkDafOpenProcBtn')?.addEventListener('click', () => stkSetDafTab('procurement'));
+    document.getElementById('stkDafOpenProcBtn')?.addEventListener('click', () => stkSetDeskTab('daf', 'manac'));
     document.getElementById('stkDafLoadCreditorsBtn')?.addEventListener('click', () => {
         if (typeof requireEditAccess === 'function' && !requireEditAccess()) return;
         if (typeof loadItDirCreditorsRegister !== 'function') return;
@@ -755,19 +902,24 @@ function renderStakeholderDeskChrome() {
         sw.hidden = true;
         sw.innerHTML = '';
     }
-    stkSyncDafChrome();
+    stkSyncDeskTabs();
 }
 
 function renderStakeholderDesk() {
     const root = document.getElementById('stakeholder-desk');
     if (!root) return;
-    if (!getStakeholderDeskKey()) {
+    const desk = getStakeholderDeskKey();
+    if (!desk) {
         const intro = document.getElementById('stkDeskIntro');
         if (intro) intro.textContent = 'This login does not have a portal.';
         return;
     }
+    if (window._stkDafTab === 'creditors' && desk === 'daf' && !window._stkDeskTab?.daf) {
+        window._stkDeskTab = window._stkDeskTab || {};
+        window._stkDeskTab.daf = 'creditors';
+    }
     renderStakeholderDeskChrome();
-    renderStakeholderDeskList();
+    stkSyncDeskTabs();
 }
 
 function initStakeholderDeskModule() {
@@ -775,6 +927,13 @@ function initStakeholderDeskModule() {
     if (!root || root.dataset.stkInit === '1') return;
     root.dataset.stkInit = '1';
     initStkDafPortalExtras();
+    document.getElementById('stkDeskTabs')?.addEventListener('click', (e) => {
+        const tab = e.target.closest('[data-stk-desk-tab]');
+        if (!tab) return;
+        const desk = getStakeholderDeskKey();
+        if (!desk) return;
+        stkSetDeskTab(desk, tab.getAttribute('data-stk-desk-tab'));
+    });
     document.getElementById('stkDeskSearch')?.addEventListener('input', () => renderStakeholderDeskList());
     document.getElementById('stkDeskList')?.addEventListener('click', (e) => {
         const btn = e.target.closest('[data-stk-open]');
@@ -791,3 +950,5 @@ window.renderStakeholderDesk = renderStakeholderDesk;
 window.renderStakeholderDeskChrome = renderStakeholderDeskChrome;
 window.renderStkDafCreditorsPanel = renderStkDafCreditorsPanel;
 window.STK_DESK_DEFS = STK_DESK_DEFS;
+window.STK_DESK_TABS = STK_DESK_TABS;
+window.stkSetDeskTab = stkSetDeskTab;

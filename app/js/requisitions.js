@@ -33,6 +33,8 @@ const REQ_MINUTE_SHEET_APPTS = [
 
 const REQ_FILE_IT_34_1 = 'IT/34/1';
 const REQ_FILE_IT_34_1_TITLE = 'COMPUTER EQUIPMENT AND MEDIA';
+const REQ_DEFAULT_ACTION_INFO = 'Action: Brig Gen GS · Info: Col SD, IT Dir';
+const REQ_CHANNEL_GS = 'gs_branch';
 
 /** Map login roles → stamp APPT row they may sign */
 const REQ_ROLE_TO_APPT = {
@@ -82,8 +84,184 @@ function ensureRequisitions() {
     if (!Array.isArray(appState.requisitions)) {
         appState.requisitions = createDefaultRequisitions();
     }
+    if (typeof ensurePortalDemoRequisitions === 'function') ensurePortalDemoRequisitions(false);
     return appState.requisitions;
 }
+
+const REQ_PORTAL_SEED_REV = 3;
+
+function buildPortalDemoRequisitions() {
+    const blankSheet = typeof createBlankMinuteSheet === 'function' ? createBlankMinuteSheet() : [];
+    return [
+        {
+            id: 'req-seed-workshop-rollers-001',
+            reqNo: 'REQ-2026-0001',
+            receivedDate: '2026-09-01',
+            unit: 'IT DIR ENGINEERING SUPPORT (WORKSHOP)',
+            requestedBy: 'WO2 P MATSIKO',
+            contact: '0712 990 334',
+            fileRef: 'IT/34/1',
+            docType: 'loose_minute',
+            receivedThrough: 'gs_branch',
+            fileAs: 'first_sight',
+            actionInfo: 'Action: Brig Gen GS · Info: Col SD, IT Dir',
+            subject: 'Printer rollers — workshop spares',
+            justification: 'HP LaserJet M528 fuser rollers worn — critical workshop printer downtime.',
+            category: 'spares-parts',
+            itemDescription: 'Printer Rollers',
+            qty: 6,
+            unitPrice: 7000,
+            estimatedCost: 42000,
+            targetMonth: '2026-09',
+            priority: 'urgent',
+            status: 'in_progress',
+            notes: 'GL 2201900002 Spare Parts — F1 raised; with Colonel SD (GS Branch) for endorsement.',
+            dpProcId: 'dpp-seed-workshop-rollers-001',
+            minuteSheet: blankSheet,
+            seedExample: true,
+            createdAt: '2026-09-01T08:30:00'
+        },
+        {
+            id: 'req-seed-portal-001',
+            reqNo: 'REQ-2026-0042',
+            receivedDate: '2026-08-20',
+            unit: 'HQ 3 INF BDE',
+            requestedBy: 'MAJ K MUSARURWA',
+            contact: '0772 441 220',
+            fileRef: 'IT/34/1',
+            docType: 'loose_minute',
+            receivedThrough: 'gs_branch',
+            fileAs: 'first_sight',
+            actionInfo: 'Action: Brig Gen GS · Info: Col SD, IT Dir',
+            subject: 'Laptop refresh — HQ 3 Inf Bde OC office',
+            justification: 'Establishment laptops beyond economic repair — route to DP for F1.',
+            category: 'laptop',
+            itemDescription: 'Dell Latitude 5540 Core i7 · 16GB · 512GB SSD',
+            qty: 12,
+            unitPrice: 1550,
+            estimatedCost: 18600,
+            targetMonth: '2026-08',
+            priority: 'urgent',
+            status: 'received',
+            notes: 'Demo — linked to DP-2026-0001 GS endorsement queue.',
+            minuteSheet: blankSheet,
+            seedExample: true,
+            createdAt: '2026-08-20T08:00:00'
+        },
+        {
+            id: 'req-seed-portal-002',
+            reqNo: 'REQ-2026-0045',
+            receivedDate: '2026-08-22',
+            unit: 'COMP ENG',
+            requestedBy: 'CAPT T NDLOVU',
+            contact: '0712 883 441',
+            fileRef: 'IT/34/1',
+            docType: 'loose_minute',
+            receivedThrough: 'gs_branch',
+            fileAs: 'first_sight',
+            actionInfo: 'Action: Brig Gen GS · Info: Col SD, IT Dir',
+            subject: 'Core switch upgrade — server room',
+            justification: 'End-of-life Catalyst 2960 — requires DP procurement.',
+            category: 'network',
+            itemDescription: 'Cisco Catalyst 9200-24P × 4',
+            qty: 4,
+            unitPrice: 3100,
+            estimatedCost: 12400,
+            targetMonth: '2026-08',
+            priority: 'normal',
+            status: 'in_progress',
+            notes: 'Demo — DP F1 raised; with GS Branch for endorsement.',
+            minuteSheet: blankSheet,
+            seedExample: true,
+            createdAt: '2026-08-22T09:30:00'
+        },
+        {
+            id: 'req-seed-portal-003',
+            reqNo: 'REQ-2026-0038',
+            receivedDate: '2026-08-15',
+            unit: 'ADMIN OFFICE',
+            requestedBy: 'LT W CHIKANDA',
+            contact: '0773 220 118',
+            fileRef: 'IT/34/1',
+            docType: 'loose_minute',
+            receivedThrough: 'gs_branch',
+            fileAs: 'first_sight',
+            actionInfo: 'Action: Brig Gen GS · Info: Col SD, IT Dir',
+            subject: 'MFP printers — admin block',
+            justification: 'Shared printers failing — MANAC endorsement pending.',
+            category: 'printer',
+            itemDescription: 'HP LaserJet Enterprise MFP M528 × 8',
+            qty: 8,
+            estimatedCost: 960000,
+            targetMonth: '2026-08',
+            priority: 'normal',
+            status: 'in_progress',
+            notes: 'Demo — GS endorsed; awaiting DAF MANAC (DP-2026-0003).',
+            minuteSheet: blankSheet,
+            seedExample: true,
+            createdAt: '2026-08-15T11:00:00'
+        },
+        {
+            id: 'req-seed-portal-004',
+            reqNo: 'REQ-2026-0051',
+            receivedDate: '2026-08-28',
+            unit: 'WORKSHOP',
+            requestedBy: 'WO2 P MATSIKO',
+            contact: '0712 990 334',
+            fileRef: 'IT/34/1',
+            docType: 'loose_minute',
+            receivedThrough: 'gs_branch',
+            fileAs: 'first_sight',
+            actionInfo: 'Action: Brig Gen GS · Info: Col SD, IT Dir',
+            subject: 'Original toner cartridges — workshop spares',
+            justification: 'Critical spares below minimum — RFQ to Nixzimo.',
+            category: 'consumable',
+            itemDescription: 'HP CF287X original toner × 50',
+            qty: 50,
+            estimatedCost: 175000,
+            targetMonth: '2026-09',
+            priority: 'normal',
+            status: 'received',
+            notes: 'Demo — supplier RFQ window (DP-2026-0008).',
+            minuteSheet: blankSheet,
+            seedExample: true,
+            createdAt: '2026-08-28T07:45:00'
+        }
+    ];
+}
+
+function ensurePortalDemoRequisitions(force) {
+    if (!appState || !Array.isArray(appState.requisitions)) return 0;
+    const list = appState.requisitions;
+    const seeds = buildPortalDemoRequisitions();
+    let added = 0;
+    seeds.forEach((seed) => {
+        if (!list.some((rec) => rec.id === seed.id)) {
+            list.push(seed);
+            added += 1;
+        }
+    });
+    const rev = Number(appState.requisitionSeedRev) || 0;
+    const expected = seeds.length;
+    const present = seeds.filter((s) => list.some((rec) => rec.id === s.id)).length;
+    if (force || added || present < expected || rev < REQ_PORTAL_SEED_REV) {
+        if (rev < REQ_PORTAL_SEED_REV) {
+            seeds.forEach((seed) => {
+                const rec = list.find((r) => r.id === seed.id);
+                if (!rec) return;
+                rec.docType = seed.docType || rec.docType;
+                rec.receivedThrough = seed.receivedThrough || rec.receivedThrough;
+                rec.fileAs = seed.fileAs || rec.fileAs;
+                rec.actionInfo = seed.actionInfo || rec.actionInfo;
+            });
+        }
+        appState.requisitionSeedRev = REQ_PORTAL_SEED_REV;
+        if (typeof saveState === 'function') saveState();
+    }
+    return added;
+}
+
+window.ensurePortalDemoRequisitions = ensurePortalDemoRequisitions;
 
 function todayIsoLocal() {
     const d = new Date();
@@ -336,7 +514,9 @@ function clearRequisitionForm() {
     set('reqContact', '');
     set('reqFileRef', '');
     set('reqDocType', 'loose_minute');
-    set('reqActionInfo', 'Action: IT Dir · Info: File');
+    set('reqReceivedThrough', REQ_CHANNEL_GS);
+    set('reqFileAs', 'first_sight');
+    set('reqActionInfo', REQ_DEFAULT_ACTION_INFO);
     set('reqSubject', '');
     set('reqJustification', '');
     set('reqCategory', getRequisitionCategoryOptions()[0]?.value || 'other');
@@ -354,7 +534,7 @@ function clearRequisitionForm() {
     set('reqItDirStampDate', todayIsoLocal());
     renderRequisitionMinuteSheet(createBlankMinuteSheet());
     const title = document.getElementById('reqFormTitle');
-    if (title) title.textContent = 'Book in a requisition';
+    if (title) title.textContent = 'Book in a GS Branch loose minute';
     const saveBtn = document.getElementById('reqSaveBtn');
     if (saveBtn) saveBtn.textContent = 'Save Requisition';
 }
@@ -379,7 +559,9 @@ function fillRequisitionForm(req) {
     set('reqContact', req.contact || '');
     set('reqFileRef', req.fileRef || '');
     set('reqDocType', req.docType || 'loose_minute');
-    set('reqActionInfo', req.actionInfo || 'Action: IT Dir · Info: File');
+    set('reqReceivedThrough', req.receivedThrough || REQ_CHANNEL_GS);
+    set('reqFileAs', req.fileAs || 'first_sight');
+    set('reqActionInfo', req.actionInfo || REQ_DEFAULT_ACTION_INFO);
     set('reqSubject', req.subject || '');
     set('reqJustification', req.justification || '');
     set('reqCategory', req.category || 'other');
@@ -477,6 +659,8 @@ function readRequisitionForm() {
         fileRef: (document.getElementById('reqFileRef')?.value || '').trim(),
         correspondenceFile: REQ_FILE_IT_34_1,
         docType: document.getElementById('reqDocType')?.value || 'loose_minute',
+        receivedThrough: document.getElementById('reqReceivedThrough')?.value || REQ_CHANNEL_GS,
+        fileAs: document.getElementById('reqFileAs')?.value || 'first_sight',
         actionInfo: (document.getElementById('reqActionInfo')?.value || '').trim(),
         subject: (document.getElementById('reqSubject')?.value || '').trim(),
         justification: (document.getElementById('reqJustification')?.value || '').trim(),
@@ -661,6 +845,7 @@ function requisitionMatchesFilters(req, filters) {
     const hay = [
         req.reqNo, req.unit, req.requestedBy, req.contact, req.itemDescription,
         req.subject, req.fileRef, req.justification, req.actionInfo,
+        req.originRef, req.receivedThrough, req.docType,
         getRequisitionCategoryLabel(req.category), getRequisitionStatusLabel(req.status), req.notes
     ].join(' ').toLowerCase();
     return hay.includes(filters.q);
@@ -678,6 +863,18 @@ function renderRequisitionAgingStrip() {
     set('reqStatAging', summary.aging);
     set('reqStatOverdue', summary.overdue);
     set('reqStatUrgent', summary.urgent);
+}
+
+function getRequisitionArrivalLabel(req) {
+    const through = req?.receivedThrough || REQ_CHANNEL_GS;
+    const doc = req?.docType === 'loose_minute' || !req?.docType
+        ? 'Loose Minute'
+        : (req.docType === 'letter' ? 'Covering letter'
+            : req.docType === 'requisition_letter' ? 'Unit letter'
+                : 'Correspondence');
+    if (through === 'gs_branch') return `via GS Branch · ${doc}`;
+    if (through === 'direct') return `Direct to IT Dir · ${doc}`;
+    return doc;
 }
 
 function getRequisitionItemCell(req) {
@@ -711,7 +908,7 @@ function renderRequisitionsTable() {
         });
 
     if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="req-empty-row">No requisitions in this view. Book one in below, or widen the filters.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="req-empty-row">No GS Branch loose minutes in this First Sight / DF in-tray. Book one in below, or widen the filters.</td></tr>';
         if (typeof refreshTableFocusViewIfOpen === 'function') refreshTableFocusViewIfOpen();
         return;
     }
@@ -729,7 +926,10 @@ function renderRequisitionsTable() {
                     <strong>${reqEscape(formatReqDateIn(req.receivedDate))}</strong>
                     <div class="req-item-meta">${reqEscape(req.reqNo || '—')}</div>
                 </td>
-                <td class="req-cell-unit" title="${reqEscape(unitLabel)}">${reqEscape(unitLabel)}</td>
+                <td class="req-cell-unit" title="${reqEscape(unitLabel)}">
+                    ${reqEscape(unitLabel)}
+                    <div class="req-item-meta">${reqEscape(getRequisitionArrivalLabel(req))}</div>
+                </td>
                 <td class="req-cell-item">
                     <div class="req-item-primary">${reqEscape(item.primary)}</div>
                     <div class="req-item-meta">Qty ${reqEscape(qty)}${req.priority === 'urgent' ? ' · URGENT' : ''}</div>
@@ -987,8 +1187,10 @@ function ensureExampleMidLaptopRequisition() {
         contact: 'Harare 2743439',
         fileRef: REQ_FILE_IT_34_1,
         correspondenceFile: REQ_FILE_IT_34_1,
-        docType: 'requisition_letter',
-        actionInfo: 'Action: IT Dir · Info: File IT/34/1',
+        docType: 'loose_minute',
+        receivedThrough: 'gs_branch',
+        fileAs: 'first_sight',
+        actionInfo: REQ_DEFAULT_ACTION_INFO,
         subject: 'REQUEST FOR THE PURCHASE OF LAPTOPS FOR DRONE TECHNOLOGY COURSE FIELD TRAINING EXERCISE',
         justification:
             'Mapping and Research is running a Drone Technology course (6 Jul – 14 Aug 2026). ' +
