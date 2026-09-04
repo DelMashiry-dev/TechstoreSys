@@ -16,7 +16,7 @@ function formatCurrency(amount) {
     });
 }
 
-/** e.g. Thursday 06 August 2026, 14:16 */
+/** e.g. Thursday 06 August 2026, Logged In at 14:16 */
 function formatFullDateTime(value) {
     const d = value instanceof Date ? value : new Date(value);
     if (Number.isNaN(d.getTime())) return '—';
@@ -28,7 +28,7 @@ function formatFullDateTime(value) {
     const dd = String(d.getDate()).padStart(2, '0');
     const hh = String(d.getHours()).padStart(2, '0');
     const mm = String(d.getMinutes()).padStart(2, '0');
-    return `${days[d.getDay()]} ${dd} ${months[d.getMonth()]} ${d.getFullYear()}, ${hh}:${mm}`;
+    return `${days[d.getDay()]} ${dd} ${months[d.getMonth()]} ${d.getFullYear()}, Logged In at ${hh}:${mm}`;
 }
 
 function getSessionLoggedInAt() {

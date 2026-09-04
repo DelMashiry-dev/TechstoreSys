@@ -117,7 +117,7 @@ function buildWhatsAppChats() {
         }
         map.set('alerts', {
             id: 'alerts',
-            title: 'Notifications',
+            title: 'IN-TRAY',
             office: 'TechStores desk',
             subtitle: latest?.text || 'Desk alerts',
             time: latest?.receivedDate || latest?.dateIn || '',

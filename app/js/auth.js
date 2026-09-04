@@ -434,7 +434,7 @@ function applyAccessControl() {
     if (notifTitle) {
         if (!notifTitle.dataset.defaultText) notifTitle.dataset.defaultText = notifTitle.textContent.trim();
         if (isGateRegisterRole() && canSeeRoleNotifications()) {
-            notifTitle.textContent = 'Gate notifications';
+            notifTitle.textContent = 'Gate IN-TRAY';
             notifTitle.dataset.gateTitle = '1';
         } else {
             notifTitle.textContent = notifTitle.dataset.defaultText;
@@ -522,7 +522,7 @@ async function logoutUser() {
     if (typeof resetDashboardKicker === 'function') resetDashboardKicker();
     const notifTitle = document.querySelector('#dashCommandBoard .dash-collapse-titles h3');
     if (notifTitle?.dataset.gateTitle) {
-        notifTitle.textContent = notifTitle.dataset.defaultText || 'Notifications';
+        notifTitle.textContent = notifTitle.dataset.defaultText || 'IN-TRAY';
         delete notifTitle.dataset.gateTitle;
     }
     updateHeaderUser();

@@ -248,6 +248,7 @@ async function finalizeBootState(state) {
         appState.orderlyDailyFile = [];
     }
     if (typeof ensureDpProcurements === 'function') ensureDpProcurements();
+    // Spec-eval demos seed when Spec/Tech Evaluation opens — avoid blocking boot/save here.
     if (typeof ensureRequisitions === 'function') ensureRequisitions();
     if (typeof ensureSupplierDebts === 'function') ensureSupplierDebts();
     applyTheme(appState.theme);

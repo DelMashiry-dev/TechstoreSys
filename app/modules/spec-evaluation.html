@@ -5,9 +5,10 @@
                 </div>
 
                 <p class="spec-eval-intro">
-                    Prepare technical specifications before procurement. Start with a <strong>laptop duty profile</strong>
-                    (command, UAV, software engineering, database design, pay run, typing pool, and the rest), then search matching machines.
-                    The ICT Market Browser below is optional price research — it is not the duty-profile list.
+                    Official <strong>Specification Evaluation</strong> sheet: tick each supplier
+                    <strong>BELOW SPEC</strong> or <strong>TO SPEC</strong> against the required ITEM list,
+                    then <strong>Compiled by</strong> / <strong>Approved by</strong>.
+                    Spec Search and Market Browser above remain optional research aids.
                 </p>
 
                 <div class="dashboard-panel spec-search-panel">
@@ -185,143 +186,200 @@
                     <div id="specDocUploadStatus" class="spec-doc-upload-status" aria-live="polite"></div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-col">
-                        <label class="form-label">Evaluation No.</label>
-                        <input type="text" class="form-control" id="specEvalNumber" placeholder="e.g. SE/ITDIR/2026/001">
+                <div class="dashboard-panel spec-paper-form" id="specPaperForm">
+                    <div class="section-heading section-heading-compact">
+                        <h3>Specification Evaluation (official sheet)</h3>
+                        <button type="button" class="btn btn-ghost btn-sm" id="specEvalLoadDemosBtn" title="Load four paper demo sheets">Load demo examples</button>
                     </div>
-                    <div class="form-col">
-                        <label class="form-label">Date</label>
-                        <input type="date" class="form-control" id="specEvalDate">
-                    </div>
-                    <div class="form-col">
-                        <label class="form-label">Equipment Category</label>
-                        <select class="form-control" id="specEvalCategory">
-                            <option value="">Select category…</option>
-                            <option value="laptop">Laptop</option>
-                            <option value="desktop">Desktop Computer</option>
-                            <option value="tablet">Tablet</option>
-                            <option value="printer">Printer</option>
-                            <option value="server">Server</option>
-                            <option value="network">Network Equipment</option>
-                            <option value="other">Other ICT Equipment</option>
-                        </select>
-                    </div>
-                </div>
+                    <p class="spec-paper-hint">
+                        Matches the printed sheet: compare quoted suppliers as <strong>BELOW SPEC</strong> or <strong>TO SPEC</strong>,
+                        then compile and approve. Demo sheets: Dell Pro Rugged 14 · HP LaserJet MFP · HP Omen 16 · HP OmniBook Ultra.
+                    </p>
 
-                <div class="form-row">
-                    <div class="form-col" style="flex: 2;">
-                        <label class="form-label">Item / Product Name</label>
-                        <div class="spec-item-autofill">
-                            <input type="text" class="form-control" id="specEvalItemName" placeholder="e.g. Samsung Tab 11 / HP EliteBook 840 G10" list="specProductCatalogHints">
-                            <button type="button" class="btn btn-primary" id="autofillFromItemBtn" title="Fill from local catalog, then online lookup">Auto-fill Specs</button>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Evaluation No.</label>
+                            <input type="text" class="form-control" id="specEvalNumber" placeholder="e.g. SE/ITDIR/2026/001">
                         </div>
-                        <datalist id="specProductCatalogHints"></datalist>
-                        <small class="spec-autofill-hint">Local catalog first, then online + AI extract. Upload a spec photo above, or set <code>OPENAI_API_KEY</code> on the server for full AI. Always review before procurement.</small>
+                        <div class="form-col">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-control" id="specEvalDate">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Equipment Category</label>
+                            <select class="form-control" id="specEvalCategory">
+                                <option value="">Select category…</option>
+                                <option value="laptop">Laptop</option>
+                                <option value="desktop">Desktop Computer</option>
+                                <option value="tablet">Tablet</option>
+                                <option value="printer">Printer</option>
+                                <option value="server">Server</option>
+                                <option value="network">Network Equipment</option>
+                                <option value="other">Other ICT Equipment</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Saved evaluations</label>
+                            <select class="form-control" id="specEvalSavedSelect" title="Open a saved or demo evaluation">
+                                <option value="">— New / blank —</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="form-col">
-                        <label class="form-label">Preferred Brand / Model (if known)</label>
-                        <input type="text" class="form-control" id="specEvalBrand" placeholder="Auto-filled from item name">
-                    </div>
-                    <div class="form-col">
-                        <label class="form-label">GL Account</label>
-                        <select class="form-control" id="specEvalGl">
-                            <option value="3112210001">3112210001 - ICT Equipment</option>
-                            <option value="6122100009">6122100009 - Office Supplies &amp; Services (ZOFF)</option>
-                            <option value="2200600002">2200600002 - Computer Consumables (legacy)</option>
-                            <option value="2200600003">2200600003 - Software Licenses</option>
-                            <option value="220200002">220200002 - Tech Equipment Maintenance</option>
-                            <option value="2201900002">2201900002 - Spare Parts</option>
-                        </select>
-                    </div>
-                </div>
 
-                <div class="form-row">
-                    <div class="form-col">
-                        <label class="form-label">Quantity Required</label>
-                        <input type="number" class="form-control" id="specEvalQty" min="1" step="1" value="1">
+                    <div class="form-row">
+                        <div class="form-col" style="flex: 2;">
+                            <label class="form-label">Product title (sheet heading)</label>
+                            <div class="spec-item-autofill">
+                                <input type="text" class="form-control" id="specEvalItemName"
+                                    placeholder="e.g. DELL PRO RUGGED 14 RB14250 BTX LAPTOP"
+                                    list="specProductCatalogHints">
+                                <button type="button" class="btn btn-primary" id="autofillFromItemBtn" title="Suggest ITEM rows from catalog">Suggest items</button>
+                            </div>
+                            <datalist id="specProductCatalogHints"></datalist>
+                            <p class="form-hint">Printed as: <strong id="specEvalSheetTitlePreview">… SPECIFICATION EVALUATION</strong></p>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Brand / Model note</label>
+                            <input type="text" class="form-control" id="specEvalBrand" placeholder="Optional">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">GL Account</label>
+                            <select class="form-control" id="specEvalGl">
+                                <option value="3112210001">3112210001 - ICT Equipment</option>
+                                <option value="6122100009">6122100009 - Office Supplies &amp; Services (ZOFF)</option>
+                                <option value="2200600002">2200600002 - Computer Consumables (legacy)</option>
+                                <option value="2200600003">2200600003 - Software Licenses</option>
+                                <option value="220200002">220200002 - Tech Equipment Maintenance</option>
+                                <option value="2201900002">2201900002 - Spare Parts</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="form-col">
-                        <label class="form-label">Estimated Unit Price</label>
-                        <input type="number" class="form-control" id="specEvalUnitPrice" min="0" step="0.01" placeholder="0.00">
+
+                    <div class="form-row" hidden>
+                        <div class="form-col">
+                            <label class="form-label">Quantity Required</label>
+                            <input type="number" class="form-control" id="specEvalQty" min="1" step="1" value="1">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Estimated Unit Price</label>
+                            <input type="number" class="form-control" id="specEvalUnitPrice" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Estimated Total</label>
+                            <input type="number" class="form-control" id="specEvalTotal" min="0" step="0.01" readonly>
+                        </div>
                     </div>
-                    <div class="form-col">
-                        <label class="form-label">Estimated Total</label>
-                        <input type="number" class="form-control" id="specEvalTotal" min="0" step="0.01" readonly>
+                    <textarea class="form-control" id="specEvalPurpose" rows="2" hidden placeholder="Purpose"></textarea>
+                    <input type="hidden" id="specEvalEditId" value="">
+
+                    <div class="spec-template-bar">
+                        <span class="spec-template-label">ITEM checklist:</span>
+                        <button type="button" class="btn btn-ghost btn-sm" id="loadLaptopSpecsBtn">Laptop items</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="loadDesktopSpecsBtn">Desktop</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="loadTabletSpecsBtn">Tablet</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="loadPrinterSpecsBtn">Printer / MFP</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="loadServerSpecsBtn">Server</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="clearSpecsBtn">Clear rows</button>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label class="form-label">Purpose / Operational Justification</label>
-                    <textarea class="form-control" id="specEvalPurpose" rows="3" placeholder="Why is this equipment required? How does the specification justify the price?"></textarea>
-                </div>
-
-                <div class="spec-template-bar">
-                    <span class="spec-template-label">Load standard specs:</span>
-                    <button type="button" class="btn btn-ghost btn-sm" id="loadLaptopSpecsBtn">Laptop</button>
-                    <button type="button" class="btn btn-ghost btn-sm" id="loadDesktopSpecsBtn">Desktop</button>
-                    <button type="button" class="btn btn-ghost btn-sm" id="loadTabletSpecsBtn">Tablet</button>
-                    <button type="button" class="btn btn-ghost btn-sm" id="loadPrinterSpecsBtn">Printer</button>
-                    <button type="button" class="btn btn-ghost btn-sm" id="loadServerSpecsBtn">Server</button>
-                    <button type="button" class="btn btn-ghost btn-sm" id="clearSpecsBtn">Clear Specs</button>
-                </div>
-
-                <div class="module-toolbar">
-                    <input type="search" class="form-control table-search" data-search-target="spec-eval-table-body" placeholder="Search specifications...">
-                    <button type="button" class="btn btn-primary btn-sm btn-table-search">Search</button>
-                    <button type="button" class="btn btn-ghost btn-sm btn-table-search-clear">Clear</button>
-                </div>
-
-                <div class="form-table-wrapper">
-                    <table class="spec-eval-table">
-                        <thead>
-                            <tr>
-                                <th style="width:48px;">Ser</th>
-                                <th>Specification Field</th>
-                                <th>Required Spec / Value</th>
-                                <th>Price Justification / Notes</th>
-                                <th style="width:90px;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="spec-eval-table-body">
-                            <tr>
-                                <td>1</td>
-                                <td><input type="text" class="form-control spec-field-name" placeholder="e.g. Processor"></td>
-                                <td><input type="text" class="form-control spec-field-value" placeholder="e.g. Intel Core i7 / AMD Ryzen 7"></td>
-                                <td><input type="text" class="form-control spec-field-note" placeholder="Why this spec is needed"></td>
-                                <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="spec-add-field-bar">
-                    <input type="text" class="form-control" id="newSpecFieldName" placeholder="New specification field name (e.g. Webcam, Touchscreen)">
-                    <button type="button" class="btn btn-primary" id="addNamedSpecFieldBtn">Add Spec Field</button>
-                    <button type="button" class="btn btn-secondary" onclick="addSpecEvalRow()">Add Blank Row</button>
-                </div>
-
-                <div class="form-row" style="margin-top: 18px;">
-                    <div class="form-col">
-                        <label class="form-label">Prepared By</label>
-                        <input type="text" class="form-control" id="specEvalPreparedBy" placeholder="Force No., Rank, Name">
+                    <div class="spec-supplier-bar" id="specSupplierBar">
+                        <span class="spec-template-label">Suppliers (columns):</span>
+                        <div class="spec-supplier-inputs" id="specSupplierInputs"></div>
+                        <button type="button" class="btn btn-ghost btn-sm" id="specAddSupplierBtn">+ Supplier</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="specRemoveSupplierBtn" title="Remove last supplier column">− Supplier</button>
                     </div>
-                    <div class="form-col">
-                        <label class="form-label">Checked / Recommended By</label>
-                        <input type="text" class="form-control" id="specEvalRecommendedBy" placeholder="Force No., Rank, Name, Appointment">
-                    </div>
-                    <div class="form-col">
-                        <label class="form-label">Approved By</label>
-                        <input type="text" class="form-control" id="specEvalApprovedBy" placeholder="Approving officer">
-                    </div>
-                </div>
 
-                <div class="module-actions" style="margin-top: 16px;">
-                    <button class="btn btn-success btn-save-module" type="button">Save Spec Evaluation</button>
-                    <button class="btn btn-secondary" id="specEvalPreviewBtn" type="button">Preview / Print</button>
-                    <button class="btn btn-secondary btn-print-module" data-print-target="spec-evaluation" type="button" hidden>Print</button>
-                    <button class="btn btn-secondary" id="specEvalSavePdfBtn" type="button">Save PDF</button>
-                    <button class="btn btn-secondary" id="specEvalSaveWordBtn" type="button">Save Word</button>
-                    <button class="btn btn-secondary btn-generate-report" data-report-module="spec-evaluation" type="button">Generate Report</button>
+                    <div class="form-table-wrapper spec-matrix-wrap">
+                        <table class="spec-eval-matrix" id="specEvalMatrixTable">
+                            <thead id="specEvalMatrixHead"></thead>
+                            <tbody id="spec-eval-table-body"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="spec-add-field-bar">
+                        <input type="text" class="form-control" id="newSpecFieldName" placeholder="New ITEM (e.g. Webcam, Touchscreen)">
+                        <button type="button" class="btn btn-primary" id="addNamedSpecFieldBtn">Add ITEM row</button>
+                        <button type="button" class="btn btn-secondary" id="addBlankSpecRowBtn">Add blank row</button>
+                    </div>
+
+                    <div class="spec-signoff-grid" aria-label="Compiled and approved">
+                        <fieldset class="spec-signoff-block">
+                            <legend>Compiled by</legend>
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <label class="form-label">ID / Service No.</label>
+                                    <input type="text" class="form-control" id="specCompiledId" placeholder="e.g. 826473P">
+                                </div>
+                                <div class="form-col">
+                                    <label class="form-label">Rank</label>
+                                    <input type="text" class="form-control" id="specCompiledRank" placeholder="e.g. CSgt">
+                                </div>
+                                <div class="form-col">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" class="form-control" id="specCompiledName" placeholder="e.g. Dube T">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <label class="form-label">Appt</label>
+                                    <input type="text" class="form-control" id="specCompiledAppt" placeholder="e.g. Technician">
+                                </div>
+                                <div class="form-col">
+                                    <label class="form-label">Sig</label>
+                                    <input type="text" class="form-control" id="specCompiledSig" placeholder="Initials / signature">
+                                </div>
+                                <div class="form-col">
+                                    <label class="form-label">Date</label>
+                                    <input type="date" class="form-control" id="specCompiledDate">
+                                </div>
+                            </div>
+                        </fieldset>
+                        <fieldset class="spec-signoff-block">
+                            <legend>Approved by</legend>
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <label class="form-label">ID / Service No.</label>
+                                    <input type="text" class="form-control" id="specApprovedId" placeholder="e.g. 789674Q">
+                                </div>
+                                <div class="form-col">
+                                    <label class="form-label">Rank</label>
+                                    <input type="text" class="form-control" id="specApprovedRank" placeholder="e.g. Capt">
+                                </div>
+                                <div class="form-col">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" class="form-control" id="specApprovedName" placeholder="e.g. L Kativhu">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <label class="form-label">Appt</label>
+                                    <input type="text" class="form-control" id="specApprovedAppt" placeholder="e.g. OC">
+                                </div>
+                                <div class="form-col">
+                                    <label class="form-label">Sig</label>
+                                    <input type="text" class="form-control" id="specApprovedSig" placeholder="Initials / signature">
+                                </div>
+                                <div class="form-col">
+                                    <label class="form-label">Date</label>
+                                    <input type="date" class="form-control" id="specApprovedDate">
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <!-- Legacy single-line sign-off fields kept for older exports / autofill bridges -->
+                    <input type="hidden" id="specEvalPreparedBy" value="">
+                    <input type="hidden" id="specEvalRecommendedBy" value="">
+                    <input type="hidden" id="specEvalApprovedBy" value="">
+
+                    <div class="module-actions" style="margin-top: 16px;">
+                        <button class="btn btn-success" id="specEvalSaveBtn" type="button">Save Spec Evaluation</button>
+                        <button class="btn btn-ghost" id="specEvalNewBtn" type="button">New blank sheet</button>
+                        <button class="btn btn-secondary" id="specEvalPreviewBtn" type="button">Preview / Print</button>
+                        <button class="btn btn-secondary btn-print-module" data-print-target="spec-evaluation" type="button" hidden>Print</button>
+                        <button class="btn btn-secondary" id="specEvalSavePdfBtn" type="button">Save PDF</button>
+                        <button class="btn btn-secondary" id="specEvalSaveWordBtn" type="button">Save Word</button>
+                        <button class="btn btn-secondary btn-generate-report" data-report-module="spec-evaluation" type="button">Generate Report</button>
+                    </div>
                 </div>
             </div>

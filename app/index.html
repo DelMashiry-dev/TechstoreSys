@@ -13,7 +13,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" type="image/png" href="../assets/favicon.png">
     <link rel="apple-touch-icon" href="../assets/pwa-icon-180.png">
-    <link rel="stylesheet" href="css/main.css?v=20260903gsminute">
+    <link rel="stylesheet" href="css/main.css?v=20260904togglenice">
 
 </head>
 <body class="app-locked">
@@ -746,10 +746,7 @@
                 <h1>IT-DIR Tech Stores Dashboard</h1>
                 <div class="header-aside">
                     <div class="user-controls">
-                        <div class="storage-mode-toggle-wrap" id="storageModeToggleWrap" title="Switch online / offline"></div>
                         <button type="button" class="db-status-badge db-offline" id="dbStatusBadge" title="Click for storage details">Local Only</button>
-                        <button type="button" class="btn btn-secondary btn-sm doc-import-entry" id="headerDocImportBtn"
-                            title="Upload or paste a loose minute, quotation, P/O, DP F1, spec or D-Note and fill the matching form">Import document</button>
                         <button class="glossy-pill-btn theme-toggle" id="themeToggle" type="button" title="Appearance — themes &amp; UI preferences">Appearance</button>
                         <button class="btn btn-ghost btn-sm" id="logoutBtn" type="button">Logout</button>
                     </div>
@@ -773,22 +770,22 @@
                             <div class="dashboard-context-row" aria-label="Operations context">
                                 <span class="context-chip">Josiah Magama Tongogara Barracks</span>
                                 <span class="context-chip" id="dashboardSignedInChip">Signed in: —</span>
-                                <button type="button" class="context-chip" id="dashboardDbChip" title="Click to switch online / offline mode">Storage: —</button>
+                                <div class="storage-mode-toggle-wrap storage-mode-toggle-wrap--compact dashboard-mode-toggle"
+                                    id="storageModeToggleWrap" title="Switch online / offline"></div>
                             </div>
                             <div class="dashboard-toolbar" aria-label="Dashboard actions">
                                 <label class="sr-only" for="dashboardUniversalSearchInput">Universal search</label>
                                 <input type="search" id="dashboardUniversalSearchInput" class="form-control dashboard-universal-search-input"
                                     placeholder="Search anything… memo, fuel, PO, ZA (Ctrl+K)"
                                     autocomplete="off" readonly>
-                                <button class="btn btn-primary btn-sm" id="universalSearchBtn" type="button"
+                                <button class="btn btn-secondary btn-sm" id="universalSearchBtn" type="button"
                                     data-universal-search title="Search anything in the system (Ctrl+K)">Universal Search</button>
                                 <button class="btn btn-secondary btn-sm" id="openAiAssistantBtn" type="button"
                                     title="Ask about GL, stock, requisitions, loans, procurement, or ICT trends">AI Assistant</button>
                                 <button class="btn btn-secondary btn-sm doc-import-entry" id="dashboardDocImportBtn" type="button"
                                     title="Upload or paste a document to fill requisitions, quotations, P/Os, DP F1, specs or D-Notes">Import document</button>
-                                <button class="btn btn-primary btn-sm" id="refreshDashboardBtn" type="button">Refresh</button>
                                 <button class="btn btn-secondary btn-sm" id="btnLoadDemoPack" type="button" title="Fill GL cards, stock ledgers, POs, vouchers, ZA register with realistic demo figures">Load demo figures</button>
-                                <button class="btn btn-primary btn-sm" id="dashboardTrackBtn" type="button"
+                                <button class="btn btn-secondary btn-sm" id="dashboardTrackBtn" type="button"
                                     title="Track location of serialised / ZA-engraved controlled stores (printer, laptop, desktop, projector, tablet, router, AP…)">Track</button>
                                 <button class="btn btn-secondary btn-sm btn-generate-report" data-report-module="dashboard" type="button">Generate Report</button>
                             </div>
@@ -796,13 +793,13 @@
                     </div>
                 </div>
 
-                <!-- Command board: Notifications at the top (collapsible) -->
-                <section class="dash-command-board dash-collapse" id="dashCommandBoard" data-collapse-key="system-alerts" aria-label="Notifications and office messages">
+                <!-- Command board: IN-TRAY at the top (collapsible) -->
+                <section class="dash-command-board dash-collapse" id="dashCommandBoard" data-collapse-key="system-alerts" aria-label="IN-TRAY and office messages">
                     <div class="command-panel command-alerts alert-panel" id="systemAlerts">
                         <div class="command-panel-head">
                             <button type="button" class="dash-collapse-toggle command-collapse-toggle" aria-expanded="false" title="Expand section">
                                 <div class="dash-collapse-titles">
-                                    <h3>Notifications</h3>
+                                    <h3>IN-TRAY</h3>
                                 </div>
                                 <span class="dash-collapse-caret" aria-hidden="true">▾</span>
                             </button>
@@ -869,7 +866,7 @@
                 <section id="rpGateHome" class="rp-gate-home" hidden aria-label="RP Gate workspace (legacy)"></section>
 
                 <section class="inventory-section" aria-label="Inventory ledgers">
-                    <div class="dash-collapse inventory-ledgers-collapse" data-collapse-key="inventory-ledgers">
+                    <div class="dashboard-panel dash-collapse inventory-ledgers-collapse" data-collapse-key="inventory-ledgers">
                         <div class="inventory-ledgers-head-row">
                             <button type="button" class="dash-collapse-toggle" aria-expanded="false" title="Expand section">
                                 <div class="dash-collapse-titles">
@@ -1697,15 +1694,15 @@
     <script src="js/product-specs-catalog.js"></script>
     <script src="js/laptop-duty-profiles.js?v=20260828cat"></script>
     <script src="js/suppliers-seed.js"></script>
-    <script src="js/state.js?v=20260902portalseed2"></script>
+    <script src="js/state.js?v=20260903specpaper"></script>
     <script src="js/storage-mode.js?v=20260823dblabel"></script>
     <script src="js/gl-targets.js"></script>
     <script src="js/monthly-target-proposals.js"></script>
-    <script src="js/auth.js?v=20260828imp"></script>
+    <script src="js/auth.js?v=20260904intray2"></script>
     <script src="js/dept-home.js?v=20260828imp"></script>
-    <script src="js/utils.js?v=20260901typeablefix2"></script>
+    <script src="js/utils.js?v=20260904loginat"></script>
     <script src="js/window-chrome.js?v=20260827max"></script>
-    <script src="js/module-loader.js?v=20260903priority"></script>
+    <script src="js/module-loader.js?v=20260904intray2"></script>
     <script src="js/how-it-works.js?v=20260826hiw"></script>
     <script src="js/search-history.js"></script>
     <script src="js/universal-search.js?v=20260828imp"></script>
@@ -1713,7 +1710,7 @@
     <script src="js/it-dir-departments.js"></script>
     <script src="js/it-dir-establishment.js"></script>
     <script src="js/process-guides.js?v=20260903gsminute"></script>
-    <script src="js/system-dictionary.js?v=20260903gsminute"></script>
+    <script src="js/system-dictionary.js?v=20260904intray2"></script>
     <script src="js/field-help.js?v=20260903gsminute"></script>
     <script src="js/ui-preferences.js"></script>
     <script src="js/nav-reorder.js?v=20260828port"></script>
@@ -1766,7 +1763,8 @@
     <script src="js/real-dp-purchase-orders.js?v=20260828cyc"></script>
     <script src="js/zimbabwe-po-benchmarks.js?v=20260826po2"></script>
     <script src="js/guide-quotation.js?v=20260826gq2"></script>
-    <script src="js/spec-eval.js?v=20260827duty"></script>
+    <script src="js/spec-eval.js?v=20260903iconfix"></script>
+    <script src="js/spec-eval-matrix.js?v=20260903iconfix"></script>
     <script src="js/dp-f1.js"></script>
     <script src="js/purchase-orders.js?v=20260829official"></script>
     <script src="js/cost-comparative-schedule.js"></script>
@@ -1790,8 +1788,8 @@
     <script src="js/message-priority.js"></script>
     <script src="js/office-messages.js"></script>
     <script src="js/mail-layout.js"></script>
-    <script src="js/sa-window.js"></script>
-    <script src="js/whatsapp-layout.js"></script>
+    <script src="js/sa-window.js?v=20260904intray2"></script>
+    <script src="js/whatsapp-layout.js?v=20260904intray2"></script>
     <script src="js/module-messaging-portal.js"></script>
     <script src="js/correspondence-samples.js"></script>
     <script src="js/it-dir-comms.js"></script>
@@ -1799,7 +1797,7 @@
     <script src="js/tables.js"></script>
     <script src="js/ux-improvements.js"></script>
     <script src="js/pwa-install.js"></script>
-    <script src="js/boot.js?v=20260901navcollapse"></script>
+    <script src="js/boot.js?v=20260903iconfix"></script>
 
 </body>
 </html>

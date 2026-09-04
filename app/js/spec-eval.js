@@ -1591,6 +1591,7 @@ function initSpecEvaluationModule() {
     initSpecIntelligentSearch();
     initSpecSheetPreviewControls();
     if (typeof initMarketCatalogPanel === 'function') initMarketCatalogPanel();
+    if (typeof initSpecEvalMatrixUI === 'function') initSpecEvalMatrixUI();
 
     if (!document.getElementById('specEvalDate')?.value) {
         const dateEl = document.getElementById('specEvalDate');
@@ -1601,3 +1602,4 @@ function initSpecEvaluationModule() {
 }
 
 window.applySpecDocumentToForm = applySpecDocumentToForm;
+window.initSpecEvaluationModule = initSpecEvaluationModule;
