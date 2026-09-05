@@ -1,0 +1,253 @@
+<div id="specification-process" class="form-container">
+    <div class="form-header">
+        <h2 class="form-title">Specs Evaluation</h2>
+        <button class="close-btn">&times;</button>
+    </div>
+
+    <p class="spec-proc-intro">
+        IT Dir ICT procurement specs run in <strong>three separate documents</strong>.
+        Workshop prepares the <strong>ZNA (IT Dir Specification)</strong> and later the
+        <strong>Spec Evaluation Form</strong>.
+        <strong>Supplier Spec / Quotation</strong> is entered on the <strong>Supplier Window</strong> (Portals).
+        After To Spec / Below Spec scoring, prices go to the <strong>Due Diligence Window</strong> (AIAD) for Cost Comparative and the certificate.
+    </p>
+
+    <div id="specProcRelatedChain" class="related-process-host" aria-live="polite"></div>
+
+    <nav class="spec-proc-steps" aria-label="Specification process stages">
+        <button type="button" class="spec-proc-step is-active" data-spec-proc-step="zna">
+            <span class="spec-proc-step-num">1</span>
+            <span class="spec-proc-step-label">ZNA (IT Dir Specification)</span>
+            <span class="spec-proc-step-hint">Workshop prepares required specs</span>
+        </button>
+        <button type="button" class="spec-proc-step" data-spec-proc-step="supplier">
+            <span class="spec-proc-step-num">2</span>
+            <span class="spec-proc-step-label">Supplier Spec / Quotation</span>
+            <span class="spec-proc-step-hint">Submitted on Supplier Window (read-only here)</span>
+        </button>
+        <button type="button" class="spec-proc-step" data-spec-proc-step="eval">
+            <span class="spec-proc-step-num">3</span>
+            <span class="spec-proc-step-label">Spec Evaluation Form</span>
+            <span class="spec-proc-step-hint">ZNA vs supplier — To Spec / Below Spec</span>
+        </button>
+    </nav>
+
+    <!-- ========== 1. ZNA (IT Dir Specification) ========== -->
+    <section class="dashboard-panel spec-proc-panel" id="specProcPanelZna" data-spec-proc-panel="zna">
+        <div class="section-heading section-heading-compact">
+            <h3>ZNA (IT Dir Specification)</h3>
+        </div>
+        <p class="spec-proc-panel-lead">
+            Prepared by <strong>Workshop / Engineers</strong> when a requisition asks for ICT equipment
+            (laptop, desktop, printer, server, tablet). Capture brand, RAM, storage, processor, and other key
+            requirements. Cosigned by the preparer and <strong>OC Engineers</strong>, then attached to the
+            <strong>DP F1</strong> before calling suppliers.
+        </p>
+
+        <div class="form-row">
+            <div class="form-col">
+                <label class="form-label">Saved ZNA specs</label>
+                <select class="form-control" id="specProcZnaSavedSelect">
+                    <option value="">— New specification —</option>
+                </select>
+            </div>
+            <div class="form-col">
+                <label class="form-label">Spec No.</label>
+                <input type="text" class="form-control" id="specProcZnaNo" placeholder="e.g. SPEC/ITDIR/2026/012">
+            </div>
+            <div class="form-col">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-control" id="specProcZnaDate">
+            </div>
+            <div class="form-col">
+                <label class="form-label">Equipment category</label>
+                <select class="form-control" id="specProcZnaCategory">
+                    <option value="laptop">Laptop</option>
+                    <option value="desktop">Desktop Computer</option>
+                    <option value="tablet">Tablet</option>
+                    <option value="printer">Printer / MFP</option>
+                    <option value="server">Server</option>
+                    <option value="network">Network Equipment</option>
+                    <option value="other">Other ICT</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-col" style="flex:2;">
+                <label class="form-label">Sheet title (printed heading)</label>
+                <input type="text" class="form-control" id="specProcZnaTitle"
+                    placeholder="e.g. HP VICTUS 16 LAPTOP SPECIFICATIONS">
+                <p class="form-hint">Matches paper form: <em>… SPECIFICATIONS</em></p>
+            </div>
+            <div class="form-col">
+                <label class="form-label">Linked requisition / purpose</label>
+                <input type="text" class="form-control" id="specProcZnaPurpose"
+                    placeholder="e.g. Laptop for Software Engineering / programmers">
+            </div>
+            <div class="form-col">
+                <label class="form-label">DP F1 / file ref</label>
+                <input type="text" class="form-control" id="specProcZnaDpRef" placeholder="Optional F1 ref">
+            </div>
+        </div>
+
+        <div class="spec-template-bar">
+            <span class="spec-template-label">Load ITEM checklist:</span>
+            <button type="button" class="btn btn-ghost btn-sm" data-spec-proc-zna-template="laptop">Laptop</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-spec-proc-zna-template="desktop">Desktop</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-spec-proc-zna-template="printer">Printer</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-spec-proc-zna-template="server">Server</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-spec-proc-zna-template="tablet">Tablet</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="specProcZnaClearRows">Clear rows</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="specProcZnaLoadVictus">Load Victus example</button>
+        </div>
+
+        <div class="form-table-wrapper">
+            <table class="overview-table spec-proc-rows-table" id="specProcZnaTable">
+                <thead>
+                    <tr>
+                        <th style="width:48px;">#</th>
+                        <th style="width:28%;">ITEM</th>
+                        <th>Required specification (ZNA)</th>
+                        <th style="width:56px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="specProcZnaBody"></tbody>
+            </table>
+        </div>
+        <div class="spec-add-field-bar">
+            <input type="text" class="form-control" id="specProcZnaNewItem" placeholder="New ITEM (e.g. Webcam)">
+            <button type="button" class="btn btn-primary btn-sm" id="specProcZnaAddRow">Add ITEM row</button>
+        </div>
+
+        <div class="spec-signoff-grid">
+            <fieldset class="spec-signoff-block">
+                <legend>Compiled by (Workshop / Engineers)</legend>
+                <div class="form-row">
+                    <div class="form-col"><label class="form-label">ID / Service No.</label><input type="text" class="form-control" id="specProcZnaCompiledId" placeholder="e.g. 847318X"></div>
+                    <div class="form-col"><label class="form-label">Rank</label><input type="text" class="form-control" id="specProcZnaCompiledRank" placeholder="e.g. CPL"></div>
+                    <div class="form-col"><label class="form-label">Name</label><input type="text" class="form-control" id="specProcZnaCompiledName" placeholder="e.g. Nyathi PB"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-col"><label class="form-label">Appt</label><input type="text" class="form-control" id="specProcZnaCompiledAppt" placeholder="e.g. Tech"></div>
+                    <div class="form-col"><label class="form-label">Sig</label><input type="text" class="form-control" id="specProcZnaCompiledSig" placeholder="Initials"></div>
+                    <div class="form-col"><label class="form-label">Date</label><input type="date" class="form-control" id="specProcZnaCompiledDate"></div>
+                </div>
+            </fieldset>
+            <fieldset class="spec-signoff-block">
+                <legend>Approved by (OC Engineers)</legend>
+                <div class="form-row">
+                    <div class="form-col"><label class="form-label">ID / Service No.</label><input type="text" class="form-control" id="specProcZnaApprovedId" placeholder="e.g. 789674Q"></div>
+                    <div class="form-col"><label class="form-label">Rank</label><input type="text" class="form-control" id="specProcZnaApprovedRank" placeholder="e.g. Capt"></div>
+                    <div class="form-col"><label class="form-label">Name</label><input type="text" class="form-control" id="specProcZnaApprovedName" placeholder="e.g. L Kativu"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-col"><label class="form-label">Appt</label><input type="text" class="form-control" id="specProcZnaApprovedAppt" placeholder="e.g. OC"></div>
+                    <div class="form-col"><label class="form-label">Sig</label><input type="text" class="form-control" id="specProcZnaApprovedSig" placeholder="Initials"></div>
+                    <div class="form-col"><label class="form-label">Date</label><input type="date" class="form-control" id="specProcZnaApprovedDate"></div>
+                </div>
+            </fieldset>
+        </div>
+
+        <div class="module-actions">
+            <button type="button" class="btn btn-primary" id="specProcZnaSaveBtn">Save ZNA Specification</button>
+            <button type="button" class="btn btn-secondary" id="specProcZnaPrintBtn">Preview / Print ZNA Spec</button>
+            <button type="button" class="btn btn-ghost" id="specProcZnaNewBtn">New blank</button>
+            <button type="button" class="btn btn-ghost" id="specProcGotoSupplierBtn">Next → Received quotations</button>
+        </div>
+        <input type="hidden" id="specProcZnaEditId" value="">
+    </section>
+
+    <!-- ========== 2. Received Supplier Spec / Quotation (read-only — entered on Supplier Portal) ========== -->
+    <section class="dashboard-panel spec-proc-panel" id="specProcPanelSupplier" data-spec-proc-panel="supplier" hidden>
+        <div class="section-heading section-heading-compact">
+            <h3>Supplier Spec / Quotation — received</h3>
+        </div>
+        <p class="spec-proc-panel-lead">
+            Suppliers complete <strong>Supplier Spec / Quotation</strong> on the
+            <strong>Supplier Window</strong> (Portals), not in Workshop.
+            Quotations against a ZNA specification appear below for Spec Evaluation.
+        </p>
+        <div class="form-row">
+            <div class="form-col">
+                <label class="form-label">Filter by ZNA specification</label>
+                <select class="form-control" id="specProcReceivedZnaFilter">
+                    <option value="">— All ZNA specs —</option>
+                </select>
+            </div>
+            <div class="form-col" style="align-self:flex-end;">
+                <button type="button" class="btn btn-secondary" id="specProcOpenSupplierPortalBtn">Open Supplier Window</button>
+            </div>
+        </div>
+        <div class="form-table-wrapper" style="margin-top:12px;">
+            <table class="overview-table">
+                <thead>
+                    <tr>
+                        <th>Quote No.</th>
+                        <th>Supplier</th>
+                        <th>ZNA Spec</th>
+                        <th>Model</th>
+                        <th>Price</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="specProcReceivedQuotesBody">
+                    <tr><td colspan="6" class="req-empty-row">No supplier quotations yet.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="module-actions">
+            <button type="button" class="btn btn-ghost" id="specProcGotoEvalBtn">Next → Spec Evaluation</button>
+        </div>
+    </section>
+
+    <!-- ========== 3. Spec Evaluation Form ========== -->
+    <section class="dashboard-panel spec-proc-panel" id="specProcPanelEval" data-spec-proc-panel="eval" hidden>
+        <div class="section-heading section-heading-compact">
+            <h3>Spec Evaluation Form</h3>
+        </div>
+        <p class="spec-proc-panel-lead">
+            IT Dir compares each supplier’s offered specs against the <strong>ZNA (IT Dir Specification)</strong>,
+            ticking <strong>TO SPEC</strong> or <strong>BELOW SPEC</strong> per ITEM (as on the printed evaluation sheet).
+            That decides the rightful supplier. Price scrutiny and the
+            <strong>Due Diligence Certificate</strong> are done on the
+            <strong>Due Diligence Window</strong> (AIAD portal) — Cost Comparative Schedule.
+        </p>
+
+        <div class="spec-proc-eval-cards">
+            <article class="spec-proc-eval-card">
+                <h4>Open Technical Specs</h4>
+                <p>Official SER / ITEM matrix with supplier columns (BELOW SPEC / TO SPEC). Stays a separate button for now — shares ZNA ITEMs and supplier quotes with this process.</p>
+                <button type="button" class="btn btn-primary" id="specProcOpenEvalBtn">Open Technical Specs</button>
+            </article>
+            <article class="spec-proc-eval-card">
+                <h4>Due Diligence — prices</h4>
+                <p>After To Spec / Below Spec scoring, prices are scrutinised on the Due Diligence Window (Cost Comparative → DD Certificate).</p>
+                <button type="button" class="btn btn-secondary" id="specProcOpenCostBtn">Open Due Diligence Window</button>
+            </article>
+            <article class="spec-proc-eval-card">
+                <h4>Research aids on Technical Specs</h4>
+                <p>Spec Search and Market Browser stay on the Technical Specs module — use them to research, then score against the ZNA Spec from this process.</p>
+                <button type="button" class="btn btn-ghost" id="specProcOpenLegacyBtn">Open Spec Search / research tools</button>
+            </article>
+        </div>
+
+        <div class="dashboard-panel spec-proc-summary" style="margin-top:14px;">
+            <h4 class="section-heading-compact" style="margin:0 0 8px;">Ready for evaluation</h4>
+            <p id="specProcEvalLinkStatus" class="spec-proc-panel-lead" style="margin-bottom:10px;"></p>
+            <div class="form-row">
+                <div class="form-col">
+                    <label class="form-label">ZNA specification</label>
+                    <select class="form-control" id="specProcEvalZnaSelect"></select>
+                </div>
+                <div class="form-col" style="flex:1.4;">
+                    <label class="form-label">Linked supplier quotations</label>
+                    <div id="specProcEvalSupList" class="spec-proc-eval-sup-list muted">Save quotations in step 2 to list them here.</div>
+                </div>
+            </div>
+            <div class="module-actions">
+                <button type="button" class="btn btn-primary" id="specProcHandOffEvalBtn">Send ZNA ITEMs → Technical Specs</button>
+            </div>
+        </div>
+    </section>
+</div>

@@ -178,6 +178,7 @@ function openFullProductSpecificationModal(itemName, familyKey, typeCode) {
                 ${docLinks}
             </div>
             <footer class="psr-modal-foot">
+                <button type="button" class="btn btn-ghost btn-sm" data-psr-print-infographic="${psrDocEscape(itemName)}" data-psr-doc-family="${psrDocEscape(familyKey || '')}" data-psr-doc-type="${psrDocEscape(typeCode || '')}">Infographic datasheet</button>
                 <button type="button" class="btn btn-primary btn-sm" data-psr-specs-close>Close</button>
             </footer>
         </div>
@@ -191,9 +192,12 @@ function openFullProductSpecificationModal(itemName, familyKey, typeCode) {
     wireProductDocumentLinkClicks(host);
 }
 
-function openPrintableProductDatasheet(itemName, familyKey, typeCode) {
+function openPrintableProductDatasheet(itemName, familyKey, typeCode, options = {}) {
     const doc = resolveProductDocumentLinks(itemName, familyKey, typeCode);
-    if (doc.datasheetUrl) {
+    const preferInfographic = !!options.infographic
+        || (typeof specSheetLayoutMode !== 'undefined' && specSheetLayoutMode === 'infographic');
+
+    if (doc.datasheetUrl && !preferInfographic && !options.forceGenerated) {
         window.open(doc.datasheetUrl, '_blank', 'noopener,noreferrer');
         return;
     }
@@ -203,10 +207,50 @@ function openPrintableProductDatasheet(itemName, familyKey, typeCode) {
         ? getInventoryItemRoleInfo(itemName, familyKey, typeCode, '')
         : null;
     const title = doc.title || itemName;
-    const rows = (product?.specs || []).map(([label, value, note]) => `
+    const specs = (product?.specs || []).map(([label, value, note]) => ({
+        name: label,
+        value: value || '—',
+        note: note || ''
+    }));
+
+    if (preferInfographic && typeof buildSpecEvalInfographicHtml === 'function') {
+        const html = buildSpecEvalInfographicHtml({
+            itemName: title,
+            brand: product?.brand || '',
+            categoryLabel: product?.category || familyKey || 'ICT Equipment',
+            purpose: role?.summary || '',
+            preparedBy: '',
+            approvedBy: '',
+            specs: specs.length ? specs : [
+                { name: 'Item', value: itemName },
+                { name: 'Role', value: role?.role || 'ICT / store item' },
+                { name: 'Summary', value: role?.summary || '' }
+            ]
+        });
+        const w = window.open('', '_blank', 'noopener,noreferrer,width=980,height=1100');
+        if (!w) {
+            if (typeof showToast === 'function') showToast('Allow pop-ups to open the infographic datasheet.', 'error');
+            return;
+        }
+        w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${psrDocEscape(title)} — Spec Infographic</title>
+<link rel="stylesheet" href="css/main.css">
+<style>
+  body{margin:0;background:#111;padding:16px}
+  .actions{margin:12px 0;text-align:center}
+  @media print{.actions{display:none} body{background:#000;padding:0}}
+</style></head><body>
+  <div class="actions"><button type="button" onclick="window.print()">Print / Save as PDF</button></div>
+  ${html}
+  <script>setTimeout(function(){ try{ window.print(); }catch(e){} }, 450);<\/script>
+</body></html>`);
+        w.document.close();
+        return;
+    }
+
+    const rows = specs.map((s) => `
         <tr>
-            <th>${psrDocEscape(label)}</th>
-            <td>${psrDocEscape(value || '—')}${note ? ` <em>(${psrDocEscape(note)})</em>` : ''}</td>
+            <th>${psrDocEscape(s.name)}</th>
+            <td>${psrDocEscape(s.value || '—')}${s.note ? ` <em>(${psrDocEscape(s.note)})</em>` : ''}</td>
         </tr>
     `).join('') || `
         <tr><th>Item</th><td>${psrDocEscape(itemName)}</td></tr>
@@ -265,6 +309,18 @@ function wireProductDocumentLinkClicks(root) {
                 el.getAttribute('data-psr-print-datasheet') || '',
                 el.getAttribute('data-psr-doc-family') || '',
                 el.getAttribute('data-psr-doc-type') || ''
+            );
+        });
+    });
+    root.querySelectorAll('[data-psr-print-infographic]').forEach((el) => {
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openPrintableProductDatasheet(
+                el.getAttribute('data-psr-print-infographic') || '',
+                el.getAttribute('data-psr-doc-family') || '',
+                el.getAttribute('data-psr-doc-type') || '',
+                { infographic: true, forceGenerated: true }
             );
         });
     });

@@ -57,7 +57,10 @@ const PORTALS_BOARD_STEPS = [
     {
         id: 's5', n: '5', tone: 'green', title: 'DP TAKES THE ENDORSED DPF1',
         text: 'Attached with IT Dir spec, supplier quotation and specs — for evaluation and a certificate to Due Diligence (AIAD).',
-        icon: 'search', desk: 'aiad', windowLabel: 'Due Diligence Window'
+        icon: 'search', desk: 'aiad', windowLabel: 'Due Diligence Window',
+        extra: [
+            { desk: 'aiad', deskTab: 'cost', label: 'Cost Comparative Schedule' }
+        ]
     },
     {
         id: 'creditors', n: 'PAY', tone: 'green', title: 'CREDITORS — DAF PAYMENT',
@@ -108,7 +111,7 @@ function renderPortalsStepCard(step) {
     const extras = (step.extra || []).filter((x) => !x.desk || (typeof canAccessPortalDesk !== 'function' || canAccessPortalDesk(x.desk)));
     const extraHtml = extras.length
         ? `<span class="portals-step-extras">${extras.map((x) => `
-            <button type="button" class="portals-step-chip" data-pb-desk="${portalsEscape(x.desk)}"${x.dafTab ? ` data-pb-daf-tab="${portalsEscape(x.dafTab)}"` : ''}>${portalsEscape(x.label)}</button>
+            <button type="button" class="portals-step-chip" data-pb-desk="${portalsEscape(x.desk)}"${x.dafTab ? ` data-pb-daf-tab="${portalsEscape(x.dafTab)}"` : ''}${x.deskTab ? ` data-pb-desk-tab="${portalsEscape(x.deskTab)}"` : ''}>${portalsEscape(x.label)}</button>
         `).join('')}</span>`
         : '';
     return `
@@ -155,13 +158,17 @@ function openPortalsBoardTarget(opts) {
     const desk = opts.desk;
     const moduleId = opts.module;
     const dafTab = opts.dafTab;
+    const deskTab = opts.deskTab;
     if (desk) {
         if (typeof canAccessPortalDesk === 'function' && !canAccessPortalDesk(desk)) {
             if (typeof showToast === 'function') showToast('That window is for another actor.', 'info');
             return;
         }
         if (typeof navigateToModule === 'function') {
-            navigateToModule('stakeholder-desk', { stkDesk: desk, stkDafTab: dafTab || '' });
+            const navOpts = { stkDesk: desk };
+            if (dafTab) navOpts.stkDafTab = dafTab;
+            if (deskTab) navOpts.stkDeskTab = deskTab;
+            navigateToModule('stakeholder-desk', navOpts);
         }
         return;
     }
@@ -177,12 +184,12 @@ function openPortalsBoardTarget(opts) {
 function openPortalsBoardStep(step) {
     if (!step) return;
     if (step.desk && (typeof canAccessPortalDesk !== 'function' || canAccessPortalDesk(step.desk))) {
-        openPortalsBoardTarget({ desk: step.desk, dafTab: step.dafTab || '' });
+        openPortalsBoardTarget({ desk: step.desk, dafTab: step.dafTab || '', deskTab: step.deskTab || '' });
         return;
     }
     const extra = (step.extra || []).find((x) => x.desk && (typeof canAccessPortalDesk !== 'function' || canAccessPortalDesk(x.desk)));
     if (extra) {
-        openPortalsBoardTarget({ desk: extra.desk, dafTab: extra.dafTab || '' });
+        openPortalsBoardTarget({ desk: extra.desk, dafTab: extra.dafTab || '', deskTab: extra.deskTab || '' });
         return;
     }
     if (step.module) {
@@ -205,7 +212,8 @@ function initPortalsBoardModule() {
                 e.stopPropagation();
                 openPortalsBoardTarget({
                     desk: chip.getAttribute('data-pb-desk'),
-                    dafTab: chip.getAttribute('data-pb-daf-tab') || ''
+                    dafTab: chip.getAttribute('data-pb-daf-tab') || '',
+                    deskTab: chip.getAttribute('data-pb-desk-tab') || ''
                 });
                 return;
             }

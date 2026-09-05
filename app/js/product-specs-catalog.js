@@ -1289,7 +1289,7 @@ function detectProcessorType(text) {
     return 'any';
 }
 
-/** True if product CPU text satisfies the selected filter (exact slug or regex). */
+/** True if product CPU text satisfies the selected filter (exact slug, regex, or typed custom text). */
 function processorMatchesCriteria(processorText, processorTypeValue, detectedType) {
     if (!processorTypeValue || processorTypeValue === 'any') return true;
     if (detectedType && detectedType === processorTypeValue) return true;
@@ -1305,7 +1305,15 @@ function processorMatchesCriteria(processorText, processorTypeValue, detectedTyp
             other: /exynos|mediatek|helio|dimensity|kompanio/i
         };
         const re = legacy[processorTypeValue];
-        return re ? re.test(String(processorText || '')) : false;
+        if (re) return re.test(String(processorText || ''));
+        // Custom typed value (e.g. "i9-14900HX", "Ryzen 7")
+        const needle = String(processorTypeValue || '').trim().toLowerCase();
+        if (!needle) return true;
+        const hay = String(processorText || '').toLowerCase();
+        const parts = needle.split(/[\s,/|]+/).filter((p) => p.length > 1);
+        return parts.length
+            ? parts.every((p) => hay.includes(p))
+            : hay.includes(needle);
     }
     return processorTextMatchesOption(processorText, opt);
 }
@@ -1463,12 +1471,13 @@ function scoreCatalogProductAgainstCriteria(entry, criteria = {}, mode = 'strict
     // Product type (keep hard even in soft mode — otherwise list is noisy)
     if (productType) {
         const cat = entry.category;
+        const knownTypes = new Set(['laptop', 'desktop', 'tablet', 'printer', 'server']);
         if (productType === 'tablet') {
             const isTablet = cat === 'tablet' || (cat === 'other' && /tablet|ipad|tab/i.test(`${entry.model} ${getCatalogSpecBlob(entry)}`));
             if (!isTablet) return null;
             score += 16;
             reasons.push('Tablet');
-        } else {
+        } else if (knownTypes.has(productType)) {
             const mappedWant = mapCatalogCategory(productType);
             const mappedHave = mapCatalogCategory(cat);
             // Product type stays hard — soft mode only relaxes brand/CPU/RAM/storage within type
@@ -1477,6 +1486,18 @@ function scoreCatalogProductAgainstCriteria(entry, criteria = {}, mode = 'strict
             }
             score += 16;
             reasons.push(productType);
+        } else {
+            // Custom typed product type — match against category / model / specs text
+            const needle = String(productType).trim().toLowerCase();
+            const hay = `${cat} ${entry.brand || ''} ${entry.model || ''} ${getCatalogSpecBlob(entry)}`.toLowerCase();
+            if (!hay.includes(needle)) {
+                if (!soft) return null;
+                score -= 14;
+                reasons.push(`Other type than “${productType}”`);
+            } else {
+                score += 16;
+                reasons.push(productType);
+            }
         }
     }
 

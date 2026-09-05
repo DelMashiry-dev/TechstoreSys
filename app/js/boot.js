@@ -149,6 +149,14 @@ async function runHeavyBootInit() {
             console.info('Laptop distribution IVs applied:', laptopIv);
         }
     }
+    if (typeof receiptHpOmen16NetlarksSep2026 === 'function') {
+        const omen = receiptHpOmen16NetlarksSep2026({ silent: true });
+        if (omen?.ok) {
+            if (typeof saveStateNow === 'function') await saveStateNow();
+            else saveState();
+            console.info('HP OMEN 16 Netlarks receipt applied:', omen);
+        }
+    }
     if (typeof ensureExampleMidLaptopRequisition === 'function') {
         const ex = ensureExampleMidLaptopRequisition();
         if (ex) {
@@ -347,7 +355,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 link.classList.toggle('is-open', submenu.classList.contains('active'));
                 const targetId = link.getAttribute('data-target');
                 if (opening && targetId) {
-                    navigateToModule(targetId);
+                    const opts = {};
+                    const panel = link.getAttribute('data-dept-panel');
+                    if (panel) opts.deptPanel = panel;
+                    const desk = link.getAttribute('data-stk-desk');
+                    if (desk) opts.stkDesk = desk;
+                    const deskTab = link.getAttribute('data-stk-desk-tab');
+                    if (deskTab) opts.stkDeskTab = deskTab;
+                    const dafTab = link.getAttribute('data-stk-daf-tab');
+                    if (dafTab) opts.stkDafTab = dafTab;
+                    navigateToModule(targetId, opts);
                 }
                 return;
             }
@@ -361,6 +378,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (panel) opts.deptPanel = panel;
         const desk = link.getAttribute('data-stk-desk');
         if (desk) opts.stkDesk = desk;
+        const deskTab = link.getAttribute('data-stk-desk-tab');
+        if (deskTab) opts.stkDeskTab = deskTab;
+        const dafTab = link.getAttribute('data-stk-daf-tab');
+        if (dafTab) opts.stkDafTab = dafTab;
         navigateToModule(targetId, opts);
     }, true);
 
@@ -374,6 +395,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (panel) opts.deptPanel = panel;
             const desk = this.getAttribute('data-stk-desk');
             if (desk) opts.stkDesk = desk;
+            const deskTab = this.getAttribute('data-stk-desk-tab');
+            if (deskTab) opts.stkDeskTab = deskTab;
+            const dafTab = this.getAttribute('data-stk-daf-tab');
+            if (dafTab) opts.stkDafTab = dafTab;
             navigateToModule(targetId, opts);
         });
     });

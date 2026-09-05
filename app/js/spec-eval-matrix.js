@@ -79,8 +79,8 @@ function buildPortalDemoSpecEvaluations() {
         sig: 'T. Dube', date: '2026-09-02'
     };
     const approved = {
-        idNo: '789674Q', rank: 'Capt', name: 'L Kativhu', appt: 'OC',
-        sig: 'L. Kativhu', date: '2026-09-02'
+        idNo: '789674Q', rank: 'Capt', name: 'L Kativu', appt: 'OC',
+        sig: 'L. Kativu', date: '2026-09-02'
     };
 
     // Dell Pro Rugged — Makbros, LASERJET, COUNTRYVALE — LASERJET all TO; others model TO only
@@ -237,11 +237,8 @@ function renderSpecSupplierInputs() {
     const host = document.getElementById('specSupplierInputs');
     if (!host) return;
     host.innerHTML = _specSupplierNames.map((name, idx) => `
-        <label class="spec-supplier-field">
-            <span>${String.fromCharCode(99 + idx)}</span>
-            <input type="text" class="form-control spec-supplier-name" data-supplier-idx="${idx}"
-                value="${specMxEscape(name)}" placeholder="Supplier ${idx + 1}">
-        </label>
+        <input type="text" class="form-control spec-supplier-name" data-supplier-idx="${idx}"
+            value="${specMxEscape(name)}" placeholder="Supplier ${idx + 1}" aria-label="Supplier column ${idx + 1}">
     `).join('');
     host.querySelectorAll('.spec-supplier-name').forEach((input) => {
         const apply = () => {
@@ -485,6 +482,7 @@ function applySpecEvaluationRecord(rec) {
     set('specEvalBrand', rec.brand || '');
     if (rec.glValue) set('specEvalGl', rec.glValue);
     else if (rec.gl && /^\d+/.test(rec.gl)) set('specEvalGl', String(rec.gl).split(/\s|-/)[0]);
+    set('specEvalLinkedZnaId', rec.znaSpecId || '');
     setSpecSupplierNames(rec.suppliers || ['Supplier A', 'Supplier B', 'Supplier C']);
     renderSpecSupplierInputs();
     rebuildSpecMatrixHeader();
@@ -497,6 +495,7 @@ function applySpecEvaluationRecord(rec) {
     fillSpecSignoff('specApproved', rec.approved);
     syncLegacySignoffFields();
     updateSpecSheetTitlePreview();
+    if (typeof refreshSpecEvalBridgePanel === 'function') refreshSpecEvalBridgePanel();
 }
 
 function clearSpecEvaluationForm() {
@@ -542,6 +541,7 @@ function saveSpecEvaluationRecord() {
     const list = ensureSpecEvaluations();
     const now = new Date().toISOString();
     const id = snap.id || `spec-${Date.now()}`;
+    const znaSpecId = document.getElementById('specEvalLinkedZnaId')?.value?.trim() || '';
     const record = {
         id,
         evalNo: snap.evalNo || `SE/${new Date().getFullYear()}/${String(list.length + 1).padStart(3, '0')}`,
@@ -555,6 +555,7 @@ function saveSpecEvaluationRecord() {
         items: snap.items,
         compiled: snap.compiled,
         approved: snap.approved,
+        znaSpecId: znaSpecId || undefined,
         updatedAt: now,
         createdAt: list.find((r) => r.id === id)?.createdAt || now
     };
@@ -563,11 +564,227 @@ function saveSpecEvaluationRecord() {
     else list.unshift(record);
     document.getElementById('specEvalEditId').value = id;
     document.getElementById('specEvalNumber').value = record.evalNo;
+    if (znaSpecId && typeof ensureZnaSpecifications === 'function') {
+        const zna = ensureZnaSpecifications().find((z) => z.id === znaSpecId);
+        if (zna) {
+            zna.linkedEvalId = id;
+            zna.linkedEvalNo = record.evalNo;
+            zna.updatedAt = now;
+        }
+    }
     if (typeof saveState === 'function') saveState();
     populateSpecEvalSavedSelect();
     const sel = document.getElementById('specEvalSavedSelect');
     if (sel) sel.value = id;
-    showToast('Specification Evaluation saved.', 'success');
+    if (typeof refreshSpecEvalBridgePanel === 'function') refreshSpecEvalBridgePanel();
+    showToast(znaSpecId
+        ? 'Specification Evaluation saved and linked back to Specs Evaluation.'
+        : 'Specification Evaluation saved.', 'success');
+}
+
+/** Normalize ITEM labels for matching ZNA ↔ evaluation rows. */
+function specBridgeNormItem(name) {
+    return String(name || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function specBridgeFindOffered(quotes, itemName) {
+    const key = specBridgeNormItem(itemName);
+    if (!key) return [];
+    return (quotes || []).map((q) => {
+        const items = q.items || [];
+        let hit = items.find((it) => specBridgeNormItem(it.name) === key);
+        if (!hit) {
+            hit = items.find((it) => {
+                const n = specBridgeNormItem(it.name);
+                return n && (n.includes(key) || key.includes(n));
+            });
+        }
+        return {
+            supplier: q.supplierName || 'Supplier',
+            offered: hit?.offered || hit?.value || '',
+            quoteId: q.id
+        };
+    });
+}
+
+/** Heuristic: equal/contains → TO SPEC; empty → blank; else BELOW SPEC. */
+function specBridgeSuggestMark(required, offered) {
+    const r = String(required || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    const o = String(offered || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    if (!r || !o) return '';
+    if (o === r || o.includes(r) || r.includes(o)) return SPEC_MARK_TO;
+    const num = (s) => {
+        const m = s.match(/(\d+(?:\.\d+)?)\s*(tb|gb|mhz|ghz|wh|cores?|threads?)?/i);
+        if (!m) return null;
+        let n = parseFloat(m[1]);
+        const u = (m[2] || '').toLowerCase();
+        if (u === 'tb') n *= 1024;
+        return n;
+    };
+    const rn = num(r);
+    const on = num(o);
+    if (rn != null && on != null) {
+        if (on >= rn * 0.95) return SPEC_MARK_TO;
+        return SPEC_MARK_BELOW;
+    }
+    return SPEC_MARK_BELOW;
+}
+
+function setSpecEvalItemsFromNames(names) {
+    const list = (names || []).map((n) => String(n || '').trim()).filter(Boolean);
+    renderSpecMatrixRows(list.length ? list.map((name) => ({ name, marks: [] })) : [{ name: '', marks: [] }]);
+}
+
+/**
+ * Apply ZNA specification + supplier quotations into Technical Specs sheet.
+ * Modules stay separate; ITEM rows, suppliers and suggested marks are shared.
+ */
+function applySpecificationProcessToEval(znaId, { autoMark = true, scroll = true } = {}) {
+    const znaList = typeof ensureZnaSpecifications === 'function' ? ensureZnaSpecifications() : [];
+    const zna = znaList.find((z) => z.id === znaId) || znaList.find((z) => z.specNo === znaId);
+    if (!zna) {
+        showToast('ZNA specification not found in Specs Evaluation.', 'error');
+        return false;
+    }
+    const quotes = (typeof ensureSupplierQuotations === 'function' ? ensureSupplierQuotations() : [])
+        .filter((q) => q.znaSpecId === zna.id);
+
+    const title = String(zna.title || '')
+        .replace(/\s+SPECIFICATIONS?\s*$/i, '')
+        .trim() || zna.title || 'ICT Equipment';
+
+    const uniqueSuppliers = [...new Set(quotes.map((q) => q.supplierName).filter(Boolean))];
+    if (uniqueSuppliers.length) setSpecSupplierNames(uniqueSuppliers);
+
+    // Prefer an already-linked saved evaluation if present
+    const existing = ensureSpecEvaluations().find((e) => e.znaSpecId === zna.id && !e.seedExample);
+    if (existing) {
+        applySpecEvaluationRecord(existing);
+        const sel = document.getElementById('specEvalSavedSelect');
+        if (sel) sel.value = existing.id;
+        showToast(`Opened linked Spec Evaluation ${existing.evalNo || existing.id} for “${zna.title}”.`, 'ok');
+        if (scroll) {
+            setTimeout(() => document.getElementById('specPaperForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+        }
+        return true;
+    }
+
+    const itemRows = (zna.items || []).filter((it) => it.name).map((it) => {
+        const offers = specBridgeFindOffered(quotes, it.name);
+        const marks = getSpecSupplierNames().map((supName) => {
+            if (!autoMark) return '';
+            const offer = offers.find((o) => o.supplier === supName);
+            return specBridgeSuggestMark(it.value, offer?.offered);
+        });
+        return { name: it.name, marks };
+    });
+
+    applySpecEvaluationRecord({
+        id: '',
+        evalNo: '',
+        date: new Date().toISOString().slice(0, 10),
+        categoryValue: zna.category || 'laptop',
+        itemName: title,
+        brand: '',
+        glValue: '3112210001',
+        suppliers: getSpecSupplierNames(),
+        items: itemRows.length ? itemRows : [{ name: '', marks: [] }],
+        compiled: zna.compiled || {},
+        approved: zna.approved || {},
+        znaSpecId: zna.id
+    });
+
+    const purpose = document.getElementById('specEvalPurpose');
+    if (purpose && zna.purpose) purpose.value = zna.purpose;
+
+    const marked = autoMark && quotes.length
+        ? ' Suggested TO SPEC / BELOW SPEC from offered values — review before save.'
+        : ' Tick TO SPEC / BELOW SPEC, then Save.';
+    showToast(`Loaded ZNA ITEMs from Specs Evaluation into Technical Specs.${marked}`, 'ok');
+    if (scroll) {
+        setTimeout(() => document.getElementById('specPaperForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    }
+    return true;
+}
+
+function populateSpecEvalBridgeZnaSelect() {
+    const sel = document.getElementById('specEvalBridgeZnaSelect');
+    if (!sel) return;
+    const list = typeof ensureZnaSpecifications === 'function' ? ensureZnaSpecifications() : [];
+    const cur = sel.value || document.getElementById('specEvalLinkedZnaId')?.value || '';
+    sel.innerHTML = '<option value="">— Pick ZNA Spec from Specs Evaluation —</option>'
+        + list.map((r) => {
+            const quotes = (typeof ensureSupplierQuotations === 'function' ? ensureSupplierQuotations() : [])
+                .filter((q) => q.znaSpecId === r.id).length;
+            const evalHit = ensureSpecEvaluations().find((e) => e.znaSpecId === r.id && !e.seedExample);
+            const tag = evalHit ? ` · eval ${evalHit.evalNo || 'saved'}` : (quotes ? ` · ${quotes} quote(s)` : '');
+            return `<option value="${specMxEscape(r.id)}">${specMxEscape(r.specNo || r.id)} — ${specMxEscape(r.title || 'Spec')}${specMxEscape(tag)}</option>`;
+        }).join('');
+    if (cur && list.some((r) => r.id === cur)) sel.value = cur;
+}
+
+function refreshSpecEvalBridgePanel() {
+    populateSpecEvalBridgeZnaSelect();
+    const status = document.getElementById('specEvalBridgeStatus');
+    const linkedId = document.getElementById('specEvalLinkedZnaId')?.value
+        || document.getElementById('specEvalBridgeZnaSelect')?.value || '';
+    if (!status) return;
+    if (!linkedId) {
+        status.textContent = 'Not linked yet — load a ZNA Spec from Specs Evaluation so both modules stay in sync.';
+        return;
+    }
+    const zna = typeof ensureZnaSpecifications === 'function'
+        ? ensureZnaSpecifications().find((z) => z.id === linkedId)
+        : null;
+    const quotes = (typeof ensureSupplierQuotations === 'function' ? ensureSupplierQuotations() : [])
+        .filter((q) => q.znaSpecId === linkedId);
+    const evalHit = ensureSpecEvaluations().find((e) => e.znaSpecId === linkedId && !e.seedExample);
+    status.innerHTML = zna
+        ? `Linked: <strong>${specMxEscape(zna.specNo || zna.id)}</strong> — ${specMxEscape(zna.title || '')}`
+            + ` · ${quotes.length} supplier quote(s)`
+            + (evalHit ? ` · evaluation <strong>${specMxEscape(evalHit.evalNo || evalHit.id)}</strong>` : ' · evaluation not saved yet')
+        : 'Linked ZNA id on sheet, but record not found in Specs Evaluation.';
+}
+
+function initSpecEvalProcessBridge() {
+    populateSpecEvalBridgeZnaSelect();
+    refreshSpecEvalBridgePanel();
+
+    const root = document.getElementById('spec-evaluation');
+    if (root?.dataset.specEvalBridgeWired === '1') {
+        if (typeof appState !== 'undefined' && appState.specProcPendingEvalZnaId) {
+            const pending = appState.specProcPendingEvalZnaId;
+            appState.specProcPendingEvalZnaId = '';
+            setTimeout(() => applySpecificationProcessToEval(pending, { autoMark: true }), 200);
+        }
+        return;
+    }
+    if (root) root.dataset.specEvalBridgeWired = '1';
+
+    document.getElementById('specEvalBridgeLoadBtn')?.addEventListener('click', () => {
+        const id = document.getElementById('specEvalBridgeZnaSelect')?.value || '';
+        if (!id) {
+            showToast('Select a ZNA specification first.', 'error');
+            return;
+        }
+        applySpecificationProcessToEval(id, { autoMark: true });
+    });
+    document.getElementById('specEvalBridgeOpenProcBtn')?.addEventListener('click', () => {
+        if (typeof navigateToModule === 'function') {
+            navigateToModule('specification-process', { specProcStep: 'eval' });
+        }
+    });
+    document.getElementById('specEvalBridgeZnaSelect')?.addEventListener('change', refreshSpecEvalBridgePanel);
+
+    if (typeof appState !== 'undefined' && appState.specProcPendingEvalZnaId) {
+        const pending = appState.specProcPendingEvalZnaId;
+        appState.specProcPendingEvalZnaId = '';
+        setTimeout(() => applySpecificationProcessToEval(pending, { autoMark: true }), 200);
+    }
 }
 
 function buildSpecEvalDatasheetHtml() {
@@ -652,6 +869,7 @@ function initSpecEvalMatrixUI() {
     }
 
     updateSpecSheetTitlePreview();
+    if (typeof initSpecEvalProcessBridge === 'function') initSpecEvalProcessBridge();
 
     document.getElementById('specEvalItemName')?.addEventListener('input', updateSpecSheetTitlePreview);
     document.getElementById('addBlankSpecRowBtn')?.addEventListener('click', () => addSpecEvalRow());
@@ -723,3 +941,8 @@ window.buildSpecEvalDatasheetHtml = buildSpecEvalDatasheetHtml;
 window.initSpecEvalMatrixUI = initSpecEvalMatrixUI;
 window.ensurePortalDemoSpecEvaluations = ensurePortalDemoSpecEvaluations;
 window.applySpecEvaluationRecord = applySpecEvaluationRecord;
+window.setSpecEvalItemsFromNames = setSpecEvalItemsFromNames;
+window.setSpecSupplierNames = setSpecSupplierNames;
+window.applySpecificationProcessToEval = applySpecificationProcessToEval;
+window.refreshSpecEvalBridgePanel = refreshSpecEvalBridgePanel;
+window.initSpecEvalProcessBridge = initSpecEvalProcessBridge;

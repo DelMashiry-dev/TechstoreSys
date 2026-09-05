@@ -360,7 +360,7 @@ function prefillCcsFromDpF1() {
 
     const attach = document.getElementById('ccsAttachmentsNote');
     if (attach && !attach.value.trim()) {
-        attach.value = `DP F1${refHint?.value ? ` (${refHint.value})` : ''} · Vendor quotations A–G · Spec / Tech Evaluation (if any)`;
+        attach.value = `DP F1${refHint?.value ? ` (${refHint.value})` : ''} · Vendor quotations A–G · Technical Specs (if any)`;
     }
     showToast(`Prefilled ${items.length} item(s) from DP F1.`, 'success');
 }
@@ -411,6 +411,10 @@ function initCostComparativeScheduleModule() {
     refreshCcsDpF1Datalist();
     refreshCcsVendorDatalist();
     updateCcsTotals();
+
+    if (typeof mountRelatedProcessChain === 'function') {
+        mountRelatedProcessChain('ccsRelatedChain', 'ict-spec-dd', 'dd');
+    }
 
     if (root.dataset.ccsInit === '1') return;
     root.dataset.ccsInit = '1';

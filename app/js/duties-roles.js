@@ -148,7 +148,7 @@ function renderLaptopDutyProfilesGuide() {
             <header class="duties-guide-header">
                 <h3>Laptop duty profiles — issue &amp; spec matching</h3>
                 <p class="duties-rank"><strong>Applies to:</strong> Military / ICT laptops issued for operational and technical work</p>
-                <p class="duties-reports"><strong>Used in:</strong> Spec/Tech Evaluation — Intelligent Spec Search</p>
+                <p class="duties-reports"><strong>Used in:</strong> Technical Specs — Intelligent Spec Search</p>
                 <p class="duties-summary">These are the main duty profiles for laptop procurement and issue. Field/tactical uses cover command, UAV/robot control, secure communications, and logistics diagnostics. Technical uses cover Software Engineering, Programming, Machine Learning, Architecture, Graphic Designing, Database Design, and Server Room. Admin/office uses cover Pay Run, Secretariat, and Typing Pool.</p>
                 <div class="duties-values">
                     <span class="duties-value-chip">Field</span>

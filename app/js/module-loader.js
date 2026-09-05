@@ -58,7 +58,7 @@ async function loadModuleHtml(moduleId) {
     }
 
     MODULE_LOAD_PROMISES[moduleId] = (async () => {
-        const url = `modules/${encodeURIComponent(moduleId)}.html?v=20260904intray2`;
+        const url = `modules/${encodeURIComponent(moduleId)}.html?v=20260904dafalloc`;
         const res = await fetchAppAsset(url);
         if (!res.ok) throw new Error(`Module HTML not found: ${moduleId} (${res.status})`);
         const html = await res.text();
@@ -102,6 +102,7 @@ async function ensureModuleLoaded(moduleId) {
     host.appendChild(el);
     wireModuleShellEvents(el);
     if (typeof ensureModuleMaximizeControl === 'function') ensureModuleMaximizeControl(el);
+    if (typeof ensureTableExpandControls === 'function') ensureTableExpandControls(el);
 
     // Restore saved field values for this module if available
     if (typeof restoreModule === 'function' && appState?.modules?.[moduleId]) {
@@ -163,6 +164,9 @@ function ensureModuleInitialized(moduleId) {
             break;
         case 'spec-evaluation':
             call(window.initSpecEvaluationModule);
+            break;
+        case 'specification-process':
+            call(window.initSpecificationProcessModule);
             break;
         case 'laptop-compare':
             call(window.initLaptopCompareModule);

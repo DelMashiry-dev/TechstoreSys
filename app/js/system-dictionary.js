@@ -11,9 +11,10 @@ const SYSTEM_DICTIONARY_GROUPS = [
             { t: 'GL 220200002', d: 'Tech Equipment Maintenance — printers, photocopiers and workshop maintenance spend.', w: 'Dashboard · Maint' },
             { t: 'GL 2201900002', d: 'Spare Parts — boards, SSDs, LCDs and other technical spares.', w: 'Dashboard · Spares' },
             { t: 'GL 3112210001', d: 'ICT Equipment — computers, servers, UPS, networking and related acquisitions.', w: 'Dashboard · ICT' },
-            { t: 'DAF', d: 'Directorate of Army Finance. Votes monthly targets (funds) onto GLs. When a GL has no buying power, procurement must seek DAF funds manually before DP F1.', w: 'Targets · Release Cut · DP cycle' },
-            { t: 'Target (DAF monthly vote)', d: 'Amount DAF allocates to a GL for the selected month. This is the ceiling used to compute buying power.', w: 'Dashboard metrics · gl-targets' },
-            { t: 'Financial Year Bids', d: 'FY funding requirements recorded against GLs (reference budgets). Demo figures can be seeded from the Bids SUMMARY workbook.', w: 'financial-year-bids' },
+            { t: 'DAF', d: 'Directorate of Army Finance. Allocates monthly money (usually ZiG) onto IT Dir GL ledgers — ZOFF, Software & Licences, Spares & Parts, Maintenance, ICT Equipment — informed by cost-centre FY Bids submitted earlier.', w: 'Targets · Financial Year Bids · Release Cut' },
+            { t: 'Target (DAF monthly vote)', d: 'Amount DAF allocates to a GL for the selected month (e.g. ZiG 500,000 to ZOFF). This is the ceiling used to compute buying power. Informed by FY Bid ask per ledger.', w: 'Dashboard · Financial Year Bids · DAF allocation' },
+            { t: 'Financial Year Bids', d: 'Cost-centre FY funding ask by ledger. Load official packs or import Excel, then use DAF allocation to vote monthly ZiG/USD onto ZOFF / Software / Spares / Maint / ICT.', w: 'financial-year-bids' },
+            { t: 'FY Bid ask', d: 'Total bid amount the cost centre submitted for each GL for the financial year. Shown on GL Target Overview so DAF can allocate monthly votes in proportion or by advice.', w: 'financial-year-bids · Dashboard targets' },
             { t: 'Bid (committed)', d: 'Bid line value that counts toward GL commitment before cash is spent.', w: 'Dashboard · Bids' },
             { t: 'Committed', d: 'Money already spoken for this month: Bids + Purchase Orders + DP F1 estimates (as modelled).', w: 'GL cards · KPI strip' },
             { t: 'Vouchers (GL impact)', d: 'Net charge or credit from Issue/Receipt vouchers. Positive (e.g. +$17,150) usually means IV charges reducing buying power; credits can restore power.', w: 'GL cards · Issue Voucher' },
@@ -90,7 +91,12 @@ const SYSTEM_DICTIONARY_GROUPS = [
             { t: 'Cost Comparative Schedule', d: 'Compares vendor quotations (A–G), selects best value-for-money supplier, and is attached with DP F1 + quotes for AIAD Due Diligence Certificate.', w: 'cost-comparative-schedule' },
             { t: 'AIAD Due Diligence Certificate', d: 'Certificate from Army Internal Audit Directorate after reviewing F1, Cost Comparative Schedule, and quotations — not always the cheapest quote. Also called Price Due Diligence (pre-audit of procurement contracts).', w: 'dp-procurement · cost-comparative-schedule' },
             { t: 'Winning vendor', d: 'Supplier selected on the Cost Comparative Schedule for value for money; recorded for AIAD and later PO award.', w: 'cost-comparative-schedule' },
-            { t: 'Spec / Tech Evaluation', d: 'Official Specification Evaluation sheet: SER / ITEM rows with supplier columns marked BELOW SPEC or TO SPEC, then Compiled by / Approved by (matches printed form). Spec Search remains optional research.', w: 'spec-evaluation' },
+            { t: 'Related process strip', d: 'Cross-portal links so related ICT procurement stages stay visible: ZNA Spec (Specs Evaluation), Supplier Spec/Quotation (Supplier Window), Spec Evaluation (Technical Specs module), Due Diligence / Cost Comparative (Due Diligence Window). Specs Evaluation and Technical Specs stay separate buttons but share ZNA ITEMs, supplier quotes, and linked evaluation scores.', w: 'specification-process · Supplier Window · spec-evaluation · Due Diligence Window' },
+            { t: 'Specs Evaluation', d: 'Official ICT procurement chain (formerly Specification Process): (1) ZNA IT Dir Specification (Workshop); (2) Supplier Spec/Quotation (Supplier Window); (3) hand-off to Technical Specs for To Spec vs Below Spec; then Due Diligence Window (AIAD) for Cost Comparative and DD Certificate. Separate nav button from Technical Specs — they communicate via shared ZNA / quote / evaluation links.', w: 'specification-process · Supplier Window · spec-evaluation · Due Diligence Window' },
+            { t: 'Technical Specs', d: 'Official Specification Evaluation sheet (formerly Spec/Tech Evaluation): SER / ITEM rows with supplier columns marked BELOW SPEC or TO SPEC, then Compiled by / Approved by. Can load ZNA Specs and supplier quotations from Specs Evaluation (and saves the link back). Also holds Spec Search research aids.', w: 'spec-evaluation · specification-process' },
+            { t: 'ZNA (IT Dir Specification)', d: 'Required ICT equipment specification sheet prepared by Workshop or Engineers from a requisition (brand, RAM, storage, processor, etc.). Cosigned by preparer and OC Engineers; attached to DP F1 before inviting suppliers.', w: 'specification-process' },
+            { t: 'Supplier Spec / Quotation', d: 'Supplier response listing offered ICT specs and price against the ZNA specification. Completed on the Supplier Window (Portals), not Workshop. Attached to DP F1 with our spec for Spec Evaluation.', w: 'Supplier Window · Portals' },
+            { t: 'Due Diligence / Cost Comparative', d: 'AIAD price scrutiny of supplier quotes (Cost Comparative Schedule) and award of the Price Due Diligence Certificate. Lives on the Due Diligence Window (Portals), not Workshop.', w: 'Due Diligence Window · cost-comparative-schedule' },
             { t: 'ICT equipment duty profile', d: 'Operational use for ICT equipment: laptops, desktops, workstations, tablets, printers, servers, field/rugged equipment, technical systems, or admin devices. Used in Laptop Compare, H2H ICT Comparison, Spec Search, and Duties & Roles.', w: 'laptop-compare · ict-compare · spec-evaluation · duties-roles' },
             { t: 'Laptop Compare', d: 'Workshop module: rank laptops from the local ICT catalog and DP PO prices for a duty profile, brand, and minimum RAM/storage. Shows recommended buy, buy score ranking, and side-by-side specs. Optionally add live market listings. Confirm a formal quote before F1.', w: 'laptop-compare' },
             { t: 'H2H ICT Comparison', d: 'Workshop head-to-head compare: crawl web listings by duty profile and equipment type (laptop, desktop, server, tablet, printer). Select two or more candidates, view buy-score ranking and factor table. Saved search history avoids repeat crawls.', w: 'ict-compare' },
@@ -140,7 +146,7 @@ const SYSTEM_DICTIONARY_GROUPS = [
         id: 'modules',
         title: 'Modules & workflows',
         terms: [
-            { t: 'Dashboard', d: 'KPIs, IN-TRAY, GL cards, stock overview and navigation hub.', w: 'dashboard' },
+            { t: 'Dashboard', d: 'KPIs, In-Tray, GL cards, stock overview and navigation hub.', w: 'dashboard' },
             { t: 'Issue Voucher / ZNA-Q-1033', d: 'Post IV/RV stock movements by catalog category against GLs (official form ZNA-Q-1033).', w: 'voucher-module' },
             { t: 'Unit / Formation Requisitions', d: 'IT Dir First Sight / Daily File in-tray of GS Branch loose minutes. Lists date in, originating unit, items, stock and age. Book the minute, then Route to Q 1033 or DP F1.', w: 'unit-requisitions' },
             { t: 'Import document', d: 'Upload or paste a typed PDF/Word file, or a photo of a written page. The system classifies it (loose minute, requisition, quotation, P/O, DP F1, tech spec, D-Note, cost comparative) and fills the related form. Review every field before save. Handwriting needs OPENAI_API_KEY on the server; typed text works without it.', w: 'doc-import' },
@@ -155,7 +161,7 @@ const SYSTEM_DICTIONARY_GROUPS = [
             { t: 'DP Window', d: 'Directorate Procurement portal under Portals. DP inputs quotations, adjudication, winning vendor and P/O, and uploads RFQ/P/O scans. Login dp / dp123.', w: 'Portals · DP Window' },
             { t: 'GS Branch Window', d: 'Colonel SD (GS Branch) portal to endorse DP F1s and upload the signed endorsement. Login gsdesk / gsdesk123.', w: 'Portals · GS Branch Window' },
             { t: 'DAF Window', d: 'MANAC endorsement of funds, then DAF payment after IT Dir inspects. Upload payment vouchers. Login daf / daf123.', w: 'Portals · DAF Window' },
-            { t: 'Due Diligence Window', d: 'AIAD portal to issue the Price Due Diligence certificate and upload the signed form. Login aiad / aiad123.', w: 'Portals · Due Diligence Window' },
+            { t: 'Due Diligence Window', d: 'AIAD portal for Cost Comparative Schedule and Price Due Diligence certificate. Expand under Portals to open Cost Comparative, or open the window for the diligence queue. Login aiad / aiad123.', w: 'Portals · Due Diligence Window · cost-comparative-schedule' },
             { t: 'Supplier Window', d: 'Registered supplier portal. Sees only RFQs/POs for that company. Uploads quotation, spec, D-Note, invoice and banking. Demo: nixzimo / nixzimo123 (Nixzimo Pvt Ltd).', w: 'Portals · Supplier Window' },
             { t: 'ICT Procurement Cycle', d: 'Shared tracker from requisition to DAF payment. Each actor works it from their own portal (DP, GS, DAF, AIAD, supplier).', w: 'dp-procurement · Portals' },
             { t: 'Undelivered Items', d: 'Open PO lines awaiting delivery.', w: 'undelivered-orders' },
@@ -166,10 +172,10 @@ const SYSTEM_DICTIONARY_GROUPS = [
             { t: 'Sample correspondence', d: 'Ready-made RESTRICTED letters in IT Dir Comms: choose a sample, Load sample, then Print letter.', w: 'it-dir-comms' },
             { t: 'Learning Centre', d: 'Process charts and learning materials for procurement/org flows.', w: 'process-guides' },
             { t: 'System Help', d: 'Standing guidance plus this System Dictionary.', w: 'system-help' },
-            { t: 'IN-TRAY', d: 'Numbered/aged operational alerts and office messages (formerly Notifications).', w: 'Dashboard alerts' },
+            { t: 'In-Tray', d: 'Numbered/aged operational alerts and office messages (formerly Notifications).', w: 'Dashboard alerts' },
             { t: 'Fuel request letter (IT/18)', d: 'Sample RESTRICTED correspondence for standby generator diesel — IT Dir Comms → Load sample.', w: 'it-dir-comms' },
-            { t: 'Cards / Mail / WhatsIn', d: 'Three layouts for the same alerts & messages (cards, inbox, chat bubbles).', w: 'IN-TRAY view toggle' },
-            { t: 'Universal Search', d: 'Ctrl+K jump to modules, GLs, Q forms — and track issued controlled stores by ZA or Serial Number (location / holder).', w: 'Header' },
+            { t: 'Cards / Mail / WhatsIn', d: 'Three layouts for the same alerts & messages (cards, inbox, chat bubbles).', w: 'In-Tray view toggle' },
+            { t: 'Universal Search', d: 'Ctrl+K jump to modules, GLs, Q forms. Dashboard Track finds stores (ZA/S/N), documents, requisitions, letters, personnel, units, POs.', w: 'Header · Track' },
             { t: 'Load demo figures', d: 'Admin/edit-role button to seed experimental FY 2026 Bids-based budgets and sample stock/POs.', w: 'Dashboard toolbar' }
         ]
     },
@@ -222,8 +228,8 @@ const SYSTEM_DICTIONARY_GROUPS = [
             { t: 'Permanent loan: Serving / 3-year due / Return on retirement / Personal', d: 'Laptop/iPad Comd/34 lifecycle — 3-year clock then Masasa scratch-off.', w: 'permanent-loans' },
             { t: 'ICT custody / S · U/S', d: 'In stores, issued, on loan, returned; Serviceable or Unserviceable.', w: 'ict-accountability' },
             { t: 'ICT Distribution Draft / Approved', d: 'List approval state for distribution exercises.', w: 'ict-distribution' },
-            { t: 'Priority Normal / Immediate / Urgent / Critical / Flash', d: 'Colour-coded bands for letters, correspondence, minutes and messages: Normal (green), Immediate (orange), Urgent (purple), Critical (red), Flash (lightning).', w: 'Comms · Orderly Room · IN-TRAY' },
-            { t: 'Alert priority Critical / High / Normal / Low', d: 'System operational alert urgency (separate from message priority bands).', w: 'IN-TRAY' }
+            { t: 'Priority Normal / Immediate / Urgent / Critical / Flash', d: 'Colour-coded bands for letters, correspondence, minutes and messages: Normal (green), Immediate (orange), Urgent (purple), Critical (red), Flash (lightning).', w: 'Comms · Orderly Room · In-Tray' },
+            { t: 'Alert priority Critical / High / Normal / Low', d: 'System operational alert urgency (separate from message priority bands).', w: 'In-Tray' }
         ]
     }
 ];

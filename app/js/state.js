@@ -163,6 +163,7 @@ function createDefaultState() {
         theme: 'fintech',
         uiDensity: 'comfortable',
         glBudgets,
+        fyBidAsk: { byGl: {}, total: 0, updatedAt: '', source: '' },
         glMonthlyTargets: {},
         glTargetViewMonth: '',
         glTargetPeriodMode: 'month',
@@ -181,6 +182,8 @@ function createDefaultState() {
         requisitionSeedRev: 0,
         specEvaluations: [],
         specEvalSeedRev: 0,
+        znaSpecifications: [],
+        supplierQuotations: [],
         orderlyDailyFile: [],
         correspondenceFiles: [],
         correspondenceHandovers: [],
@@ -257,6 +260,9 @@ function loadState() {
             ...defaults,
             ...parsed,
             glBudgets: { ...defaults.glBudgets, ...(parsed.glBudgets || {}) },
+            fyBidAsk: (parsed.fyBidAsk && typeof parsed.fyBidAsk === 'object')
+                ? { ...defaults.fyBidAsk, ...parsed.fyBidAsk, byGl: { ...(defaults.fyBidAsk?.byGl || {}), ...(parsed.fyBidAsk.byGl || {}) } }
+                : defaults.fyBidAsk,
             glMonthlyTargets: (parsed.glMonthlyTargets && typeof parsed.glMonthlyTargets === 'object')
                 ? parsed.glMonthlyTargets
                 : {},
@@ -337,6 +343,9 @@ function mergeState(parsed) {
         ...defaults,
         ...parsed,
         glBudgets: { ...defaults.glBudgets, ...(parsed.glBudgets || {}) },
+        fyBidAsk: (parsed.fyBidAsk && typeof parsed.fyBidAsk === 'object')
+            ? { ...defaults.fyBidAsk, ...parsed.fyBidAsk, byGl: { ...(defaults.fyBidAsk?.byGl || {}), ...(parsed.fyBidAsk.byGl || {}) } }
+            : defaults.fyBidAsk,
         glMonthlyTargets: (parsed.glMonthlyTargets && typeof parsed.glMonthlyTargets === 'object')
             ? parsed.glMonthlyTargets
             : {},
@@ -359,6 +368,8 @@ function mergeState(parsed) {
         requisitionSeedRev: Number(parsed.requisitionSeedRev) || 0,
         specEvaluations: Array.isArray(parsed.specEvaluations) ? parsed.specEvaluations : [],
         specEvalSeedRev: Number(parsed.specEvalSeedRev) || 0,
+        znaSpecifications: Array.isArray(parsed.znaSpecifications) ? parsed.znaSpecifications : [],
+        supplierQuotations: Array.isArray(parsed.supplierQuotations) ? parsed.supplierQuotations : [],
         orderlyDailyFile: Array.isArray(parsed.orderlyDailyFile) ? parsed.orderlyDailyFile : [],
         correspondenceFiles: Array.isArray(parsed.correspondenceFiles) ? parsed.correspondenceFiles : [],
         correspondenceHandovers: Array.isArray(parsed.correspondenceHandovers) ? parsed.correspondenceHandovers : [],

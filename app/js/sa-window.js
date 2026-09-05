@@ -98,7 +98,7 @@ function ensureSaWinChrome() {
         ph.className = 'sa-float-placeholder';
         ph.hidden = true;
         ph.innerHTML = `
-            <span>IN-TRAY is floating.</span>
+            <span>In-Tray is floating.</span>
             <button type="button" class="btn btn-ghost btn-sm" data-sa-win="dock">Dock ↓</button>`;
         panel.parentNode.insertBefore(ph, panel);
     }
@@ -111,7 +111,7 @@ function ensureSaWinChrome() {
         minBar.hidden = true;
         minBar.innerHTML = `
             <button type="button" class="sa-win-min-restore" data-sa-win="restore">
-                <strong>IN-TRAY</strong>
+                <strong>In-Tray</strong>
                 <span>Click to restore</span>
             </button>
             <button type="button" class="sa-win-min-dock" data-sa-win="dock" title="Dock back">⬇</button>`;
@@ -177,8 +177,8 @@ function syncSaWinUi() {
             const label = ph.querySelector('span');
             if (label) {
                 label.textContent = isMin
-                    ? 'IN-TRAY is minimized.'
-                    : (isMax ? 'IN-TRAY is maximized.' : 'IN-TRAY is floating.');
+                    ? 'In-Tray is minimized.'
+                    : (isMax ? 'In-Tray is maximized.' : 'In-Tray is floating.');
             }
         } else {
             ph.setAttribute('hidden', '');

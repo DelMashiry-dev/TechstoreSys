@@ -717,6 +717,17 @@ function renderTypeableSelectList(selectEl, filterText = '') {
             `<li class="typeable-select-item" role="option" data-value="${escapeHtml(row.value)}" data-index="${index}">${escapeHtml(row.label)}</li>`
         );
     });
+    const rawQ = String(filterText || '').trim();
+    if (ui.allowCustom && rawQ) {
+        const hasExact = options.some((o) =>
+            o.label.toLowerCase() === q || o.value.toLowerCase() === q
+        );
+        if (!hasExact) {
+            parts.push(
+                `<li class="typeable-select-item typeable-select-custom" role="option" data-value="${escapeHtml(rawQ)}" data-custom="1" data-index="${filtered.length}">Use “${escapeHtml(rawQ)}”</li>`
+            );
+        }
+    }
     ui.list.innerHTML = parts.length
         ? parts.join('')
         : '<li class="typeable-select-empty">No match — keep typing or pick from the list.</li>';
@@ -849,9 +860,17 @@ function mountTypeableSelect(selectEl, { placeholder = 'Type or pick…', allowC
         const item = e.target.closest('.typeable-select-item');
         if (!item) return;
         e.preventDefault();
-        selectEl.value = item.getAttribute('data-value') || '';
-        uiSyncAndClose(selectEl, item.textContent.trim());
-        selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+        const val = item.getAttribute('data-value') || '';
+        const isCustom = item.getAttribute('data-custom') === '1'
+            || ![...selectEl.options].some((o) => o.value === val);
+        if (isCustom) {
+            applyTypeableSelectCustomValue(selectEl, val);
+            uiSyncAndClose(selectEl, val);
+        } else {
+            selectEl.value = val;
+            uiSyncAndClose(selectEl, item.textContent.trim());
+            selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+        }
     });
 
     function uiSyncAndClose(sel, label) {
@@ -876,3 +895,129 @@ function mountTypeableSelect(selectEl, { placeholder = 'Type or pick…', allowC
 
 window.mountTypeableSelect = mountTypeableSelect;
 window.refreshTypeableSelect = refreshTypeableSelect;
+window.resolveTypeableSelectInput = resolveTypeableSelectInput;
+window.applyTypeableSelectCustomValue = applyTypeableSelectCustomValue;
+
+/** Cross-portal process strips — related stages stay visible even on different windows. */
+const RELATED_PROCESS_CHAINS = {
+    'ict-spec-dd': {
+        title: 'Related process',
+        subtitle: 'Same ICT procurement chain — open any stage from any portal',
+        steps: [
+            {
+                id: 'zna',
+                label: 'ZNA Spec',
+                where: 'Specs Evaluation',
+                module: 'specification-process',
+                options: { specProcStep: 'zna' }
+            },
+            {
+                id: 'supplier',
+                label: 'Supplier Spec / Quotation',
+                where: 'Supplier Window',
+                module: 'stakeholder-desk',
+                options: { stkDesk: 'supplier', stkDeskTab: 'specquote' }
+            },
+            {
+                id: 'eval',
+                label: 'Spec Evaluation',
+                where: 'Technical Specs',
+                module: 'spec-evaluation',
+                options: {}
+            },
+            {
+                id: 'dd',
+                label: 'Due Diligence / Cost Comparative',
+                where: 'Due Diligence Window',
+                module: 'stakeholder-desk',
+                options: { stkDesk: 'aiad', stkDeskTab: 'cost' }
+            }
+        ]
+    }
+};
+
+function relatedProcessEscape(v) {
+    return String(v ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+/**
+ * Render a related-process strip into host.
+ * @param {HTMLElement|string} hostEl
+ * @param {string} chainId
+ * @param {string} currentId active step id (or '' if none)
+ * @param {{ hidden?: boolean }} [opts]
+ */
+function mountRelatedProcessChain(hostEl, chainId, currentId, opts = {}) {
+    const host = typeof hostEl === 'string' ? document.getElementById(hostEl) : hostEl;
+    if (!host) return null;
+    const chain = RELATED_PROCESS_CHAINS[chainId];
+    if (!chain || opts.hidden) {
+        host.hidden = true;
+        host.innerHTML = '';
+        return null;
+    }
+    host.hidden = false;
+    host.classList.add('related-process-host');
+    host.dataset.relatedChain = chainId;
+    host.dataset.relatedCurrent = currentId || '';
+
+    const stepsHtml = chain.steps.map((step, idx) => {
+        const isCurrent = step.id === currentId;
+        const canOpen = typeof canAccessModule === 'function' ? canAccessModule(step.module) : true;
+        const disabled = !canOpen;
+        const cls = [
+            'related-process-step',
+            isCurrent ? 'is-current' : '',
+            disabled ? 'is-disabled' : ''
+        ].filter(Boolean).join(' ');
+        const title = disabled
+            ? `${step.label} — lives on ${step.where} (your role cannot open it)`
+            : `Open ${step.label} (${step.where})`;
+        return `<button type="button" class="${cls}" data-related-step="${relatedProcessEscape(step.id)}"
+            ${disabled ? 'disabled' : ''} title="${relatedProcessEscape(title)}">
+            <span class="related-process-step-num">${idx + 1}</span>
+            <span class="related-process-step-body">
+                <span class="related-process-step-label">${relatedProcessEscape(step.label)}</span>
+                <span class="related-process-step-where">${relatedProcessEscape(step.where)}</span>
+            </span>
+        </button>`;
+    }).join('<span class="related-process-arrow" aria-hidden="true">→</span>');
+
+    host.innerHTML = `
+        <div class="related-process-chain" role="navigation" aria-label="${relatedProcessEscape(chain.title)}">
+            <div class="related-process-head">
+                <strong>${relatedProcessEscape(chain.title)}</strong>
+                <span class="related-process-sub">${relatedProcessEscape(chain.subtitle || '')}</span>
+            </div>
+            <div class="related-process-steps">${stepsHtml}</div>
+        </div>`;
+
+    host.querySelectorAll('[data-related-step]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-related-step');
+            const step = chain.steps.find((s) => s.id === id);
+            if (!step || typeof navigateToModule !== 'function') return;
+            navigateToModule(step.module, { ...(step.options || {}) });
+        });
+    });
+    return host;
+}
+
+/** Map stakeholder desk + tab → current related step (or null to hide). */
+function relatedProcessCurrentForDesk(desk, tabId) {
+    if (desk === 'supplier') return 'supplier';
+    if (desk === 'aiad') {
+        if (tabId === 'spec') return 'eval';
+        return 'dd';
+    }
+    if (desk === 'dp' && ['quotes', 'cycle', 'dpf1', 'po'].includes(tabId)) return '';
+    return null;
+}
+
+window.RELATED_PROCESS_CHAINS = RELATED_PROCESS_CHAINS;
+window.mountRelatedProcessChain = mountRelatedProcessChain;
+window.relatedProcessCurrentForDesk = relatedProcessCurrentForDesk;

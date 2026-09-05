@@ -2639,7 +2639,7 @@ function renderVoucherInventoryTables() {
                             <td><span class="txn-badge ${isReceipt ? 'txn-receipt' : 'txn-issue'}">${isReceipt ? 'Receive' : 'Issue'}</span>${src}</td>
                             <td>${invHtmlEscape(txn.item)}</td>
                             <td>${txn.serialOrZa ? `<strong>${invHtmlEscape(txn.serialOrZa)}</strong>` : '—'}</td>
-                            <td>${invHtmlEscape(txn.description || '—')}</td>
+                            <td class="cell-text-clamp" title="${invAttrEscape(txn.description || '')}">${invHtmlEscape(txn.description || '—')}</td>
                             <td>${txn.qty || 0}</td>
                             <td>${invHtmlEscape(txn.uom || 'EA')}</td>
                             <td>${invHtmlEscape(txn.gl || '—')}</td>

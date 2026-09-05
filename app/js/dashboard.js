@@ -23,7 +23,8 @@ function getModuleLabel(moduleId) {
         'monthly-target-proposal': 'IT Dir Monthly Target / Priority List',
         'daf-fund-request-memo': 'DAF Fund Request Memo',
         'monthly-returns': 'Monthly Returns — Unit ICT Equipment',
-        'spec-evaluation': 'Spec/Tech Evaluation',
+        'spec-evaluation': 'Technical Specs',
+        'specification-process': 'Specs Evaluation',
         'laptop-compare': 'Laptop Compare — buy the winner',
         'ict-compare': 'H2H ICT Comparison — crawl & compare',
         'guide-quotation': 'Rough Guide Quotation',
@@ -316,6 +317,16 @@ function initDashboardCollapsibles() {
     });
 }
 
+function formatDafMoney(amount, month) {
+    const meta = typeof getMonthDafMeta === 'function' ? getMonthDafMeta(month) : null;
+    const currency = meta?.currency || 'USD';
+    if (typeof formatBidsMoney === 'function') return formatBidsMoney(amount, currency === 'USD' ? 'USD' : 'ZiG');
+    if (currency === 'ZiG' || currency === 'ZWG') {
+        return `ZiG ${(Number(amount) || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    }
+    return typeof formatCurrency === 'function' ? formatCurrency(amount) : String(amount || 0);
+}
+
 function renderBudgetOverviewTable(rows) {
     const tbody = document.getElementById('budgetOverviewBody');
     if (!tbody) return;
@@ -324,32 +335,38 @@ function renderBudgetOverviewTable(rows) {
     const month = typeof getSelectedGlTargetMonth === 'function' ? getSelectedGlTargetMonth() : '';
     const periodMode = typeof getGlTargetPeriodMode === 'function' ? getGlTargetPeriodMode() : 'month';
     const periodEdit = periodMode === 'month';
+    const money = (n) => formatDafMoney(n, month);
 
     tbody.innerHTML = rows.map((row) => {
         const status = getBudgetStatus(row.budget, row.balance);
         const funding = row.fundingNote || '';
         const isTotal = row.code === 'ALL';
         const proposed = row.proposed != null ? row.proposed : 0;
+        const bidAsk = row.bidAsk != null ? row.bidAsk : 0;
         const targetCell = isTotal || !canEdit || !periodEdit
-            ? formatCurrency(row.budget)
+            ? money(row.budget)
             : `<input type="number" class="form-control gl-target-input" min="0" step="0.01"
                     data-gl-target="${row.code}" value="${row.budget || 0}" title="DAF monthly target / vote for ${row.code}">`;
         const proposedCell = isTotal
-            ? formatCurrency(proposed)
+            ? money(proposed)
             : (proposed > 0
-                ? `<strong class="${proposed > row.budget && row.budget > 0 ? 'proposal-over-vote' : 'proposal-ok'}">${formatCurrency(proposed)}</strong>`
+                ? `<strong class="${proposed > row.budget && row.budget > 0 ? 'proposal-over-vote' : 'proposal-ok'}">${money(proposed)}</strong>`
                 : '—');
+        const bidAskCell = bidAsk > 0
+            ? `<span title="Cost-centre FY bid ask">${typeof formatBidsMoney === 'function' ? formatBidsMoney(bidAsk, 'USD') : money(bidAsk)}</span>`
+            : '—';
         return `
             <tr class="${isTotal ? 'gl-target-total-row' : ''} ${row.budget > 0 ? 'is-funded' : 'is-unfunded'}">
                 <td><span class="gl-link" data-target="${row.target}">${row.code}</span><br><small>${row.name}</small>
                     ${!isTotal && funding ? `<div class="gl-funding-note">${funding}</div>` : ''}
                 </td>
+                <td>${bidAskCell}</td>
                 <td>${proposedCell}</td>
                 <td>${targetCell}</td>
-                <td>${formatCurrency(row.committed)}</td>
-                <td>${(row.vouchers >= 0 ? '+' : '') + formatCurrency(row.vouchers)}</td>
-                <td>${formatCurrency(row.expended != null ? row.expended : (row.committed + row.vouchers))}</td>
-                <td><strong class="${row.balance < 0 ? 'buying-power-neg' : 'buying-power-ok'}">${formatCurrency(row.balance)}</strong></td>
+                <td>${money(row.committed)}</td>
+                <td>${(row.vouchers >= 0 ? '+' : '') + money(row.vouchers)}</td>
+                <td>${money(row.expended != null ? row.expended : (row.committed + row.vouchers))}</td>
+                <td><strong class="${row.balance < 0 ? 'buying-power-neg' : 'buying-power-ok'}">${money(row.balance)}</strong></td>
                 <td><span class="card-status-badge ${status.className}">${status.label}</span></td>
             </tr>
         `;
@@ -1182,9 +1199,26 @@ async function navigateToModule(targetId, options = {}) {
         if (typeof initIctDistributionModule === 'function') initIctDistributionModule();
         else if (typeof renderIctDistributionModule === 'function') renderIctDistributionModule();
     }
+    if (targetId === 'specification-process' && typeof initSpecificationProcessModule === 'function') {
+        initSpecificationProcessModule();
+        if (options.specProcStep && typeof specProcSetStep === 'function') {
+            specProcSetStep(options.specProcStep);
+        }
+    }
     if (targetId === 'spec-evaluation') {
         if (typeof initSpecEvaluationModule === 'function') initSpecEvaluationModule();
         else if (typeof populateSpecSearchFacets === 'function') populateSpecSearchFacets();
+        const znaId = options.znaSpecId
+            || (typeof appState !== 'undefined' ? appState.specProcPendingEvalZnaId : '');
+        if (znaId && typeof applySpecificationProcessToEval === 'function') {
+            if (typeof appState !== 'undefined') appState.specProcPendingEvalZnaId = '';
+            setTimeout(() => applySpecificationProcessToEval(znaId, { autoMark: true }), 250);
+        } else if (typeof refreshSpecEvalBridgePanel === 'function') {
+            refreshSpecEvalBridgePanel();
+        }
+    }
+    if (targetId === 'cost-comparative-schedule' && typeof initCostComparativeScheduleModule === 'function') {
+        initCostComparativeScheduleModule();
     }
     if (targetId === 'laptop-compare' && typeof initLaptopCompareModule === 'function') {
         initLaptopCompareModule();
@@ -1230,9 +1264,6 @@ async function navigateToModule(targetId, options = {}) {
     }
     if (targetId === 'purchase-orders' && typeof initPurchaseOrderModuleDefaults === 'function') {
         initPurchaseOrderModuleDefaults();
-    }
-    if (targetId === 'cost-comparative-schedule' && typeof initCostComparativeScheduleModule === 'function') {
-        initCostComparativeScheduleModule();
     }
     if (targetId === 'portals-board') {
         if (typeof initPortalsBoardModule === 'function') initPortalsBoardModule();
@@ -1399,6 +1430,9 @@ function updateDashboard() {
             code: gl,
             name: GL_ACCOUNTS[gl].name,
             target: card.getAttribute('data-target'),
+            bidAsk: typeof getFyBidAskByGl === 'function'
+                ? (Number(getFyBidAskByGl()[gl]) || 0)
+                : (Number(appState?.glBudgets?.[gl]) || 0),
             proposed: usePeriod && typeof getProposalAmountForGlPeriod === 'function'
                 ? getProposalAmountForGlPeriod(gl, period)
                 : (typeof getProposalAmountForGl === 'function' ? getProposalAmountForGl(gl, month) : 0),
@@ -1422,6 +1456,7 @@ function updateDashboard() {
             code: 'ALL',
             name: usePeriod ? `Period total · ${periodLabel}` : (month ? `Month total · ${typeof formatYmLabel === 'function' ? formatYmLabel(month) : month}` : 'Financial Year Total'),
             target: 'financial-year-bids',
+            bidAsk: overviewRows.reduce((s, r) => s + (r.bidAsk || 0), 0),
             proposed: overviewRows.reduce((s, r) => s + (r.proposed || 0), 0),
             budget: summaryBudget,
             committed: summaryCommitted,

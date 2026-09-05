@@ -848,6 +848,216 @@ function colorizeProductTitle(itemName) {
     return `${match[1]}<span class="spec-sheet-accent">${match[2]}</span>${match[3]}`;
 }
 
+/** Classic (white TechStores) vs Infographic (dark OEM-style) datasheet layout. */
+let specSheetLayoutMode = (() => {
+    try {
+        const saved = sessionStorage.getItem('techstoresSpecSheetLayout');
+        if (saved === 'infographic' || saved === 'classic') return saved;
+    } catch (_) { /* ignore */ }
+    return 'classic';
+})();
+
+function setSpecSheetLayoutMode(mode) {
+    specSheetLayoutMode = mode === 'infographic' ? 'infographic' : 'classic';
+    try { sessionStorage.setItem('techstoresSpecSheetLayout', specSheetLayoutMode); } catch (_) { /* ignore */ }
+    document.querySelectorAll('[data-spec-sheet-layout]').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-spec-sheet-layout') === specSheetLayoutMode);
+    });
+}
+
+function findSpecValue(specs, re) {
+    const hit = (specs || []).find((s) => re.test(s.name || '') && s.value);
+    return hit?.value || '';
+}
+
+/** Bucket form / catalog specs into numbered infographic panels. */
+function groupSpecsForInfographic(specs) {
+    const panels = [
+        { id: 'overview', n: 1, title: 'Quick Overview', icon: '◈', match: /brand|series|model|part\s*no|p\/n|serial|colour|color|category|operating|os\b|freedos|windows|product/i },
+        { id: 'performance', n: 2, title: 'Performance', icon: '⚡', match: /processor|cpu|chipset|graphics|gpu|memory|ram|storage|ssd|hdd|cache|core|thread|turbo|expansion|pcie|boot/i },
+        { id: 'display', n: 3, title: 'Display', icon: '▣', match: /display|screen|panel|resolution|refresh|nit|srgb|brightness|anti-?glare|response\s*time|ips|oled/i },
+        { id: 'battery', n: 4, title: 'Battery & Power', icon: '🔋', match: /battery|power|adapter|charger|wh\b|charging|psu|watt/i },
+        { id: 'connectivity', n: 5, title: 'Connectivity & Ports', icon: '☍', match: /wireless|wifi|wi-?fi|bluetooth|ethernet|lan|port|usb|hdmi|thunderbolt|rj-?45|i\/o|network|connectivity/i },
+        { id: 'input', n: 6, title: 'Input, Camera & Audio', icon: '⌨', match: /keyboard|touchpad|imagepad|camera|webcam|microphone|audio|speaker|sensor|pointing|input/i },
+        { id: 'physical', n: 7, title: 'Physical Design', icon: '▭', match: /dimension|weight|form\s*factor|chassis|build|colour|color|size\b(?!.*ram)/i },
+        { id: 'security', n: 8, title: 'Security & Sustainability', icon: '⛨', match: /security|tpm|privacy|warranty|sustainab|recycled|ocean|firmware|fingerprint|smart.?card/i }
+    ];
+    const used = new Set();
+    const result = panels.map((panel) => {
+        const rows = [];
+        (specs || []).forEach((spec, idx) => {
+            if (used.has(idx)) return;
+            if (panel.match.test(`${spec.name} ${spec.value || ''}`)) {
+                used.add(idx);
+                rows.push(spec);
+            }
+        });
+        return { ...panel, rows };
+    }).filter((p) => p.rows.length);
+
+    const leftover = (specs || []).filter((_, idx) => !used.has(idx));
+    if (leftover.length) {
+        result.push({
+            id: 'other',
+            n: result.length + 1,
+            title: 'Additional Specifications',
+            icon: '⋯',
+            rows: leftover
+        });
+    }
+    if (!result.length) {
+        return [{
+            id: 'overview',
+            n: 1,
+            title: 'Quick Overview',
+            icon: '◈',
+            rows: [{ name: 'Specification', value: 'Not yet defined', note: '' }]
+        }];
+    }
+    return result;
+}
+
+function buildInfographicCallouts(specs) {
+    const picks = [
+        { re: /display|screen|resolution/i, fallback: 'Display' },
+        { re: /processor|cpu/i, fallback: 'Processor' },
+        { re: /graphics|gpu/i, fallback: 'Graphics' },
+        { re: /memory|ram/i, fallback: 'Memory' },
+        { re: /storage|ssd|hdd/i, fallback: 'Storage' },
+        { re: /battery|power|wh\b/i, fallback: 'Battery' }
+    ];
+    return picks.map((p) => {
+        const hit = (specs || []).find((s) => p.re.test(s.name || '') && s.value);
+        return {
+            label: hit?.name || p.fallback,
+            value: hit?.value || '—'
+        };
+    });
+}
+
+/**
+ * Dark OEM-style specification infographic (alternative to classic white TechStores sheet).
+ * @param {object} [snap] — defaults to Spec Evaluation form snapshot
+ */
+function buildSpecEvalInfographicHtml(snap) {
+    const data = snap || getSpecEvalFormSnapshot();
+    const specs = data.specs?.length
+        ? data.specs
+        : [{ name: 'Specification', value: 'Not yet defined', note: '' }];
+    const panels = groupSpecsForInfographic(specs);
+    const callouts = buildInfographicCallouts(specs);
+    const modelLine = [
+        data.brand,
+        findSpecValue(specs, /^model$/i) || findSpecValue(specs, /model/i),
+        findSpecValue(specs, /part\s*no|p\/n/i)
+    ].filter(Boolean);
+    const subLine = modelLine.length
+        ? modelLine.join(' · ')
+        : [data.categoryLabel, data.evalNo && `Eval ${data.evalNo}`, data.date].filter(Boolean).join(' · ');
+    const unitPrice = data.unitPrice && typeof formatCurrency === 'function'
+        ? formatCurrency(parseFloat(data.unitPrice) || 0)
+        : (data.unitPrice || '');
+    const totalPrice = data.total && typeof formatCurrency === 'function'
+        ? formatCurrency(parseFloat(data.total) || 0)
+        : (data.total || '');
+
+    const calloutHtml = callouts.map((c) => `
+        <div class="spec-ig-callout">
+            <span class="spec-ig-callout-ring" aria-hidden="true"></span>
+            <div>
+                <strong>${escapeHtml(c.value)}</strong>
+                <small>${escapeHtml(c.label)}</small>
+            </div>
+        </div>
+    `).join('');
+
+    const panelHtml = panels.map((panel) => `
+        <section class="spec-ig-panel">
+            <header class="spec-ig-panel-head">
+                <span class="spec-ig-panel-num">${panel.n}</span>
+                <span class="spec-ig-panel-ico" aria-hidden="true">${panel.icon}</span>
+                <h3>${escapeHtml(panel.title)}</h3>
+            </header>
+            <dl class="spec-ig-dl">
+                ${panel.rows.map((row) => `
+                    <div class="spec-ig-row">
+                        <dt>${escapeHtml(row.name || '—')}</dt>
+                        <dd>${escapeHtml(row.value || '—')}${row.note ? `<span class="spec-ig-note">${escapeHtml(row.note)}</span>` : ''}</dd>
+                    </div>
+                `).join('')}
+            </dl>
+        </section>
+    `).join('');
+
+    const highlightHtml = callouts.slice(0, 6).map((c, i) => `
+        <div class="spec-ig-highlight" data-hi="${i + 1}">
+            <span class="spec-ig-hi-dot"></span>
+            <strong>${escapeHtml(c.label)}</strong>
+            <small>${escapeHtml(c.value)}</small>
+        </div>
+    `).join('');
+
+    return `
+    <div class="spec-sheet-infographic">
+        <header class="spec-ig-hero">
+            <div class="spec-ig-brand-strip">
+                <img src="../assets/techstores-badge.png" alt="" class="spec-ig-logo">
+                <div>
+                    <div class="spec-ig-org">IT-DIR Tech Stores · Zimbabwe National Army</div>
+                    <div class="spec-ig-org-sub">ICT Equipment Specification Infographic</div>
+                </div>
+            </div>
+            <h1 class="spec-ig-title">${escapeHtml(data.itemName || 'ICT Equipment')}</h1>
+            <p class="spec-ig-sub">${escapeHtml(subLine || 'Detailed specification')}</p>
+            <div class="spec-ig-meta">
+                ${data.qty ? `<span>Qty <strong>${escapeHtml(data.qty)}</strong></span>` : ''}
+                ${unitPrice ? `<span>Est. unit <strong>${escapeHtml(unitPrice)}</strong></span>` : ''}
+                ${totalPrice ? `<span>Est. total <strong>${escapeHtml(totalPrice)}</strong></span>` : ''}
+                ${data.gl ? `<span>GL <strong>${escapeHtml(data.gl)}</strong></span>` : ''}
+            </div>
+            <div class="spec-ig-hero-stage" aria-hidden="true">
+                <div class="spec-ig-device-card">
+                    <div class="spec-ig-device-label">${escapeHtml((data.categoryLabel || 'ICT').toUpperCase())}</div>
+                    <div class="spec-ig-device-name">${escapeHtml(data.brand || data.itemName || 'Equipment')}</div>
+                    <div class="spec-ig-device-chip">${escapeHtml(findSpecValue(specs, /operating|os\b|freedos|windows/i) || 'Professional Spec')}</div>
+                </div>
+            </div>
+            <div class="spec-ig-callouts">${calloutHtml}</div>
+        </header>
+
+        <div class="spec-ig-grid">
+            ${panelHtml}
+        </div>
+
+        <section class="spec-ig-highlights">
+            <h2><span class="spec-ig-panel-num">9</span> Highlight Features</h2>
+            <div class="spec-ig-highlight-row">${highlightHtml}</div>
+        </section>
+
+        <footer class="spec-ig-footer">
+            <div class="spec-ig-sign">
+                <span>Compiled by</span>
+                <strong>${escapeHtml(data.preparedBy || '—')}</strong>
+            </div>
+            <div class="spec-ig-sign">
+                <span>Approved by</span>
+                <strong>${escapeHtml(data.approvedBy || '—')}</strong>
+            </div>
+            <div class="spec-ig-foot-note">
+                ${escapeHtml(data.itemName || 'ICT Equipment')}
+                ${data.evalNo ? ` · ${escapeHtml(data.evalNo)}` : ''}
+                · Detailed Specification Infographic
+            </div>
+        </footer>
+    </div>`;
+}
+
+function buildActiveSpecSheetHtml() {
+    return specSheetLayoutMode === 'infographic'
+        ? buildSpecEvalInfographicHtml()
+        : buildSpecEvalDatasheetHtml();
+}
+
 function buildSpecEvalDatasheetHtml() {
     const snap = getSpecEvalFormSnapshot();
     const highlights = buildSpecSheetHighlights(snap);
@@ -1010,7 +1220,8 @@ function openSpecSheetPreview() {
 
     resetSpecSheetPreviewWindowState();
     setSpecSheetPreviewZoom(1);
-    stage.innerHTML = buildSpecEvalDatasheetHtml();
+    setSpecSheetLayoutMode(specSheetLayoutMode);
+    stage.innerHTML = buildActiveSpecSheetHtml();
     modal.hidden = false;
     modal.setAttribute('aria-hidden', 'false');
 }
@@ -1079,46 +1290,113 @@ function printSpecEvaluationDatasheet() {
     if (typeof runOfficialPrint === 'function') {
         runOfficialPrint(() => {
             const host = ensureSpecEvalPrintHost();
-            host.innerHTML = buildSpecEvalDatasheetHtml();
+            host.innerHTML = buildActiveSpecSheetHtml();
             host.classList.add('print-target');
             document.body.classList.add('is-printing', 'printing-spec-sheet');
         });
         return;
     }
     const host = ensureSpecEvalPrintHost();
-    host.innerHTML = buildSpecEvalDatasheetHtml();
+    host.innerHTML = buildActiveSpecSheetHtml();
     host.classList.add('print-target');
     document.body.classList.add('is-printing', 'printing-spec-sheet');
     window.print();
 }
 
+function refreshSpecSheetPreviewLayout() {
+    const stage = document.getElementById('specSheetPreviewStage');
+    const modal = document.getElementById('specSheetPreviewModal');
+    if (!stage || !modal || modal.hidden) return;
+    stage.innerHTML = buildActiveSpecSheetHtml();
+}
+
 function readSpecSearchCriteria() {
+    const ids = [
+        'specSearchProductType',
+        'specSearchDutyProfile',
+        'specSearchBrand',
+        'specSearchProcessorType',
+        'specSearchProcessorSpeed',
+        'specSearchRam',
+        'specSearchStorage',
+        'specSearchStorageType'
+    ];
+    if (typeof resolveTypeableSelectInput === 'function') {
+        ids.forEach((id) => resolveTypeableSelectInput(document.getElementById(id)));
+    }
+
+    const productType = document.getElementById('specSearchProductType')?.value || '';
+    const dutyProfile = document.getElementById('specSearchDutyProfile')?.value || 'any';
+    const brand = document.getElementById('specSearchBrand')?.value || 'Any';
+    const processorType = document.getElementById('specSearchProcessorType')?.value || 'any';
+    const minProcessorGhz = document.getElementById('specSearchProcessorSpeed')?.value || 'any';
+    const minRamGb = document.getElementById('specSearchRam')?.value || 'any';
+    const minStorageGb = document.getElementById('specSearchStorage')?.value || 'any';
+    const storageType = document.getElementById('specSearchStorageType')?.value || 'any';
+    let freeText = document.getElementById('specSearchFreeText')?.value || '';
+
+    // Unknown duty profile text → treat as keyword so search still uses it
+    if (dutyProfile && dutyProfile !== 'any' && typeof getLaptopDutyProfile === 'function'
+        && !getLaptopDutyProfile(dutyProfile)) {
+        const dutyBit = String(dutyProfile).replace(/\s*\(custom\)\s*$/i, '').trim();
+        if (dutyBit && !freeText.toLowerCase().includes(dutyBit.toLowerCase())) {
+            freeText = [dutyBit, freeText].filter(Boolean).join(' ').trim();
+        }
+    }
+
     return {
-        productType: document.getElementById('specSearchProductType')?.value || '',
-        dutyProfile: document.getElementById('specSearchDutyProfile')?.value || 'any',
-        brand: document.getElementById('specSearchBrand')?.value || 'Any',
-        processorType: document.getElementById('specSearchProcessorType')?.value || 'any',
-        minProcessorGhz: document.getElementById('specSearchProcessorSpeed')?.value || 'any',
-        minRamGb: document.getElementById('specSearchRam')?.value || 'any',
-        minStorageGb: document.getElementById('specSearchStorage')?.value || 'any',
-        storageType: document.getElementById('specSearchStorageType')?.value || 'any',
-        freeText: document.getElementById('specSearchFreeText')?.value || ''
+        productType,
+        dutyProfile: (typeof getLaptopDutyProfile === 'function' && getLaptopDutyProfile(dutyProfile))
+            ? dutyProfile
+            : 'any',
+        brand,
+        processorType,
+        minProcessorGhz,
+        minRamGb,
+        minStorageGb,
+        storageType,
+        freeText
     };
+}
+
+function mountSpecSearchTypeableSelects() {
+    if (typeof mountTypeableSelect !== 'function') return;
+    const mounts = [
+        ['specSearchProductType', 'Type or pick product type'],
+        ['specSearchDutyProfile', 'Type or pick duty profile'],
+        ['specSearchBrand', 'Type or pick brand'],
+        ['specSearchProcessorType', 'Type or pick processor'],
+        ['specSearchProcessorSpeed', 'Type or pick speed (e.g. 4.5)'],
+        ['specSearchRam', 'Type or pick RAM (GB)'],
+        ['specSearchStorage', 'Type or pick storage'],
+        ['specSearchStorageType', 'Type or pick storage type']
+    ];
+    mounts.forEach(([id, placeholder]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        mountTypeableSelect(el, { placeholder, allowCustom: true, maxItems: 250 });
+    });
 }
 
 function updateSpecSearchDutyHint() {
     const hint = document.getElementById('specSearchDutyHint');
     if (!hint) return;
+    const raw = document.getElementById('specSearchDutyProfile')?.value || '';
     const profile = typeof getLaptopDutyProfile === 'function'
-        ? getLaptopDutyProfile(document.getElementById('specSearchDutyProfile')?.value)
+        ? getLaptopDutyProfile(raw)
         : null;
-    if (!profile) {
-        hint.hidden = true;
-        hint.textContent = '';
+    if (profile) {
+        hint.hidden = false;
+        hint.textContent = `${profile.groupLabel}: ${profile.summary} ${profile.deviceHint || ''}`.trim();
         return;
     }
-    hint.hidden = false;
-    hint.textContent = `${profile.groupLabel}: ${profile.summary} ${profile.deviceHint || ''}`.trim();
+    if (raw && raw !== 'any') {
+        hint.hidden = false;
+        hint.textContent = `Custom duty note: “${raw}” — used as an extra keyword in Spec Search.`;
+        return;
+    }
+    hint.hidden = true;
+    hint.textContent = '';
 }
 
 function populateSpecSearchFacets() {
@@ -1127,6 +1405,22 @@ function populateSpecSearchFacets() {
         console.warn('SPEC_SEARCH_FACETS missing — processor/brand lists unavailable');
         return;
     }
+
+    const facetIds = [
+        'specSearchProductType',
+        'specSearchDutyProfile',
+        'specSearchBrand',
+        'specSearchProcessorType',
+        'specSearchProcessorSpeed',
+        'specSearchRam',
+        'specSearchStorage',
+        'specSearchStorageType'
+    ];
+    const preserved = {};
+    facetIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) preserved[id] = el.value;
+    });
 
     const esc = (value) => {
         if (typeof escapeAttr === 'function') return escapeAttr(value);
@@ -1219,6 +1513,21 @@ function populateSpecSearchFacets() {
         console.error('RAM facet enrich failed', err);
     }
     fillSelect('specSearchRam', ramOptions);
+
+    facetIds.forEach((id) => {
+        const el = document.getElementById(id);
+        const want = preserved[id];
+        if (!el || want == null || want === '') {
+            if (el && want === '') el.value = '';
+            return;
+        }
+        if (![...el.options].some((o) => o.value === want)) {
+            el.add(new Option(`${want} (custom)`, want, true, true));
+        }
+        el.value = want;
+    });
+
+    mountSpecSearchTypeableSelects();
 }
 
 function setSpecSearchStatus(message, type = 'info') {
@@ -1232,6 +1541,7 @@ function clearSpecSearchCriteria() {
     const set = (id, value) => {
         const el = document.getElementById(id);
         if (el) el.value = value;
+        if (typeof refreshTypeableSelect === 'function') refreshTypeableSelect(el);
     };
     set('specSearchProductType', '');
     set('specSearchDutyProfile', 'any');
@@ -1525,6 +1835,13 @@ function initSpecSheetPreviewControls() {
     document.getElementById('specSheetPrintBtn')?.addEventListener('click', () => {
         printSpecEvaluationDatasheet();
     });
+    document.querySelectorAll('[data-spec-sheet-layout]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            setSpecSheetLayoutMode(btn.getAttribute('data-spec-sheet-layout'));
+            refreshSpecSheetPreviewLayout();
+        });
+    });
+    setSpecSheetLayoutMode(specSheetLayoutMode);
     document.getElementById('specSheetPreviewModal')?.addEventListener('click', (e) => {
         if (e.target?.id === 'specSheetPreviewModal' && !e.target.classList.contains('is-minimized')) {
             closeSpecSheetPreview();
@@ -1547,6 +1864,10 @@ function initSpecEvaluationModule() {
 
     if (moduleEl.dataset.specEvalInited === '1') {
         updateSpecEvalTotal();
+        if (typeof mountRelatedProcessChain === 'function') {
+            mountRelatedProcessChain('specEvalRelatedChain', 'ict-spec-dd', 'eval');
+        }
+        if (typeof initSpecEvalProcessBridge === 'function') initSpecEvalProcessBridge();
         return;
     }
     moduleEl.dataset.specEvalInited = '1';
@@ -1598,8 +1919,17 @@ function initSpecEvaluationModule() {
         if (dateEl) dateEl.value = new Date().toISOString().slice(0, 10);
     }
 
+    if (typeof mountRelatedProcessChain === 'function') {
+        mountRelatedProcessChain('specEvalRelatedChain', 'ict-spec-dd', 'eval');
+    }
+
     updateSpecEvalTotal();
 }
 
 window.applySpecDocumentToForm = applySpecDocumentToForm;
 window.initSpecEvaluationModule = initSpecEvaluationModule;
+window.buildSpecEvalDatasheetHtml = buildSpecEvalDatasheetHtml;
+window.buildSpecEvalInfographicHtml = buildSpecEvalInfographicHtml;
+window.buildActiveSpecSheetHtml = buildActiveSpecSheetHtml;
+window.setSpecSheetLayoutMode = setSpecSheetLayoutMode;
+window.openSpecSheetPreview = openSpecSheetPreview;

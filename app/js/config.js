@@ -64,7 +64,7 @@ const MODULES_FULL_OPS = [
     ...MODULES_DEPT_DESKS,
     ...MODULES_STORES_LEDGERS,
     'unit-requisitions', 'doc-import',
-    'spec-evaluation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'portals-board', 'stakeholder-desk', 'zna-svcs-1045',
+    'spec-evaluation', 'specification-process', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'portals-board', 'stakeholder-desk', 'zna-svcs-1045',
     'workshop-repairs', 'workshop-receipt-cert', 'laptop-compare', 'ict-compare', 'guide-quotation', 'gate-register', 'techstores-equipment-register',
     'suppliers-contracts', 'duties-roles', 'process-guides', 'system-help', 'reports-module'
 ];
@@ -73,7 +73,7 @@ const MODULES_FULL_OPS = [
 const MODULES_RQ = [
     'dashboard', 'it-dir-comms',
     ...MODULES_STORES_LEDGERS,
-    'unit-requisitions', 'doc-import', 'spec-evaluation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'portals-board', 'stakeholder-desk', 'zna-svcs-1045',
+    'unit-requisitions', 'doc-import', 'spec-evaluation', 'specification-process', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'portals-board', 'stakeholder-desk', 'zna-svcs-1045',
     'techstores-equipment-register', 'workshop-repairs', 'workshop-receipt-cert', 'laptop-compare', 'ict-compare', 'guide-quotation',
     'suppliers-contracts', 'duties-roles', 'process-guides', 'system-help', 'reports-module'
 ];
@@ -104,7 +104,7 @@ const MODULES_STOREMAN = [
 
 /** Workshop IC / 2IC / Senior Technician — repairs register, spec eval, comms only. */
 const MODULES_WORKSHOP = [
-    'dashboard', 'workshop-repairs', 'workshop-receipt-cert', 'laptop-compare', 'ict-compare', 'spec-evaluation', 'guide-quotation', 'doc-import', 'it-dir-comms'
+    'dashboard', 'workshop-repairs', 'workshop-receipt-cert', 'laptop-compare', 'ict-compare', 'specification-process', 'spec-evaluation', 'guide-quotation', 'doc-import', 'it-dir-comms'
 ];
 
 /** RP Gate — gate register only (no stores / GL / comms module). */
@@ -130,7 +130,7 @@ const MODULES_STAKEHOLDER_SHARED = [
 
 const MODULES_DESK_DP = [
     ...MODULES_STAKEHOLDER_SHARED, 'it-dir-comms',
-    'dp-procurement', 'dp-f1-form', 'cost-comparative-schedule', 'spec-evaluation',
+    'dp-procurement', 'dp-f1-form', 'cost-comparative-schedule', 'specification-process', 'spec-evaluation',
     'purchase-orders', 'suppliers-contracts', 'undelivered-orders'
 ];
 
@@ -146,7 +146,7 @@ const MODULES_DESK_DAF = [
 
 const MODULES_DESK_AIAD = [
     ...MODULES_STAKEHOLDER_SHARED, 'it-dir-comms',
-    'dp-procurement', 'cost-comparative-schedule', 'spec-evaluation'
+    'dp-procurement', 'cost-comparative-schedule', 'specification-process', 'spec-evaluation'
 ];
 
 const MODULES_DESK_SUPPLIER = [
@@ -439,7 +439,7 @@ const MODULE_IDS = [
     'gl-2200600002', 'gl-2200600003', 'gl-220200002', 'gl-2201900002', 'gl-3112210001',
     'voucher-module', 'stock-take', 'unit-checks', 'financial-year-bids', 'unit-equipment', 'ict-accountability', 'ict-distribution', 'temporary-loans', 'permanent-loans',
     'monthly-returns',
-    'spec-evaluation', 'laptop-compare', 'ict-compare', 'guide-quotation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'zna-q-982', 'zna-q-178', 'zna-q-1033', 'zna-q-1043',
+    'spec-evaluation', 'specification-process', 'laptop-compare', 'ict-compare', 'guide-quotation', 'dp-f1-form', 'cost-comparative-schedule', 'dp-procurement', 'zna-q-982', 'zna-q-178', 'zna-q-1033', 'zna-q-1043',
     'zna-q-80', 'zna-svcs-890', 'zna-q-1179', 'zna-q-987', 'zna-q-3977', 'zna-svcs-1045', 'zna-q-1157',
     'zna-q-985', 'zna-q-1', 'zna-q-998', 'zna-q-1680',
     'zna-q-forms-index', 'zna-q-3', 'zna-q-31', 'zna-q-40', 'zna-q-1049', 'zna-q-1229', 'zna-q-1571', 'zna-q-1954',

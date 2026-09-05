@@ -63,7 +63,7 @@ function mountLaptopCompareTypeableSelects() {
     mounts.forEach(([id, placeholder]) => {
         const el = document.getElementById(id);
         if (el && typeof mountTypeableSelect === 'function') {
-            mountTypeableSelect(el, { placeholder });
+            mountTypeableSelect(el, { placeholder, allowCustom: true });
         }
     });
 }

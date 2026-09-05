@@ -2,6 +2,22 @@
 
 const UNIVERSAL_SEARCH_HISTORY_KEY = 'universal';
 
+/** Kinds included when Dashboard Track is open (not full module catalogue). */
+const TRACK_SEARCH_KINDS = new Set([
+    'controlled',
+    'stock',
+    'requisition',
+    'undelivered',
+    'supplier-debt',
+    'dp',
+    'letter',
+    'file',
+    'document',
+    'message',
+    'personnel',
+    'unit'
+]);
+
 /** Extra keywords so short queries like “memo” or “fuel” find the right module. */
 const MODULE_SEARCH_ALIASES = {
     'it-dir-comms': 'memo memos compose memo letter letters correspondence sample correspondence load sample print letter fuel diesel generator standby IT/18 restricted communications portal comms request demand minutes directive',
@@ -20,6 +36,8 @@ const MODULE_SEARCH_ALIASES = {
     'workshop-repairs': 'workshop register repairs indent',
     'laptop-compare': 'laptop compare buy the winner rank laptops side by side specs recommended buy buy score ranking duty profile brand ram storage local catalog dp purchase order',
     'ict-compare': 'head to head h2h ict equipment compare crawl web duty profile laptop desktop server tablet printer workstation best buy ranking candidates',
+    'specification-process': 'specs evaluation specification process zna it dir specification supplier quotation spec evaluation to spec below spec workshop engineers oc dp f1 due diligence cost comparative victus laptop printer',
+    'spec-evaluation': 'technical specs spec tech evaluation below to spec datasheet classic infographic search',
     'stakeholder-desk': 'portals portal dp window gs branch daf due diligence aiad supplier desk login upload quotation endorsement creditors payment paid list manac',
     'portals-board': 'portals dashboard workflow procurement chart dp gs daf due diligence supplier requisition pfms purchase order',
     'voucher-module': 'issue voucher receipt rv iv stock',
@@ -202,6 +220,163 @@ function collectControlledStoreSearchEntries(add) {
     }
 }
 
+/** Issued-to / holder names across register, loans, and stock issues. */
+function collectPersonnelSearchEntries(add) {
+    const byKey = new Map();
+
+    const pushPerson = (name, forceNo, unit, extra = {}) => {
+        const holder = String(name || '').trim();
+        if (!holder || holder.length < 2) return;
+        const key = `${holder.toLowerCase()}|${String(forceNo || '').trim().toLowerCase()}`;
+        const prev = byKey.get(key);
+        if (prev) {
+            if (unit && !prev.units.includes(unit)) prev.units.push(unit);
+            if (extra.za && !prev.zas.includes(extra.za)) prev.zas.push(extra.za);
+            return;
+        }
+        byKey.set(key, {
+            name: holder,
+            forceNo: String(forceNo || '').trim(),
+            units: unit ? [unit] : [],
+            zas: extra.za ? [extra.za] : [],
+            trackQuery: holder
+        });
+    };
+
+    if (typeof getIctAccountabilitySnapshot === 'function') {
+        getIctAccountabilitySnapshot().forEach((rec) => {
+            if (!rec.holderName) return;
+            const za = typeof normalizeZaNumber === 'function'
+                ? normalizeZaNumber(rec.zaNumber)
+                : String(rec.zaNumber || '').trim();
+            pushPerson(rec.holderName, rec.forceNo, rec.unit, { za });
+        });
+    } else if (Array.isArray(appState?.ictAccountability)) {
+        appState.ictAccountability.forEach((rec) => {
+            if (rec.holderName) pushPerson(rec.holderName, rec.forceNo, rec.unit);
+        });
+    }
+
+    if (typeof collectLoanRowsForZaLookup === 'function') {
+        collectLoanRowsForZaLookup().forEach((loan) => {
+            if (loan.issuedTo) pushPerson(loan.issuedTo, loan.forceNo, loan.unit);
+        });
+    }
+    if (typeof collectPermanentLoanRows === 'function') {
+        collectPermanentLoanRows().forEach((loan) => {
+            if (loan.issuedTo) pushPerson(loan.issuedTo, loan.forceNo, loan.unit);
+        });
+    }
+
+    const inv = typeof ensureStoresInventory === 'function'
+        ? ensureStoresInventory()
+        : (appState?.storesInventory || null);
+    (inv?.transactions || []).forEach((txn) => {
+        if (txn.type === 'issue' && txn.party) pushPerson(txn.party, '', '');
+    });
+
+    [...byKey.values()].slice(0, 200).forEach((p) => {
+        const unitLabel = p.units.slice(0, 2).join(', ');
+        add({
+            id: `person-${p.name}-${p.forceNo || 'x'}`.toLowerCase().replace(/\s+/g, '-'),
+            kind: 'personnel',
+            moduleId: 'ict-accountability',
+            title: p.forceNo ? `${p.name} (${p.forceNo})` : p.name,
+            subtitle: [
+                'Personnel',
+                unitLabel ? `Unit: ${unitLabel}` : '',
+                p.zas.length ? `ZA: ${p.zas.slice(0, 3).join(', ')}` : 'Issued / on loan'
+            ].filter(Boolean).join(' · '),
+            haystack: [
+                p.name, p.forceNo, ...p.units, ...p.zas,
+                'personnel person holder issued to force number name soldier officer'
+            ].filter(Boolean).join(' ').toLowerCase(),
+            trackQuery: p.trackQuery,
+            scoreBoost: 5
+        });
+    });
+}
+
+/** ZNA units / formations — track by name or abbr. */
+function collectUnitSearchEntries(add) {
+    if (typeof flattenZnaUnits !== 'function') return;
+    flattenZnaUnits().forEach((u) => {
+        add({
+            id: `unit-${u.value}`.toLowerCase().replace(/\s+/g, '-'),
+            kind: 'unit',
+            moduleId: 'unit-requisitions',
+            title: u.label || u.value,
+            subtitle: `Unit · ${u.group || 'ZNA establishment'}`,
+            haystack: [
+                u.label, u.value, u.name, u.abbr, u.group,
+                'unit formation establishment barracks brigade battalion directorate corps zna'
+            ].filter(Boolean).join(' ').toLowerCase(),
+            unitValue: u.value,
+            scoreBoost: 3
+        });
+    });
+}
+
+/** Orderly Room Daily File — letters, minutes, requisitions as documents. */
+function collectOrderlyDocumentSearchEntries(add) {
+    if (typeof ensureOrderlyDailyFile !== 'function') return;
+    if (typeof syncUnitRequisitionsToOrderlyRoom === 'function') {
+        try { syncUnitRequisitionsToOrderlyRoom(); } catch (_) { /* ignore */ }
+    }
+    ensureOrderlyDailyFile().slice(0, 120).forEach((row) => {
+        const ref = row.refNo || row.fileRef || row.id || 'DF';
+        const subject = row.subject || row.remarks || 'Daily File entry';
+        const docKind = row.docType || 'document';
+        add({
+            id: `df-${row.id}`,
+            kind: 'document',
+            moduleId: 'orderly-room',
+            title: `${ref} — ${subject}`.trim(),
+            subtitle: [
+                'Document',
+                docKind.replace(/_/g, ' '),
+                row.fromUnit || '',
+                row.status || ''
+            ].filter(Boolean).join(' · '),
+            haystack: [
+                ref, subject, row.fromUnit, row.docType, row.fileAs, row.status,
+                row.remarks, row.receivedBy, row.priority, row.fileRef,
+                'document letter loose minute requisition daily file correspondence first sight orderly'
+            ].filter(Boolean).join(' ').toLowerCase(),
+            orId: row.id,
+            scoreBoost: 6
+        });
+    });
+}
+
+/** Office / In-Tray messages and letters. */
+function collectOfficeMessageSearchEntries(add) {
+    if (typeof ensureOfficeMessagesState !== 'function') return;
+    ensureOfficeMessagesState().slice().reverse().slice(0, 100).forEach((msg) => {
+        if (!msg?.id) return;
+        const subject = msg.subject || '(no subject)';
+        add({
+            id: `om-${msg.id}`,
+            kind: 'message',
+            moduleId: 'it-dir-comms',
+            title: subject,
+            subtitle: [
+                'Letter / message',
+                msg.fromLabel || msg.fromDepartment || '',
+                msg.toLabel || msg.toDepartment || '',
+                msg.priority || ''
+            ].filter(Boolean).join(' · '),
+            haystack: [
+                subject, msg.body, msg.fromDepartment, msg.fromLabel,
+                msg.toDepartment, msg.toLabel, msg.priority,
+                'letter message memo correspondence inbox compose office'
+            ].filter(Boolean).join(' ').toLowerCase(),
+            omId: msg.id,
+            scoreBoost: 4
+        });
+    });
+}
+
 /** Receive/issue stock movements — searchable by issued-to name, voucher no., item. */
 function collectStockMovementSearchEntries(add) {
     const inv = typeof ensureStoresInventory === 'function'
@@ -305,16 +480,21 @@ function collectUniversalSearchIndex() {
 
     // Open unit requisitions
     const reqs = typeof ensureRequisitions === 'function' ? ensureRequisitions() : (appState?.requisitions || []);
-    (reqs || []).slice(0, 80).forEach((req) => {
+    (reqs || []).slice(0, 120).forEach((req) => {
         const title = `${req.reqNo || 'Req'} — ${req.unit || ''} ${req.itemDescription || ''}`.trim();
         add({
             id: `req-${req.id}`,
             kind: 'requisition',
             moduleId: 'unit-requisitions',
             title,
-            subtitle: `Requisition · ${req.status || ''}`,
-            haystack: `${req.reqNo || ''} ${req.unit || ''} ${req.itemDescription || ''} ${req.category || ''}`.toLowerCase(),
-            reqId: req.id
+            subtitle: `Requisition · ${req.status || ''}${req.priority ? ` · ${req.priority}` : ''}`,
+            haystack: [
+                req.reqNo, req.unit, req.originUnitDetail, req.itemDescription, req.category,
+                req.subject, req.status, req.priority, req.fileRef, req.notes, req.justification,
+                req.receivedThrough, 'requisition indent demand minute loose minute track'
+            ].filter(Boolean).join(' ').toLowerCase(),
+            reqId: req.id,
+            scoreBoost: 4
         });
     });
 
@@ -399,9 +579,15 @@ function collectUniversalSearchIndex() {
             moduleId: 'orderly-room',
             title: `${row.ref || ''} — ${row.file || ''}`.trim(),
             subtitle: 'Correspondence Files Register',
-            haystack: `${row.ref || ''} ${row.file || ''} correspondence file register letter`.toLowerCase()
+            haystack: `${row.ref || ''} ${row.file || ''} correspondence file register letter document`.toLowerCase()
         });
     });
+
+    // Daily File documents, office letters/messages, personnel, units
+    collectOrderlyDocumentSearchEntries(add);
+    collectOfficeMessageSearchEntries(add);
+    collectPersonnelSearchEntries(add);
+    collectUnitSearchEntries(add);
 
     // System Dictionary terms — jump to the live module when known
     if (typeof getSystemDictionaryFlat === 'function') {
@@ -442,7 +628,8 @@ function rankUniversalHit(item, query) {
     }
     if (!score) return 0;
 
-    if (item.kind === 'letter') score += 18;
+    if (item.kind === 'letter' || item.kind === 'document' || item.kind === 'message') score += 18;
+    if (item.kind === 'requisition' || item.kind === 'personnel' || item.kind === 'unit') score += 12;
     if (item.kind === 'module') score += 8;
     score += Number(item.scoreBoost || 0);
 
@@ -461,15 +648,29 @@ function rankUniversalHit(item, query) {
 
 function searchUniversal(query, limit = 18, options = {}) {
     const q = String(query || '').trim();
-    const controlledOnly = !!options.controlledOnly;
-    const lim = looksLikeControlledIdQuery(q) || controlledOnly ? Math.max(limit, 20) : limit;
+    const trackMode = !!options.trackMode || !!options.controlledOnly;
+    const lim = looksLikeControlledIdQuery(q) || trackMode ? Math.max(limit, 24) : limit;
     let items = collectUniversalSearchIndex();
-    if (controlledOnly) {
-        items = items.filter((item) => item.kind === 'controlled');
+    if (trackMode) {
+        items = items.filter((item) => TRACK_SEARCH_KINDS.has(item.kind));
         if (!q) {
-            return items
-                .sort((a, b) => a.title.localeCompare(b.title))
-                .slice(0, lim);
+            const order = [
+                'controlled', 'requisition', 'document', 'letter', 'message',
+                'personnel', 'unit', 'undelivered', 'dp', 'stock', 'file', 'supplier-debt'
+            ];
+            const buckets = Object.fromEntries(order.map((k) => [k, []]));
+            items.forEach((item) => {
+                if (buckets[item.kind]) buckets[item.kind].push(item);
+            });
+            const caps = {
+                controlled: 6, requisition: 5, document: 4, letter: 3, message: 3,
+                personnel: 4, unit: 4, undelivered: 2, dp: 2, stock: 2, file: 2, 'supplier-debt': 2
+            };
+            const preview = [];
+            order.forEach((k) => {
+                preview.push(...buckets[k].sort((a, b) => a.title.localeCompare(b.title)).slice(0, caps[k] || 2));
+            });
+            return preview.slice(0, lim);
         }
     }
     return items
@@ -532,7 +733,7 @@ function ensureUniversalSearchUi() {
     const input = document.getElementById('universalSearchInput');
     input?.addEventListener('input', () => {
         const mode = document.getElementById('universalSearchModal')?.dataset.mode;
-        renderUniversalSearchResults(input.value, { controlledOnly: mode === 'track' });
+        renderUniversalSearchResults(input.value, { trackMode: mode === 'track' });
     });
     input?.addEventListener('keydown', (e) => {
         const list = document.getElementById('universalSearchResults');
@@ -612,6 +813,10 @@ function kindBadge(kind) {
         dictionary: 'Dict',
         letter: 'Letter',
         file: 'File',
+        document: 'Doc',
+        message: 'Msg',
+        personnel: 'Person',
+        unit: 'Unit',
         controlled: 'ZA / S/N',
         stock: 'Stock'
     };
@@ -629,12 +834,13 @@ function escapeUs(v) {
 function renderUniversalSearchResults(query, options = {}) {
     const host = document.getElementById('universalSearchResults');
     if (!host) return;
-    const controlledOnly = !!options.controlledOnly
+    const trackMode = !!options.trackMode
+        || !!options.controlledOnly
         || document.getElementById('universalSearchModal')?.dataset.mode === 'track';
-    const hits = searchUniversal(query, 18, { controlledOnly });
+    const hits = searchUniversal(query, 18, { trackMode });
     if (!hits.length) {
-        host.innerHTML = controlledOnly
-            ? `<div class="universal-search-empty">No serialised / ZA-engraved items found yet. Register them on <strong>ZNA ICT Asset Register</strong> or Unit Equipment first.</div>`
+        host.innerHTML = trackMode
+            ? `<div class="universal-search-empty">No track hits for “${escapeUs(query)}”. Try a <strong>ZA / S/N</strong>, requisition no., letter subject, person name, unit, or document ref.</div>`
             : `<div class="universal-search-empty">No matches for “${escapeUs(query)}”. Try a <strong>name</strong> (issued to), ZA / Q 1033 ref, memo, fuel, PO, or module name. Refresh the page if you just imported data.</div>`;
         return;
     }
@@ -653,6 +859,9 @@ function renderUniversalSearchResults(query, options = {}) {
             data-ict-acc-id="${escapeUs(item.ictAccId || '')}"
             data-stock-search="${escapeUs(item.stockSearch || '')}"
             data-stock-category="${escapeUs(item.stockCategory || '')}"
+            data-or-id="${escapeUs(item.orId || '')}"
+            data-om-id="${escapeUs(item.omId || '')}"
+            data-unit-value="${escapeUs(item.unitValue || '')}"
             data-stk-desk="${escapeUs(item.stkDesk || '')}">
             <span class="universal-search-badge">${escapeUs(kindBadge(item.kind))}</span>
             <span class="universal-search-text">
@@ -676,6 +885,9 @@ async function activateUniversalResult(el) {
     const ictAccId = el.getAttribute('data-ict-acc-id');
     const stockSearch = el.getAttribute('data-stock-search');
     const stockCategory = el.getAttribute('data-stock-category');
+    const orId = el.getAttribute('data-or-id');
+    const omId = el.getAttribute('data-om-id');
+    const unitValue = el.getAttribute('data-unit-value');
     const stkDesk = el.getAttribute('data-stk-desk');
     const q = document.getElementById('universalSearchInput')?.value || '';
     if (q && typeof rememberSearchTerm === 'function') {
@@ -740,6 +952,36 @@ async function activateUniversalResult(el) {
         if (undId && typeof editUndelivered === 'function') editUndelivered(undId);
         if (sdId && typeof editSupplierDebt === 'function') editSupplierDebt(sdId);
         if (dpId && typeof editDpProcurement === 'function') editDpProcurement(dpId);
+        if (orId && typeof fillOrderlyRoomForm === 'function') {
+            const row = typeof ensureOrderlyDailyFile === 'function'
+                ? ensureOrderlyDailyFile().find((r) => r.id === orId)
+                : null;
+            if (row) fillOrderlyRoomForm(row);
+            document.getElementById('orEditId')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        if (omId) {
+            const msgEl = document.querySelector(`[data-om-id="${omId}"], [data-message-id="${omId}"]`);
+            msgEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            msgEl?.classList?.add('is-highlight');
+        }
+        if (unitValue) {
+            const unitField = document.getElementById('reqUnit')
+                || document.getElementById('reqOriginUnit')
+                || document.querySelector('[data-zna-unit], #reqFilterUnit, [name="unit"]');
+            if (unitField) {
+                if (typeof setZnaUnitField === 'function') setZnaUnitField(unitField, unitValue);
+                else {
+                    unitField.value = unitValue;
+                    unitField.dispatchEvent(new Event('input', { bubbles: true }));
+                    unitField.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+            const filter = document.getElementById('reqSearch') || document.getElementById('reqFilter');
+            if (filter) {
+                filter.value = unitValue;
+                filter.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
         if (qCode && moduleId === 'zna-q-forms-index') {
             const search = document.getElementById('znaQIndexSearch');
             if (search) {
@@ -774,23 +1016,23 @@ function openUniversalSearch(prefill = '', options = {}) {
     if (!options.keepMaximized) resetUniversalSearchWindow();
     if (title) {
         title.textContent = trackMode
-            ? 'Track controlled stores (ZA / S/N)'
+            ? 'Track — stores, docs, reqs, letters, people, units'
             : 'Universal search';
     }
     input.placeholder = trackMode
-        ? 'Type ZA number or serial number to find location…'
+        ? 'ZA / S/N, requisition, letter, person, unit, document ref…'
         : 'Search anything — name, ZA / S/N, memo, fuel, PO, modules…';
     modal.hidden = false;
     document.body.classList.add('universal-search-open');
     input.value = prefill || '';
-    renderUniversalSearchResults(input.value, { controlledOnly: trackMode });
+    renderUniversalSearchResults(input.value, { trackMode });
     requestAnimationFrame(() => {
         input.focus();
         input.select();
     });
 }
 
-/** Dashboard Track — list / find location of ZA-engraved and serialised issued stores. */
+/** Dashboard Track — stores (ZA/S/N), documents, requisitions, letters, personnel, units, etc. */
 function openControlledStoreTrack(prefill = '') {
     openUniversalSearch(prefill, { trackMode: true });
 }

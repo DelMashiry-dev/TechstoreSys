@@ -4,6 +4,7 @@
                     <button class="close-btn">&times;</button>
                 </div>
                 <p class="stk-desk-intro" id="stkDeskIntro"></p>
+                <div id="stkDeskRelatedChain" class="related-process-host" hidden aria-live="polite"></div>
                 <div id="stkDeskSwitch" class="stk-desk-switch" hidden></div>
                 <div id="stkDeskTabs" class="stk-desk-tabs" role="tablist" aria-label="Portal workspace"></div>
                 <div id="stkDeskCyclePanel" class="stk-desk-panel">
@@ -21,6 +22,95 @@
                     </div>
                 </div>
                 <div id="stkDeskModulePanel" class="stk-desk-panel" hidden></div>
+                <div id="stkDeskSupplierSpecPanel" class="stk-desk-panel" hidden>
+                    <div class="dashboard-panel">
+                        <div class="section-heading section-heading-compact">
+                            <h3>Supplier Spec / Quotation</h3>
+                        </div>
+                        <p class="spec-proc-panel-lead">
+                            Complete this on the <strong>Supplier Window</strong> after IT Dir attaches the
+                            <strong>ZNA (IT Dir Specification)</strong> to the DP F1 and invites you to quote.
+                            List the ICT equipment you can supply (to spec, near spec, or better), with quote No. and price.
+                            IT Dir then runs Spec Evaluation (To Spec / Below Spec).
+                        </p>
+
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Saved quotations</label>
+                                <select class="form-control" id="specProcSupSavedSelect">
+                                    <option value="">— New quotation —</option>
+                                </select>
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Against ZNA specification</label>
+                                <select class="form-control" id="specProcSupZnaLink">
+                                    <option value="">— Select ZNA spec —</option>
+                                </select>
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Quotation date</label>
+                                <input type="date" class="form-control" id="specProcSupDate">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Supplier name</label>
+                                <input type="text" class="form-control" id="specProcSupName" placeholder="Your registered company name" readonly>
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Quotation / quote No.</label>
+                                <input type="text" class="form-control" id="specProcSupQuoteNo" placeholder="e.g. QTN/2026/088">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Quoted unit price</label>
+                                <input type="number" class="form-control" id="specProcSupPrice" min="0" step="0.01" placeholder="0.00">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Currency</label>
+                                <select class="form-control" id="specProcSupCurrency">
+                                    <option value="USD">USD</option>
+                                    <option value="ZiG">ZiG</option>
+                                    <option value="ZAR">ZAR</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-col" style="flex:2;">
+                                <label class="form-label">Offered model / product title</label>
+                                <input type="text" class="form-control" id="specProcSupModel" placeholder="Model as stated on your quotation">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Capacity note</label>
+                                <input type="text" class="form-control" id="specProcSupCapacity" placeholder="In stock / can procure / lead time">
+                            </div>
+                        </div>
+
+                        <p class="form-hint" id="specProcSupZnaHint">Select the ZNA specification to load ITEM rows, then fill your offered values.</p>
+
+                        <div class="form-table-wrapper">
+                            <table class="overview-table spec-proc-rows-table" id="specProcSupTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width:48px;">#</th>
+                                        <th style="width:22%;">ITEM</th>
+                                        <th style="width:34%;">ZNA required</th>
+                                        <th>Your offered specification</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="specProcSupBody"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="module-actions">
+                            <button type="button" class="btn btn-primary" id="specProcSupSaveBtn">Save Supplier Quotation</button>
+                            <button type="button" class="btn btn-secondary" id="specProcSupPrintBtn">Preview / Print Quotation Spec</button>
+                            <button type="button" class="btn btn-ghost" id="specProcSupNewBtn">New blank</button>
+                        </div>
+                        <input type="hidden" id="specProcSupEditId" value="">
+                    </div>
+                </div>
                 <div id="stkDafCreditorsPanel" class="stk-desk-panel" hidden>
                     <p class="muted stk-daf-creditors-lead">Goods delivered to IT Dir but not yet paid. Import registers, apply DAF paid lists, and chase outstanding creditors from this window.</p>
                     <div class="req-aging-strip sd-aging-strip stk-daf-creditors-stats" aria-label="Creditors summary">

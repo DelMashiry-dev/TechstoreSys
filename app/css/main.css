@@ -1222,6 +1222,34 @@ body.nav-reordering .sidebar-menu a.nav-btn:hover {
     background: linear-gradient(135deg, #1abc9c, #0e6655);
 }
 
+.nav-ico-workshop-sub {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    font-size: 0;
+    color: #fff;
+    background: linear-gradient(160deg, #5eead4 0%, #14b8a6 42%, #0f766e 100%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        0 4px 10px rgba(15, 118, 110, 0.35);
+}
+.nav-ico-workshop-sub svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+.sidebar-menu a.nav-btn:has(.nav-ico-workshop-sub) {
+    gap: 12px;
+    min-height: 56px;
+    align-items: center;
+}
+.sidebar.collapsed .nav-ico-workshop-sub {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto;
+}
+
 .nav-ico-portal {
     width: 46px;
     height: 46px;
@@ -1264,6 +1292,13 @@ body.nav-reordering .sidebar-menu a.nav-btn:hover {
 .portals-submenu .portal-nav-btn.active {
     background: linear-gradient(90deg, rgba(20, 184, 166, 0.62), rgba(15, 118, 110, 0.38));
     border-color: rgba(153, 246, 228, 0.45);
+}
+
+.portals-submenu .submenu-nested .portal-nav-btn .nav-ico-img {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 6px;
 }
 
 .nav-submenu-toggle.is-open .nav-caret,
@@ -5077,7 +5112,7 @@ body.printing-accommodation-stores .accommodation-stores-print-host.print-target
     .dashboard-toolbar {
         flex-wrap: nowrap;
         justify-content: flex-start;
-        overflow-x: hidden;
+        overflow: visible;
         gap: 4px;
     }
 
@@ -6987,6 +7022,35 @@ button.alert-item-link:focus-visible {
 .bids-import-panel {
     margin-bottom: 16px;
 }
+.bids-excel-import-panel {
+    margin-bottom: 16px;
+}
+.bids-excel-drop {
+    margin-top: 8px;
+}
+.bids-excel-import-status {
+    margin: 8px 0 0;
+    font-size: 0.88rem;
+}
+.bids-excel-import-status.is-ok {
+    color: #0f6b4c;
+}
+.bids-excel-import-status.is-error {
+    color: #b42318;
+}
+.bids-daf-alloc-panel {
+    margin: 14px 0;
+}
+.bids-daf-alloc-status {
+    margin: 8px 0 0;
+    font-size: 0.88rem;
+}
+.bids-daf-alloc-status.is-ok {
+    color: #0f6b4c;
+}
+.bids-daf-alloc-input {
+    max-width: 160px;
+}
 
 .bids-pack-summary {
     margin: 8px 0 10px;
@@ -8398,6 +8462,17 @@ tr.req-age-aging td:first-child {
     margin-bottom: 18px;
 }
 
+#spec-evaluation > .dashboard-panel,
+#spec-evaluation > .related-process-host {
+    margin-bottom: 18px;
+}
+#spec-evaluation .spec-eval-bridge-panel {
+    margin-bottom: 22px;
+}
+#spec-evaluation .spec-eval-intro {
+    margin-bottom: 16px;
+}
+
 .spec-search-duty-hint {
     margin: 0 0 12px;
     padding: 8px 12px;
@@ -8459,6 +8534,63 @@ tr.req-age-aging td:first-child {
     letter-spacing: 0.04em;
     color: #1b5e3b;
     margin-right: 4px;
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+/* Technical Specs — ITEM checklist + supplier columns toolbar (exact two-row layout) */
+.spec-matrix-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 14px 0 12px;
+}
+.spec-template-bar,
+.spec-supplier-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+}
+.spec-template-pills {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    flex: 0 1 auto;
+    min-width: 0;
+}
+.spec-template-bar .btn-ghost.btn-sm,
+.spec-supplier-count-actions .btn-ghost.btn-sm {
+    border-radius: 999px;
+    border: 1px solid #d0ddd4;
+    background: #fff;
+    color: #1b5e3b;
+    font-weight: 600;
+    box-shadow: none;
+}
+.spec-supplier-count-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-left: 0;
+}
+.spec-supplier-count-actions .btn-ghost.btn-sm {
+    box-shadow: 0 1px 3px rgba(15, 60, 45, 0.12);
+}
+.spec-supplier-inputs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.spec-supplier-inputs .spec-supplier-name {
+    flex: 1 1 140px;
+    max-width: 220px;
+    min-width: 120px;
+    border-radius: 10px;
 }
 
 .spec-add-field-bar {
@@ -8603,7 +8735,8 @@ tr.req-age-aging td:first-child {
     box-shadow: var(--shadow-card);
     border: 1px solid var(--border-soft);
     position: relative;
-    overflow: hidden;
+    /* Keep pills/shadows fully visible on hover/press (was clipping bottoms) */
+    overflow: visible;
 }
 
 .dashboard-hero::before {
@@ -8613,7 +8746,9 @@ tr.req-age-aging td:first-child {
     top: 0;
     bottom: 0;
     width: 4px;
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
     background: linear-gradient(180deg, #1b5e3b, #3498db);
+    pointer-events: none;
 }
 
 .dashboard-hero-main {
@@ -8783,11 +8918,20 @@ tr.req-age-aging td:first-child {
 }
 
 .dashboard-ops-strip {
-    display: flex;
+    display: inline-flex;
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
     margin-top: 10px;
+    width: max-content;
+    max-width: 100%;
+    overflow: visible;
+    position: relative;
+    z-index: 2;
+}
+
+.dashboard-ops-strip .dashboard-context-row,
+.dashboard-ops-strip .dashboard-toolbar {
     width: 100%;
 }
 
@@ -8846,8 +8990,10 @@ button.context-chip:hover {
     margin: 0;
     width: 100%;
     min-width: 0;
-    overflow-x: hidden;
-    padding-bottom: 0;
+    /* overflow-x:hidden forces overflow-y clipping too — bury pills on hover/active */
+    overflow: visible;
+    padding-top: 2px;
+    padding-bottom: 4px;
 }
 
 .dashboard-universal-search-input {
@@ -8873,6 +9019,7 @@ button.context-chip:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 5px;
     height: 28px;
     min-height: 28px;
     padding: 0 8px;
@@ -8884,6 +9031,17 @@ button.context-chip:hover {
     vertical-align: middle;
     font-size: 0.7rem;
     font-weight: 600;
+}
+
+.dashboard-toolbar .dashboard-search-btn .dashboard-search-icon {
+    flex-shrink: 0;
+    display: block;
+}
+
+.dashboard-toolbar .dashboard-search-btn {
+    flex: 1 1 auto;
+    min-width: 7.5rem;
+    justify-content: center;
 }
 
 /* Match illustrated toolbar: same dark-green pill for every action */
@@ -8899,6 +9057,14 @@ button.context-chip:hover {
 .dashboard-toolbar .btn.btn-primary:hover {
     background: linear-gradient(180deg, #35825e 0%, #1f6b43 100%);
     color: #fff;
+    /* Stay put — vertical nudge was sliding under the next panel / clip edge */
+    transform: none;
+}
+
+.dashboard-toolbar .btn:active,
+.dashboard-toolbar .btn.btn-secondary:active,
+.dashboard-toolbar .btn.btn-primary:active {
+    transform: none;
 }
 
 .sr-only {
@@ -13335,6 +13501,398 @@ body.printing-spec-sheet .spec-eval-print-host.print-target {
         border-left: none;
         border-top: 1px solid var(--spec-line);
         padding: 10px 0 0;
+    }
+}
+
+/* Spec sheet layout toggle (Classic vs Infographic) */
+.spec-sheet-layout-toggle {
+    display: inline-flex;
+    gap: 4px;
+    margin: 0 8px 0 0;
+    padding: 2px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.06);
+}
+
+.spec-sheet-layout-toggle .btn {
+    border-radius: 999px;
+    min-height: 26px;
+    padding: 0 10px;
+    font-size: 0.72rem;
+}
+
+.spec-sheet-layout-toggle .btn.is-active {
+    background: #1b5e3b;
+    color: #fff;
+    border-color: #14532d;
+}
+
+/* Dark OEM-style specification infographic (alternative datasheet) */
+.spec-sheet-infographic {
+    --ig-bg: #0a0a0a;
+    --ig-panel: #121212;
+    --ig-line: #2a2a2a;
+    --ig-red: #e31b23;
+    --ig-text: #f5f5f5;
+    --ig-muted: #a3a3a3;
+    background: var(--ig-bg);
+    color: var(--ig-text);
+    border: 1px solid #1f1f1f;
+    border-radius: 10px;
+    padding: 20px 18px 16px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+.report-preview .spec-sheet-infographic,
+.spec-sheet-preview-stage .spec-sheet-infographic {
+    margin: 0 auto;
+    max-width: 980px;
+}
+
+.spec-ig-hero {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--ig-line);
+}
+
+.spec-ig-brand-strip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.spec-ig-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: contain;
+    background: #fff;
+}
+
+.spec-ig-org {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.spec-ig-org-sub {
+    font-size: 0.68rem;
+    color: var(--ig-muted);
+}
+
+.spec-ig-title {
+    margin: 0 0 6px;
+    font-size: 1.65rem;
+    line-height: 1.15;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.spec-ig-sub {
+    margin: 0 0 10px;
+    color: var(--ig-red);
+    font-size: 0.88rem;
+    font-weight: 650;
+}
+
+.spec-ig-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-bottom: 14px;
+    font-size: 0.72rem;
+    color: var(--ig-muted);
+}
+
+.spec-ig-meta strong {
+    color: var(--ig-text);
+}
+
+.spec-ig-hero-stage {
+    display: flex;
+    justify-content: center;
+    margin: 8px 0 14px;
+}
+
+.spec-ig-device-card {
+    min-width: min(280px, 100%);
+    padding: 18px 16px;
+    border-radius: 14px;
+    border: 1px solid #333;
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(227, 27, 35, 0.22), transparent 60%),
+        linear-gradient(160deg, #1a1a1a, #0d0d0d);
+    text-align: center;
+}
+
+.spec-ig-device-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--ig-red);
+    margin-bottom: 6px;
+}
+
+.spec-ig-device-name {
+    font-size: 1.05rem;
+    font-weight: 750;
+    margin-bottom: 8px;
+}
+
+.spec-ig-device-chip {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid #444;
+    font-size: 0.68rem;
+    color: #ddd;
+}
+
+.spec-ig-callouts {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.spec-ig-callout {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    gap: 6px;
+    align-items: start;
+    padding: 8px 6px;
+    border: 1px solid #2c2c2c;
+    border-radius: 10px;
+    background: #111;
+}
+
+.spec-ig-callout-ring {
+    width: 14px;
+    height: 14px;
+    margin-top: 2px;
+    border: 2px solid var(--ig-red);
+    border-radius: 50%;
+}
+
+.spec-ig-callout strong {
+    display: block;
+    font-size: 0.68rem;
+    line-height: 1.25;
+    color: #fff;
+}
+
+.spec-ig-callout small {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.6rem;
+    color: var(--ig-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.spec-ig-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.spec-ig-panel {
+    background: var(--ig-panel);
+    border: 1px solid var(--ig-line);
+    border-radius: 10px;
+    overflow: hidden;
+    min-height: 120px;
+}
+
+.spec-ig-panel-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--ig-line);
+    background: #171717;
+}
+
+.spec-ig-panel-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: var(--ig-red);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.spec-ig-panel-ico {
+    color: var(--ig-red);
+    font-size: 0.85rem;
+}
+
+.spec-ig-panel-head h3 {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.spec-ig-dl {
+    margin: 0;
+    padding: 6px 0;
+}
+
+.spec-ig-row {
+    display: grid;
+    grid-template-columns: 42% minmax(0, 1fr);
+    gap: 8px;
+    padding: 5px 10px;
+    border-bottom: 1px solid #1c1c1c;
+}
+
+.spec-ig-row:last-child {
+    border-bottom: none;
+}
+
+.spec-ig-row dt {
+    margin: 0;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--ig-muted);
+}
+
+.spec-ig-row dd {
+    margin: 0;
+    font-size: 0.74rem;
+    color: #f0f0f0;
+    line-height: 1.35;
+}
+
+.spec-ig-note {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.62rem;
+    color: #888;
+}
+
+.spec-ig-highlights {
+    margin-bottom: 14px;
+    padding: 12px;
+    border: 1px solid var(--ig-line);
+    border-radius: 10px;
+    background: #101010;
+}
+
+.spec-ig-highlights h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.spec-ig-highlight-row {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.spec-ig-highlight {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #2a2a2a;
+    background: #161616;
+    text-align: center;
+}
+
+.spec-ig-hi-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ig-red);
+    margin-bottom: 6px;
+}
+
+.spec-ig-highlight strong {
+    display: block;
+    font-size: 0.68rem;
+    margin-bottom: 3px;
+}
+
+.spec-ig-highlight small {
+    display: block;
+    font-size: 0.62rem;
+    color: var(--ig-muted);
+    line-height: 1.3;
+}
+
+.spec-ig-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 18px;
+    padding-top: 12px;
+    border-top: 1px solid var(--ig-line);
+}
+
+.spec-ig-sign span {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--ig-red);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+
+.spec-ig-sign strong {
+    display: block;
+    min-height: 1.4em;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #444;
+    font-size: 0.86rem;
+}
+
+.spec-ig-foot-note {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-size: 0.68rem;
+    color: var(--ig-muted);
+    margin-top: 4px;
+}
+
+@media (max-width: 900px) {
+    .spec-ig-callouts,
+    .spec-ig-highlight-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .spec-ig-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+    .spec-ig-callouts,
+    .spec-ig-highlight-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media print {
+    body.printing-spec-sheet .spec-sheet-infographic {
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        max-width: none;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 }
 
@@ -21360,6 +21918,45 @@ body.table-focus-open {
     overflow: hidden;
 }
 
+/* Compact long cells; click to expand in-place. Full text always shown in ⛶ Expand view. */
+.cell-text-clamp {
+    max-width: 22rem;
+    cursor: pointer;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    line-height: 1.35;
+    color: inherit;
+}
+
+.cell-text-clamp.is-expanded,
+.table-focus-table-wrap .cell-text-clamp {
+    -webkit-line-clamp: unset;
+    overflow: visible;
+    max-width: none;
+    cursor: default;
+}
+
+.cell-text-clamp:not(.is-expanded):hover {
+    color: var(--primary, #1a3a5c);
+}
+
+.table-expand-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+    margin: 0 0 8px;
+}
+
+.table-expand-btn,
+.module-toolbar .table-expand-btn {
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
 @media (max-width: 640px) {
     .stores-query-form {
         grid-template-columns: 1fr;
@@ -22058,6 +22655,11 @@ body.table-focus-open {
 .typeable-select-item.is-active {
     background: #f0f7f4;
 }
+.typeable-select-item.typeable-select-custom {
+    font-style: italic;
+    color: #0f6b4c;
+    border-top: 1px solid #e4ebe7;
+}
 .typeable-select-empty {
     padding: 10px 12px;
     font-size: 0.82rem;
@@ -22522,31 +23124,6 @@ body.table-focus-open {
     font-size: 0.88rem;
     color: #475569;
 }
-.spec-supplier-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    margin: 10px 0 12px;
-}
-.spec-supplier-inputs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    flex: 1;
-}
-.spec-supplier-field {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    min-width: 140px;
-}
-.spec-supplier-field > span {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: lowercase;
-}
 .spec-matrix-wrap {
     overflow-x: auto;
 }
@@ -22701,4 +23278,275 @@ body.table-focus-open {
 .spec-paper-sign div {
     margin: 4px 0;
     font-size: 0.85rem;
+}
+/* Related process chain — cross-portal visibility */
+.related-process-host {
+    margin: 0 0 14px;
+}
+.related-process-chain {
+    border: 1px solid #d0d5dd;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #f8faf9 0%, #fff 100%);
+    padding: 10px 12px 12px;
+}
+.related-process-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 12px;
+    margin-bottom: 8px;
+}
+.related-process-head strong {
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #0f6b4c;
+}
+.related-process-sub {
+    font-size: 0.82rem;
+    color: #667085;
+}
+.related-process-steps {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 6px;
+}
+.related-process-arrow {
+    align-self: center;
+    color: #98a2b3;
+    font-size: 0.95rem;
+    padding: 0 2px;
+}
+.related-process-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    flex: 1 1 140px;
+    min-width: 132px;
+    max-width: 220px;
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    color: #1d2939;
+}
+.related-process-step:hover:not(:disabled) {
+    border-color: #0f6b4c;
+    background: #f0faf5;
+}
+.related-process-step.is-current {
+    border-color: #0f6b4c;
+    background: #e8f5ef;
+    box-shadow: 0 0 0 1px #0f6b4c33;
+    cursor: default;
+}
+.related-process-step.is-disabled,
+.related-process-step:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+.related-process-step-num {
+    flex: 0 0 auto;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 999px;
+    background: #e4e7ec;
+    color: #344054;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.related-process-step.is-current .related-process-step-num {
+    background: #0f6b4c;
+    color: #fff;
+}
+.related-process-step-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+.related-process-step-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+.related-process-step-where {
+    font-size: 0.72rem;
+    color: #667085;
+    line-height: 1.2;
+}
+
+/* Specification Process — ZNA Spec → Supplier Quote → Evaluation */
+.spec-proc-intro {
+    margin: 0 0 14px;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    color: #344054;
+}
+.spec-proc-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0 0 16px;
+}
+.spec-proc-step {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    text-align: left;
+    padding: 12px 14px;
+    border: 1px solid #d0d5dd;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    color: #1d2939;
+}
+.spec-proc-step:hover {
+    border-color: #98a2b3;
+}
+.spec-proc-step.is-active {
+    border-color: #0f6b4c;
+    background: #f0faf5;
+    box-shadow: 0 0 0 1px #0f6b4c33;
+}
+.spec-proc-step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #1a3a5c;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+.spec-proc-step.is-active .spec-proc-step-num {
+    background: #0f6b4c;
+}
+.spec-proc-step-label {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+.spec-proc-step-hint {
+    font-size: 0.78rem;
+    color: #667085;
+    line-height: 1.3;
+}
+.spec-proc-panel-lead {
+    margin: 0 0 12px;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: #475467;
+}
+.spec-proc-rows-table input.form-control,
+.spec-proc-rows-table .typeable-select,
+.spec-proc-rows-table .typeable-select-input {
+    width: 100%;
+    min-width: 0;
+}
+.spec-proc-rows-table td {
+    overflow: visible;
+}
+.spec-proc-rows-table .typeable-select {
+    position: relative;
+}
+#specification-process .form-table-wrapper {
+    overflow: visible;
+}
+.spec-proc-eval-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+.spec-proc-eval-card {
+    padding: 14px;
+    border: 1px solid #e4ebe7;
+    border-radius: 10px;
+    background: #fafcfb;
+}
+.spec-proc-eval-card h4 {
+    margin: 0 0 8px;
+    font-size: 0.95rem;
+}
+.spec-proc-eval-card p {
+    margin: 0 0 12px;
+    font-size: 0.84rem;
+    color: #475467;
+    line-height: 1.4;
+}
+.spec-proc-eval-sup-ul {
+    margin: 0;
+    padding-left: 1.1rem;
+}
+.spec-proc-eval-sup-ul li {
+    margin: 4px 0;
+    font-size: 0.88rem;
+}
+@media (max-width: 900px) {
+    .spec-proc-steps,
+    .spec-proc-eval-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+.zna-spec-print-sheet {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px;
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: #111;
+    background: #fff;
+}
+.zna-spec-print-title {
+    margin: 0 0 8px;
+    font-size: 1.15rem;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+.zna-spec-print-meta {
+    margin: 0 0 16px;
+    font-size: 0.85rem;
+    color: #444;
+}
+.zna-spec-print-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 22px;
+}
+.zna-spec-print-table td {
+    padding: 6px 8px;
+    vertical-align: top;
+    border-bottom: 1px solid #eee;
+    font-size: 0.92rem;
+}
+.zna-spec-label {
+    font-weight: 700;
+    width: 28%;
+    white-space: nowrap;
+}
+.zna-spec-label::after {
+    content: ":";
+}
+.zna-spec-sign {
+    margin-top: 14px;
+    display: grid;
+    gap: 4px;
+    font-size: 0.88rem;
+}
+@media print {
+    body.printing-zna-spec .print-target {
+        display: block !important;
+    }
+    body.printing-zna-spec .zna-spec-print-sheet {
+        box-shadow: none;
+        padding: 0;
+    }
 }

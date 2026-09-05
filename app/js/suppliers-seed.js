@@ -46,6 +46,7 @@ const IT_DIR_SUPPLIERS_SEED = [
     { ser: 26, name: 'NC & Banat Strategic Partners', phone: '0773 412 718 / 0782 819 776' },
     { ser: 19, name: 'Nibex Hardware t/a Century Computers', phone: '0772 101 138 / 0717 239 191' },
     { ser: 43, name: 'Nixzimo', phone: '0712 491 600' },
+    { ser: 48, name: 'Netlarks Technologies (Pvt) Ltd', phone: '0773 925 179', notes: 'Also styled NETLARKS TECHNOLOGIES (PVT) LTD — 14-16 George Silundika Ave, Harare' },
     { ser: 15, name: 'Norkom', phone: '0772 622 857' },
     { ser: 37, name: 'Osinet', phone: '0772 851 262' },
     { ser: 28, name: 'Potash Zimbabwe', phone: '0772 494 416 / 0786 126 611' },

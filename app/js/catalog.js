@@ -1087,6 +1087,10 @@ const STORES_CATALOG_SECTIONS = [
         "name": "HP OmniBook X Flip 16 AI (Intel Core Ultra 9)"
       },
       {
+        "id": "ict-equipment__hp-omen-16-am0000ne",
+        "name": "HP OMEN 16 Gaming Laptop (16-am0000ne)"
+      },
+      {
         "id": "ict-equipment__hp-omnibook-7",
         "name": "HP OmniBook 7"
       },

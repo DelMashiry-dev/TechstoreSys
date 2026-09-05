@@ -1,6 +1,6 @@
 <div id="spec-evaluation" class="form-container">
                 <div class="form-header">
-                    <h2 class="form-title">Spec/Tech Evaluation</h2>
+                    <h2 class="form-title">Technical Specs</h2>
                     <button class="close-btn">&times;</button>
                 </div>
 
@@ -11,13 +11,37 @@
                     Spec Search and Market Browser above remain optional research aids.
                 </p>
 
+                <div id="specEvalRelatedChain" class="related-process-host" aria-live="polite"></div>
+
+                <div class="dashboard-panel spec-eval-bridge-panel" id="specEvalBridgePanel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>Linked to Specs Evaluation</h3>
+                    </div>
+                    <p class="spec-search-hint">
+                        <strong>Technical Specs</strong> stays its own button alongside Specs Evaluation. Load a saved <strong>ZNA Spec</strong>
+                        (and its supplier quotations) so ITEM rows and TO SPEC / BELOW SPEC scoring stay in sync.
+                    </p>
+                    <div class="form-row">
+                        <div class="form-col" style="flex:1.6;">
+                            <label class="form-label">ZNA Spec (from Specs Evaluation)</label>
+                            <select class="form-control" id="specEvalBridgeZnaSelect"></select>
+                        </div>
+                        <div class="form-col" style="display:flex; align-items:flex-end; gap:8px; flex-wrap:wrap;">
+                            <button type="button" class="btn btn-primary" id="specEvalBridgeLoadBtn">Load into this sheet</button>
+                            <button type="button" class="btn btn-ghost" id="specEvalBridgeOpenProcBtn">Open Specs Evaluation</button>
+                        </div>
+                    </div>
+                    <p class="muted" id="specEvalBridgeStatus" style="margin:8px 0 0;"></p>
+                    <input type="hidden" id="specEvalLinkedZnaId" value="">
+                </div>
+
                 <div class="dashboard-panel spec-search-panel">
                     <div class="section-heading section-heading-compact">
                         <h3>Intelligent Spec Search — “I need at least these specs”</h3>
                     </div>
                     <p class="spec-search-hint">
                         Set product type, <strong>duty profile</strong> (for laptops), brand, processor, RAM and/or storage. Keywords are optional.
-                        Returns a ranked table of the best options (at least 5 when available). Local catalog is
+                        You can <strong>type a value</strong> if it is not in the list (e.g. a specific CPU or brand). Local catalog is
                         searched first; optionally enrich with online lookup (when the server is running). Pick a
                         row to load the Spec Evaluation datasheet.
                     </p>
@@ -272,21 +296,26 @@
                     <textarea class="form-control" id="specEvalPurpose" rows="2" hidden placeholder="Purpose"></textarea>
                     <input type="hidden" id="specEvalEditId" value="">
 
-                    <div class="spec-template-bar">
-                        <span class="spec-template-label">ITEM checklist:</span>
-                        <button type="button" class="btn btn-ghost btn-sm" id="loadLaptopSpecsBtn">Laptop items</button>
-                        <button type="button" class="btn btn-ghost btn-sm" id="loadDesktopSpecsBtn">Desktop</button>
-                        <button type="button" class="btn btn-ghost btn-sm" id="loadTabletSpecsBtn">Tablet</button>
-                        <button type="button" class="btn btn-ghost btn-sm" id="loadPrinterSpecsBtn">Printer / MFP</button>
-                        <button type="button" class="btn btn-ghost btn-sm" id="loadServerSpecsBtn">Server</button>
-                        <button type="button" class="btn btn-ghost btn-sm" id="clearSpecsBtn">Clear rows</button>
-                    </div>
-
-                    <div class="spec-supplier-bar" id="specSupplierBar">
-                        <span class="spec-template-label">Suppliers (columns):</span>
-                        <div class="spec-supplier-inputs" id="specSupplierInputs"></div>
-                        <button type="button" class="btn btn-ghost btn-sm" id="specAddSupplierBtn">+ Supplier</button>
-                        <button type="button" class="btn btn-ghost btn-sm" id="specRemoveSupplierBtn" title="Remove last supplier column">− Supplier</button>
+                    <div class="spec-matrix-toolbar">
+                        <div class="spec-template-bar">
+                            <span class="spec-template-label">ITEM checklist:</span>
+                            <div class="spec-template-pills">
+                                <button type="button" class="btn btn-ghost btn-sm" id="loadLaptopSpecsBtn">Laptop items</button>
+                                <button type="button" class="btn btn-ghost btn-sm" id="loadDesktopSpecsBtn">Desktop</button>
+                                <button type="button" class="btn btn-ghost btn-sm" id="loadTabletSpecsBtn">Tablet</button>
+                                <button type="button" class="btn btn-ghost btn-sm" id="loadPrinterSpecsBtn">Printer / MFP</button>
+                                <button type="button" class="btn btn-ghost btn-sm" id="loadServerSpecsBtn">Server</button>
+                                <button type="button" class="btn btn-ghost btn-sm" id="clearSpecsBtn">Clear rows</button>
+                            </div>
+                            <div class="spec-supplier-count-actions">
+                                <button type="button" class="btn btn-ghost btn-sm" id="specAddSupplierBtn">+ Supplier</button>
+                                <button type="button" class="btn btn-ghost btn-sm" id="specRemoveSupplierBtn" title="Remove last supplier column">− Supplier</button>
+                            </div>
+                        </div>
+                        <div class="spec-supplier-bar" id="specSupplierBar">
+                            <span class="spec-template-label">Suppliers (columns):</span>
+                            <div class="spec-supplier-inputs" id="specSupplierInputs"></div>
+                        </div>
                     </div>
 
                     <div class="form-table-wrapper spec-matrix-wrap">
@@ -347,7 +376,7 @@
                                 </div>
                                 <div class="form-col">
                                     <label class="form-label">Name</label>
-                                    <input type="text" class="form-control" id="specApprovedName" placeholder="e.g. L Kativhu">
+                                    <input type="text" class="form-control" id="specApprovedName" placeholder="e.g. L Kativu">
                                 </div>
                             </div>
                             <div class="form-row">

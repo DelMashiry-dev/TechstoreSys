@@ -21,13 +21,13 @@ const STK_DESK_DEFS = {
     },
     aiad: {
         title: 'Due Diligence Window — AIAD',
-        blurb: 'Evaluate endorsed F1 + IT Dir spec + supplier quotation. Issue the Price Due Diligence certificate and upload the signed form.',
+        blurb: 'Evaluate endorsed F1 + IT Dir spec + supplier quotation. Run Cost Comparative, issue the Price Due Diligence certificate, and upload the signed form.',
         actor: 'aiad',
         queueHint: 'All AIAD due-diligence cases — from spec return through certificate issue.'
     },
     supplier: {
         title: 'Supplier Window',
-        blurb: 'See RFQs and P/Os addressed to your company. Upload quotation + spec, delivery note, invoice, and banking details.',
+        blurb: 'See RFQs and P/Os addressed to your company. Complete Supplier Spec / Quotation against ZNA specs, then upload quotation packs, D-Note, invoice, and banking.',
         actor: 'supplier',
         queueHint: 'Only cases where you are invited or awarded.'
     }
@@ -39,7 +39,7 @@ const STK_DESK_TABS = {
         { id: 'manac', label: 'MANAC / DP F1', panel: 'cycle', cycleFilter: 'manac', blurb: 'Endorse DP F1 forms for funds release (MANAC). Upload signed endorsement scans.' },
         { id: 'payment', label: 'Supplier payment', panel: 'cycle', cycleFilter: 'payment', blurb: 'Record payment vouchers after delivery inspection and goods received.' },
         { id: 'creditors', label: 'Creditors register', panel: 'creditors', blurb: 'Open balances, DAF chase list, import creditors Excel and paid-list proof.' },
-        { id: 'targets', label: 'Vote / target allocation', panel: 'module', moduleId: 'financial-year-bids', blurb: 'Allocate DAF monthly targets and buying power across ZNA cost-centre GL votes.' },
+        { id: 'targets', label: 'Vote / target allocation', panel: 'module', moduleId: 'financial-year-bids', blurb: 'Cost-centre FY Bids inform DAF monthly ZiG/USD allocations onto ZOFF, Software, Spares, Maintenance and ICT ledgers.' },
         { id: 'pfms', label: 'PFMS / procurement cycle', panel: 'module', moduleId: 'dp-procurement', blurb: 'ICT procurement cycle register — PFMS numbering, pipeline stages, and case history.' }
     ],
     dp: [
@@ -58,14 +58,15 @@ const STK_DESK_TABS = {
         { id: 'pipeline', label: 'Full pipeline view', panel: 'cycle', blurb: 'Read-only awareness of all procurement cases from F1 raise through supply (no quotes or payment).' }
     ],
     aiad: [
-        { id: 'benchmark', label: 'Market prevailing prices', panel: 'module', moduleId: 'cost-comparative-schedule', blurb: 'Government gazetted / benchmark prices for cost comparative — compare supplier quotes against prevailing market rates.' },
+        { id: 'cost', label: 'Cost Comparative / DD', panel: 'module', moduleId: 'cost-comparative-schedule', blurb: 'Cost Comparative Schedule — price scrutiny of supplier quotes vs market/gazetted rates, then award Price Due Diligence Certificate.' },
         { id: 'diligence', label: 'Due diligence queue', panel: 'cycle', cycleFilter: 'aiad', blurb: 'Cases awaiting AIAD price audit before contract award.' },
-        { id: 'certificate', label: 'DD certificate issue', panel: 'cycle', cycleFilter: 'cert', blurb: 'Issue and upload signed Price Due Diligence certificates.' },
-        { id: 'spec', label: 'Spec / tech evaluation', panel: 'module', moduleId: 'spec-evaluation', blurb: 'Supporting spec evaluation reference for due diligence decisions.' }
+        { id: 'certificate', label: 'DD certificate issue', panel: 'cycle', cycleFilter: 'cert', blurb: 'Issue and upload signed Price Due Diligence certificates on the procurement case.' },
+        { id: 'spec', label: 'Technical Specs', panel: 'module', moduleId: 'spec-evaluation', blurb: 'Supporting technical specs / To Spec scoring for due diligence decisions.' }
     ],
     supplier: [
+        { id: 'specquote', label: 'Supplier Spec / Quotation', panel: 'supplierspec', blurb: 'Enter your offered ICT specs against the ZNA (IT Dir Specification) — To Spec / near / better — with quote No. and price.' },
         { id: 'rfq', label: 'RFQs / invitations', panel: 'cycle', cycleFilter: 'rfq', blurb: 'Open requests for quotation addressed to your company.' },
-        { id: 'quote', label: 'Quotation submission', panel: 'cycle', cycleFilter: 'quote', blurb: 'Submit quotation, spec compliance, and banking details for active RFQs.' },
+        { id: 'quote', label: 'Quotation submission', panel: 'cycle', cycleFilter: 'quote', blurb: 'Submit quotation packs, banking details, and case attachments for active RFQs.' },
         { id: 'po', label: 'Purchase orders', panel: 'cycle', cycleFilter: 'po', blurb: 'Awarded P/Os — confirm supply against order lines.' },
         { id: 'dnote', label: 'Delivery notes', panel: 'cycle', cycleFilter: 'dnote', blurb: 'Upload delivery notes and invoices after supply.' },
         { id: 'docimport', label: 'Document upload', panel: 'module', moduleId: 'doc-import', blurb: 'Import and attach quotation packs, invoices, or banking letters from files.' }
@@ -701,6 +702,7 @@ function stkSetDeskTab(desk, tabId) {
     window._stkCycleFilter = tab?.cycleFilter || '';
     stkRenderDeskTabs(desk);
     stkShowDeskPanel(desk, tab);
+    stkSyncRelatedProcessChain();
 }
 
 function stkRenderDeskTabs(desk) {
@@ -720,9 +722,11 @@ function stkShowDeskPanel(desk, tab) {
     const cycle = document.getElementById('stkDeskCyclePanel');
     const cred = document.getElementById('stkDafCreditorsPanel');
     const mod = document.getElementById('stkDeskModulePanel');
+    const supSpec = document.getElementById('stkDeskSupplierSpecPanel');
     if (cycle) cycle.hidden = tab.panel !== 'cycle';
     if (cred) cred.hidden = tab.panel !== 'creditors';
     if (mod) mod.hidden = tab.panel !== 'module';
+    if (supSpec) supSpec.hidden = tab.panel !== 'supplierspec';
 
     if (tab.panel === 'cycle') {
         renderStakeholderDeskList();
@@ -732,6 +736,10 @@ function stkShowDeskPanel(desk, tab) {
         renderStkDafCreditorsPanel();
     } else if (tab.panel === 'module') {
         renderStkDeskModulePanel(tab);
+    } else if (tab.panel === 'supplierspec') {
+        if (typeof initSpecProcSupplierPortalForm === 'function') {
+            initSpecProcSupplierPortalForm({ portal: true });
+        }
     }
 }
 
@@ -739,10 +747,13 @@ function renderStkDeskModulePanel(tab) {
     const host = document.getElementById('stkDeskModulePanel');
     if (!host || !tab?.moduleId) return;
     const canOpen = typeof canAccessModule === 'function' ? canAccessModule(tab.moduleId) : true;
+    const showRelated = tab.moduleId === 'cost-comparative-schedule' || tab.moduleId === 'spec-evaluation';
+    const relatedCurrent = tab.moduleId === 'spec-evaluation' ? 'eval' : 'dd';
     host.innerHTML = `
         <div class="stk-module-workspace dashboard-panel">
             <div class="section-heading section-heading-compact"><h3>${stkEscape(tab.label)}</h3></div>
             <p class="stk-module-blurb">${stkEscape(tab.blurb || '')}</p>
+            <div id="stkModuleRelatedChain" class="related-process-host" ${showRelated ? '' : 'hidden'}></div>
             <div class="module-actions">
                 ${canOpen
         ? `<button type="button" class="btn btn-primary" data-stk-open-module="${stkEscape(tab.moduleId)}">Open ${stkEscape(tab.label)}</button>`
@@ -750,6 +761,9 @@ function renderStkDeskModulePanel(tab) {
                 <button type="button" class="btn btn-ghost" data-stk-back-cycle="">Back to in-tray</button>
             </div>
         </div>`;
+    if (showRelated && typeof mountRelatedProcessChain === 'function') {
+        mountRelatedProcessChain('stkModuleRelatedChain', 'ict-spec-dd', relatedCurrent);
+    }
     host.querySelector('[data-stk-open-module]')?.addEventListener('click', () => {
         if (typeof navigateToModule === 'function') navigateToModule(tab.moduleId);
     });
@@ -772,6 +786,21 @@ function stkSetDafTab(tab) {
     else stkSetDeskTab('daf', 'manac');
 }
 
+function stkSyncRelatedProcessChain() {
+    const host = document.getElementById('stkDeskRelatedChain');
+    if (!host || typeof mountRelatedProcessChain !== 'function') return;
+    const desk = getStakeholderDeskKey();
+    const tabId = stkActiveTabId(desk);
+    const current = typeof relatedProcessCurrentForDesk === 'function'
+        ? relatedProcessCurrentForDesk(desk, tabId)
+        : null;
+    if (current === null) {
+        mountRelatedProcessChain(host, 'ict-spec-dd', '', { hidden: true });
+        return;
+    }
+    mountRelatedProcessChain(host, 'ict-spec-dd', current);
+}
+
 function stkSyncDeskTabs() {
     const desk = getStakeholderDeskKey();
     const tabsHost = document.getElementById('stkDeskTabs');
@@ -780,6 +809,7 @@ function stkSyncDeskTabs() {
     const tab = stkTabDef(desk, stkActiveTabId(desk));
     window._stkCycleFilter = tab?.cycleFilter || '';
     stkShowDeskPanel(desk, tab);
+    stkSyncRelatedProcessChain();
 }
 
 function renderStkDafCreditorsPanel() {

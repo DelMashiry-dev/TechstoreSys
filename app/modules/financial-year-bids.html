@@ -5,9 +5,9 @@
                 </div>
 
                 <p class="bids-intro">
-                    Official <strong>IT DIR BIDS</strong> workbooks are built into the system (from your Excel files).
-                    Load a pack to populate the bid schedule by GL (consumables, software, parts, ICT equipment, maintenance).
-                    These bids inform target/budget provision for the ICT procurement cycle.
+                    The cost centre prepares <strong>FY Bids</strong> by ledger (ZOFF, Software, Spares, Maintenance, ICT).
+                    <strong>DAF</strong> then allocates monthly money (usually <strong>ZiG</strong>) to those GL ledgers,
+                    informed by the bid ask for each ledger. Load or import bids below, then set DAF allocations.
                 </p>
 
                 <div class="dashboard-panel bids-import-panel">
@@ -44,9 +44,104 @@
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-top: 12px;">
-                    <label class="form-label">Other Excel file (optional):</label>
-                    <input type="file" class="form-control" id="excelFile" accept=".xlsx, .xls">
+                <div class="dashboard-panel bids-excel-import-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>Import prepared bids from Excel</h3>
+                    </div>
+                    <p class="muted">
+                        Upload an <strong>IT DIR BIDS</strong> workbook (.xlsx) prepared offline — multi-sheet packs
+                        (toner, ICT, parts, software, maint) or a flat sheet with Item / Qty / Unit Cost / Total columns.
+                        Requires <strong>START-SYSTEM</strong> (local server) running.
+                    </p>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Import mode</label>
+                            <select class="form-control" id="bidsExcelLoadMode">
+                                <option value="replace">Replace table</option>
+                                <option value="append">Append to table</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">GL filter (optional)</label>
+                            <select class="form-control" id="bidsExcelGlFilter">
+                                <option value="all">All GLs in file</option>
+                                <option value="2200600002">2200600002 Consumables</option>
+                                <option value="2200600003">2200600003 Software</option>
+                                <option value="2201900002">2201900002 Spare Parts</option>
+                                <option value="220200002">220200002 Tech Maint</option>
+                                <option value="3112210001">3112210001 ICT Equipment</option>
+                                <option value="6122100009">6122100009 ZOFF</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="sd-creditors-drop bids-excel-drop" id="bidsExcelDropZone" tabindex="0" role="button" aria-label="Drop bids Excel file here">
+                        <strong>Drop prepared bids Excel here</strong>
+                        <span class="muted">or click to browse · .xlsx / .xls</span>
+                        <input type="file" id="excelFile" accept=".xlsx,.xls" hidden>
+                    </div>
+                    <p id="bidsExcelImportStatus" class="bids-excel-import-status muted" aria-live="polite"></p>
+                    <div id="bidsExcelPreview" class="bids-excel-preview" hidden></div>
+                    <div class="module-actions" id="bidsExcelConfirmActions" hidden>
+                        <button type="button" class="btn btn-primary" id="bidsConfirmExcelImportBtn">Load imported lines into table</button>
+                        <button type="button" class="btn btn-ghost" id="bidsCancelExcelImportBtn">Cancel</button>
+                    </div>
+                </div>
+
+                <div class="dashboard-panel bids-daf-alloc-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>DAF allocation to GL ledgers (informed by bids)</h3>
+                    </div>
+                    <p class="muted">
+                        After bids are loaded, DAF votes money onto each IT Dir ledger for the selected month.
+                        Enter the DAF advice amounts (e.g. ZiG 500,000 to ZOFF). Bid ask shows what the cost centre submitted for the year.
+                    </p>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label" for="bidsDafAllocMonth">Target month</label>
+                            <input type="month" class="form-control" id="bidsDafAllocMonth">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="bidsDafAllocCurrency">DAF currency</label>
+                            <select class="form-control" id="bidsDafAllocCurrency">
+                                <option value="ZiG" selected>ZiG (ZWG)</option>
+                                <option value="USD">USD</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="bidsDafAllocSuggest">Suggest from bids</label>
+                            <select class="form-control" id="bidsDafAllocSuggest">
+                                <option value="month12">FY bid ÷ 12 (monthly share)</option>
+                                <option value="full">Full FY bid ask</option>
+                                <option value="blank">Leave blank (type DAF advice)</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="bidsDafAllocRef">DAF advice / vote ref</label>
+                            <input type="text" class="form-control" id="bidsDafAllocRef" placeholder="e.g. DAF/IT/SEP26/01" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="form-table-wrapper">
+                        <table class="overview-table" id="bidsDafAllocTable">
+                            <thead>
+                                <tr>
+                                    <th>IT Dir ledger</th>
+                                    <th>GL</th>
+                                    <th>FY Bid ask (from bids)</th>
+                                    <th>DAF allocation this month</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bidsDafAllocBody">
+                                <tr><td colspan="4" class="muted">Load or import bids to see ledger totals.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p id="bidsDafAllocStatus" class="bids-daf-alloc-status muted" aria-live="polite"></p>
+                    <div class="module-actions">
+                        <button type="button" class="btn btn-ghost" id="bidsDafRefreshAskBtn">Refresh from bids table</button>
+                        <button type="button" class="btn btn-secondary" id="bidsDafSuggestBtn">Fill suggestion</button>
+                        <button type="button" class="btn btn-primary" id="bidsDafApplyTargetsBtn">Apply DAF allocations to monthly targets</button>
+                        <button type="button" class="btn btn-ghost" id="bidsDafOpenTargetsBtn">Open GL Target Overview</button>
+                    </div>
                 </div>
 
                 <div class="module-toolbar">

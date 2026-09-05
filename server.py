@@ -25,6 +25,7 @@ from product_specs_lookup import lookup_product_specs, lookup_market_catalog, lo
 from ai_services import ai_status, parse_spec_document, parse_import_document, answer_stores_question, draft_requisition_justification
 from creditors_parse import parse_creditors_bytes
 from creditors_paid_parse import parse_paid_bytes
+from bids_parse import parse_bids_bytes
 from mode_switch import (
     handle_mode_switch,
     mode_status_payload,
@@ -1632,6 +1633,23 @@ class TechStoresHandler(BaseHTTPRequestHandler):
                 self._send_json(200, {"ok": True, "paid": paid})
             except Exception as exc:
                 self._send_json(500, {"ok": False, "error": f"Paid list parse failed: {exc}"})
+            return
+
+        if path == "/api/bids/parse":
+            try:
+                import base64
+
+                payload = self._read_json()
+                raw_b64 = str(payload.get("fileBase64") or payload.get("file") or "").strip()
+                file_name = str(payload.get("fileName") or payload.get("filename") or "bids.xlsx")
+                if not raw_b64:
+                    self._send_json(400, {"ok": False, "error": "No Excel file supplied."})
+                    return
+                data = base64.b64decode(raw_b64.split(",", 1)[-1])
+                pack = parse_bids_bytes(data, filename=file_name)
+                self._send_json(200, {"ok": True, "pack": pack})
+            except Exception as exc:
+                self._send_json(500, {"ok": False, "error": f"Bids parse failed: {exc}"})
             return
 
         self._send_json(404, {"ok": False, "error": "Not found"})

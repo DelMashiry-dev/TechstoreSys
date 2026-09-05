@@ -391,7 +391,7 @@ function renderProcurementCycleGuide() {
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="unit-requisitions">Requisitions</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="dp-f1-form">DP F1</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="dp-procurement">ICT Procurement Cycle</button>
-                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="spec-evaluation">Spec / Tech Evaluation</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-pg-open="spec-evaluation">Technical Specs</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="cost-comparative-schedule">Cost Comparative</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="purchase-orders">Purchase Orders</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-pg-open="delivery-note">Delivery Note</button>

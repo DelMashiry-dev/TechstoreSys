@@ -52,7 +52,7 @@ const DEPT_HOME_PRESETS = {
         blurb: 'Workshop repairs register, specification / technical evaluation, and IT Directorate communications.',
         shortcuts: [
             { target: 'workshop-repairs', label: 'Workshop Register', primary: true },
-            { target: 'spec-evaluation', label: 'Spec / Tech Evaluation' },
+            { target: 'spec-evaluation', label: 'Technical Specs' },
             { target: 'doc-import', label: 'Import document' },
             { target: 'it-dir-comms', label: 'IT Dir Comms' }
         ]
@@ -116,19 +116,19 @@ const DEPT_HOME_PRESETS = {
     aiad: {
         kicker: 'Army Internal Audit Directorate',
         title: 'Due Diligence Window',
-        blurb: 'Pre-audit of procurement contracts. The portal lists all AIAD due-diligence cases — spec return, certificate issue, and completed audits.',
+        blurb: 'Cost Comparative Schedule, price due diligence queue, and Price Due Diligence Certificate — all from this portal.',
         shortcuts: [
             { target: 'portals-board', label: 'Portals dashboard' },
             { target: 'stakeholder-desk', desk: 'aiad', label: 'Open Due Diligence Window', primary: true },
+            { target: 'stakeholder-desk', desk: 'aiad', stkDeskTab: 'cost', label: 'Cost Comparative Schedule' },
             { target: 'doc-import', label: 'Import document' },
-            { target: 'cost-comparative-schedule', label: 'Cost Comparative Schedule' },
             { target: 'dp-procurement', label: 'ICT Procurement Cycle' }
         ]
     },
     supplier: {
         kicker: 'Registered supplier',
         title: 'Supplier Window',
-        blurb: 'See RFQs and P/Os for your company only. Upload quotation and spec, delivery note, invoice, and banking details.',
+        blurb: 'Complete Supplier Spec / Quotation against ZNA specs, then upload quote packs, D-Note, invoice, and banking for your RFQs/POs.',
         shortcuts: [
             { target: 'portals-board', label: 'Portals dashboard' },
             { target: 'stakeholder-desk', desk: 'supplier', label: 'Open Supplier Window', primary: true },
@@ -174,7 +174,7 @@ function renderRoleScopedHome() {
             <div class="role-scoped-home-actions">
                 ${shortcuts.map((s) => `
                     <button type="button" class="btn ${s.primary ? 'btn-primary' : 'btn-secondary'}"
-                        data-target="${escapeHtml(s.target)}"${s.desk ? ` data-stk-desk="${escapeHtml(s.desk)}"` : ''}${s.stkDafTab ? ` data-stk-daf-tab="${escapeHtml(s.stkDafTab)}"` : ''}>${escapeHtml(s.label)}</button>
+                        data-target="${escapeHtml(s.target)}"${s.desk ? ` data-stk-desk="${escapeHtml(s.desk)}"` : ''}${s.stkDeskTab ? ` data-stk-desk-tab="${escapeHtml(s.stkDeskTab)}"` : ''}${s.stkDafTab ? ` data-stk-daf-tab="${escapeHtml(s.stkDafTab)}"` : ''}>${escapeHtml(s.label)}</button>
                 `).join('')}
             </div>
         </div>`;
@@ -183,10 +183,12 @@ function renderRoleScopedHome() {
         btn.addEventListener('click', () => {
             const target = btn.getAttribute('data-target');
             const desk = btn.getAttribute('data-stk-desk');
+            const deskTab = btn.getAttribute('data-stk-desk-tab');
             const dafTab = btn.getAttribute('data-stk-daf-tab');
             if (target && typeof navigateToModule === 'function') {
                 const opts = {};
                 if (desk) opts.stkDesk = desk;
+                if (deskTab) opts.stkDeskTab = deskTab;
                 if (dafTab) opts.stkDafTab = dafTab;
                 navigateToModule(target, opts);
             }
