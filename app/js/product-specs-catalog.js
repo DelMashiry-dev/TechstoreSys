@@ -126,6 +126,32 @@ const PRODUCT_SPECS_CATALOG = [
         ]
     },
     {
+        id: 'hp-omen-16-ap0097nr',
+        brand: 'HP',
+        model: 'OMEN Gaming Laptop 16-ap0097nr',
+        category: 'laptop',
+        names: [
+            'HP OMEN Gaming Laptop 16-ap0097nr',
+            'OMEN Gaming Laptop 16-ap0097nr',
+            'HP OMEN 16-ap0097nr',
+            'OMEN 16-ap0097nr'
+        ],
+        aliases: ['omen 16', '16-ap0097nr', 'ap0097nr', 'omen gaming laptop 16'],
+        dutyProfiles: ['simulations', 'graphic-design', 'machine-learning', 'software-engineering', 'architecture'],
+        specs: [
+            ['Device Type', '16\" gaming / high-performance laptop', 'Taken on charge — ICT Equipment'],
+            ['Model', '16-ap0097nr', 'OMEN 16 series · Shadow Black'],
+            ['Processor', 'AMD Ryzen™ AI 9', 'On-device AI + high-end compute'],
+            ['Graphics', 'NVIDIA® GeForce RTX™ 5070', 'GPU workloads, design, simulations'],
+            ['RAM', '32 GB RAM', 'Heavy multitasking'],
+            ['Storage', '1 TB SSD', 'Local project and media store'],
+            ['Display', '16\" WQXGA (2560 × 1600)', 'High-resolution briefing / design'],
+            ['Operating System', 'Windows 11 Home', 'Confirm Pro upgrade if domain join required'],
+            ['Colour', 'Shadow Black', 'OEM finish'],
+            ['Warranty', '1 year HP limited warranty (confirm contract)', 'Service continuity']
+        ]
+    },
+    {
         id: 'hp-elitebook-840-g10',
         brand: 'HP',
         model: 'EliteBook 840 G10',

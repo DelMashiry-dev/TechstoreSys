@@ -157,6 +157,14 @@ async function runHeavyBootInit() {
             console.info('HP OMEN 16 Netlarks receipt applied:', omen);
         }
     }
+    if (typeof receiptHpOmen16Ap0097nrSep2026 === 'function') {
+        const omenAp = receiptHpOmen16Ap0097nrSep2026({ silent: true });
+        if (omenAp?.ok) {
+            if (typeof saveStateNow === 'function') await saveStateNow();
+            else saveState();
+            console.info('HP OMEN 16-ap0097nr receipt applied:', omenAp);
+        }
+    }
     if (typeof ensureExampleMidLaptopRequisition === 'function') {
         const ex = ensureExampleMidLaptopRequisition();
         if (ex) {

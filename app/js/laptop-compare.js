@@ -235,6 +235,155 @@ function laptopCompareSpecFromProduct(product, pattern) {
     return hit ? String(hit[1] || '—').trim() : '—';
 }
 
+const COMPARE_SHOWCASE_SPECS = [
+    { label: 'Display', re: /display|screen/i, fromText: /(\d{2}(?:\.\d)?\s*(?:\"|inch|-inch)[^\n,;]{0,48})/i },
+    { label: 'Processor', re: /processor/i, fromText: /Intel(?:\s+Core)?(?:\s+Ultra)?\s*\d*\s*[A-Z0-9-]{0,14}|AMD\s+Ryzen(?:\s+AI)?\s*[0-9][^\s,/|]{0,18}|Apple\s+M[1-5]\w*/i },
+    { label: 'RAM', re: /^ram$|memory/i, fromText: /(\d+\s*GB(?:\s*(?:RAM|LPDDR\d|DDR\d))?)/i },
+    { label: 'Storage', re: /storage/i, fromText: /(\d+\s*(?:GB|TB)\s*(?:SSD|NVMe|HDD)?)/i },
+    { label: 'Graphics', re: /graphics|gpu/i, fromText: /RTX\s*\d{3,4}(?:\s*\d+\s*GB)?|GeForce[^\s,]{0,16}|Arc\s+\w+|Iris\s*Xe|integrated graphics/i }
+];
+
+function getCompareLayoutMode() {
+    return appState?.uiCompareLayout === 'table' ? 'table' : 'showcase';
+}
+
+function syncCompareLayoutToggle() {
+    const mode = getCompareLayoutMode();
+    document.querySelectorAll('[data-cmp-layout]').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-cmp-layout') === mode);
+    });
+}
+
+function setCompareLayoutMode(mode) {
+    const id = mode === 'table' ? 'table' : 'showcase';
+    if (appState) appState.uiCompareLayout = id;
+    if (typeof saveState === 'function') saveState();
+    syncCompareLayoutToggle();
+    if (typeof renderLaptopCompareResults === 'function' && laptopCompareState.items.length) {
+        renderLaptopCompareResults();
+    }
+    if (typeof renderIctCompareTable === 'function') {
+        renderIctCompareTable();
+    }
+}
+
+function wireCompareLayoutToggles(root) {
+    root?.querySelectorAll('[data-cmp-layout]').forEach((btn) => {
+        if (btn.dataset.cmpBound === '1') return;
+        btn.dataset.cmpBound = '1';
+        btn.addEventListener('click', () => setCompareLayoutMode(btn.getAttribute('data-cmp-layout')));
+    });
+    syncCompareLayoutToggle();
+}
+
+function compareShowcaseChip(row) {
+    const blob = `${row.title || ''} ${row.snippet || ''} ${row.subtitle || ''} ${(row.product?.specs || []).map((s) => s[1]).join(' ')}`;
+    const intel = /intel/i.test(blob);
+    const amd = /amd|ryzen/i.test(blob);
+    const apple = /apple|\bm[1-5]\b/i.test(blob);
+    if (intel && amd) return 'Intel/AMD';
+    if (intel) return 'Intel';
+    if (amd) return 'AMD';
+    if (apple) return 'Apple';
+    return row.product?.brand || row.subtitle || 'ICT';
+}
+
+function compareShowcaseTagline(row, profile) {
+    const best = laptopCompareSpecFromProduct(row.product, /best for|form factor|device type/i);
+    if (best && best !== '—') return best;
+    if (row.catalogReasons?.[0]) return row.catalogReasons[0];
+    if (profile?.summary) return profile.summary;
+    const snip = String(row.snippet || '').trim();
+    if (snip) return snip.length > 90 ? `${snip.slice(0, 87)}…` : snip;
+    return 'Key specifications for duty comparison.';
+}
+
+function compareShowcaseImageSrc(row) {
+    if (row.imageUrl) return row.imageUrl;
+    const title = row.title || '';
+    const pid = String(row.product?.id || '');
+    const stockId = pid.includes('__') ? pid : (pid ? `ict-equipment__${pid}` : '');
+    if (typeof resolveProductStockImage === 'function') {
+        return resolveProductStockImage(title, row.product?.category || row.subtitle, null, stockId)
+            || resolveProductStockImage(title, row.product?.category, null, pid)
+            || '';
+    }
+    return '';
+}
+
+function compareShowcaseSpecValue(row, spec) {
+    const fromProduct = laptopCompareSpecFromProduct(row.product, spec.re);
+    if (fromProduct && fromProduct !== '—') return fromProduct;
+    const blob = `${row.title || ''} ${row.snippet || ''} ${row.subtitle || ''}`;
+    const m = spec.fromText ? blob.match(spec.fromText) : null;
+    return m ? String(m[0]).replace(/\s+/g, ' ').trim() : '—';
+}
+
+function compareShowcasePhotoHtml(row, esc) {
+    const src = compareShowcaseImageSrc(row);
+    const letter = esc((row.title || '?').slice(0, 1) || '?');
+    const ph = `<div class="cmp-showcase-ph" aria-hidden="true">${letter}</div>`;
+    if (!src) return ph;
+    return `<img src="${esc(src)}" alt="${esc(row.title || '')}" class="cmp-showcase-img" loading="lazy" referrerpolicy="no-referrer" decoding="async" onerror="this.hidden=true;var n=this.nextElementSibling;if(n)n.hidden=false;"><div class="cmp-showcase-ph" hidden aria-hidden="true">${letter}</div>`;
+}
+
+function renderCompareShowcase(host, scored, options = {}) {
+    if (!host) return;
+    const profile = options.profile || null;
+    const extraRows = options.extraRows || [];
+    const max = options.max || 4;
+    const show = scored.slice(0, max);
+    const specN = COMPARE_SHOWCASE_SPECS.length + extraRows.length;
+    const esc = options.esc || laptopCmpEsc;
+
+    host.hidden = !show.length;
+    if (!show.length) {
+        host.innerHTML = '';
+        return;
+    }
+
+    host.innerHTML = `
+        <div class="cmp-showcase" style="--cols:${show.length};--spec-n:${specN}">
+            ${show.map((s, i) => {
+                const row = s.row;
+                const specs = COMPARE_SHOWCASE_SPECS.map((spec) => `
+                    <div class="cmp-showcase-spec">
+                        <span class="cmp-showcase-spec-label">${esc(spec.label)}</span>
+                        <span class="cmp-showcase-spec-value">${esc(compareShowcaseSpecValue(row, spec))}</span>
+                    </div>`).join('');
+                const extras = extraRows.map((ex) => `
+                    <div class="cmp-showcase-spec">
+                        <span class="cmp-showcase-spec-label">${esc(ex.label)}</span>
+                        <span class="cmp-showcase-spec-value">${ex.html ? ex.html(s, i) : esc(ex.value(s, i))}</span>
+                    </div>`).join('');
+                return `
+                <article class="cmp-showcase-col${i === 0 ? ' is-winner' : ''}">
+                    <p class="cmp-showcase-chip">${esc(compareShowcaseChip(row))}</p>
+                    <h4 class="cmp-showcase-title">${esc(row.title || 'Unnamed item')}</h4>
+                    <div class="cmp-showcase-photo">${compareShowcasePhotoHtml(row, esc)}</div>
+                    <p class="cmp-showcase-tagline">${esc(compareShowcaseTagline(row, profile))}</p>
+                    <div class="cmp-showcase-keyhead"><span>Key Specifications</span></div>
+                    ${specs}${extras}
+                </article>`;
+            }).join('')}
+        </div>
+        ${scored.length > show.length
+            ? `<p class="cmp-showcase-more">Showing top ${show.length} of ${scored.length}. Switch to Table to see every ranked item.</p>`
+            : ''}`;
+}
+
+function applyCompareLayoutViews(tableWrap, showcaseEl, scored, options) {
+    const mode = getCompareLayoutMode();
+    syncCompareLayoutToggle();
+    if (tableWrap) tableWrap.hidden = mode === 'showcase';
+    if (mode === 'showcase') {
+        renderCompareShowcase(showcaseEl, scored, options);
+    } else if (showcaseEl) {
+        showcaseEl.hidden = true;
+        showcaseEl.innerHTML = '';
+    }
+}
+
 function laptopCompareWhyLine(best) {
     const reasons = best.row.catalogReasons || [];
     if (reasons.length) return reasons.slice(0, 3).join('; ');
@@ -328,6 +477,8 @@ function renderLaptopCompareResults() {
         if (body) body.innerHTML = '<tr><td colspan="2" class="req-empty-row">Rank laptops to compare.</td></tr>';
         const barsEl = document.getElementById('laptopCompareBars');
         if (barsEl) barsEl.innerHTML = '';
+        const showcase = document.getElementById('laptopCompareShowcase');
+        if (showcase) { showcase.hidden = true; showcase.innerHTML = ''; }
         laptopCompareState.scored = [];
         laptopCompareState.winner = null;
         return;
@@ -354,6 +505,19 @@ function renderLaptopCompareResults() {
 
     renderLaptopCompareChart(scored, profile);
     renderLaptopCompareSideBySide(scored);
+    applyCompareLayoutViews(
+        document.getElementById('laptopCompareTableWrap'),
+        document.getElementById('laptopCompareShowcase'),
+        scored,
+        {
+            profile,
+            max: 4,
+            extraRows: [
+                { label: 'Buy score', html: (s) => `<strong>${s.buy}</strong>` },
+                { label: 'Price ref', value: (s) => s.row.priceDisplay || '—' }
+            ]
+        }
+    );
 }
 
 function setLaptopCompareStatus(msg, kind = '') {
@@ -483,7 +647,10 @@ function initLaptopCompareModule() {
     fillLaptopCompareDutySelect();
     fillLaptopCompareFacets();
     updateLaptopCompareDutyHint();
-    if (root.dataset.inited === '1') return;
+    if (root.dataset.inited === '1') {
+        wireCompareLayoutToggles(root);
+        return;
+    }
     root.dataset.inited = '1';
 
     document.getElementById('laptopCompareDuty')?.addEventListener('change', updateLaptopCompareDutyHint);
@@ -491,7 +658,13 @@ function initLaptopCompareModule() {
     document.getElementById('laptopCompareMarketBtn')?.addEventListener('click', addLiveMarketListings);
     document.getElementById('laptopComparePrintBtn')?.addEventListener('click', printLaptopCompareComparison);
     document.getElementById('laptopCompareSendWinnerBtn')?.addEventListener('click', sendLaptopCompareWinnerToSpecEval);
+    wireCompareLayoutToggles(root);
 }
 
 window.initLaptopCompareModule = initLaptopCompareModule;
 window.rankLaptopsFromCatalog = rankLaptopsFromCatalog;
+window.getCompareLayoutMode = getCompareLayoutMode;
+window.setCompareLayoutMode = setCompareLayoutMode;
+window.wireCompareLayoutToggles = wireCompareLayoutToggles;
+window.applyCompareLayoutViews = applyCompareLayoutViews;
+window.renderCompareShowcase = renderCompareShowcase;

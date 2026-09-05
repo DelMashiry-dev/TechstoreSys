@@ -512,7 +512,7 @@ function runStoresQuery(templateId, params = {}) {
             if (wantReceipt && !wantIssue && txn.type !== 'receipt') return false;
             if (!sqInPeriod(txn.date, dateFrom, dateTo)) return false;
             if (!sqTxnMatchesCategory(txn, category)) return false;
-            const hay = `${txn.item} ${txn.description} ${txn.party} ${txn.appointment} ${txn.voucherNo} ${txn.by}`.toLowerCase();
+            const hay = `${txn.item} ${txn.description} ${txn.party} ${txn.supplier} ${txn.appointment} ${txn.voucherNo} ${txn.by}`.toLowerCase();
             if (itemContains && !hay.includes(itemContains)) return false;
             if (partyContains && !hay.includes(partyContains)) return false;
             return true;
@@ -525,6 +525,7 @@ function runStoresQuery(templateId, params = {}) {
             item: txn.item || '—',
             qty: txn.qty ?? 1,
             voucher: txn.voucherNo || '—',
+            supplier: (typeof resolveTxnSupplier === 'function' ? resolveTxnSupplier(txn) : (txn.supplier || '')) || '—',
             party: txn.party || '—',
             appointment: txn.appointment || '—',
             by: txn.by || '—',
@@ -542,6 +543,7 @@ function runStoresQuery(templateId, params = {}) {
             { key: 'item', label: 'Item' },
             { key: 'qty', label: 'Qty' },
             { key: 'voucher', label: 'RV/IV No.' },
+            { key: 'supplier', label: 'Supplier' },
             { key: 'party', label: 'Issued To / From' },
             { key: 'appointment', label: 'Appointment' },
             { key: 'by', label: 'By' }

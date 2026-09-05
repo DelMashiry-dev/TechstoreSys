@@ -495,7 +495,7 @@ function buildZnaSpecPrintHtml(rec) {
     const sign = (label, s = {}) => `
         <div class="zna-spec-sign">
             <strong>${label}</strong>
-            <span>ID: ${specProcEsc(s.idNo || '________')} &nbsp; Rank: ${specProcEsc(s.rank || '________')} &nbsp; Name: ${specProcEsc(s.name || '________')}</span>
+            <span>Number: ${specProcEsc(s.idNo || '________')} &nbsp; Rank: ${specProcEsc(s.rank || '________')} &nbsp; Name: ${specProcEsc(s.name || '________')}</span>
             <span>Appt: ${specProcEsc(s.appt || '________')} &nbsp; Sig: ${specProcEsc(s.sig || '________')} &nbsp; Date: ${specProcEsc(s.date || '________')}</span>
         </div>`;
     return `

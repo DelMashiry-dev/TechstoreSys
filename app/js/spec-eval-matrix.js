@@ -817,7 +817,7 @@ function buildSpecEvalDatasheetHtml() {
     const signBlock = (label, b) => `
         <div class="spec-paper-sign">
             <h4>${label}</h4>
-            <div><span>ID/Service No:</span> <strong>${specMxEscape(b?.idNo || '')}</strong></div>
+            <div><span>Number:</span> <strong>${specMxEscape(b?.idNo || '')}</strong></div>
             <div><span>Rank:</span> <strong>${specMxEscape(b?.rank || '')}</strong>
                 &nbsp;&nbsp;<span>Name:</span> <strong>${specMxEscape(b?.name || '')}</strong></div>
             <div><span>Appt:</span> <strong>${specMxEscape(b?.appt || '')}</strong>

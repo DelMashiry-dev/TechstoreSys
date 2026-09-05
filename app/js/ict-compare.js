@@ -286,6 +286,10 @@ function renderIctCompareTable() {
         }
         const barsEl = document.getElementById('ictCompareBars');
         if (barsEl) barsEl.innerHTML = '';
+        const showcase = document.getElementById('ictCompareShowcase');
+        if (showcase) { showcase.hidden = true; showcase.innerHTML = ''; }
+        const tableWrap = document.getElementById('ictCompareTableWrap');
+        if (tableWrap) tableWrap.hidden = false;
         return;
     }
 
@@ -318,6 +322,23 @@ function renderIctCompareTable() {
     ].join('');
 
     renderIctCompareChart(scored, profile);
+    if (typeof applyCompareLayoutViews === 'function') {
+        applyCompareLayoutViews(
+            document.getElementById('ictCompareTableWrap'),
+            document.getElementById('ictCompareShowcase'),
+            scored,
+            {
+                profile,
+                max: 4,
+                esc: ictCmpEsc,
+                extraRows: [
+                    { label: 'Buy score', html: (s) => `<strong>${s.buy}</strong>` },
+                    { label: 'Listed price', value: (s) => s.row.priceDisplay || s.row.priceText || 'On request' },
+                    { label: 'Source', value: (s) => s.row.source || 'web' }
+                ]
+            }
+        );
+    }
 }
 
 function setIctCompareStatus(msg, kind = '') {
@@ -707,6 +728,7 @@ function initIctCompareModule() {
     updateIctCompareDutyHint();
     renderIctCompareHistory();
     if (root.dataset.inited === '1') {
+        if (typeof wireCompareLayoutToggles === 'function') wireCompareLayoutToggles(root);
         if (!ictCompareState.items.length) {
             const latest = ensureIctCompareHistory()[0];
             if (latest) applyIctCompareHistoryEntry(latest);
@@ -743,6 +765,7 @@ function initIctCompareModule() {
         const entry = ensureIctCompareHistory().find((row) => row && row.id === id);
         if (entry) applyIctCompareHistoryEntry(entry);
     });
+    if (typeof wireCompareLayoutToggles === 'function') wireCompareLayoutToggles(root);
     const latest = ensureIctCompareHistory()[0];
     if (latest) applyIctCompareHistoryEntry(latest);
 }

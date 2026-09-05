@@ -12,6 +12,37 @@ function invAttrEscape(value) {
     return invHtmlEscape(value).replace(/\r?\n/g, ' ');
 }
 
+function looksLikeSupplierName(value) {
+    const s = String(value || '').trim();
+    if (!s) return false;
+    if (/taken on charge|stock on hand|struck off|it directorate tech stores|inventory receipt/i.test(s)) return false;
+    return true;
+}
+
+function resolveTxnSupplier(txn) {
+    const explicit = String(txn?.supplier || '').trim();
+    if (explicit) return explicit;
+    if (txn?.type === 'receipt' && looksLikeSupplierName(txn.party)) return String(txn.party).trim();
+    return '';
+}
+
+function listKnownSupplierNames() {
+    const names = new Set();
+    if (typeof IT_DIR_SUPPLIERS_SEED !== 'undefined') {
+        IT_DIR_SUPPLIERS_SEED.forEach((s) => {
+            if (s?.name) names.add(String(s.name).trim());
+        });
+    }
+    if (typeof collectSupplierRows === 'function') {
+        try {
+            collectSupplierRows().forEach((r) => {
+                if (r?.name) names.add(String(r.name).trim());
+            });
+        } catch (_) { /* suppliers table optional */ }
+    }
+    return [...names].filter(Boolean).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+}
+
 /** Canonical ZA / manufacturer serial for stock movements (ZA820, S/N, etc.). */
 function normalizeStockSerialOrZa(value) {
     const raw = String(value || '').trim();
@@ -111,6 +142,8 @@ const INV_MOVEMENT_SORT_OPTIONS = [
     { value: 'gl-desc', label: 'GL account (Z–A)' },
     { value: 'party-asc', label: 'Party / facility (A–Z)' },
     { value: 'party-desc', label: 'Party / facility (Z–A)' },
+    { value: 'supplier-asc', label: 'Supplier (A–Z)' },
+    { value: 'supplier-desc', label: 'Supplier (Z–A)' },
     { value: 'serial-asc', label: 'ZA / Serial (A–Z)' },
     { value: 'voucher-asc', label: 'RV/IV No. (A–Z)' },
     { value: 'by-asc', label: 'Posted by (A–Z)' }
@@ -151,6 +184,8 @@ function compareInvMovementRows(a, b, sortKey) {
         if (!cmp) cmp = String(a.dataset.invDate || '').localeCompare(String(b.dataset.invDate || ''));
     } else if (field === 'party') {
         cmp = String(a.dataset.invParty || '').localeCompare(String(b.dataset.invParty || ''), undefined, { sensitivity: 'base' });
+    } else if (field === 'supplier') {
+        cmp = String(a.dataset.invSupplier || '').localeCompare(String(b.dataset.invSupplier || ''), undefined, { sensitivity: 'base' });
     } else if (field === 'serial') {
         cmp = normalizeStockSerialOrZa(a.dataset.invSerial || '').localeCompare(
             normalizeStockSerialOrZa(b.dataset.invSerial || ''),
@@ -209,7 +244,8 @@ function syncInvMovementFilterPeers(fromBar, values, sortKey) {
                 item: '[data-inv-filter="item"]',
                 gl: '[data-inv-filter="gl"]',
                 serialOrZa: '[data-inv-filter="serialOrZa"]',
-                description: '[data-inv-filter="description"]'
+                description: '[data-inv-filter="description"]',
+                supplier: '[data-inv-filter="supplier"]'
             };
             Object.entries(map).forEach(([key, sel]) => {
                 if (values[key] == null) return;
@@ -326,7 +362,7 @@ function updateInvMovementFilterHint(filterRoot, stats) {
 
 function getInvMovementFilterValues(filterRoot) {
     if (!filterRoot) {
-        return { date: '', type: '', item: '', gl: '', serialOrZa: '', description: '' };
+        return { date: '', type: '', item: '', gl: '', serialOrZa: '', description: '', supplier: '' };
     }
     return {
         date: filterRoot.querySelector('[data-inv-filter="date"]')?.value.trim().toLowerCase() || '',
@@ -334,12 +370,13 @@ function getInvMovementFilterValues(filterRoot) {
         item: filterRoot.querySelector('[data-inv-filter="item"]')?.value.trim().toLowerCase() || '',
         gl: filterRoot.querySelector('[data-inv-filter="gl"]')?.value.trim().toLowerCase() || '',
         serialOrZa: filterRoot.querySelector('[data-inv-filter="serialOrZa"]')?.value.trim().toLowerCase() || '',
-        description: filterRoot.querySelector('[data-inv-filter="description"]')?.value.trim().toLowerCase() || ''
+        description: filterRoot.querySelector('[data-inv-filter="description"]')?.value.trim().toLowerCase() || '',
+        supplier: filterRoot.querySelector('[data-inv-filter="supplier"]')?.value.trim().toLowerCase() || ''
     };
 }
 
 function movementFiltersActive(filters) {
-    return Boolean(filters.date || filters.type || filters.item || filters.gl || filters.serialOrZa || filters.description);
+    return Boolean(filters.date || filters.type || filters.item || filters.gl || filters.serialOrZa || filters.description || filters.supplier);
 }
 
 function applyInvMovementFiltersFromBar(filterRoot, opts = {}) {
@@ -363,12 +400,14 @@ function applyInvMovementFiltersFromBar(filterRoot, opts = {}) {
         const gl = (tr.dataset.invGl || '').toLowerCase();
         const serial = normalizeStockSerialOrZa(tr.dataset.invSerial || '').toLowerCase();
         const desc = (tr.dataset.invDesc || '').toLowerCase();
+        const supplier = (tr.dataset.invSupplier || '').toLowerCase();
         const show = (!filters.date || date.includes(filters.date))
             && (!filters.type || type === filters.type)
             && (!filters.item || item.includes(filters.item))
             && (!filters.gl || gl === filters.gl)
             && (!serialKey || serial.includes(serialKey))
-            && (!filters.description || desc.includes(filters.description));
+            && (!filters.description || desc.includes(filters.description))
+            && (!filters.supplier || supplier.includes(filters.supplier));
         tr.style.display = show ? '' : 'none';
         if (show) visible += 1;
     });
@@ -413,7 +452,8 @@ function setInvMovementFilters(catKey, filters = {}) {
         item: '[data-inv-filter="item"]',
         gl: '[data-inv-filter="gl"]',
         serialOrZa: '[data-inv-filter="serialOrZa"]',
-        description: '[data-inv-filter="description"]'
+        description: '[data-inv-filter="description"]',
+        supplier: '[data-inv-filter="supplier"]'
     };
     Object.entries(map).forEach(([key, sel]) => {
         if (filters[key] == null) return;
@@ -463,6 +503,10 @@ function invMovementFiltersHtml(cat) {
                 <label class="inv-filter-field inv-filter-field-desc">
                     <span>Description</span>
                     <input type="text" class="form-control inv-filter-control" data-inv-filter="description" placeholder="Description" autocomplete="off">
+                </label>
+                <label class="inv-filter-field inv-filter-field-supplier">
+                    <span>Supplier</span>
+                    <input type="text" class="form-control inv-filter-control" data-inv-filter="supplier" placeholder="Supplier" autocomplete="off">
                 </label>
                 <label class="inv-filter-field inv-filter-field-sort">
                     <span>Order by</span>
@@ -1114,6 +1158,8 @@ function postStockTransaction(payload) {
         serialOrZa,
         voucherNo: (payload.voucherNo || '').trim(),
         party: (payload.party || '').trim(),
+        supplier: (payload.supplier || '').trim()
+            || (type === 'receipt' && looksLikeSupplierName(payload.party) ? String(payload.party).trim() : ''),
         appointment: (payload.appointment || '').trim(),
         source: (payload.source || 'manual').trim(),
         sourceRef: (payload.sourceRef || '').trim(),
@@ -1794,9 +1840,14 @@ function openReceiveIssueModal(type) {
                 <input type="text" class="form-control" id="stockTxnVoucherNo">
             </div>
         </div>
+        <div class="form-group" id="stockTxnSupplierBox" ${isReceipt ? '' : 'hidden'}>
+            <label class="form-label" for="stockTxnSupplier">Supplier</label>
+            <input type="text" class="form-control" id="stockTxnSupplier" list="stockTxnSupplierList" placeholder="Registered supplier / vendor" autocomplete="off">
+            <datalist id="stockTxnSupplierList">${listKnownSupplierNames().map((n) => `<option value="${invHtmlEscape(n)}"></option>`).join('')}</datalist>
+        </div>
         <div class="form-group">
-            <label class="form-label" id="stockTxnPartyLabel">${isReceipt ? 'Received From / Supplier' : 'Issued To'}</label>
-            <input type="text" class="form-control" id="stockTxnParty" placeholder="${isReceipt ? 'Supplier / consignor' : 'Rank and name'}">
+            <label class="form-label" id="stockTxnPartyLabel">${isReceipt ? 'Received From' : 'Issued To'}</label>
+            <input type="text" class="form-control" id="stockTxnParty" placeholder="${isReceipt ? 'Consignor / taken on charge' : 'Rank and name'}">
         </div>
         <div class="form-group" id="stockTxnAppointmentBox" ${isReceipt ? 'hidden' : ''}>
             <label class="form-label">Appointment</label>
@@ -1843,6 +1894,8 @@ function openReceiveIssueModal(type) {
                 party.placeholder = 'Online vendor / account';
             }
             if (apptBox) apptBox.hidden = true;
+            const supplierBox = document.getElementById('stockTxnSupplierBox');
+            if (supplierBox) supplierBox.hidden = false;
             const vendorEl = document.getElementById('stockTxnLicenceVendor');
             if (vendorEl && !vendorEl.value) {
                 const itemName = document.getElementById('stockTxnItemName')?.value || '';
@@ -1859,11 +1912,15 @@ function openReceiveIssueModal(type) {
                 help.innerHTML = 'Choose or <strong>type</strong> a catalog item to receive. New names are saved to this category on confirm.';
             }
             if (qtyLabel) qtyLabel.textContent = 'Quantity';
-            if (partyLabel) partyLabel.textContent = 'Received From / Supplier';
-            if (party) party.placeholder = 'Supplier / consignor';
+            if (partyLabel) partyLabel.textContent = 'Received From';
+            if (party) party.placeholder = 'Consignor / taken on charge';
+            const supplierBox = document.getElementById('stockTxnSupplierBox');
+            if (supplierBox) supplierBox.hidden = false;
             if (apptBox) apptBox.hidden = true;
         } else {
             if (apptBox) apptBox.hidden = false;
+            const supplierBox = document.getElementById('stockTxnSupplierBox');
+            if (supplierBox) supplierBox.hidden = true;
         }
         syncStockTxnSerialUi();
     };
@@ -2123,6 +2180,7 @@ function confirmStockTxnModal() {
     }
 
     const party = document.getElementById('stockTxnParty')?.value || '';
+    const supplier = (document.getElementById('stockTxnSupplier')?.value || '').trim();
     const serialOrZa = document.getElementById('stockTxnSerialOrZa')?.value || '';
     const descParts = [
         document.getElementById('stockTxnDesc')?.value || '',
@@ -2141,6 +2199,7 @@ function confirmStockTxnModal() {
         gl,
         voucherNo: document.getElementById('stockTxnVoucherNo')?.value || '',
         party: licenceVendor || party,
+        supplier: supplier || licenceVendor || '',
         appointment: document.getElementById('stockTxnAppointment')?.value || '',
         serialOrZa,
         licenceTerm: isLicencePurchase ? licenceTerm : '',
@@ -2168,6 +2227,7 @@ function confirmStockTxnModal() {
             gl: txn.gl,
             voucherNo: txn.voucherNo,
             party: txn.party || 'IT Dir (online)',
+            supplier: txn.supplier || payload.supplier || '',
             source: 'licence-expend',
             sourceRef: txn.id,
             silent: true,
@@ -2390,6 +2450,7 @@ function buildVoucherInventorySection() {
                             <th>UoM</th>
                             <th>GL</th>
                             <th>RV/IV No.</th>
+                            <th>Supplier</th>
                             <th>Issued To / From</th>
                             <th>Appointment</th>
                             <th>By</th>
@@ -2614,10 +2675,11 @@ function renderVoucherInventoryTables() {
         if (tbody) {
             const rows = summary.transactions;
             if (!rows.length) {
-                tbody.innerHTML = `<tr class="empty-inv-row"><td colspan="13">No receive/issue movements yet for ${invHtmlEscape(cat.label)}${mode === 'daily' ? ` on ${invHtmlEscape(focusDate)}` : ''}.</td></tr>`;
+                tbody.innerHTML = `<tr class="empty-inv-row"><td colspan="14">No receive/issue movements yet for ${invHtmlEscape(cat.label)}${mode === 'daily' ? ` on ${invHtmlEscape(focusDate)}` : ''}.</td></tr>`;
             } else {
                 tbody.innerHTML = rows.map((txn, idx) => {
                     const isReceipt = txn.type === 'receipt';
+                    const supplier = resolveTxnSupplier(txn);
                     const src = txn.source && txn.source !== 'manual'
                         ? ` <span class="txn-source">(${invHtmlEscape(txn.source)})</span>`
                         : '';
@@ -2630,6 +2692,7 @@ function renderVoucherInventoryTables() {
                             data-inv-serial="${invAttrEscape(txn.serialOrZa || '')}"
                             data-inv-desc="${invAttrEscape(txn.description || '')}"
                             data-inv-party="${invAttrEscape(txn.party || '')}"
+                            data-inv-supplier="${invAttrEscape(supplier)}"
                             data-inv-appointment="${invAttrEscape(txn.appointment || '')}"
                             data-inv-voucher="${invAttrEscape(txn.voucherNo || '')}"
                             data-inv-qty="${Number(txn.qty) || 0}"
@@ -2644,6 +2707,7 @@ function renderVoucherInventoryTables() {
                             <td>${invHtmlEscape(txn.uom || 'EA')}</td>
                             <td>${invHtmlEscape(txn.gl || '—')}</td>
                             <td>${invHtmlEscape(txn.voucherNo || '—')}</td>
+                            <td>${invHtmlEscape(supplier || '—')}</td>
                             <td>${invHtmlEscape(txn.party || '—')}</td>
                             <td>${invHtmlEscape(txn.appointment || '—')}</td>
                             <td>${invHtmlEscape(txn.by || '—')}</td>
@@ -2668,6 +2732,7 @@ function renderVoucherInventoryTables() {
     if (typeof refreshTableFocusViewIfOpen === 'function') refreshTableFocusViewIfOpen();
 }
 
+window.resolveTxnSupplier = resolveTxnSupplier;
 window.applyInvMovementFiltersFromBar = applyInvMovementFiltersFromBar;
 window.applyInvMovementSortFromBar = applyInvMovementSortFromBar;
 window.bindInvMovementFilters = bindInvMovementFilters;

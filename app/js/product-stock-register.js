@@ -140,6 +140,7 @@ const PRODUCT_ITEM_IMAGES = {
     'ict-equipment__hp-elitedesk-800-g9': '../assets/inventory/hp-elitedesk-800-g9.png',
     'ict-equipment__hp-laserjet-enterprise-m507dn': '../assets/inventory/hp-laserjet-enterprise-m507dn.png',
     'ict-equipment__hp-laserjet-enterprise-mfp-m528dn': '../assets/inventory/hp-laserjet-enterprise-mfp-m528dn.png',
+    'ict-equipment__hp-omen-16-ap0097nr': '../assets/inventory/hp-omen-16-ap0097nr.png',
     'ict-equipment__hp-omnibook-x-flip-16': '../assets/inventory/hp-omnibook-x-flip-16.png',
     'ict-equipment__hp-prodesk-400-g9': '../assets/inventory/hp-prodesk-400-g9.png',
     'ict-equipment__hp-zbook-firefly': '../assets/inventory/hp-zbook-firefly.png',
@@ -154,12 +155,35 @@ const PRODUCT_ITEM_IMAGES = {
 };
 
 /** Bump when inventory PNGs are regenerated so browsers drop stale 160px cache. */
-const PRODUCT_IMAGE_CACHE_VER = '20260818a';
+const PRODUCT_IMAGE_CACHE_VER = '20260905omen';
 
 function withProductImageCache(src) {
     if (!src) return src;
     const sep = src.includes('?') ? '&' : '?';
     return `${src}${sep}v=${PRODUCT_IMAGE_CACHE_VER}`;
+}
+
+const PRODUCT_ITEM_GALLERIES = {
+    'ict-equipment__hp-omen-16-ap0097nr': [
+        '../assets/inventory/hp-omen-16-ap0097nr.png',
+        '../assets/inventory/hp-omen-16-ap0097nr-front.png',
+        '../assets/inventory/hp-omen-16-ap0097nr-front-right.png',
+        '../assets/inventory/hp-omen-16-ap0097nr-left.png',
+        '../assets/inventory/hp-omen-16-ap0097nr-right.png',
+        '../assets/inventory/hp-omen-16-ap0097nr-rear.png'
+    ]
+};
+
+function resolveProductGallery(itemName, itemId) {
+    const id = String(itemId || '');
+    if (id && PRODUCT_ITEM_GALLERIES[id]) {
+        return PRODUCT_ITEM_GALLERIES[id].map(withProductImageCache);
+    }
+    const name = String(itemName || '');
+    if (/16-ap0097nr|\bomen\s*16[- ]?ap0097/i.test(name)) {
+        return (PRODUCT_ITEM_GALLERIES['ict-equipment__hp-omen-16-ap0097nr'] || []).map(withProductImageCache);
+    }
+    return [];
 }
 
 /**
@@ -172,6 +196,7 @@ const PRODUCT_NAME_IMAGES = [
     { re: /\blatitude\s*5540\b|\bdell\s*5540\b/i, src: '../assets/inventory/dell-latitude-5540.png' },
     { re: /\bc3025i\b|\bimagerunner\s*c3025/i, src: '../assets/inventory/canon-imagerunner-c3025i.png' },
     { re: /\bomnibook\s*x\s*flip\b|\bomnibook\s*flip\b/i, src: '../assets/inventory/hp-omnibook-x-flip-16.png' },
+    { re: /\b16-ap0097nr\b|\bomen\s*16[- ]?ap0097/i, src: '../assets/inventory/hp-omen-16-ap0097nr.png' },
 
     // --- Product / kind photos (name-driven, real-time on list refresh) ---
     { re: /\bups\b|battery\s*kits?|\bbatter(?:y|ies)\b/i, src: '../assets/inventory/ups-battery.png' },
@@ -982,6 +1007,13 @@ function openProductStockZoom(imgSrc, itemName, familyKey, typeCode, categoryLab
     const specsHtml = toner
         ? renderTonerPrintersPanelHtml(itemName)
         : renderIctSpecsPanelHtml(itemName, familyKey);
+    const gallery = resolveProductGallery(itemName);
+    const galleryHtml = gallery.length > 1
+        ? `<div class="psr-zoom-gallery" role="list">${gallery.map((src, i) => `
+                <button type="button" class="psr-zoom-gal-btn${i === 0 ? ' is-active' : ''}" data-psr-gal="${psrEscape(src)}" aria-label="Photo ${i + 1}">
+                    <img src="${psrEscape(src)}" alt="">
+                </button>`).join('')}</div>`
+        : '';
     const wide = ' psr-zoom-dialog--with-specs';
     host.hidden = false;
     host.innerHTML = `
@@ -990,8 +1022,9 @@ function openProductStockZoom(imgSrc, itemName, familyKey, typeCode, categoryLab
             <button type="button" class="psr-zoom-close" data-psr-zoom-close aria-label="Close">✕</button>
             <div class="psr-zoom-body">
                 <div class="psr-zoom-media">
-                    <img class="psr-zoom-img" src="${psrEscape(imgSrc)}" alt="${psrEscape(itemName || 'Product')}">
+                    <img class="psr-zoom-img" src="${psrEscape(gallery[0] || imgSrc)}" alt="${psrEscape(itemName || 'Product')}">
                     <p class="psr-zoom-caption">${psrEscape(itemName || '')}</p>
+                    ${galleryHtml}
                 </div>
                 <div class="psr-zoom-side">
                     ${rolePanel}
@@ -1007,6 +1040,14 @@ function openProductStockZoom(imgSrc, itemName, familyKey, typeCode, categoryLab
         el.addEventListener('click', () => {
             host.hidden = true;
             host.innerHTML = '';
+        });
+    });
+    const mainImg = host.querySelector('.psr-zoom-img');
+    host.querySelectorAll('[data-psr-gal]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const src = btn.getAttribute('data-psr-gal') || '';
+            if (mainImg && src) mainImg.src = src;
+            host.querySelectorAll('[data-psr-gal]').forEach((b) => b.classList.toggle('is-active', b === btn));
         });
     });
     if (typeof wireProductDocumentLinkClicks === 'function') wireProductDocumentLinkClicks(host);
@@ -1463,6 +1504,7 @@ function initProductStockRegister() {
 
 window.renderProductStockRegister = renderProductStockRegister;
 window.initProductStockRegister = initProductStockRegister;
+window.resolveProductStockImage = resolveProductStockImage;
 window.resolveProductStockPeriodRange = resolveProductStockPeriodRange;
 window.getItemStockSummaryForPeriod = getItemStockSummaryForPeriod;
 window.getOrAssignDisplayItemId = getOrAssignDisplayItemId;

@@ -13,7 +13,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" type="image/png" href="../assets/favicon.png">
     <link rel="apple-touch-icon" href="../assets/pwa-icon-180.png">
-    <link rel="stylesheet" href="css/main.css?v=20260905closegap">
+    <link rel="stylesheet" href="css/main.css?v=20260905showcase">
 
 </head>
 <body class="app-locked">
@@ -1619,23 +1619,35 @@
             <div class="ui-prefs-head">
                 <div>
                     <h2 id="uiPrefsTitle">Appearance</h2>
-                    <p class="ui-prefs-sub">Choose a theme and layout density. Preferences are saved with your system data.</p>
+                    <p class="ui-prefs-sub">Theme, density, button size and field size. Preferences are saved with your system data.</p>
                 </div>
                 <button type="button" class="ui-prefs-close" id="uiPrefsCloseBtn" aria-label="Close">&times;</button>
             </div>
-            <section class="ui-prefs-section">
-                <h3>Theme</h3>
-                <div id="uiThemeCards" class="ui-theme-grid"></div>
-            </section>
-            <section class="ui-prefs-section">
-                <h3>Density</h3>
-                <div id="uiDensityCards" class="ui-density-grid"></div>
-            </section>
-            <section class="ui-prefs-section">
-                <h3>Sidebar menu</h3>
-                <p class="ui-prefs-sub">Drag buttons in the left menu to change their order. On a touch screen, press and hold a button, then drag. New modules added later appear at the bottom of that group.</p>
-                <button type="button" class="btn btn-secondary" id="uiPrefsResetNavOrder">Reset menu order</button>
-            </section>
+            <div class="ui-prefs-body">
+                <section class="ui-prefs-section">
+                    <h3>Theme</h3>
+                    <div id="uiThemeCards" class="ui-theme-grid"></div>
+                </section>
+                <section class="ui-prefs-section">
+                    <h3>Density</h3>
+                    <div id="uiDensityCards" class="ui-density-grid"></div>
+                </section>
+                <section class="ui-prefs-section">
+                    <h3>Buttons</h3>
+                    <p class="ui-prefs-sub">Size of action buttons — Search, Receive, Issue, Generate Report, and the rest.</p>
+                    <div id="uiBtnSizeCards" class="ui-size-grid"></div>
+                </section>
+                <section class="ui-prefs-section">
+                    <h3>Fields</h3>
+                    <p class="ui-prefs-sub">Size of date boxes, dropdowns and typed fields in forms and table rows.</p>
+                    <div id="uiFieldSizeCards" class="ui-size-grid"></div>
+                </section>
+                <section class="ui-prefs-section">
+                    <h3>Sidebar menu</h3>
+                    <p class="ui-prefs-sub">Drag buttons in the left menu to change their order. On a touch screen, press and hold a button, then drag. New modules added later appear at the bottom of that group.</p>
+                    <button type="button" class="btn btn-secondary" id="uiPrefsResetNavOrder">Reset menu order</button>
+                </section>
+            </div>
             <div class="ui-prefs-foot">
                 <button type="button" class="btn btn-primary" id="uiPrefsDoneBtn">Done</button>
             </div>
@@ -1723,14 +1735,14 @@
     <script src="js/offline-precache.js"></script>
     <script src="js/org-profile.js?v=20260828cyc"></script>
     <script src="js/zna-units.js?v=20260901znaunits3"></script>
-    <script src="js/catalog.js"></script>
+    <script src="js/catalog.js?v=20260905omenap"></script>
     <script src="js/ict-spares-accessories.js?v=20260827spa"></script>
     <script src="js/inventory-ledgers.js"></script>
     <script src="js/it-dir-bids-seed.js"></script>
-    <script src="js/product-specs-catalog.js?v=20260904typein"></script>
+    <script src="js/product-specs-catalog.js?v=20260905omenap"></script>
     <script src="js/laptop-duty-profiles.js?v=20260828cat"></script>
     <script src="js/suppliers-seed.js"></script>
-    <script src="js/state.js?v=20260904dafalloc"></script>
+    <script src="js/state.js?v=20260905showcase"></script>
     <script src="js/storage-mode.js?v=20260823dblabel"></script>
     <script src="js/gl-targets.js"></script>
     <script src="js/monthly-target-proposals.js"></script>
@@ -1738,7 +1750,7 @@
     <script src="js/dept-home.js?v=20260905ddcost"></script>
     <script src="js/utils.js?v=20260904specseval"></script>
     <script src="js/window-chrome.js?v=20260904tblxp"></script>
-    <script src="js/module-loader.js?v=20260904dafalloc"></script>
+    <script src="js/module-loader.js?v=20260905showcase"></script>
     <script src="js/how-it-works.js?v=20260826hiw"></script>
     <script src="js/search-history.js"></script>
     <script src="js/universal-search.js?v=20260904specseval"></script>
@@ -1746,24 +1758,24 @@
     <script src="js/it-dir-departments.js"></script>
     <script src="js/it-dir-establishment.js"></script>
     <script src="js/process-guides.js?v=20260904techspecs"></script>
-    <script src="js/system-dictionary.js?v=20260905ddcost"></script>
+    <script src="js/system-dictionary.js?v=20260905showcase"></script>
     <script src="js/field-help.js?v=20260903gsminute"></script>
-    <script src="js/ui-preferences.js"></script>
+    <script src="js/ui-preferences.js?v=20260905parade"></script>
     <script src="js/nav-reorder.js?v=20260828port"></script>
     <script src="js/modules-data.js"></script>
     <script src="js/requisition-tracker.js?v=20260903gsminute"></script>
     <script src="js/dashboard.js?v=20260904specseval"></script>
     <script src="js/inventory.js"></script>
     <script src="js/gl-inventory-view.js"></script>
-    <script src="js/voucher-inventory.js?v=20260904tblxp"></script>
+    <script src="js/voucher-inventory.js?v=20260905supplier"></script>
     <script src="js/toner-compatibility.js"></script>
     <script src="js/product-web-enrich.js"></script>
     <script src="js/offline-assistant.js"></script>
     <script src="js/ai-assistant.js?v=20260825query"></script>
     <script src="js/product-datasheets.js?v=20260904specig"></script>
-    <script src="js/product-stock-register.js"></script>
+    <script src="js/product-stock-register.js?v=20260905showcase"></script>
     <script src="js/physical-stock-count.js"></script>
-    <script src="js/inventory-refresh-2026.js?v=20260904omen"></script>
+    <script src="js/inventory-refresh-2026.js?v=20260905omenap"></script>
     <script src="js/commander-demo-pack.js"></script>
     <script src="js/stock-take.js"></script>
     <script src="js/unit-checks.js"></script>
@@ -1787,21 +1799,21 @@
     <script src="js/delivery-note.js"></script>
     <script src="js/temporary-loans.js"></script>
     <script src="js/permanent-loans.js"></script>
-    <script src="js/stores-query-engine.js?v=20260825query"></script>
+    <script src="js/stores-query-engine.js?v=20260905supplier"></script>
     <script src="js/stores-intelligent-lookup.js?v=20260825board"></script>
     <script src="js/rows.js"></script>
     <script src="js/repair-intake.js"></script>
     <script src="js/workshop-stores-request.js"></script>
     <script src="js/bids-import.js?v=20260904dafalloc"></script>
     <script src="js/market-catalog.js?v=20260828img"></script>
-    <script src="js/laptop-compare.js?v=20260904typein"></script>
-    <script src="js/ict-compare.js?v=20260901comparefilter"></script>
+    <script src="js/laptop-compare.js?v=20260905showcase"></script>
+    <script src="js/ict-compare.js?v=20260905showcase"></script>
     <script src="js/real-dp-purchase-orders.js?v=20260828cyc"></script>
     <script src="js/zimbabwe-po-benchmarks.js?v=20260826po2"></script>
     <script src="js/guide-quotation.js?v=20260826gq2"></script>
     <script src="js/spec-eval.js?v=20260904techspecs"></script>
-    <script src="js/spec-eval-matrix.js?v=20260905checklist"></script>
-    <script src="js/specification-process.js?v=20260904specseval"></script>
+    <script src="js/spec-eval-matrix.js?v=20260905number"></script>
+    <script src="js/specification-process.js?v=20260905number"></script>
     <script src="js/dp-f1.js"></script>
     <script src="js/purchase-orders.js?v=20260829official"></script>
     <script src="js/cost-comparative-schedule.js?v=20260904techspecs"></script>

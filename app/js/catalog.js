@@ -1091,6 +1091,10 @@ const STORES_CATALOG_SECTIONS = [
         "name": "HP OMEN 16 Gaming Laptop (16-am0000ne)"
       },
       {
+        "id": "ict-equipment__hp-omen-16-ap0097nr",
+        "name": "HP OMEN Gaming Laptop 16-ap0097nr"
+      },
+      {
         "id": "ict-equipment__hp-omnibook-7",
         "name": "HP OmniBook 7"
       },

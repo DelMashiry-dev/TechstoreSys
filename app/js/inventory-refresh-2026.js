@@ -557,3 +557,103 @@ function receiptHpOmen16NetlarksSep2026(opts = {}) {
 
 window.receiptHpOmen16NetlarksSep2026 = receiptHpOmen16NetlarksSep2026;
 window.HP_OMEN16_NETLARKS_RECEIPT = HP_OMEN16_NETLARKS_RECEIPT;
+
+/** 5 × HP OMEN Gaming Laptop 16-ap0097nr — taken on charge 5 Sep 2026. */
+const HP_OMEN16_AP0097NR_RECEIPT = {
+    itemId: 'ict-equipment__hp-omen-16-ap0097nr',
+    name: 'HP OMEN Gaming Laptop 16-ap0097nr',
+    qty: 5,
+    date: '2026-09-05',
+    source: 'inventory-receipt-omen16-ap0097nr-20260905',
+    sourceRef: 'RV/IT/0905/OMEN-16-AP',
+    dnRef: '',
+    party: 'Taken on charge — stock on hand',
+    description: [
+        'HP OMEN Gaming Laptop 16-ap0097nr × 5 — taken on charge to ICT Equipment.',
+        '16\" WQXGA · Shadow Black · Windows 11 Home.',
+        'AMD Ryzen AI 9 · NVIDIA GeForce RTX 5070 · 32 GB RAM · 1 TB SSD.'
+    ].join(' ')
+};
+
+function receiptHpOmen16Ap0097nrSep2026(opts = {}) {
+    if (!appState) return { ok: false, reason: 'no-state' };
+    const force = !!opts.force;
+    const row = HP_OMEN16_AP0097NR_RECEIPT;
+    const inv = typeof ensureStoresInventory === 'function'
+        ? ensureStoresInventory()
+        : (appState.storesInventory = appState.storesInventory || { openings: {}, transactions: [] });
+    if (!inv.openings) inv.openings = {};
+    if (!Array.isArray(inv.transactions)) inv.transactions = [];
+
+    const exists = (inv.transactions || []).some((t) =>
+        t.source === row.source && t.sourceRef === row.sourceRef
+        && t.itemId === row.itemId && t.type === 'receipt'
+    );
+    if (exists && !force) {
+        return { ok: false, reason: 'already', itemId: row.itemId, qty: row.qty };
+    }
+
+    let posted = null;
+    if (typeof postStockTransaction === 'function') {
+        posted = postStockTransaction({
+            type: 'receipt',
+            itemId: row.itemId,
+            item: row.name,
+            category: 'ict-equipment',
+            gl: '3112210001',
+            qty: row.qty,
+            party: row.party,
+            description: row.description,
+            voucherNo: row.sourceRef,
+            deliveryNoteRef: row.dnRef,
+            source: row.source,
+            sourceRef: row.sourceRef,
+            wrcBypass: true,
+            date: row.date,
+            silent: true,
+            skipRender: true
+        });
+    }
+    if (!posted && !(exists && !force)) {
+        inv.transactions.push({
+            id: `stk-omen16-ap0097nr-${Date.now()}`,
+            date: row.date,
+            type: 'receipt',
+            itemId: row.itemId,
+            category: 'ict-equipment',
+            item: row.name,
+            description: row.description,
+            qty: row.qty,
+            uom: 'EA',
+            gl: '3112210001',
+            voucherNo: row.sourceRef,
+            party: row.party,
+            deliveryNoteRef: row.dnRef,
+            source: row.source,
+            sourceRef: row.sourceRef,
+            by: 'Inventory receipt',
+            createdAt: new Date().toISOString()
+        });
+    }
+
+    inv.omen16Ap0097nrReceipt_20260905 = {
+        applied: true,
+        appliedAt: new Date().toISOString(),
+        itemId: row.itemId,
+        qty: row.qty,
+        party: row.party,
+        voucherNo: row.sourceRef
+    };
+
+    if (typeof saveState === 'function') saveState();
+    if (typeof renderProductStockRegister === 'function') renderProductStockRegister();
+    if (typeof renderVoucherInventoryTables === 'function') renderVoucherInventoryTables();
+    if (typeof updateDashboard === 'function') updateDashboard();
+    if (typeof showToast === 'function' && !opts.silent) {
+        showToast(`Received ${row.qty} × ${row.name} into ICT stock.`, 'success');
+    }
+    return { ok: true, itemId: row.itemId, name: row.name, qty: row.qty };
+}
+
+window.receiptHpOmen16Ap0097nrSep2026 = receiptHpOmen16Ap0097nrSep2026;
+window.HP_OMEN16_AP0097NR_RECEIPT = HP_OMEN16_AP0097NR_RECEIPT;

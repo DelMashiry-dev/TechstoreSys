@@ -243,7 +243,7 @@ function buildStoresInventoryReportData(dateFrom, dateTo) {
         });
     });
 
-    const movementHeaders = ['Date', 'Type', 'Source', 'Category', 'Item', 'Qty', 'UoM', 'GL', 'RV/IV / DN', 'PO / Cycle', 'Party', 'Appointment', 'By', 'Description'];
+    const movementHeaders = ['Date', 'Type', 'Source', 'Category', 'Item', 'Qty', 'UoM', 'GL', 'RV/IV / DN', 'PO / Cycle', 'Supplier', 'Party', 'Appointment', 'By', 'Description'];
     const movements = (appState.storesInventory?.transactions || []).filter((txn) => {
         const d = txn.date || '';
         if (dateFrom && d < dateFrom) return false;
@@ -264,6 +264,7 @@ function buildStoresInventoryReportData(dateFrom, dateTo) {
             txn.gl || '',
             txn.deliveryNoteRef || txn.voucherNo || '',
             [txn.poNumber, txn.dpRef].filter(Boolean).join(' / ') || txn.sourceRef || '',
+            (typeof resolveTxnSupplier === 'function' ? resolveTxnSupplier(txn) : (txn.supplier || '')) || '',
             txn.party || '',
             txn.appointment || '',
             txn.by || '',
