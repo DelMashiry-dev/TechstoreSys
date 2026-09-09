@@ -1505,6 +1505,7 @@ function initProductStockRegister() {
 window.renderProductStockRegister = renderProductStockRegister;
 window.initProductStockRegister = initProductStockRegister;
 window.resolveProductStockImage = resolveProductStockImage;
+window.resolveProductGallery = resolveProductGallery;
 window.resolveProductStockPeriodRange = resolveProductStockPeriodRange;
 window.getItemStockSummaryForPeriod = getItemStockSummaryForPeriod;
 window.getOrAssignDisplayItemId = getOrAssignDisplayItemId;

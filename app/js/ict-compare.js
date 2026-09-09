@@ -288,6 +288,8 @@ function renderIctCompareTable() {
         if (barsEl) barsEl.innerHTML = '';
         const showcase = document.getElementById('ictCompareShowcase');
         if (showcase) { showcase.hidden = true; showcase.innerHTML = ''; }
+        const catalog = document.getElementById('ictCompareCatalog');
+        if (catalog) { catalog.hidden = true; catalog.innerHTML = ''; }
         const tableWrap = document.getElementById('ictCompareTableWrap');
         if (tableWrap) tableWrap.hidden = false;
         return;
@@ -330,6 +332,8 @@ function renderIctCompareTable() {
             {
                 profile,
                 max: 4,
+                catalogMax: 6,
+                catalogEl: document.getElementById('ictCompareCatalog'),
                 esc: ictCmpEsc,
                 extraRows: [
                     { label: 'Buy score', html: (s) => `<strong>${s.buy}</strong>` },

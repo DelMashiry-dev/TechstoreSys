@@ -244,7 +244,9 @@ const COMPARE_SHOWCASE_SPECS = [
 ];
 
 function getCompareLayoutMode() {
-    return appState?.uiCompareLayout === 'table' ? 'table' : 'showcase';
+    const v = appState?.uiCompareLayout;
+    if (v === 'table' || v === 'catalog' || v === 'showcase') return v;
+    return 'showcase';
 }
 
 function syncCompareLayoutToggle() {
@@ -255,7 +257,7 @@ function syncCompareLayoutToggle() {
 }
 
 function setCompareLayoutMode(mode) {
-    const id = mode === 'table' ? 'table' : 'showcase';
+    const id = (mode === 'table' || mode === 'catalog') ? mode : 'showcase';
     if (appState) appState.uiCompareLayout = id;
     if (typeof saveState === 'function') saveState();
     syncCompareLayoutToggle();
@@ -372,15 +374,186 @@ function renderCompareShowcase(host, scored, options = {}) {
             : ''}`;
 }
 
+function compareCatalogImages(row) {
+    const pid = String(row.product?.id || '');
+    const stockId = pid.includes('__') ? pid : (pid ? `ict-equipment__${pid}` : '');
+    let gallery = [];
+    if (typeof resolveProductGallery === 'function') {
+        gallery = resolveProductGallery(row.title, stockId) || [];
+    }
+    if (!gallery.length) {
+        const one = compareShowcaseImageSrc(row);
+        if (one) gallery = [one];
+    }
+    return gallery;
+}
+
+function compareCatalogStock(row) {
+    const pid = String(row.product?.id || '');
+    const stockId = pid.includes('__') ? pid : (pid ? `ict-equipment__${pid}` : '');
+    if (typeof getItemStockSummaryForPeriod === 'function' && stockId) {
+        const sum = getItemStockSummaryForPeriod(stockId);
+        const onHand = Number(sum?.onHand);
+        const hasTx = (sum?.allTransactions || []).length > 0 || Number(sum?.opening) > 0;
+        if (hasTx && onHand > 0) return { label: `ON HAND · ${onHand}`, kind: 'in' };
+        if (hasTx && onHand <= 0) return { label: 'OUT OF STOCK', kind: 'out' };
+    }
+    if (row.source === 'local') return { label: 'LOCAL CATALOG', kind: 'in' };
+    if (row.source === 'manufacturer') return { label: 'OEM LISTING', kind: 'order' };
+    return { label: 'WEB LISTING', kind: 'web' };
+}
+
+function compareCatalogSpecPipe(row) {
+    const labels = [
+        { label: 'OS', re: /operating system|^os$/i, fromText: /Windows\s*11(?:\s*(?:Pro|Home))?|macOS[^\s,]{0,16}|ChromeOS/i },
+        ...COMPARE_SHOWCASE_SPECS
+    ];
+    const parts = labels.map((spec) => compareShowcaseSpecValue(row, spec)).filter((v) => v && v !== '—');
+    if (parts.length) return parts.join('  ·  ');
+    return String(row.snippet || '').trim() || 'See specifications';
+}
+
+function compareCatalogIsAiPc(row) {
+    const blob = `${row.title || ''} ${row.snippet || ''} ${(row.product?.specs || []).map((s) => s.join(' ')).join(' ')}`;
+    return /copilot|ai pc|npu|core ultra|ryzen\s*ai/i.test(blob);
+}
+
+function sendCompareRowToSpecEval(row, { toastPrefix = 'Sent to Spec Evaluation' } = {}) {
+    if (!row) return;
+    if (typeof navigateToModule === 'function') navigateToModule('spec-evaluation');
+    setTimeout(() => {
+        const itemEl = document.getElementById('specEvalItemName');
+        if (itemEl) itemEl.value = row.title || '';
+        if (row.product && typeof applyCatalogProductToForm === 'function') {
+            applyCatalogProductToForm(row.product, row.title);
+        } else if (typeof autofillSpecEvaluationFromItemName === 'function') {
+            autofillSpecEvaluationFromItemName();
+        }
+        if (typeof showToast === 'function') showToast(`${toastPrefix}: ${row.title}`, 'info');
+    }, 400);
+}
+
+function wireCompareCatalogGallery(host) {
+    host.querySelectorAll('[data-cmp-gallery]').forEach((box) => {
+        let urls = [];
+        try { urls = JSON.parse(box.getAttribute('data-images') || '[]'); } catch (_) { urls = []; }
+        if (urls.length < 2) return;
+        let i = 0;
+        const img = box.querySelector('.cmp-cat-img');
+        const count = box.querySelector('.cmp-cat-count');
+        const dots = box.querySelectorAll('.cmp-cat-dot');
+        const show = () => {
+            if (img) img.src = urls[i];
+            if (count) count.textContent = `${i + 1}/${urls.length}`;
+            dots.forEach((d, di) => d.classList.toggle('is-on', di === i));
+        };
+        box.querySelector('[data-cmp-gal-prev]')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            i = (i - 1 + urls.length) % urls.length;
+            show();
+        });
+        box.querySelector('[data-cmp-gal-next]')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            i = (i + 1) % urls.length;
+            show();
+        });
+        dots.forEach((d, di) => d.addEventListener('click', () => { i = di; show(); }));
+    });
+}
+
+function renderCompareCatalog(host, scored, options = {}) {
+    if (!host) return;
+    const profile = options.profile || null;
+    const max = options.catalogMax || options.max || 9;
+    const show = scored.slice(0, max);
+    const esc = options.esc || laptopCmpEsc;
+    host.hidden = !show.length;
+    if (!show.length) {
+        host.innerHTML = '';
+        return;
+    }
+
+    host.innerHTML = `
+        <div class="cmp-catalog">
+            ${show.map((s, i) => {
+                const row = s.row;
+                const stock = compareCatalogStock(row);
+                const images = compareCatalogImages(row);
+                const letter = esc((row.title || '?').slice(0, 1) || '?');
+                const photo = images.length
+                    ? `<img src="${esc(images[0])}" alt="${esc(row.title || '')}" class="cmp-cat-img" loading="lazy" referrerpolicy="no-referrer" decoding="async" onerror="this.hidden=true;var n=this.nextElementSibling;if(n)n.hidden=false;"><div class="cmp-showcase-ph" hidden aria-hidden="true">${letter}</div>`
+                    : `<div class="cmp-showcase-ph" aria-hidden="true">${letter}</div>`;
+                const nav = images.length > 1
+                    ? `<div class="cmp-cat-nav">
+                            <button type="button" class="cmp-cat-nav-btn" data-cmp-gal-prev aria-label="Previous photo">‹</button>
+                            <span class="cmp-cat-count">${1}/${images.length}</span>
+                            <button type="button" class="cmp-cat-nav-btn" data-cmp-gal-next aria-label="Next photo">›</button>
+                       </div>
+                       <div class="cmp-cat-dots">${images.map((_, di) => `<button type="button" class="cmp-cat-dot${di === 0 ? ' is-on' : ''}" aria-label="Photo ${di + 1}"></button>`).join('')}</div>`
+                    : '';
+                const price = row.priceDisplay || row.priceText || 'Price on request';
+                const listing = row.url
+                    ? `<a class="cmp-cat-link" href="${esc(row.url)}" target="_blank" rel="noopener noreferrer">View listing</a>`
+                    : `<span></span>`;
+                return `
+                <article class="cmp-cat-card${i === 0 ? ' is-winner' : ''}">
+                    <div class="cmp-cat-top">
+                        <span class="cmp-cat-stock is-${stock.kind}"><i></i>${esc(stock.label)}</span>
+                        ${i === 0 ? '<span class="cmp-cat-promo">Recommended buy</span>' : ''}
+                    </div>
+                    <div class="cmp-cat-photo" data-cmp-gallery data-images="${esc(JSON.stringify(images))}">${photo}${nav}</div>
+                    <div class="cmp-cat-score">
+                        <strong>Buy score ${s.buy}/100</strong>
+                        <span>Spec ${s.fit}</span>
+                        ${compareCatalogIsAiPc(row) ? '<em class="cmp-cat-ai">AI PC</em>' : ''}
+                    </div>
+                    <h4 class="cmp-cat-title">${esc(row.title || 'Unnamed item')}</h4>
+                    <p class="cmp-cat-blurb">${esc(compareShowcaseTagline(row, profile))}</p>
+                    <p class="cmp-cat-specs">${esc(compareCatalogSpecPipe(row))}</p>
+                    <div class="cmp-cat-price">
+                        <span class="cmp-cat-msrp">Price ref</span>
+                        <strong>${esc(price)}</strong>
+                    </div>
+                    <div class="cmp-cat-actions">
+                        ${listing}
+                        <button type="button" class="btn btn-primary btn-sm" data-cmp-send-spec="${i}">Send to Spec Eval</button>
+                    </div>
+                </article>`;
+            }).join('')}
+        </div>
+        ${scored.length > show.length
+            ? `<p class="cmp-showcase-more">Showing top ${show.length} of ${scored.length}. Switch to Table to see every ranked item.</p>`
+            : ''}`;
+
+    wireCompareCatalogGallery(host);
+    host.querySelectorAll('[data-cmp-send-spec]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const idx = parseInt(btn.getAttribute('data-cmp-send-spec'), 10);
+            const hit = show[idx];
+            if (!hit?.row) return;
+            sendCompareRowToSpecEval(hit.row, {
+                toastPrefix: idx === 0 ? 'Winner sent to Spec Evaluation' : 'Sent to Spec Evaluation'
+            });
+        });
+    });
+}
+
 function applyCompareLayoutViews(tableWrap, showcaseEl, scored, options) {
     const mode = getCompareLayoutMode();
+    const catalogEl = options.catalogEl;
     syncCompareLayoutToggle();
-    if (tableWrap) tableWrap.hidden = mode === 'showcase';
+    if (tableWrap) tableWrap.hidden = mode !== 'table';
     if (mode === 'showcase') {
         renderCompareShowcase(showcaseEl, scored, options);
     } else if (showcaseEl) {
         showcaseEl.hidden = true;
         showcaseEl.innerHTML = '';
+    }
+    if (mode === 'catalog') {
+        renderCompareCatalog(catalogEl, scored, options);
+    } else if (catalogEl) {
+        catalogEl.hidden = true;
+        catalogEl.innerHTML = '';
     }
 }
 
@@ -479,6 +652,8 @@ function renderLaptopCompareResults() {
         if (barsEl) barsEl.innerHTML = '';
         const showcase = document.getElementById('laptopCompareShowcase');
         if (showcase) { showcase.hidden = true; showcase.innerHTML = ''; }
+        const catalog = document.getElementById('laptopCompareCatalog');
+        if (catalog) { catalog.hidden = true; catalog.innerHTML = ''; }
         laptopCompareState.scored = [];
         laptopCompareState.winner = null;
         return;
@@ -512,6 +687,8 @@ function renderLaptopCompareResults() {
         {
             profile,
             max: 4,
+            catalogMax: 9,
+            catalogEl: document.getElementById('laptopCompareCatalog'),
             extraRows: [
                 { label: 'Buy score', html: (s) => `<strong>${s.buy}</strong>` },
                 { label: 'Price ref', value: (s) => s.row.priceDisplay || '—' }
@@ -613,20 +790,7 @@ async function addLiveMarketListings() {
 }
 
 function sendLaptopCompareWinnerToSpecEval() {
-    const best = laptopCompareState.winner;
-    if (!best?.row) return;
-    const row = best.row;
-    if (typeof navigateToModule === 'function') navigateToModule('spec-evaluation');
-    setTimeout(() => {
-        const itemEl = document.getElementById('specEvalItemName');
-        if (itemEl) itemEl.value = row.title || '';
-        if (row.product && typeof applyCatalogProductToForm === 'function') {
-            applyCatalogProductToForm(row.product, row.title);
-        } else if (typeof autofillSpecEvaluationFromItemName === 'function') {
-            autofillSpecEvaluationFromItemName();
-        }
-        if (typeof showToast === 'function') showToast(`Winner sent to Spec Evaluation: ${row.title}`, 'info');
-    }, 400);
+    sendCompareRowToSpecEval(laptopCompareState.winner?.row, { toastPrefix: 'Winner sent to Spec Evaluation' });
 }
 
 function printLaptopCompareComparison() {

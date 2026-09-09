@@ -12912,6 +12912,12 @@ td .typeable-select {
     letter-spacing: 0.03em;
 }
 
+.overview-table tbody th {
+    background: #eef2f6;
+    color: #102a43;
+    font-weight: 800;
+}
+
 .overview-table tr:hover {
     background: #e4eef7;
 }
@@ -22977,6 +22983,181 @@ body.table-focus-open {
     font-size: 0.8rem;
     text-align: center;
 }
+.cmp-catalog-wrap {
+    background: #fff;
+    border: 1px solid #ececec;
+    border-radius: 4px;
+    padding: 20px 16px 12px;
+}
+.cmp-catalog {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px 32px;
+}
+.cmp-cat-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding-bottom: 8px;
+}
+.cmp-cat-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 22px;
+    margin-bottom: 8px;
+}
+.cmp-cat-stock {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #111;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+.cmp-cat-stock i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #98a2b3;
+}
+.cmp-cat-stock.is-in i { background: #12b76a; }
+.cmp-cat-stock.is-out i { background: #f04438; }
+.cmp-cat-stock.is-order i { background: #f79009; }
+.cmp-cat-stock.is-web i { background: #2e90fa; }
+.cmp-cat-promo {
+    color: #c01048;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+.cmp-cat-photo {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 190px;
+    margin-bottom: 10px;
+}
+.cmp-cat-img {
+    max-width: 100%;
+    max-height: 180px;
+    object-fit: contain;
+}
+.cmp-cat-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px;
+    color: #475467;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.cmp-cat-nav-btn {
+    border: 0;
+    background: transparent;
+    color: #344054;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+}
+.cmp-cat-dots {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 6px;
+}
+.cmp-cat-dot {
+    width: 7px;
+    height: 7px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #d0d5dd;
+    cursor: pointer;
+}
+.cmp-cat-dot.is-on { background: #344054; }
+.cmp-cat-score {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 8px 0 6px;
+    color: #344054;
+    font-size: 0.78rem;
+}
+.cmp-cat-score strong { color: #111; }
+.cmp-cat-ai {
+    color: #155eef;
+    font-style: normal;
+    font-weight: 800;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+}
+.cmp-cat-title {
+    margin: 0 0 8px;
+    color: #111;
+    font-size: 1.02rem;
+    font-weight: 800;
+    line-height: 1.3;
+}
+.cmp-cat-blurb {
+    margin: 0 0 8px;
+    color: #111;
+    font-size: 0.86rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+.cmp-cat-specs {
+    margin: 0 0 14px;
+    color: #344054;
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+.cmp-cat-price {
+    margin-top: auto;
+    margin-bottom: 12px;
+}
+.cmp-cat-msrp {
+    display: block;
+    color: #667085;
+    font-size: 0.72rem;
+    margin-bottom: 2px;
+}
+.cmp-cat-price strong {
+    color: #111;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+.cmp-cat-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.cmp-cat-link {
+    color: #155eef;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+.cmp-cat-link:hover { text-decoration: underline; }
+.cmp-cat-card.is-winner {
+    outline: 1px solid #f9c5d1;
+    outline-offset: 10px;
+    border-radius: 4px;
+}
+@media (max-width: 1100px) {
+    .cmp-catalog { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+    .cmp-catalog { grid-template-columns: 1fr; }
+}
 @supports not (grid-template-rows: subgrid) {
     .cmp-showcase {
         display: flex;
@@ -22999,9 +23180,12 @@ body.table-focus-open {
     font-size: 0.72rem;
     vertical-align: bottom;
 }
-.ict-compare-sidebyside tbody th {
-    background: #f2f4f7;
+.ict-compare-sidebyside tbody th,
+.ict-compare-table tbody th {
+    background: #e8eef5 !important;
+    color: #102a43 !important;
     font-size: 0.76rem;
+    font-weight: 800;
     white-space: nowrap;
 }
 .ict-compare-sidebyside td,
