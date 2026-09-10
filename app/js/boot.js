@@ -530,6 +530,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('backupMenuBtn')?.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleBackupMenu();
+        if (typeof refreshSupabaseBackupStatus === 'function') refreshSupabaseBackupStatus();
     });
     document.getElementById('viewDbTablesBtn')?.addEventListener('click', () => {
         closeBackupMenu();
@@ -545,6 +546,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.getElementById('exportDataBtn')?.addEventListener('click', () => {
         closeBackupMenu();
+    });
+    document.getElementById('supabaseBackupBtn')?.addEventListener('click', async () => {
+        closeBackupMenu();
+        if (typeof backupToSupabase === 'function') await backupToSupabase();
+    });
+    document.getElementById('supabaseRestoreBtn')?.addEventListener('click', async () => {
+        closeBackupMenu();
+        if (typeof restoreFromSupabase === 'function') await restoreFromSupabase();
     });
     document.addEventListener('click', (e) => {
         if (!e.target.closest('#backupMenu')) closeBackupMenu();

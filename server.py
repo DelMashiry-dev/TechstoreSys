@@ -26,6 +26,12 @@ from ai_services import ai_status, parse_spec_document, parse_import_document, a
 from creditors_parse import parse_creditors_bytes
 from creditors_paid_parse import parse_paid_bytes
 from bids_parse import parse_bids_bytes
+from supabase_backup import (
+    fetch_latest_snapshot,
+    push_snapshot,
+    schedule_backup,
+    status_payload as supabase_status_payload,
+)
 from mode_switch import (
     handle_mode_switch,
     mode_status_payload,
@@ -901,6 +907,10 @@ def save_full_state(state: dict, *, force: bool = False) -> dict:
                 username=saved_by or "system",
             )
             conn.commit()
+            try:
+                schedule_backup(state)
+            except Exception:
+                pass
             return {"conflict": False, "saveRevision": next_rev, "savedAt": now}
         except Exception:
             conn.rollback()
@@ -1350,7 +1360,12 @@ class TechStoresHandler(BaseHTTPRequestHandler):
                 "database": True,
                 "stats": db_stats(),
                 "ai": status,
+                "supabase": supabase_status_payload(),
             })
+            return
+
+        if path == "/api/supabase/status":
+            self._send_json(200, {"ok": True, **supabase_status_payload()})
             return
 
         if path == "/api/mode":
@@ -1652,6 +1667,76 @@ class TechStoresHandler(BaseHTTPRequestHandler):
                 self._send_json(500, {"ok": False, "error": f"Bids parse failed: {exc}"})
             return
 
+        if path == "/api/supabase/backup":
+            try:
+                state = load_full_state()
+                result = push_snapshot(state)
+                append_audit(
+                    "supabase_backup",
+                    f"Manual cloud backup (rev {result.get('saveRevision')})",
+                    username=str(state.get("savedBy") or "system"),
+                )
+                self._send_json(200, result)
+            except Exception as exc:
+                self._send_json(400, {"ok": False, "error": str(exc)})
+            return
+
+        if path == "/api/supabase/restore":
+            try:
+                payload = self._read_json()
+                force = bool(payload.get("force"))
+                row = fetch_latest_snapshot()
+                if not row:
+                    self._send_json(404, {"ok": False, "error": "No cloud backup found in Supabase."})
+                    return
+
+                cloud_state = row.get("payload")
+                if not isinstance(cloud_state, dict):
+                    raise ValueError("Cloud backup payload is invalid.")
+
+                local_state = load_full_state()
+                cloud_rev = int(row.get("save_revision") or cloud_state.get("saveRevision") or 0)
+                local_rev = int(local_state.get("saveRevision") or 0)
+                if not force and cloud_rev <= local_rev:
+                    self._send_json(
+                        409,
+                        {
+                            "ok": False,
+                            "error": "Local database is already up to date or newer than the cloud backup.",
+                            "localRevision": local_rev,
+                            "cloudRevision": cloud_rev,
+                            "cloudSavedAt": row.get("saved_at"),
+                            "cloudMachineId": row.get("machine_id"),
+                        },
+                    )
+                    return
+
+                result = save_full_state(cloud_state, force=True)
+                if result.get("conflict"):
+                    self._send_json(409, {"ok": False, **result})
+                    return
+
+                append_audit(
+                    "supabase_restore",
+                    f"Restored from cloud backup rev {cloud_rev} ({row.get('machine_id') or 'unknown machine'})",
+                    username=str(payload.get("username") or cloud_state.get("savedBy") or "system"),
+                )
+                self._send_json(
+                    200,
+                    {
+                        "ok": True,
+                        "saveRevision": result.get("saveRevision"),
+                        "savedAt": result.get("savedAt"),
+                        "cloudRevision": cloud_rev,
+                        "cloudSavedAt": row.get("saved_at"),
+                        "cloudMachineId": row.get("machine_id"),
+                        "appState": load_full_state(),
+                    },
+                )
+            except Exception as exc:
+                self._send_json(400, {"ok": False, "error": str(exc)})
+            return
+
         self._send_json(404, {"ok": False, "error": "Not found"})
 
 
@@ -1755,6 +1840,13 @@ def main() -> None:
     print(f" API:      http://127.0.0.1:{PORT}/api/health")
     ai = ai_status()
     print(f" AI:       {'enabled (' + str(ai.get('model') or 'model') + ')' if ai.get('aiEnabled') else 'off — copy .env.example to .env and set OPENAI_API_KEY'}")
+    sb = supabase_status_payload()
+    if sb.get("enabled"):
+        print(f" Supabase: enabled ({sb.get('projectHost') or 'cloud backup on save'})")
+    elif sb.get("configured"):
+        print(" Supabase: configured but disabled (SUPABASE_BACKUP_ENABLED=0)")
+    else:
+        print(" Supabase: off — copy .env.example to .env and set SUPABASE_URL + service key")
     print(" Keep this window open while using the system.")
     print(" Press Ctrl+C to stop")
     print("=" * 60)

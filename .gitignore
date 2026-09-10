@@ -11,6 +11,7 @@ techstores.db
 techstores.db-journal
 techstores.db-wal
 techstores.db-shm
+.techstores-machine-id
 
 # Product lookup cache
 data/product-web-cache.json

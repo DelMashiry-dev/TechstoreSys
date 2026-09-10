@@ -1553,6 +1553,10 @@
                                 Import Backup
                                 <input type="file" id="importDataFile" accept=".json" hidden>
                             </label>
+                            <div class="backup-menu-sep" role="separator"></div>
+                            <button class="backup-menu-item" id="supabaseBackupBtn" type="button" role="menuitem">Backup to Supabase</button>
+                            <button class="backup-menu-item" id="supabaseRestoreBtn" type="button" role="menuitem">Restore from Supabase</button>
+                            <div class="backup-menu-hint" id="supabaseBackupStatus" hidden>Supabase: not configured</div>
                         </div>
                     </div>
                 </div>

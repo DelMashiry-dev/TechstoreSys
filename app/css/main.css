@@ -1699,6 +1699,13 @@ body.nav-reordering .sidebar-menu a.nav-btn:hover {
     outline: none;
 }
 
+.backup-menu-hint {
+    margin: 2px 10px 6px;
+    color: #667085;
+    font-size: 0.72rem;
+    line-height: 1.35;
+}
+
 .theme-toggle:not(.glossy-pill-btn) {
     background: var(--secondary);
     color: white;
