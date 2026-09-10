@@ -11492,6 +11492,11 @@ button.context-chip:hover {
     margin-bottom: 0;
 }
 
+#btnAddInventoryLedgerDash,
+.inventory-ledgers-head-row > .btn {
+    display: none !important;
+}
+
 .inventory-ledgers-collapse {
     margin-bottom: 16px;
 }
