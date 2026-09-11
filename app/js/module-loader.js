@@ -58,7 +58,7 @@ async function loadModuleHtml(moduleId) {
     }
 
     MODULE_LOAD_PROMISES[moduleId] = (async () => {
-        const url = `modules/${encodeURIComponent(moduleId)}.html?v=20260911credtarget`;
+        const url = `modules/${encodeURIComponent(moduleId)}.html?v=20260911smartops`;
         const res = await fetchAppAsset(url);
         if (!res.ok) throw new Error(`Module HTML not found: ${moduleId} (${res.status})`);
         const html = await res.text();
@@ -161,6 +161,9 @@ function ensureModuleInitialized(moduleId) {
             break;
         case 'supplier-debts':
             call(window.initSupplierDebtsModule);
+            break;
+        case 'smart-ops-desk':
+            call(window.initSmartOpsDeskModule);
             break;
         case 'spec-evaluation':
             call(window.initSpecEvaluationModule);

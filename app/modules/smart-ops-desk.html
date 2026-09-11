@@ -1,0 +1,97 @@
+<div id="smart-ops-desk" class="form-container">
+    <div class="form-header">
+        <h2 class="form-title">Smart Ops Desk</h2>
+        <button class="close-btn" type="button">&times;</button>
+    </div>
+
+    <p class="req-intro">
+        Cross-module <strong>projection and priority</strong> for IT Dir Tech Stores —
+        Creditors, Undelivered POs, and DAF buying-power targets.
+        Scores are transparent heuristics; you decide the action.
+    </p>
+
+    <div class="req-aging-strip sod-kpi-strip" aria-label="Smart Ops summary">
+        <div class="req-stat"><span class="req-stat-value" id="sodKpiBuying">—</span><span class="req-stat-label">Buying power left</span></div>
+        <div class="req-stat"><span class="req-stat-value" id="sodKpiBurn">—</span><span class="req-stat-label">Projected days left</span></div>
+        <div class="req-stat"><span class="req-stat-value" id="sodKpiCreditors">—</span><span class="req-stat-label">Open creditors</span></div>
+        <div class="req-stat"><span class="req-stat-value" id="sodKpiUndelivered">—</span><span class="req-stat-label">Undelivered open</span></div>
+        <div class="req-stat"><span class="req-stat-value req-stat-overdue" id="sodKpiOverdue">—</span><span class="req-stat-label">Overdue (31d+)</span></div>
+        <div class="req-stat"><span class="req-stat-value" id="sodKpiCredTarget">—</span><span class="req-stat-label">Creditors Target ZWG</span></div>
+    </div>
+
+    <div class="module-toolbar sod-toolbar">
+        <button type="button" class="btn btn-primary btn-sm" id="sodRefreshBtn">Refresh intelligence</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="sodAiBriefBtn">AI ops brief</button>
+        <span class="muted" id="sodUpdatedAt"></span>
+    </div>
+
+    <div class="dashboard-panel sod-panel">
+        <div class="section-heading section-heading-compact">
+            <h3>Projection — DAF targets / buying power</h3>
+        </div>
+        <p id="sodProjectionNarrative" class="muted">Computing…</p>
+        <div class="form-table-wrapper">
+            <table class="overview-table sod-table">
+                <thead>
+                    <tr>
+                        <th>GL</th>
+                        <th>Target</th>
+                        <th>Expended</th>
+                        <th>Buying power</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="sodTargetsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="sod-grid">
+        <div class="dashboard-panel sod-panel">
+            <div class="section-heading section-heading-compact">
+                <h3>Priority — chase Creditors</h3>
+            </div>
+            <p class="muted">Weighted by age and amount; unchased cases rank higher.</p>
+            <div id="sodCreditorsList" class="sod-priority-list"></div>
+            <div class="module-toolbar">
+                <button type="button" class="btn btn-ghost btn-sm" data-sod-nav="supplier-debts">Open Creditors</button>
+            </div>
+        </div>
+
+        <div class="dashboard-panel sod-panel">
+            <div class="section-heading section-heading-compact">
+                <h3>Priority — chase Undelivered</h3>
+            </div>
+            <p class="muted">Weighted by age and outstanding balance.</p>
+            <div id="sodUndeliveredList" class="sod-priority-list"></div>
+            <div class="module-toolbar">
+                <button type="button" class="btn btn-ghost btn-sm" data-sod-nav="undelivered-orders">Open Undelivered</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-panel sod-panel">
+        <div class="section-heading section-heading-compact">
+            <h3>Suggested next actions</h3>
+        </div>
+        <ol id="sodActionsList" class="sod-actions-list"></ol>
+    </div>
+
+    <div class="dashboard-panel sod-panel sod-forecast-teaser">
+        <div class="section-heading section-heading-compact">
+            <h3>Demand signal — parts &amp; toner (preview)</h3>
+        </div>
+        <p class="muted">
+            Early signal from undelivered Parts/Toner lines. Full reorder forecasting is Phase 3
+            (<a href="#" data-sod-nav="doc-intel-roadmap">Intelligence roadmap</a>).
+        </p>
+        <div id="sodDemandList" class="sod-priority-list"></div>
+    </div>
+
+    <div class="dashboard-panel sod-panel" id="sodAiBriefPanel" hidden>
+        <div class="section-heading section-heading-compact">
+            <h3>AI ops brief</h3>
+        </div>
+        <div id="sodAiBriefBody" class="sod-ai-brief"></div>
+    </div>
+</div>

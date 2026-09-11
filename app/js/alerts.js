@@ -523,7 +523,9 @@ function updateSystemAlerts() {
     if (typeof getSoftwareRenewalAlerts === 'function') {
         getSoftwareRenewalAlerts().forEach((alert) => alerts.push(alert));
     }
-    if (typeof getStoresItemDepletionAlerts === 'function') {
+    if (typeof getStoresItemDepletionAlertsMerged === 'function') {
+        getStoresItemDepletionAlertsMerged().forEach((alert) => alerts.push(alert));
+    } else if (typeof getStoresItemDepletionAlerts === 'function') {
         getStoresItemDepletionAlerts().forEach((alert) => alerts.push(alert));
     }
     if (typeof getTargetProposalAlerts === 'function') {

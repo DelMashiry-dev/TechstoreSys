@@ -33,6 +33,7 @@ const MODULE_SEARCH_ALIASES = {
     'suppliers-contracts': 'vendor supplier register G/C/006',
     'delivery-note': 'dn delivery note goods received supplier',
     'supplier-debts': 'creditors creditor supplier debt debts owed unpaid non-paid goods received age daf chase invoice po dampack creditors register',
+    'smart-ops-desk': 'smart ops desk intelligence forecast project prioritize creditors undelivered buying power daf target thinker predict',
     'workshop-repairs': 'workshop register repairs indent',
     'laptop-compare': 'ict equipment compare laptop desktop server printer tablet network ups buy the winner rank side by side specs recommended buy buy score catalog pick models web crawl ai',
     'ict-compare': 'head to head h2h ict equipment compare crawl web duty profile laptop desktop server tablet printer workstation best buy ranking candidates',

@@ -1471,6 +1471,7 @@ function updateDashboard() {
         ? updateCommandBoard()
         : updateSystemAlerts();
     updateDashboardKpis(summaryBudget, summaryCommitted, summaryVouchers, summaryBudget - summaryCommitted - summaryVouchers, breakdownTotals, alertCount);
+    if (typeof updateSmartOpsDashboardTeaser === 'function') updateSmartOpsDashboardTeaser();
     updateGlCollapsedSummary(
         overviewRows,
         summaryBudget,

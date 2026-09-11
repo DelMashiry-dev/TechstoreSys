@@ -419,17 +419,19 @@ function renderUndeliveredTable() {
                 <td>${undEscape(getUndeliveredStatusLabel(row.status))}</td>
                 <td><span class="req-age-badge ${bucket.className}" title="${undEscape(bucket.label)}">${age}d</span></td>
                 <td>${undEscape(row.remarks || row.contact || '—')}</td>
-                <td class="req-actions-cell">
+                <td class="req-actions-cell und-actions-cell">
                     ${canEdit ? `
-                        <button type="button" class="btn btn-ghost btn-sm" data-und-action="edit" data-und-id="${undEscape(row.id)}">Edit</button>
-                        ${UNDELIVERED_OPEN.has(row.status) ? `
-                            <button type="button" class="btn btn-primary btn-sm" data-und-action="partial" data-und-id="${undEscape(row.id)}">Part Delivered</button>
-                            <button type="button" class="btn btn-success btn-sm" data-und-action="deliver" data-und-id="${undEscape(row.id)}">Mark Delivered</button>
-                        ` : ''}
-                        ${row.category === 'ICT' && row.status !== 'cancelled' && typeof createWrcFromUndelivered === 'function' ? `
-                            <button type="button" class="btn btn-secondary btn-sm" data-und-action="wrc" data-und-id="${undEscape(row.id)}" title="Open IT Dir Workshop receipt certification">Workshop cert</button>
-                        ` : ''}
-                        <button type="button" class="btn btn-danger btn-sm" data-und-action="delete" data-und-id="${undEscape(row.id)}">Delete</button>
+                        <div class="req-action-bar und-action-bar" role="group" aria-label="Undelivered item actions">
+                            <button type="button" class="btn btn-ghost btn-sm" data-und-action="edit" data-und-id="${undEscape(row.id)}" title="Edit line">Edit</button>
+                            ${UNDELIVERED_OPEN.has(row.status) ? `
+                                <button type="button" class="btn btn-primary btn-sm" data-und-action="partial" data-und-id="${undEscape(row.id)}" title="Record part delivery">Part</button>
+                                <button type="button" class="btn btn-success btn-sm" data-und-action="deliver" data-und-id="${undEscape(row.id)}" title="Mark fully delivered">Delivered</button>
+                            ` : ''}
+                            ${row.category === 'ICT' && row.status !== 'cancelled' && typeof createWrcFromUndelivered === 'function' ? `
+                                <button type="button" class="btn btn-secondary btn-sm" data-und-action="wrc" data-und-id="${undEscape(row.id)}" title="Open IT Dir Workshop receipt certification">WRC</button>
+                            ` : ''}
+                            <button type="button" class="btn btn-danger btn-sm" data-und-action="delete" data-und-id="${undEscape(row.id)}" title="Delete line">Del</button>
+                        </div>
                     ` : '—'}
                 </td>
             </tr>

@@ -1026,6 +1026,14 @@ function getStoresItemDepletionAlerts() {
     return alerts;
 }
 
+function getStoresItemDepletionAlertsMerged() {
+    const base = getStoresItemDepletionAlerts();
+    const reserve = typeof getCommanderReserveBreachAlerts === 'function'
+        ? getCommanderReserveBreachAlerts()
+        : [];
+    return base.concat(reserve);
+}
+
 function postStockTransaction(payload) {
     if (typeof requireEditAccess === 'function' && !requireEditAccess()) return null;
 
@@ -1093,6 +1101,18 @@ function postStockTransaction(payload) {
     if (type === 'issue' && qty > summary.onHand) {
         if (!silent) showToast(`Cannot issue ${qty}. Only ${summary.onHand} of "${itemName}" on hand.`, 'error');
         return null;
+    }
+
+    if (type === 'issue' && typeof validateCommanderReserveIssue === 'function') {
+        const soft = typeof isSoftwareLicenceCategory === 'function'
+            && isSoftwareLicenceCategory(category, gl, itemId);
+        if (!soft) {
+            const reserveErr = validateCommanderReserveIssue(itemId, qty);
+            if (reserveErr) {
+                if (!silent) showToast(reserveErr, 'error');
+                return null;
+            }
+        }
     }
 
     const serialErr = validateStockSerialOrZa({
@@ -2024,7 +2044,19 @@ function openReceiveIssueModal(type) {
             return;
         }
         const sum = getItemStockSummary(itemId);
-        hint.innerHTML = `On hand for <strong>${invHtmlEscape(sum.item)}</strong>: <strong>${sum.onHand}</strong>`;
+        const levels = typeof computeCommanderReserveLevels === 'function'
+            ? computeCommanderReserveLevels(getItemStockSummary(itemId, { mode: 'cumulative' }))
+            : null;
+        const meter = levels && typeof renderCommanderReserveMeterHtml === 'function'
+            ? renderCommanderReserveMeterHtml(levels, { compact: false })
+            : '';
+        const issuable = levels ? levels.freeFloat : sum.onHand;
+        hint.innerHTML =
+            `On hand for <strong>${invHtmlEscape(sum.item)}</strong>: <strong>${sum.onHand}</strong>` +
+            (levels
+                ? ` · Commander reserve 10%: <strong>${levels.reserveQty}</strong> · Issuable: <strong>${issuable}</strong>`
+                : '') +
+            (meter ? `<div class="stock-reserve-hint-meter">${meter}</div>` : '');
     };
 
     const refillItems = (preferSelectId) => {
@@ -2617,11 +2649,12 @@ function renderVoucherInventoryTables() {
                     <th>Received</th>
                     <th>Issued</th>
                     <th>On Hand</th>
+                    <th>Commander 10% / Min order</th>
                 `;
             }
 
             if (!itemRows.length) {
-                itemsBody.innerHTML = `<tr class="empty-inv-row"><td colspan="${isSoftwares ? 7 : 5}">${
+                itemsBody.innerHTML = `<tr class="empty-inv-row"><td colspan="${isSoftwares ? 7 : 6}">${
                     isSoftwares
                         ? 'No software licence movements yet. Use <strong>Receive</strong> → Softwares to purchase a licence (expended; renewal date tracked).'
                         : 'No stock recorded for this catalog yet. Use <strong>Start of Day</strong> or <strong>Receive</strong>.'
@@ -2658,13 +2691,20 @@ function renderVoucherInventoryTables() {
                     const openingCell = adminOpenings
                         ? `<input type="number" class="form-control inv-opening-input" data-item-id="${invHtmlEscape(row.itemId)}" min="0" step="1" value="${row.openingBase}" title="Admin: edit perpetual Opening (take-on). On Hand recalculates.">`
                         : String(row.opening);
+                    const levels = typeof computeCommanderReserveLevels === 'function'
+                        ? computeCommanderReserveLevels(getItemStockSummary(row.itemId, { mode: 'cumulative' }))
+                        : null;
+                    const meter = levels && typeof renderCommanderReserveMeterHtml === 'function'
+                        ? renderCommanderReserveMeterHtml(levels, { compact: true })
+                        : '—';
                     return `
-                    <tr>
+                    <tr class="${levels?.breached ? 'stock-reserve-breach-row' : (levels?.minOrderQty > 0 ? 'stock-reserve-reorder-row' : '')}">
                         <td>${invHtmlEscape(row.item)}</td>
                         <td>${openingCell}</td>
                         <td class="inv-received">${row.received}</td>
                         <td class="inv-issued">${row.issued}</td>
                         <td><strong class="${row.onHand <= 0 ? 'stock-depleted' : 'inv-onhand'}">${row.onHand}</strong></td>
+                        <td class="stock-reserve-cell">${meter}</td>
                     </tr>
                 `;
                 }).join('');
