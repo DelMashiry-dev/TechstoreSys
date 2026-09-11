@@ -22851,6 +22851,56 @@ body.table-focus-open {
     margin-bottom: 12px;
     overflow: visible;
 }
+.laptop-compare-pick-panel {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(29, 78, 216, 0.28);
+}
+.laptop-compare-pick-hint {
+    margin: 0 0 12px;
+    font-size: 0.84rem;
+    color: #475467;
+    line-height: 1.45;
+}
+.laptop-compare-picks .form-col {
+    min-width: 0;
+}
+.laptop-compare-source-opts {
+    margin-top: 8px;
+    gap: 8px 16px;
+}
+.laptop-compare-opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: #344054;
+    line-height: 1.4;
+    cursor: pointer;
+}
+.laptop-compare-opt input {
+    margin-top: 3px;
+}
+.laptop-compare-opt code {
+    font-size: 0.78em;
+}
+.laptop-compare-ai-advice {
+    margin-top: 10px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid #c7d2fe;
+    background: #eef2ff;
+    color: #1e3a8a;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+.laptop-compare-ai-advice strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
 .ict-compare-search-panel .form-row,
 .ict-compare-search-panel .form-col {
     overflow: visible;

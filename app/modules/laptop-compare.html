@@ -1,19 +1,31 @@
 <div id="laptop-compare" class="form-container">
     <div class="form-header">
-        <h2 class="form-title">Laptop Compare — buy the winner</h2>
+        <h2 class="form-title">ICT Equipment Compare — buy the winner</h2>
         <button class="close-btn">&times;</button>
     </div>
     <p class="q982-intro">
-        Ranks <strong>laptops</strong> from the local ICT catalog (CPU, RAM, storage, display, security, battery, etc.)
-        and DP purchase-order prices where available. Use this <em>before</em> Spec Evaluation and Guide Quotation —
-        it does not replace official due diligence or supplier quotation.
+        Compare <strong>laptops, desktops, servers, printers, tablets, network gear</strong>, or any ICT item
+        from the <strong>local catalog</strong>, optionally <strong>web-crawl</strong> public specs, and optionally
+        ask <strong>AI</strong> which buy fits the duty best. Confirm against quotation/datasheet before Spec Evaluation or F1.
     </p>
 
     <div class="dashboard-panel ict-compare-search-panel">
         <div class="section-heading section-heading-compact">
-            <h3>What are we buying for?</h3>
+            <h3>What are we buying?</h3>
         </div>
         <div class="form-row">
+            <div class="form-col">
+                <label class="form-label" for="laptopCompareCategory">Equipment type</label>
+                <select class="form-control" id="laptopCompareCategory">
+                    <option value="laptop">Laptop</option>
+                    <option value="desktop">Desktop / workstation</option>
+                    <option value="server">Server</option>
+                    <option value="printer">Printer / MFP</option>
+                    <option value="tablet">Tablet</option>
+                    <option value="network">Network equipment</option>
+                    <option value="other">Other ICT equipment</option>
+                </select>
+            </div>
             <div class="form-col">
                 <label class="form-label" for="laptopCompareDuty">Duty profile</label>
                 <select class="form-control" id="laptopCompareDuty"></select>
@@ -24,13 +36,13 @@
                     <option value="Any">Any brand</option>
                 </select>
             </div>
-            <div class="form-col">
+            <div class="form-col" id="laptopCompareMinRamWrap">
                 <label class="form-label" for="laptopCompareMinRam">Minimum RAM</label>
                 <select class="form-control" id="laptopCompareMinRam">
                     <option value="any">Any</option>
                 </select>
             </div>
-            <div class="form-col">
+            <div class="form-col" id="laptopCompareMinStorageWrap">
                 <label class="form-label" for="laptopCompareMinStorage">Minimum storage</label>
                 <select class="form-control" id="laptopCompareMinStorage">
                     <option value="any">Any</option>
@@ -39,11 +51,62 @@
         </div>
         <p class="spec-search-duty-hint" id="laptopCompareDutyHint" hidden></p>
         <div class="module-actions ict-compare-actions">
-            <button type="button" class="btn btn-primary" id="laptopCompareRankBtn">Rank laptops &amp; pick winner</button>
+            <button type="button" class="btn btn-primary" id="laptopCompareRankBtn">Rank catalog &amp; pick winner</button>
             <button type="button" class="btn btn-secondary" id="laptopCompareMarketBtn">Add live market listings</button>
             <button type="button" class="btn btn-secondary" id="laptopComparePrintBtn">Print comparison</button>
         </div>
+        <div class="laptop-compare-pick-panel" id="laptopComparePickPanel">
+            <div class="section-heading section-heading-compact">
+                <h3>Or pick specific models by name</h3>
+            </div>
+            <p class="laptop-compare-pick-hint" id="laptopComparePickHint">
+                Type part of a name or open the list — choose up to three items for a head-to-head compare.
+            </p>
+            <div class="form-row laptop-compare-picks">
+                <div class="form-col">
+                    <label class="form-label" for="laptopComparePickA" id="laptopComparePickALabel">Item A</label>
+                    <select class="form-control" id="laptopComparePickA">
+                        <option value="">— Type or pick —</option>
+                    </select>
+                </div>
+                <div class="form-col">
+                    <label class="form-label" for="laptopComparePickB" id="laptopComparePickBLabel">Item B</label>
+                    <select class="form-control" id="laptopComparePickB">
+                        <option value="">— Type or pick —</option>
+                    </select>
+                </div>
+                <div class="form-col">
+                    <label class="form-label" for="laptopComparePickC" id="laptopComparePickCLabel">Item C</label>
+                    <select class="form-control" id="laptopComparePickC">
+                        <option value="">— Type or pick —</option>
+                    </select>
+                </div>
+            </div>
+            <div class="module-actions ict-compare-actions">
+                <button type="button" class="btn btn-primary" id="laptopComparePickedBtn">Compare selected</button>
+                <button type="button" class="btn btn-ghost" id="laptopCompareClearPicksBtn">Clear picks</button>
+            </div>
+            <div class="form-row laptop-compare-source-opts">
+                <div class="form-col">
+                    <label class="form-check laptop-compare-opt">
+                        <input type="checkbox" id="laptopCompareUseWeb" checked>
+                        <span>Web-crawl specs when comparing (public sources; AI fills gaps if <code>OPENAI_API_KEY</code> is set)</span>
+                    </label>
+                </div>
+                <div class="form-col">
+                    <label class="form-check laptop-compare-opt">
+                        <input type="checkbox" id="laptopCompareUseAi" checked>
+                        <span>Ask AI for a buy recommendation after compare</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="module-actions ict-compare-actions">
+            <button type="button" class="btn btn-secondary" id="laptopCompareEnrichBtn" title="Crawl/enrich specs for the current comparison set">Enrich current from web</button>
+            <button type="button" class="btn btn-secondary" id="laptopCompareAiBtn" title="Ask AI which item to buy for the duty">AI recommend winner</button>
+        </div>
         <div id="laptopCompareStatus" class="spec-search-status" aria-live="polite"></div>
+        <div id="laptopCompareAiAdvice" class="laptop-compare-ai-advice" hidden></div>
     </div>
 
     <div class="dashboard-panel ict-compare-results-panel" id="laptopCompareResultsPanel" hidden>
@@ -69,7 +132,7 @@
                     </tr>
                 </thead>
                 <tbody id="laptopCompareTableBody">
-                    <tr><td colspan="2" class="req-empty-row">Rank laptops to compare.</td></tr>
+                    <tr><td colspan="2" class="req-empty-row">Rank or pick items to compare.</td></tr>
                 </tbody>
             </table>
         </div>

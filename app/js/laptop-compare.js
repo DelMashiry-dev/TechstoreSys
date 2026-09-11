@@ -1,25 +1,175 @@
-/* laptop-compare.js — Workshop Laptop Compare: rank catalog laptops and pick a winner */
+/* laptop-compare.js — ICT Equipment Compare: rank/pick laptops, desktops, servers, printers, etc. */
 
-const LAPTOP_COMPARE_SIDE_SPEC_ROWS = [
-    { label: 'Processor', re: /processor/i },
-    { label: 'RAM', re: /^ram$|memory/i },
-    { label: 'Storage', re: /storage/i },
+const ICT_COMPARE_COMMON_SPEC_ROWS = [
+    { label: 'Model', re: /^model$/i },
+    { label: 'Processor', re: /processor|cpu/i },
     { label: 'Graphics', re: /graphics|gpu/i },
+    { label: 'Operating System', re: /operating system|^os$/i },
     { label: 'Display', re: /display|screen/i },
-    { label: 'OS', re: /operating system|^os$/i },
-    { label: 'Security', re: /security|tpm/i },
-    { label: 'Battery', re: /battery/i }
+    { label: 'Memory', re: /^(ram|memory)$/i },
+    { label: 'Storage', re: /storage|boot storage|internal storage/i },
+    { label: 'Keyboard', re: /keyboard/i },
+    { label: 'Pointing Device', re: /pointing|touchpad|imagepad|trackpad|clickpad/i },
+    { label: 'WebCam', re: /webcam|camera|true vision/i },
+    { label: 'Battery', re: /battery/i },
+    { label: 'Ports', re: /ports?|connectivity|i\/o|network$/i },
+    { label: 'Security', re: /security|tpm/i }
 ];
+
+const ICT_COMPARE_SERVER_SPEC_ROWS = [
+    { label: 'Model', re: /^model$/i },
+    { label: 'Form Factor', re: /form factor|chassis|rack/i },
+    { label: 'Processor', re: /processor|cpu|xeon/i },
+    { label: 'Memory', re: /^(ram|memory)$|memory channels/i },
+    { label: 'Boot Storage', re: /boot storage/i },
+    { label: 'Internal Storage', re: /internal storage|storage/i },
+    { label: 'RAID / Storage Controller', re: /raid|storage controller/i },
+    { label: 'Graphics / GPUs', re: /graphics|gpu/i },
+    { label: 'Network', re: /network|ethernet|nic/i },
+    { label: 'Power Supply', re: /power supply|psu/i },
+    { label: 'Remote Management', re: /remote management|ilo|idrac|imm|xclarity/i },
+    { label: 'Operating System', re: /operating system|^os$/i },
+    { label: 'Warranty', re: /warranty/i }
+];
+
+const ICT_COMPARE_PRINTER_SPEC_ROWS = [
+    { label: 'Model', re: /^model$/i },
+    { label: 'Print Technology', re: /print technology|technology|laser|inkjet/i },
+    { label: 'Functions', re: /functions|print.*copy.*scan|mfp/i },
+    { label: 'Print Speed', re: /print speed|ppm|ipm/i },
+    { label: 'Resolution', re: /resolution|dpi/i },
+    { label: 'Paper Size', re: /paper|media size|a4|a3/i },
+    { label: 'Duplex', re: /duplex|two.?sided/i },
+    { label: 'Duty Cycle', re: /duty cycle|monthly/i },
+    { label: 'Connectivity', re: /connectivity|ports?|wifi|ethernet|usb/i },
+    { label: 'Tray / Capacity', re: /tray|capacity|input/i },
+    { label: 'Warranty', re: /warranty/i }
+];
+
+const ICT_COMPARE_NETWORK_SPEC_ROWS = [
+    { label: 'Model', re: /^model$/i },
+    { label: 'Device Type', re: /device type|type|switch|router|firewall|access point/i },
+    { label: 'Ports', re: /ports?|interfaces/i },
+    { label: 'Speed / Throughput', re: /speed|throughput|gbps|mbps/i },
+    { label: 'PoE', re: /poe|power over ethernet/i },
+    { label: 'Management', re: /management|controller|cli|gui/i },
+    { label: 'Security', re: /security|firewall|vpn|acl/i },
+    { label: 'Warranty', re: /warranty/i }
+];
+
+const ICT_COMPARE_CATEGORY_META = {
+    laptop: {
+        label: 'Laptop',
+        singular: 'laptop',
+        productType: 'laptop',
+        invKeys: ['inv-laptops', 'ict-equipment'],
+        nameRe: /\b(laptop|notebook|macbook|omnibook|elitebook|probook|thinkpad|latitude|vostro|xps|zbook|surface\s*laptop|yoga|legion|omen|victus|transcend|toughbook|firefly|vivobook|expertbook|travelmate|alienware)\b/i,
+        example: 'Victus, OMEN, EliteBook',
+        showRamStorage: true,
+        rows: ICT_COMPARE_COMMON_SPEC_ROWS
+    },
+    desktop: {
+        label: 'Desktop / workstation',
+        singular: 'desktop',
+        productType: 'desktop',
+        invKeys: ['inv-desktops', 'ict-equipment'],
+        nameRe: /\b(desktop|optiplex|elitedesk|prodesk|thinkcentre|workstation|z2|precision|all-?in-?one|imac|mac\s*mini|tower|sff|tiny)\b/i,
+        example: 'OptiPlex, EliteDesk, ThinkCentre',
+        showRamStorage: true,
+        rows: ICT_COMPARE_COMMON_SPEC_ROWS.filter((r) => !/battery|webcam|keyboard|pointing/i.test(r.label))
+    },
+    server: {
+        label: 'Server',
+        singular: 'server',
+        productType: 'server',
+        invKeys: ['inv-servers', 'ict-equipment'],
+        nameRe: /\b(server|proliant|poweredge|thinksystem|dl\d+|ml\d+|r\d{3,4}|tower server|rack)\b/i,
+        example: 'DL380, PowerEdge, ThinkSystem',
+        showRamStorage: true,
+        rows: ICT_COMPARE_SERVER_SPEC_ROWS
+    },
+    printer: {
+        label: 'Printer / MFP',
+        singular: 'printer',
+        productType: 'printer',
+        invKeys: ['inv-printers', 'ict-equipment'],
+        nameRe: /\b(printer|mfp|laserjet|imagerunner|ecotank|designjet|photocopier|pagewide|bizhub|workcentre)\b/i,
+        example: 'LaserJet, imageRUNNER, EcoTank',
+        showRamStorage: false,
+        rows: ICT_COMPARE_PRINTER_SPEC_ROWS
+    },
+    tablet: {
+        label: 'Tablet',
+        singular: 'tablet',
+        productType: 'tablet',
+        invKeys: ['ict-equipment'],
+        nameRe: /\b(tablet|ipad|galaxy\s*tab|surface\s*go|surface\s*pro|toughpad)\b/i,
+        example: 'iPad, Galaxy Tab, Surface',
+        showRamStorage: true,
+        rows: ICT_COMPARE_COMMON_SPEC_ROWS
+    },
+    network: {
+        label: 'Network equipment',
+        singular: 'network device',
+        productType: 'network',
+        invKeys: ['ict-equipment'],
+        nameRe: /\b(switch|router|firewall|access\s*point|catalyst|meraki|fortigate|aruba|ubiquiti|wifi|wlan)\b/i,
+        example: 'Catalyst, FortiGate, Aruba AP',
+        showRamStorage: false,
+        rows: ICT_COMPARE_NETWORK_SPEC_ROWS
+    },
+    other: {
+        label: 'Other ICT equipment',
+        singular: 'ICT item',
+        productType: 'other',
+        invKeys: ['ict-equipment'],
+        nameRe: /./i,
+        example: 'UPS, scanner, projector',
+        showRamStorage: true,
+        rows: [
+            { label: 'Model', re: /^model$/i },
+            { label: 'Device Type', re: /device type|type/i },
+            { label: 'Processor', re: /processor|cpu/i },
+            { label: 'Memory', re: /^(ram|memory)$/i },
+            { label: 'Storage', re: /storage/i },
+            { label: 'Connectivity', re: /connectivity|ports?|network/i },
+            { label: 'Operating System', re: /operating system|^os$/i },
+            { label: 'Warranty', re: /warranty/i }
+        ]
+    }
+};
+
+/** @deprecated kept as alias for older call sites */
+const LAPTOP_COMPARE_SIDE_SPEC_ROWS = ICT_COMPARE_COMMON_SPEC_ROWS;
 
 const laptopCompareState = {
     items: [],
     scored: [],
     dutyKey: '',
+    category: 'laptop',
     brand: 'Any',
     minRam: 'any',
     minStorage: 'any',
-    winner: null
+    winner: null,
+    pickMode: false
 };
+
+const LAPTOP_COMPARE_PICK_IDS = ['laptopComparePickA', 'laptopComparePickB', 'laptopComparePickC'];
+const LAPTOP_COMPARE_NAME_RE = ICT_COMPARE_CATEGORY_META.laptop.nameRe;
+
+function getLaptopCompareCategory() {
+    const el = document.getElementById('laptopCompareCategory');
+    const raw = el?.value || laptopCompareState.category || 'laptop';
+    return ICT_COMPARE_CATEGORY_META[raw] ? raw : 'laptop';
+}
+
+function getLaptopCompareCategoryMeta(cat = getLaptopCompareCategory()) {
+    return ICT_COMPARE_CATEGORY_META[cat] || ICT_COMPARE_CATEGORY_META.laptop;
+}
+
+function getLaptopCompareSideSpecRows(cat = getLaptopCompareCategory()) {
+    return getLaptopCompareCategoryMeta(cat).rows || ICT_COMPARE_COMMON_SPEC_ROWS;
+}
 
 function laptopCmpEsc(v) {
     return String(v ?? '')
@@ -54,18 +204,500 @@ function fillLaptopCompareDutySelect() {
 }
 
 function mountLaptopCompareTypeableSelects() {
+    const meta = getLaptopCompareCategoryMeta();
+    const noun = meta.singular || 'item';
     const mounts = [
         ['laptopCompareDuty', 'Type or pick duty profile'],
         ['laptopCompareBrand', 'Type or pick brand'],
         ['laptopCompareMinRam', 'Type or pick minimum RAM'],
-        ['laptopCompareMinStorage', 'Type or pick minimum storage']
+        ['laptopCompareMinStorage', 'Type or pick minimum storage'],
+        ['laptopComparePickA', `Type or pick ${noun} A (e.g. ${meta.example.split(',')[0].trim()})`],
+        ['laptopComparePickB', `Type or pick ${noun} B`],
+        ['laptopComparePickC', `Type or pick ${noun} C`]
     ];
     mounts.forEach(([id, placeholder]) => {
         const el = document.getElementById(id);
         if (el && typeof mountTypeableSelect === 'function') {
-            mountTypeableSelect(el, { placeholder, allowCustom: true });
+            mountTypeableSelect(el, {
+                placeholder,
+                allowCustom: true,
+                maxItems: id.startsWith('laptopComparePick') ? 400 : 200
+            });
         }
     });
+}
+
+function listLaptopComparePickOptions() {
+    const cat = getLaptopCompareCategory();
+    const meta = getLaptopCompareCategoryMeta(cat);
+    const byKey = new Map();
+    const add = (value, label) => {
+        const text = String(label || '').trim();
+        if (!text) return;
+        const key = text.toLowerCase().replace(/\s+/g, ' ');
+        if (byKey.has(key)) return;
+        byKey.set(key, { value: String(value || text), label: text });
+    };
+
+    const catalog = typeof getEnrichedProductCatalog === 'function'
+        ? getEnrichedProductCatalog()
+        : (typeof PRODUCT_SPECS_CATALOG !== 'undefined' ? PRODUCT_SPECS_CATALOG : []);
+    (catalog || []).forEach((p) => {
+        const pCat = String(p.category || '').toLowerCase();
+        if (cat !== 'other' && pCat !== cat) return;
+        if (cat === 'other' && ['laptop', 'desktop', 'server', 'printer', 'tablet', 'network'].includes(pCat)) return;
+        const title = `${p.brand || ''} ${p.model || ''}`.trim();
+        add(p.id, title);
+        (p.names || []).forEach((n) => {
+            const name = String(n || '').trim();
+            if (!name || name.toLowerCase() === title.toLowerCase()) return;
+            add(`${p.id}::${name}`, name);
+        });
+    });
+
+    const invKeys = meta.invKeys || ['ict-equipment'];
+    const seenInv = new Set();
+    invKeys.forEach((key) => {
+        const invPool = typeof getCatalogItemsForCategory === 'function'
+            ? (getCatalogItemsForCategory(key) || [])
+            : [];
+        invPool.forEach((item) => {
+            const name = String(item.name || '').trim();
+            if (!name || seenInv.has(item.id)) return;
+            if (cat !== 'other' && meta.nameRe && !meta.nameRe.test(name)) return;
+            seenInv.add(item.id);
+            add(`inv:${item.id}`, name);
+        });
+    });
+
+    return [
+        { value: '', label: `— Type or pick a ${meta.singular} —` },
+        ...[...byKey.values()].sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }))
+    ];
+}
+
+function syncLaptopCompareCategoryUi() {
+    const cat = getLaptopCompareCategory();
+    const meta = getLaptopCompareCategoryMeta(cat);
+    laptopCompareState.category = cat;
+    const hint = document.getElementById('laptopComparePickHint');
+    if (hint) {
+        hint.innerHTML = `Type part of a name (e.g. <strong>${laptopCmpEsc(meta.example)}</strong>) or open the list — choose up to three ${laptopCmpEsc(meta.label.toLowerCase())} items.`;
+    }
+    ['A', 'B', 'C'].forEach((letter) => {
+        const label = document.getElementById(`laptopComparePick${letter}Label`);
+        if (label) label.textContent = `${meta.label.split('/')[0].trim()} ${letter}`;
+    });
+    const showRam = !!meta.showRamStorage;
+    document.getElementById('laptopCompareMinRamWrap')?.toggleAttribute('hidden', !showRam);
+    document.getElementById('laptopCompareMinStorageWrap')?.toggleAttribute('hidden', !showRam);
+    fillLaptopComparePickSelects();
+    const body = document.getElementById('laptopCompareTableBody');
+    if (body && !laptopCompareState.items.length) {
+        body.innerHTML = `<tr><td colspan="2" class="req-empty-row">Rank or pick ${laptopCmpEsc(meta.singular)}s to compare.</td></tr>`;
+    }
+}
+
+function fillLaptopComparePickSelects() {
+    const options = listLaptopComparePickOptions();
+    const html = options.map((o) => (
+        `<option value="${laptopCmpEsc(o.value)}">${laptopCmpEsc(o.label)}</option>`
+    )).join('');
+    LAPTOP_COMPARE_PICK_IDS.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const keep = el.value;
+        el.innerHTML = html;
+        if (keep && [...el.options].some((o) => o.value === keep)) el.value = keep;
+        else el.value = '';
+    });
+    mountLaptopCompareTypeableSelects();
+}
+
+function resolveLaptopComparePick(selectEl) {
+    if (!selectEl) return null;
+    if (typeof resolveTypeableSelectInput === 'function') resolveTypeableSelectInput(selectEl);
+    const value = String(selectEl.value || '').trim();
+    const typed = String(selectEl._typeable?.input?.value || '').trim();
+    const label = typed || ([...selectEl.options].find((o) => o.value === value)?.textContent || '').trim();
+    if (!value && !label) return null;
+    return { value, label };
+}
+
+function productFromLaptopComparePick(pick) {
+    if (!pick) return null;
+    const value = String(pick.value || '').trim();
+    const label = String(pick.label || '').trim();
+
+    if (value && !value.startsWith('inv:')) {
+        const productId = value.includes('::') ? value.split('::')[0] : value;
+        const catalog = typeof getEnrichedProductCatalog === 'function'
+            ? getEnrichedProductCatalog()
+            : (typeof PRODUCT_SPECS_CATALOG !== 'undefined' ? PRODUCT_SPECS_CATALOG : []);
+        const hit = (catalog || []).find((p) => p.id === productId);
+        if (hit) return typeof enrichCatalogProduct === 'function' ? enrichCatalogProduct(hit) : hit;
+    }
+
+    const query = label || value.replace(/^inv:/, '');
+    if (query && typeof findProductInCatalog === 'function') {
+        const found = findProductInCatalog(query, { minScore: 55 });
+        if (found?.product) {
+            return typeof enrichCatalogProduct === 'function'
+                ? enrichCatalogProduct(found.product)
+                : found.product;
+        }
+    }
+
+    if (value.startsWith('inv:') || label) {
+        const title = label || value.replace(/^inv:/, '');
+        const meta = getLaptopCompareCategoryMeta();
+        return {
+            id: value.startsWith('inv:') ? value.slice(4) : `pick-${title.toLowerCase().replace(/\W+/g, '-').slice(0, 40)}`,
+            brand: title.split(/\s+/)[0] || '',
+            model: title,
+            category: meta.productType,
+            names: [title],
+            specs: [
+                ['Device Type', `${meta.label} (inventory / name pick)`, 'Confirm full specs on quotation'],
+                ['Model', title, 'Selected for direct compare']
+            ]
+        };
+    }
+    return null;
+}
+
+function readLaptopComparePicks() {
+    return LAPTOP_COMPARE_PICK_IDS
+        .map((id) => resolveLaptopComparePick(document.getElementById(id)))
+        .filter(Boolean);
+}
+
+function clearLaptopComparePicks() {
+    LAPTOP_COMPARE_PICK_IDS.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.value = '';
+        if (el._typeable?.input) el._typeable.input.value = '';
+        if (typeof syncTypeableSelectFromNative === 'function') {
+            try { syncTypeableSelectFromNative(el); } catch (_) { /* ignore */ }
+        }
+    });
+    setLaptopCompareStatus('Cleared model picks.', 'info');
+}
+
+function laptopCompareWantWeb() {
+    return !!document.getElementById('laptopCompareUseWeb')?.checked;
+}
+
+function laptopCompareWantAi() {
+    return !!document.getElementById('laptopCompareUseAi')?.checked;
+}
+
+function setLaptopCompareAiAdvice(html, { hidden = false } = {}) {
+    const el = document.getElementById('laptopCompareAiAdvice');
+    if (!el) return;
+    if (hidden || !html) {
+        el.hidden = true;
+        el.innerHTML = '';
+        return;
+    }
+    el.hidden = false;
+    el.innerHTML = html;
+}
+
+function normalizeEnrichSpecs(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw.map((row) => {
+        if (Array.isArray(row)) {
+            return [String(row[0] || '').trim(), String(row[1] || '').trim(), String(row[2] || '').trim()];
+        }
+        if (row && typeof row === 'object') {
+            return [
+                String(row.name || row.label || row[0] || '').trim(),
+                String(row.value || row[1] || '').trim(),
+                String(row.note || row[2] || '').trim()
+            ];
+        }
+        return ['', '', ''];
+    }).filter(([label, value]) => label && value);
+}
+
+function mergeSpecsPreferEnrich(localSpecs, enrichSpecs) {
+    const out = [];
+    const byKey = new Map();
+    const push = (triple) => {
+        const [label, value, note] = triple;
+        if (!label || !value) return;
+        const key = label.toLowerCase();
+        if (byKey.has(key)) {
+            const idx = byKey.get(key);
+            const prev = out[idx];
+            const prevWeak = !prev[1] || prev[1] === '—' || /typical|options|config|confirm/i.test(prev[1]);
+            if (prevWeak || value.length > String(prev[1] || '').length) {
+                out[idx] = [label, value, note || prev[2] || ''];
+            }
+            return;
+        }
+        byKey.set(key, out.length);
+        out.push([label, value, note || '']);
+    };
+    (localSpecs || []).forEach((s) => push(Array.isArray(s) ? s : [s?.[0], s?.[1], s?.[2]]));
+    normalizeEnrichSpecs(enrichSpecs).forEach(push);
+    return out;
+}
+
+function applyWebEnrichToCompareItem(item, payload) {
+    if (!item || !payload?.ok) return item;
+    const enrichSpecs = normalizeEnrichSpecs(payload.specs);
+    const localSpecs = item.product?.specs || [];
+    const merged = mergeSpecsPreferEnrich(localSpecs, enrichSpecs);
+    const brand = payload.brand || item.product?.brand || '';
+    const model = payload.model || item.product?.model || item.title || '';
+    item.product = {
+        ...(item.product || {}),
+        id: item.product?.id || `web-${productWebCacheKey?.(item.title) || item.title}`,
+        brand,
+        model,
+        category: payload.category || item.product?.category || 'laptop',
+        specs: merged
+    };
+    item.snippet = merged
+        .filter(([label]) => /processor|memory|^ram$|storage|graphics|display/i.test(label))
+        .slice(0, 3)
+        .map(([, value]) => value)
+        .join(' · ') || item.snippet;
+    item.source = payload.ai ? 'web+ai' : 'web';
+    item.imageUrl = payload.imageUrl || item.imageUrl || '';
+    item.datasheetUrl = payload.datasheetUrl || item.datasheetUrl || '';
+    item.webSources = payload.sources || [];
+    item.catalogReasons = [
+        ...(item.catalogReasons || []).filter((r) => !/web|crawl|ai enrich/i.test(r)),
+        payload.ai ? 'Web crawl + AI spec enrich' : 'Web crawl enrich'
+    ];
+    if (item.catalogScore == null || item.catalogScore < 70) item.catalogScore = 72;
+    return item;
+}
+
+async function enrichLaptopCompareItemsFromWeb(items, { force = false } = {}) {
+    const list = Array.isArray(items) ? items : [];
+    if (!list.length) return { enriched: 0, failed: 0 };
+    if (typeof fetchProductWebEnrich !== 'function') {
+        throw new Error('Web enrich module not loaded.');
+    }
+    let enriched = 0;
+    let failed = 0;
+    for (let i = 0; i < list.length; i += 1) {
+        const item = list[i];
+        const query = item.title || `${item.product?.brand || ''} ${item.product?.model || ''}`.trim();
+        if (!query) {
+            failed += 1;
+            continue;
+        }
+        setLaptopCompareStatus(`Web-crawling specs ${i + 1}/${list.length}: ${query}…`, 'info');
+        try {
+            const payload = await fetchProductWebEnrich(query, { force });
+            if (payload?.ok) {
+                applyWebEnrichToCompareItem(item, payload);
+                enriched += 1;
+            } else {
+                failed += 1;
+            }
+        } catch (_) {
+            failed += 1;
+        }
+    }
+    return { enriched, failed };
+}
+
+function buildLaptopCompareAiQuestion(scored, profile) {
+    const duty = profile?.label || profile?.groupLabel || 'general ICT duty';
+    const lines = (scored || []).slice(0, 5).map((s, i) => {
+        const row = s.row;
+        const specs = getLaptopCompareSideSpecRows().map(({ label, re }) => {
+            const val = laptopCompareSpecFromProduct(row.product, re);
+            return val && val !== '—' ? `${label}: ${val}` : null;
+        }).filter(Boolean).join('; ');
+        return `${i + 1}. ${row.title} (buy score ${s.buy}, spec ${s.fit})${specs ? ` — ${specs}` : ''}`;
+    });
+    const meta = getLaptopCompareCategoryMeta();
+    return (
+        `For ZNA IT-DIR Tech Stores procurement, recommend which ${meta.singular} to buy for duty “${duty}”. `
+        + 'Give a clear winner, why it wins, and any risks (SKU variance, domain OS, rugged/enterprise needs). '
+        + 'Use only the comparison facts below; do not invent exact prices.\n\n'
+        + lines.join('\n')
+    );
+}
+
+function buildLaptopCompareAiContext(scored, profile) {
+    return {
+        module: 'laptop-compare',
+        equipmentType: getLaptopCompareCategory(),
+        dutyProfile: profile?.key || profile?.label || '',
+        dutySummary: profile?.summary || '',
+        comparison: (scored || []).slice(0, 5).map((s) => ({
+            title: s.row.title,
+            buyScore: s.buy,
+            specScore: s.fit,
+            source: s.row.source,
+            specs: Object.fromEntries(
+                getLaptopCompareSideSpecRows().map(({ label, re }) => [
+                    label,
+                    laptopCompareSpecFromProduct(s.row.product, re)
+                ])
+            )
+        }))
+    };
+}
+
+async function askLaptopCompareAiRecommendation() {
+    if (!laptopCompareState.scored.length) {
+        setLaptopCompareStatus('Compare or rank laptops first, then ask AI.', 'warn');
+        return;
+    }
+    const btn = document.getElementById('laptopCompareAiBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'AI thinking…'; }
+    setLaptopCompareStatus('Asking AI for buy recommendation…', 'info');
+    const profile = typeof getLaptopDutyProfile === 'function'
+        ? getLaptopDutyProfile(laptopCompareState.dutyKey)
+        : null;
+    const question = buildLaptopCompareAiQuestion(laptopCompareState.scored, profile);
+    const context = {
+        ...(typeof buildStoresAssistantContext === 'function' ? buildStoresAssistantContext() : {}),
+        ...buildLaptopCompareAiContext(laptopCompareState.scored, profile)
+    };
+    try {
+        let data = null;
+        if (typeof askStoresAssistant === 'function') {
+            // Prefer dedicated ask with our richer context via API directly
+            const apiBase = typeof API_BASE === 'string' ? API_BASE : '';
+            const res = await fetch(`${apiBase}/api/ai/ask`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question, context })
+            });
+            data = await res.json();
+            if (!res.ok || !data?.ok) {
+                data = await askStoresAssistant(question);
+            }
+        } else {
+            throw new Error('AI assistant not loaded.');
+        }
+        const answer = String(data.answer || '').trim();
+        if (!answer) throw new Error('AI returned an empty recommendation.');
+        setLaptopCompareAiAdvice(
+            `<strong>AI recommendation ${data.ai ? '(model)' : '(heuristic)'}</strong>`
+            + laptopCmpEsc(answer).replace(/\n/g, '<br>')
+        );
+        setLaptopCompareStatus(
+            data.ai
+                ? 'AI recommendation ready — review against quotation/datasheet.'
+                : 'Heuristic recommendation ready (set OPENAI_API_KEY on the server for full AI).',
+            data.ai ? 'ok' : 'warn'
+        );
+    } catch (err) {
+        setLaptopCompareAiAdvice('', { hidden: true });
+        setLaptopCompareStatus(err.message || 'AI recommendation failed.', 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'AI recommend winner'; }
+    }
+}
+
+async function enrichCurrentLaptopCompareFromWeb() {
+    if (!laptopCompareState.items.length) {
+        setLaptopCompareStatus('Compare or rank laptops first, then enrich from web.', 'warn');
+        return;
+    }
+    const btn = document.getElementById('laptopCompareEnrichBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Crawling…'; }
+    try {
+        const { enriched, failed } = await enrichLaptopCompareItemsFromWeb(laptopCompareState.items, { force: true });
+        renderLaptopCompareResults();
+        setLaptopCompareStatus(
+            enriched
+                ? `Web-enriched ${enriched} laptop(s)${failed ? ` · ${failed} failed` : ''}. Table updated.`
+                : 'No web specs found — check internet or use a more specific model name.',
+            enriched ? 'ok' : 'warn'
+        );
+    } catch (err) {
+        setLaptopCompareStatus(err.message || 'Web enrich failed.', 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Enrich current from web'; }
+    }
+}
+
+async function comparePickedLaptops() {
+    const picks = readLaptopComparePicks();
+    const meta = getLaptopCompareCategoryMeta();
+    if (picks.length < 2) {
+        setLaptopCompareStatus(`Pick at least two ${meta.singular}s from the lists (e.g. ${meta.example}).`, 'error');
+        return;
+    }
+
+    const criteria = readLaptopCompareCriteria();
+    const profile = typeof getLaptopDutyProfile === 'function'
+        ? getLaptopDutyProfile(criteria.dutyProfile)
+        : null;
+    const cat = getLaptopCompareCategory();
+
+    const seen = new Set();
+    const items = [];
+    picks.forEach((pick) => {
+        const product = productFromLaptopComparePick(pick);
+        if (!product) return;
+        product.category = product.category || meta.productType;
+        const title = `${product.brand || ''} ${product.model || ''}`.trim() || pick.label;
+        const key = title.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        items.push(catalogHitToCompareItem({
+            product,
+            score: 78,
+            reasons: ['Selected for direct name compare']
+        }));
+    });
+
+    if (items.length < 2) {
+        setLaptopCompareStatus('Could not resolve two distinct models — try picking from the dropdown list.', 'error');
+        return;
+    }
+
+    laptopCompareState.dutyKey = criteria.dutyProfile || laptopCompareState.dutyKey;
+    laptopCompareState.category = cat;
+    laptopCompareState.brand = criteria.brand;
+    laptopCompareState.minRam = criteria.minRamGb;
+    laptopCompareState.minStorage = criteria.minStorageGb;
+    laptopCompareState.pickMode = true;
+    laptopCompareState.items = items;
+    setLaptopCompareAiAdvice('', { hidden: true });
+    renderLaptopCompareResults();
+
+    const btn = document.getElementById('laptopComparePickedBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Comparing…'; }
+
+    let enrichNote = '';
+    try {
+        if (laptopCompareWantWeb()) {
+            const { enriched, failed } = await enrichLaptopCompareItemsFromWeb(items, { force: false });
+            if (enriched) {
+                enrichNote = ` · web-enriched ${enriched}${failed ? ` (${failed} missed)` : ''}`;
+                renderLaptopCompareResults();
+            } else if (failed) {
+                enrichNote = ' · web crawl found no extra specs';
+            }
+        }
+
+        const dutyBit = profile ? ` for ${profile.label}` : '';
+        setLaptopCompareStatus(
+            `Comparing ${items.length} ${meta.singular}(s)${dutyBit}: ${items.map((r) => r.title).join(' · ')}${enrichNote}.`,
+            'ok'
+        );
+
+        if (laptopCompareWantAi()) {
+            await askLaptopCompareAiRecommendation();
+        }
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Compare selected'; }
+    }
 }
 function fillLaptopCompareFacets() {
     const facets = typeof SPEC_SEARCH_FACETS !== 'undefined' ? SPEC_SEARCH_FACETS : null;
@@ -195,37 +827,200 @@ function laptopCompareSpecLine(row) {
     return String(row.snippet || 'See side-by-side specs').slice(0, 120);
 }
 
-function laptopCompareDutyScore(row, profile) {
-    const blob = `${row.title || ''} ${row.snippet || ''} ${row.subtitle || ''}`.toLowerCase();
-    let score = row.catalogScore || 35;
-    if (!profile) return score;
+function laptopCompareSpecBlob(row) {
+    const specs = (row?.product?.specs || [])
+        .map((s) => Array.isArray(s) ? `${s[0] || ''} ${s[1] || ''}` : String(s || ''))
+        .join(' ');
+    return `${row?.title || ''} ${row?.snippet || ''} ${row?.subtitle || ''} ${specs}`.toLowerCase();
+}
+
+function laptopCompareOnHandQty(row) {
+    const pid = String(row?.product?.id || '');
+    const stockId = pid.includes('__') ? pid : (pid ? `ict-equipment__${pid}` : '');
+    if (typeof getItemStockSummaryForPeriod === 'function' && stockId) {
+        const sum = getItemStockSummaryForPeriod(stockId);
+        const onHand = Number(sum?.onHand);
+        if (Number.isFinite(onHand)) return onHand;
+    }
+    return 0;
+}
+
+/** Capability score from actual specs — category-aware (laptops vs servers vs printers). */
+function laptopCompareHardwareScore(row) {
+    const blob = laptopCompareSpecBlob(row);
+    const cat = String(row.product?.category || laptopCompareState.category || 'laptop').toLowerCase();
+
+    if (cat === 'printer') {
+        let score = 40;
+        if (/mfp|multifunction|print.*copy.*scan|all.?in.?one/.test(blob)) score += 10;
+        if (/laser|pagewide/.test(blob)) score += 8;
+        else if (/inkjet|ecotank|tank/.test(blob)) score += 5;
+        if (/a3/.test(blob)) score += 8;
+        else if (/a4/.test(blob)) score += 3;
+        const ppm = blob.match(/(\d+)\s*(?:ppm|ipm)/);
+        if (ppm) {
+            const n = parseInt(ppm[1], 10);
+            if (n >= 40) score += 12;
+            else if (n >= 25) score += 8;
+            else if (n >= 15) score += 4;
+        }
+        if (/duplex|two.?sided/.test(blob)) score += 6;
+        if (/wifi|wireless|ethernet|network/.test(blob)) score += 4;
+        if (/enterprise|workgroup|department/.test(blob)) score += 6;
+        return Math.max(8, Math.min(96, Math.round(score)));
+    }
+
+    if (cat === 'server') {
+        let score = 38;
+        if (/xeon|epyc|amd\s*eypc|scalable/.test(blob)) score += 16;
+        else if (/core\s*i[579]|ryzen|ultra/.test(blob)) score += 8;
+        const ramMatches = [...blob.matchAll(/(\d+)\s*(gb|tb)/gi)];
+        let ramGb = 0;
+        ramMatches.forEach((m) => {
+            const n = parseFloat(m[1]);
+            const unit = String(m[2] || '').toLowerCase();
+            const gb = unit === 'tb' ? n * 1024 : n;
+            if (gb >= 8 && gb <= 4096) ramGb = Math.max(ramGb, gb);
+        });
+        if (ramGb >= 512) score += 16;
+        else if (ramGb >= 128) score += 12;
+        else if (ramGb >= 64) score += 8;
+        else if (ramGb >= 32) score += 4;
+        if (/raid|smart\s*array|perc|hba/.test(blob)) score += 6;
+        if (/ilo|idrac|xclarity|imm|ipmi/.test(blob)) score += 6;
+        if (/2u|1u|rack/.test(blob)) score += 4;
+        if (/redundant|hot.?swap|dual\s*psu/.test(blob)) score += 6;
+        if (/proliant|poweredge|thinksystem/.test(blob)) score += 4;
+        return Math.max(8, Math.min(96, Math.round(score)));
+    }
+
+    if (cat === 'network') {
+        let score = 40;
+        if (/firewall|fortigate|asa|palo/.test(blob)) score += 10;
+        if (/catalyst|nexus|aruba|meraki/.test(blob)) score += 8;
+        const ports = blob.match(/(\d+)\s*port/);
+        if (ports) {
+            const n = parseInt(ports[1], 10);
+            if (n >= 48) score += 10;
+            else if (n >= 24) score += 7;
+            else if (n >= 8) score += 4;
+        }
+        if (/10\s*g|25\s*g|40\s*g|100\s*g|multi.?gig/.test(blob)) score += 10;
+        else if (/gigabit|1\s*g/.test(blob)) score += 4;
+        if (/poe/.test(blob)) score += 6;
+        if (/wifi\s*6|wifi\s*7|802\.11ax|802\.11be/.test(blob)) score += 8;
+        return Math.max(8, Math.min(96, Math.round(score)));
+    }
+
+    // laptop / desktop / tablet / other — compute-class scoring
+    let score = 36;
+    if (/core ultra\s*9|\bultra\s*9\b|ryzen\s*ai\s*9|ryzen\s*9|core\s*i9|\bi9\b/.test(blob)) score += 22;
+    else if (/core ultra\s*7|\bultra\s*7\b|ryzen\s*ai\s*7|ryzen\s*7|core\s*i7|\bi7\b|core\s*7/.test(blob)) score += 14;
+    else if (/core ultra|ryzen\s*ai|ryzen\s*5|core\s*i5|\bi5\b|core\s*5/.test(blob)) score += 8;
+    else if (/i3|ryzen\s*3|celeron|pentium/.test(blob)) score += 2;
+
+    if (/rtx\s*50[89]0|rtx\s*4090|rtx\s*4080/.test(blob)) score += 24;
+    else if (/rtx\s*4070|rtx\s*5070/.test(blob)) score += 20;
+    else if (/rtx\s*4060|rtx\s*5060/.test(blob)) score += 14;
+    else if (/rtx\s*4050|rtx\s*3050/.test(blob)) score += 10;
+    else if (/rtx|geforce|discrete\s*gpu|nvidia|quadro|rtx\s*a/.test(blob)) score += 7;
+    else if (/iris|uhd|integrated/.test(blob)) score += 1;
+
+    const ramMatches = [...blob.matchAll(/(\d+)\s*gb/gi)]
+        .map((m) => parseInt(m[1], 10))
+        .filter((n) => n >= 8 && n <= 128);
+    const ramMax = ramMatches.length ? Math.max(...ramMatches) : 0;
+    if (ramMax >= 64) score += 12;
+    else if (ramMax >= 32) score += 10;
+    else if (ramMax >= 16) score += 5;
+    else if (ramMax >= 8) score += 2;
+    if (/lpddr5/.test(blob)) score += 2;
+
+    if (/oled/.test(blob)) score += 10;
+    if (/wqxga|2560\s*[×x]\s*1600|2880|3200|3k|4k|uhd/.test(blob)) score += 6;
+    else if (/qhd|1440|1600/.test(blob)) score += 4;
+    else if (/fhd|1920/.test(blob)) score += 2;
+    if (/\b(144|165|240)\s*hz\b/.test(blob)) score += 2;
+
+    if (/\b2\s*tb\b/.test(blob)) score += 5;
+    else if (/\b1\s*tb\b/.test(blob)) score += 4;
+    else if (/512/.test(blob)) score += 2;
+
+    if (/ai pc|npu|core ultra|ryzen\s*ai|copilot\+?\s*pc/.test(blob)) score += 6;
+
+    if (/transcend|zbook|precision|thinkpad\s*p|legion\s*pro|macbook\s*pro|workstation/.test(blob)) score += 8;
+    else if (/\bomen\b/.test(blob) && !/victus/.test(blob)) score += 4;
+    else if (/victus|ideapad|pavilion|aspire/.test(blob)) score -= 2;
+
+    const wh = blob.match(/(\d+(?:\.\d+)?)\s*wh/);
+    if (wh) {
+        const w = parseFloat(wh[1]);
+        if (w >= 80) score += 5;
+        else if (w >= 60) score += 3;
+        else if (w >= 45) score += 1;
+    }
+
+    return Math.max(8, Math.min(96, Math.round(score)));
+}
+
+function laptopCompareDutyBonus(row, profile) {
+    if (!profile) return 0;
+    const blob = laptopCompareSpecBlob(row);
     const key = profile.key;
-    if (profile.group === 'field' && /rugged|toughbook|mil-std|ip6[0-6]|outdoor/.test(blob)) score += 22;
-    if (key === 'machine-learning' && /rtx|npu|ultra|gpu|ai pc|core ultra/.test(blob)) score += 22;
-    if (key === 'simulations' && /rtx|gpu|workstation|zbook|precision|legion|omen/.test(blob)) score += 22;
-    if (key === 'software-engineering' && /32 gb|ultra|ryzen 9|i9|workstation/.test(blob)) score += 16;
-    if (key === 'programming' && /thinkpad|elitebook|latitude|16 gb/.test(blob)) score += 14;
-    if (key === 'graphic-design' && /oled|creator|macbook|rtx|studio/.test(blob)) score += 18;
-    if (key === 'architecture' && /zbook|precision|rtx|cad|workstation/.test(blob)) score += 20;
-    if (key === 'outdoor-field' && /rugged|ip65|hot.?swap|toughbook/.test(blob)) score += 24;
-    if (row.source === 'local') score += 4;
-    if (row.price && row.price > 0) score += 4;
+    let bonus = 0;
+    if (profile.group === 'field' && /rugged|toughbook|mil-std|ip6[0-6]|outdoor/.test(blob)) bonus += 14;
+    if (key === 'machine-learning' && /rtx|npu|ultra|gpu|ai pc|core ultra|ryzen\s*ai/.test(blob)) bonus += 14;
+    if (key === 'simulations' && /rtx|gpu|workstation|zbook|precision|legion|omen|transcend/.test(blob)) bonus += 12;
+    if (key === 'software-engineering' && /32\s*gb|64\s*gb|ultra|ryzen\s*9|i9|workstation|oled/.test(blob)) bonus += 10;
+    if (key === 'programming' && /thinkpad|elitebook|latitude|16\s*gb|ultra/.test(blob)) bonus += 8;
+    if (key === 'graphic-design' && /oled|creator|macbook|rtx|studio|transcend|wqxga/.test(blob)) bonus += 12;
+    if (key === 'architecture' && /zbook|precision|rtx|cad|workstation|transcend|omen/.test(blob)) bonus += 12;
+    if (key === 'outdoor-field' && /rugged|ip65|hot.?swap|toughbook/.test(blob)) bonus += 16;
+    return bonus;
+}
+
+function laptopCompareDutyScore(row, profile) {
+    const hw = laptopCompareHardwareScore(row);
+    const duty = laptopCompareDutyBonus(row, profile);
+    let score = hw + duty;
+    if (row.source === 'local') score += 2;
+    if (laptopCompareOnHandQty(row) > 0) score += 3;
+    if (row.price && row.price > 0) score += 2;
     return Math.max(8, Math.min(99, score));
 }
 
 function laptopCompareScorePicks(picks, profile) {
-    const scored = picks.map((row) => ({
-        row,
-        fit: row.catalogScore || laptopCompareDutyScore(row, profile),
-        price: Number(row.price) || 0
-    }));
+    const scored = picks.map((row) => {
+        const hw = laptopCompareHardwareScore(row);
+        const duty = laptopCompareDutyBonus(row, profile);
+        const onHand = laptopCompareOnHandQty(row);
+        let fit = hw + duty;
+        if (row.source === 'local') fit += 2;
+        if (onHand > 0) fit += 3;
+        fit = Math.max(8, Math.min(99, fit));
+        return {
+            row,
+            fit,
+            hw,
+            duty,
+            onHand,
+            price: Number(row.price) || 0
+        };
+    });
     const priced = scored.filter((s) => s.price > 0);
     const minP = priced.length ? Math.min(...priced.map((s) => s.price)) : 0;
     scored.forEach((s) => {
-        const valueBonus = s.price > 0 && minP > 0 ? Math.round(18 * (minP / s.price)) : 8;
+        // Only apply value bonus when real prices exist — flat +8 was tying every pick at 86.
+        const valueBonus = s.price > 0 && minP > 0 ? Math.round(16 * (minP / s.price)) : 0;
         s.buy = Math.min(99, s.fit + valueBonus);
     });
-    scored.sort((a, b) => b.buy - a.buy || b.fit - a.fit);
+    scored.sort((a, b) => (
+        b.buy - a.buy
+        || b.fit - a.fit
+        || b.hw - a.hw
+        || b.onHand - a.onHand
+        || String(a.row.title || '').localeCompare(String(b.row.title || ''))
+    ));
     return scored;
 }
 
@@ -557,17 +1352,28 @@ function applyCompareLayoutViews(tableWrap, showcaseEl, scored, options) {
     }
 }
 
-function laptopCompareWhyLine(best) {
+function laptopCompareWhyLine(best, scored) {
+    if (!best) return 'strongest combined duty fit and value score among ranked laptops';
     const reasons = best.row.catalogReasons || [];
-    if (reasons.length) return reasons.slice(0, 3).join('; ');
     const bits = [];
-    const blob = `${best.row.title || ''} ${best.row.snippet || ''}`.toLowerCase();
-    if (/ultra|i[579]|ryzen\s*9|core\s*i[579]/.test(blob)) bits.push('strong processor class');
-    if (/32\s*gb|64\s*gb/.test(blob)) bits.push('32 GB RAM');
-    else if (/16\s*gb/.test(blob)) bits.push('16 GB RAM');
-    if (/battery|hour|wh/.test(blob)) bits.push('long battery class');
-    if (/toughbook|rugged|mil-std/.test(blob)) bits.push('rugged duty fit');
-    return bits.length ? bits.join('; ') : 'strongest combined duty fit and value score among ranked laptops';
+    const blob = laptopCompareSpecBlob(best.row);
+    if (/core ultra\s*9|ultra\s*9|ryzen\s*ai\s*9|ryzen\s*9|i9/.test(blob)) bits.push('top CPU class');
+    else if (/core ultra|ryzen\s*ai|ryzen\s*7|i7|core\s*7/.test(blob)) bits.push('strong CPU class');
+    if (/rtx\s*4070|rtx\s*5070/.test(blob)) bits.push('higher GPU class (up to RTX 4070)');
+    else if (/rtx\s*4060/.test(blob)) bits.push('RTX 4060-class GPU');
+    else if (/rtx/.test(blob)) bits.push('discrete RTX graphics');
+    if (/oled/.test(blob)) bits.push('OLED display');
+    if (/32\s*gb|64\s*gb/.test(blob)) bits.push('32 GB+ RAM class');
+    if (/ai pc|npu|core ultra|ryzen\s*ai/.test(blob)) bits.push('AI PC / NPU class');
+    if (best.onHand > 0) bits.push(`on hand (${best.onHand})`);
+    if (Array.isArray(scored) && scored.length > 1) {
+        const second = scored[1];
+        const gap = (best.buy || 0) - (second.buy || 0);
+        if (gap > 0) bits.push(`+${gap} buy points vs ${second.row.title}`);
+    }
+    if (bits.length) return bits.join('; ');
+    if (reasons.length) return reasons.slice(0, 3).join('; ');
+    return 'strongest hardware + duty fit among ranked laptops';
 }
 
 function renderLaptopCompareChart(scored, profile) {
@@ -620,7 +1426,7 @@ function renderLaptopCompareSideBySide(scored) {
     headRow.innerHTML = `<th>Spec</th>${head}`;
 
     const cell = (s, i, html) => `<td class="${i === 0 ? 'is-winner-col' : ''}">${html}</td>`;
-    const rows = LAPTOP_COMPARE_SIDE_SPEC_ROWS.map(({ label, re }) => {
+    const rows = getLaptopCompareSideSpecRows().map(({ label, re }) => {
         const cells = scored.map((s, i) => cell(
             s,
             i,
@@ -672,8 +1478,8 @@ function renderLaptopCompareResults() {
             <span class="ict-recommended-buy-label">Recommended buy</span>
             <strong class="ict-recommended-buy-title">${laptopCmpEsc(best.row.title)}</strong>
             <span class="ict-recommended-buy-spec">${laptopCmpEsc(laptopCompareSpecLine(best.row))}</span>
-            <span class="ict-recommended-buy-score">Buy score <strong>${best.buy}</strong> / 100 · Spec score ${best.fit}</span>
-            <span class="ict-recommended-buy-why">Why: ${laptopCmpEsc(laptopCompareWhyLine(best))}.</span>
+            <span class="ict-recommended-buy-score">Buy score <strong>${best.buy}</strong> / 100 · Spec score ${best.fit}${best.hw != null ? ` · Hardware ${best.hw}` : ''}</span>
+            <span class="ict-recommended-buy-why">Why: ${laptopCmpEsc(laptopCompareWhyLine(best, scored))}.</span>
         `;
     }
     if (sendBtn) sendBtn.hidden = !best;
@@ -706,6 +1512,8 @@ function setLaptopCompareStatus(msg, kind = '') {
 
 function rankLaptopsFromCatalog() {
     const criteria = readLaptopCompareCriteria();
+    const cat = getLaptopCompareCategory();
+    const meta = getLaptopCompareCategoryMeta(cat);
     const profile = typeof getLaptopDutyProfile === 'function'
         ? getLaptopDutyProfile(criteria.dutyProfile)
         : null;
@@ -719,49 +1527,69 @@ function rankLaptopsFromCatalog() {
     }
 
     const hits = searchCatalogByMinspec({
-        productType: 'laptop',
+        productType: meta.productType,
         dutyProfile: criteria.dutyProfile,
         brand: criteria.brand,
-        minRamGb: criteria.minRamGb,
-        minStorageGb: criteria.minStorageGb
+        minRamGb: meta.showRamStorage ? criteria.minRamGb : 'any',
+        minStorageGb: meta.showRamStorage ? criteria.minStorageGb : 'any'
     }, { minResults: 5, maxResults: 50 });
 
     laptopCompareState.dutyKey = criteria.dutyProfile;
+    laptopCompareState.category = cat;
     laptopCompareState.brand = criteria.brand;
     laptopCompareState.minRam = criteria.minRamGb;
     laptopCompareState.minStorage = criteria.minStorageGb;
-    laptopCompareState.items = hits.map(catalogHitToCompareItem);
+    laptopCompareState.pickMode = false;
+    laptopCompareState.items = hits.map((hit) => {
+        const item = catalogHitToCompareItem(hit);
+        if (item.product && !item.product.category) item.product.category = meta.productType;
+        return item;
+    });
 
+    setLaptopCompareAiAdvice('', { hidden: true });
     renderLaptopCompareResults();
     setLaptopCompareStatus(
         laptopCompareState.items.length
-            ? `Ranked ${laptopCompareState.items.length} laptop(s) for ${profile.label}.`
-            : 'No laptops matched — widen brand or RAM/storage filters.',
+            ? `Ranked ${laptopCompareState.items.length} ${meta.singular}(s) for ${profile.label}.`
+            : `No ${meta.singular}s matched — widen brand or filters, or pick models by name.`,
         laptopCompareState.items.length ? 'ok' : 'warn'
     );
 }
 
 async function addLiveMarketListings() {
     const criteria = readLaptopCompareCriteria();
+    const meta = getLaptopCompareCategoryMeta();
     const profile = typeof getLaptopDutyProfile === 'function'
         ? getLaptopDutyProfile(criteria.dutyProfile)
         : null;
-    if (!profile) {
-        setLaptopCompareStatus('Select a duty profile first.', 'error');
+    const picks = readLaptopComparePicks().map((p) => p.label).filter(Boolean);
+    const query = picks.length
+        ? picks.slice(0, 3).join(' vs ')
+        : (typeof dutyProfileWebQuery === 'function' && profile
+            ? dutyProfileWebQuery(profile, meta.productType)
+            : `${profile?.label || criteria.brand || 'HP'} ${meta.singular}`);
+
+    if (!picks.length && !profile) {
+        setLaptopCompareStatus('Select a duty profile or pick models first.', 'error');
         return;
     }
 
-    const query = typeof dutyProfileWebQuery === 'function'
-        ? dutyProfileWebQuery(profile, 'laptop')
-        : `${profile.label} laptop`;
     const btn = document.getElementById('laptopCompareMarketBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'Adding listings…'; }
     setLaptopCompareStatus(`Searching live market for “${query}”…`, 'info');
 
     try {
         if (typeof fetchMarketCatalog !== 'function') throw new Error('Market catalog unavailable');
-        const result = await fetchMarketCatalog(query, 'laptop', { force: false });
-        const webItems = (result.items || []).map(marketRowToCompareItem);
+        const marketCat = ['laptop', 'desktop', 'tablet', 'printer', 'server'].includes(meta.productType)
+            ? meta.productType
+            : 'laptop';
+        const result = await fetchMarketCatalog(query, marketCat, { force: false });
+        const webItems = (result.items || []).map((row) => {
+            const item = marketRowToCompareItem(row);
+            if (item.product) item.product.category = meta.productType;
+            else item.product = { category: meta.productType, brand: '', model: item.title, specs: [] };
+            return item;
+        });
         const seen = new Set(laptopCompareState.items.map((r) => (r.title || '').toLowerCase()));
         let added = 0;
         webItems.forEach((row) => {
@@ -771,15 +1599,14 @@ async function addLiveMarketListings() {
             laptopCompareState.items.push(row);
             added += 1;
         });
-        laptopCompareState.items.sort((a, b) => {
-            const profileObj = profile;
-            return laptopCompareDutyScore(b, profileObj) - laptopCompareDutyScore(a, profileObj);
-        });
+        if (profile) laptopCompareState.dutyKey = criteria.dutyProfile || laptopCompareState.dutyKey;
+        laptopCompareState.category = getLaptopCompareCategory();
+        laptopCompareState.items.sort((a, b) => laptopCompareDutyScore(b, profile) - laptopCompareDutyScore(a, profile));
         renderLaptopCompareResults();
         setLaptopCompareStatus(
             added
-                ? `Added ${added} live listing(s). ${laptopCompareState.items.length} laptop(s) ranked for ${profile.label}.`
-                : `No new live listings — ${laptopCompareState.items.length} laptop(s) still ranked.`,
+                ? `Added ${added} live listing(s). ${laptopCompareState.items.length} ${meta.singular}(s) in comparison.`
+                : `No new live listings — ${laptopCompareState.items.length} ${meta.singular}(s) still ranked.`,
             added ? 'ok' : 'warn'
         );
     } catch (err) {
@@ -810,6 +1637,7 @@ function initLaptopCompareModule() {
     if (!root) return;
     fillLaptopCompareDutySelect();
     fillLaptopCompareFacets();
+    syncLaptopCompareCategoryUi();
     updateLaptopCompareDutyHint();
     if (root.dataset.inited === '1') {
         wireCompareLayoutToggles(root);
@@ -817,16 +1645,39 @@ function initLaptopCompareModule() {
     }
     root.dataset.inited = '1';
 
+    document.getElementById('laptopCompareCategory')?.addEventListener('change', () => {
+        laptopCompareState.items = [];
+        laptopCompareState.scored = [];
+        laptopCompareState.winner = null;
+        setLaptopCompareAiAdvice('', { hidden: true });
+        syncLaptopCompareCategoryUi();
+        renderLaptopCompareResults();
+        setLaptopCompareStatus(`Equipment type set to ${getLaptopCompareCategoryMeta().label}.`, 'info');
+    });
     document.getElementById('laptopCompareDuty')?.addEventListener('change', updateLaptopCompareDutyHint);
     document.getElementById('laptopCompareRankBtn')?.addEventListener('click', rankLaptopsFromCatalog);
     document.getElementById('laptopCompareMarketBtn')?.addEventListener('click', addLiveMarketListings);
     document.getElementById('laptopComparePrintBtn')?.addEventListener('click', printLaptopCompareComparison);
     document.getElementById('laptopCompareSendWinnerBtn')?.addEventListener('click', sendLaptopCompareWinnerToSpecEval);
+    document.getElementById('laptopComparePickedBtn')?.addEventListener('click', () => {
+        comparePickedLaptops();
+    });
+    document.getElementById('laptopCompareClearPicksBtn')?.addEventListener('click', clearLaptopComparePicks);
+    document.getElementById('laptopCompareEnrichBtn')?.addEventListener('click', () => {
+        enrichCurrentLaptopCompareFromWeb();
+    });
+    document.getElementById('laptopCompareAiBtn')?.addEventListener('click', () => {
+        askLaptopCompareAiRecommendation();
+    });
     wireCompareLayoutToggles(root);
 }
 
 window.initLaptopCompareModule = initLaptopCompareModule;
 window.rankLaptopsFromCatalog = rankLaptopsFromCatalog;
+window.comparePickedLaptops = comparePickedLaptops;
+window.fillLaptopComparePickSelects = fillLaptopComparePickSelects;
+window.enrichCurrentLaptopCompareFromWeb = enrichCurrentLaptopCompareFromWeb;
+window.askLaptopCompareAiRecommendation = askLaptopCompareAiRecommendation;
 window.getCompareLayoutMode = getCompareLayoutMode;
 window.setCompareLayoutMode = setCompareLayoutMode;
 window.wireCompareLayoutToggles = wireCompareLayoutToggles;

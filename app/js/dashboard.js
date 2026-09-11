@@ -25,7 +25,7 @@ function getModuleLabel(moduleId) {
         'monthly-returns': 'Monthly Returns — Unit ICT Equipment',
         'spec-evaluation': 'Technical Specs',
         'specification-process': 'Specs Evaluation',
-        'laptop-compare': 'Laptop Compare — buy the winner',
+        'laptop-compare': 'ICT Equip Compare — buy the winner',
         'ict-compare': 'H2H ICT Comparison — crawl & compare',
         'guide-quotation': 'Rough Guide Quotation',
         'dp-f1-form': 'DP F1 Form',

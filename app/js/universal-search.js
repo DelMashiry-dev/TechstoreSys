@@ -34,7 +34,7 @@ const MODULE_SEARCH_ALIASES = {
     'delivery-note': 'dn delivery note goods received supplier',
     'supplier-debts': 'creditors creditor supplier debt debts owed unpaid non-paid goods received age daf chase invoice po dampack creditors register',
     'workshop-repairs': 'workshop register repairs indent',
-    'laptop-compare': 'laptop compare buy the winner rank laptops side by side specs recommended buy buy score ranking duty profile brand ram storage local catalog dp purchase order',
+    'laptop-compare': 'ict equipment compare laptop desktop server printer tablet network ups buy the winner rank side by side specs recommended buy buy score catalog pick models web crawl ai',
     'ict-compare': 'head to head h2h ict equipment compare crawl web duty profile laptop desktop server tablet printer workstation best buy ranking candidates',
     'specification-process': 'specs evaluation specification process zna it dir specification supplier quotation spec evaluation to spec below spec workshop engineers oc dp f1 due diligence cost comparative victus laptop printer',
     'spec-evaluation': 'technical specs spec tech evaluation below to spec datasheet classic infographic search',
