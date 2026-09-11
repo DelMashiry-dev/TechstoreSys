@@ -9,8 +9,9 @@ const SD_STATUSES = [
 ];
 
 const SD_OPEN_STATUSES = new Set(['open', 'chased_daf', 'part_paid']);
-const SD_SEED_REV = 3;
+const SD_SEED_REV = 4;
 const SD_CREDITORS_IMPORT_SOURCE = 'it-dir-creditors-2025-11';
+const SD_CREDITORS_TARGET_AUG2026_SOURCE = 'creditors-target-aug-2026';
 
 function sdEscape(value) {
     return String(value ?? '')
@@ -52,6 +53,22 @@ function sdCaseUsd(rec) {
         return Math.round(lines.reduce((sum, line) => sum + sdLineUsd(line), 0) * 100) / 100;
     }
     return Math.round(sdParseNum(rec?.totalUsd) * 100) / 100;
+}
+
+function sdCaseZwg(rec) {
+    const lines = Array.isArray(rec?.lines) ? rec.lines : [];
+    return Math.round(lines.reduce((sum, line) => sum + sdParseNum(line?.amountZwg), 0) * 100) / 100;
+}
+
+function sdCaseAmountLabel(rec) {
+    const usd = sdCaseUsd(rec);
+    const zwg = sdCaseZwg(rec);
+    const currency = String(rec?.currency || '').toUpperCase();
+    if (currency === 'ZWG' || currency === 'ZIG' || (zwg > 0 && usd <= 0)) {
+        return `ZWG ${sdFmtUsd(zwg)}`;
+    }
+    if (zwg > 0) return `USD ${sdFmtUsd(usd)} · ZWG ${sdFmtUsd(zwg)}`;
+    return `USD ${sdFmtUsd(usd)}`;
 }
 
 function sdEarliestSupplyDate(rec) {
@@ -214,6 +231,194 @@ function sdNixzimoDp3478SeedCase() {
             }
         ]
     };
+}
+
+/** IT/25 DP Sep 2026 — electronic POs on Target ZNA Creditors (Aug 2026); DAF target released. */
+function getAug2026CreditorsTargetPack() {
+    return {
+        source: 'IT/25 DP Sep 2026',
+        title: 'Electronic POs on Target ZNA Creditors — August 2026',
+        minuteRef: 'IT/25 DP',
+        minuteDate: '2026-09-01',
+        targetMonth: '2026-08',
+        signedBy: 'Maj W BARWA for Dir',
+        totalZwg: 557114.54,
+        dafTargetReleased: true,
+        dafChasedRef: 'ZNA Creditors Target Aug 2026 — DAF released',
+        rows: [
+            { supplier: 'Rinfoteck Investments', poNo: 'DP 597/2022', amountZwg: 27192.70, alias: 'Rainfotex' },
+            { supplier: 'Philiport', poNo: 'DP 596/2022', amountZwg: 40855.75, alias: 'Philpot' },
+            { supplier: 'Latertech Investments (Pvt)', poNo: '4204004041', amountZwg: 400000.00 },
+            { supplier: 'Ranares Enterprises', poNo: '4504113275', amountZwg: 86618.09 },
+            { supplier: 'Gad Tech Investments', poNo: '4504116440', amountZwg: 2448.00, alias: 'Gadtech' }
+        ]
+    };
+}
+
+function sdAug2026CreditorsTargetSeedCases() {
+    const pack = getAug2026CreditorsTargetPack();
+    const now = `${pack.minuteDate}T00:00:00`;
+    return pack.rows.map((row, index) => {
+        const slug = String(row.supplier || 'supplier')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '')
+            .slice(0, 40);
+        return {
+            id: `sd-seed-cred-target-aug2026-${slug}`,
+            caseNo: `CT-AUG26-${String(index + 1).padStart(2, '0')}`,
+            minuteRef: pack.minuteRef,
+            receivedDate: pack.minuteDate,
+            accumulatedFrom: pack.minuteDate,
+            supplier: row.supplier,
+            costCentre: 'IT DIR',
+            description: `Electronic PO on Target ZNA Creditors (Aug 2026) — ${row.poNo}. DAF target released for payment.`,
+            actionTo: 'DAF',
+            infoTo: 'IT Dir, DP, File',
+            status: 'chased_daf',
+            currency: 'ZWG',
+            totalUsd: 0,
+            attachments: `${pack.source} · Maj W BARWA for Dir · Creditors Target Aug 2026`,
+            notes: [
+                `Request for creation of electronic POs on Target ZNA Creditors for August 2026.`,
+                `Amount ZWG ${sdFmtUsd(row.amountZwg)} · PO ${row.poNo}.`,
+                `DAF target released to pay creditors.`,
+                row.alias ? `Vendor as on minute may appear as ${row.alias}.` : ''
+            ].filter(Boolean).join(' '),
+            dafChasedAt: pack.minuteDate,
+            dafChasedRef: pack.dafChasedRef,
+            paidDate: '',
+            createdAt: now,
+            updatedAt: now,
+            importSource: SD_CREDITORS_TARGET_AUG2026_SOURCE,
+            lines: [
+                {
+                    supplyDate: pack.minuteDate,
+                    costCentre: 'IT DIR',
+                    poNo: row.poNo,
+                    invoiceNo: '',
+                    amountZwl: 0,
+                    rateUsd: '',
+                    convertedUsd: 0,
+                    amountZwg: row.amountZwg,
+                    amountUsd: 0,
+                    totalUsd: 0,
+                    remarks: 'Creditors Target Aug 2026 electronic PO'
+                }
+            ]
+        };
+    });
+}
+
+function sdApplyAug2026CreditorsTargetBatch({ force = false } = {}) {
+    if (!appState) return { added: 0, updated: 0, linked: 0 };
+    if (!Array.isArray(appState.supplierDebts)) {
+        appState.supplierDebts = createDefaultSupplierDebts();
+    }
+    const cases = sdAug2026CreditorsTargetSeedCases();
+    const pack = getAug2026CreditorsTargetPack();
+    const poKeys = new Set(
+        pack.rows.flatMap((row) => [sdNormRef(row.poNo)].concat(row.alias ? [] : []))
+    );
+    let added = 0;
+    let updated = 0;
+    cases.forEach((rec) => {
+        const idx = appState.supplierDebts.findIndex((row) => row.id === rec.id);
+        if (idx < 0) {
+            appState.supplierDebts.push(rec);
+            added += 1;
+            return;
+        }
+        if (!force) {
+            updated += 1;
+            return;
+        }
+        const prev = appState.supplierDebts[idx];
+        appState.supplierDebts[idx] = {
+            ...rec,
+            paidDate: prev.paidDate || '',
+            status: prev.status === 'paid' ? 'paid' : rec.status,
+            createdAt: prev.createdAt || rec.createdAt
+        };
+        updated += 1;
+    });
+
+    let linked = 0;
+    appState.supplierDebts.forEach((rec) => {
+        if (rec.importSource === SD_CREDITORS_TARGET_AUG2026_SOURCE) return;
+        if (!SD_OPEN_STATUSES.has(rec.status)) return;
+        const match = (rec.lines || []).some((line) => poKeys.has(sdNormRef(line.poNo)));
+        if (!match) return;
+        if (rec.status === 'paid') return;
+        const noteTag = 'Creditors Target Aug 2026 — DAF released';
+        let changed = false;
+        if (rec.status === 'open' || !rec.dafChasedAt) {
+            rec.status = 'chased_daf';
+            rec.dafChasedAt = rec.dafChasedAt || pack.minuteDate;
+            rec.dafChasedRef = rec.dafChasedRef || pack.dafChasedRef;
+            changed = true;
+        }
+        if (!String(rec.notes || '').includes(noteTag)) {
+            rec.notes = [rec.notes, noteTag].filter(Boolean).join(' ');
+            changed = true;
+        }
+        if (changed) {
+            rec.updatedAt = new Date().toISOString();
+            linked += 1;
+        }
+    });
+
+    appState.creditorsTargetAug2026 = {
+        loadedAt: new Date().toISOString(),
+        minuteRef: pack.minuteRef,
+        targetMonth: pack.targetMonth,
+        totalZwg: pack.totalZwg,
+        dafTargetReleased: true,
+        caseIds: cases.map((c) => c.id)
+    };
+    return { added, updated, linked, totalZwg: pack.totalZwg, caseCount: cases.length };
+}
+
+function loadAug2026CreditorsTargetBatch(options = {}) {
+    if (typeof requireEditAccess === 'function' && !requireEditAccess()) return false;
+    const result = sdApplyAug2026CreditorsTargetBatch({ force: options.force === true });
+    if (typeof ensureRealDpPurchaseOrders === 'function') ensureRealDpPurchaseOrders();
+    if (typeof saveState === 'function') saveState();
+    updateSdCreditorsTargetSummary();
+    if (typeof renderSupplierDebtsModule === 'function') renderSupplierDebtsModule();
+    if (typeof updateDashboard === 'function') updateDashboard();
+    const statusEl = document.getElementById('sdCreditorsTargetStatus');
+    if (statusEl) {
+        statusEl.hidden = false;
+        statusEl.textContent =
+            `Creditors Target Aug 2026: ${result.added} added · ${result.updated} refreshed · ` +
+            `${result.linked} existing case(s) marked chased · ZWG ${sdFmtUsd(result.totalZwg)}.`;
+    }
+    if (typeof showToast === 'function') {
+        showToast(
+            `Loaded Creditors Target Aug 2026 — ${result.caseCount} electronic PO line(s), DAF target released.`,
+            'success'
+        );
+    }
+    return true;
+}
+
+function updateSdCreditorsTargetSummary() {
+    const el = document.getElementById('sdCreditorsTargetSummary');
+    if (!el) return;
+    const pack = getAug2026CreditorsTargetPack();
+    const loaded = appState?.creditorsTargetAug2026;
+    const lines = pack.rows
+        .map((r) => `${r.supplier}: ${r.poNo} — ZWG ${sdFmtUsd(r.amountZwg)}`)
+        .join(' · ');
+    el.innerHTML =
+        `<strong>${sdEscape(pack.title)}</strong> · ${sdEscape(pack.source)} · ` +
+        `total <strong>ZWG ${sdEscape(sdFmtUsd(pack.totalZwg))}</strong>` +
+        (pack.dafTargetReleased ? ' · <strong>DAF target released</strong>' : '') +
+        `<br><span class="muted">${sdEscape(lines)}</span>` +
+        (loaded?.loadedAt
+            ? `<br><span class="muted">Loaded in app ${sdEscape(String(loaded.loadedAt).slice(0, 19).replace('T', ' '))}</span>`
+            : '');
 }
 
 function sdNormRef(value) {
@@ -456,6 +661,10 @@ function ensureSupplierDebts() {
                     if (rec) appState.supplierDebts.push(rec);
                 });
             }
+        }
+        if (rev < 4) {
+            sdApplyAug2026CreditorsTargetBatch({ force: false });
+            if (typeof ensureRealDpPurchaseOrders === 'function') ensureRealDpPurchaseOrders();
         }
         appState.supplierDebtSeedRev = SD_SEED_REV;
         if (typeof saveState === 'function') saveState();
@@ -1033,7 +1242,7 @@ function renderSupplierDebtsTable() {
             <td>${sdEscape(rec.supplier || '—')}</td>
             <td>${sdEscape(poHint)}</td>
             <td>${sdEscape(rec.costCentre || '—')}</td>
-            <td>USD ${sdEscape(sdFmtUsd(sdCaseUsd(rec)))}</td>
+            <td>${sdEscape(sdCaseAmountLabel(rec))}</td>
             <td><span class="req-age-badge ${ageCss}">${sdEscape(sdAgeLabel(days))}</span></td>
             <td>${sdEscape(sdStatusLabel(rec.status))}</td>
             <td class="sd-actions">
@@ -1196,6 +1405,7 @@ function renderSdIntelligencePanel(hostId = 'sdIntelligencePanel') {
 function renderSupplierDebtsModule() {
     ensureSupplierDebts();
     populateSdStatusSelect();
+    updateSdCreditorsTargetSummary();
     renderSupplierDebtSummaryStrip();
     renderSdIntelligencePanel();
     renderSupplierDebtRollup();
@@ -1449,7 +1659,11 @@ function initSupplierDebtsModule() {
     });
 
     updateSdCreditorsPackSummary();
+    updateSdCreditorsTargetSummary();
     document.getElementById('sdLoadCreditorsBtn')?.addEventListener('click', () => loadItDirCreditorsRegister());
+    document.getElementById('sdLoadCreditorsTargetBtn')?.addEventListener('click', () => {
+        loadAug2026CreditorsTargetBatch({ force: true });
+    });
     if (typeof initSdCreditorsDropZone === 'function') initSdCreditorsDropZone();
 
     renderSupplierDebtsModule();

@@ -12,6 +12,23 @@
                     Opposite of Undelivered Items (ordered, not yet received).
                 </p>
 
+                <div class="dashboard-panel sd-creditors-target-panel">
+                    <div class="section-heading section-heading-compact">
+                        <h3>Creditors Target — electronic POs</h3>
+                    </div>
+                    <p class="muted">
+                        When DAF releases the monthly ZNA Creditors Target, load the IT Dir electronic-PO request here.
+                        Cases are marked <strong>Chased DAF</strong> until payment proof arrives.
+                    </p>
+                    <p id="sdCreditorsTargetSummary" class="muted">Loading Creditors Target batch…</p>
+                    <div class="module-toolbar">
+                        <button type="button" class="btn btn-primary btn-sm" id="sdLoadCreditorsTargetBtn">
+                            Load / refresh Aug 2026 Creditors Target (IT/25 DP)
+                        </button>
+                    </div>
+                    <p id="sdCreditorsTargetStatus" class="muted" hidden></p>
+                </div>
+
                 <div class="dashboard-panel sd-creditors-import-panel">
                     <div class="section-heading section-heading-compact">
                         <h3>Import creditors register</h3>

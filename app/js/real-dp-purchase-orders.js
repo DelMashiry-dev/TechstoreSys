@@ -158,6 +158,137 @@ const REAL_DP_PURCHASE_ORDERS = [
             { item: '01', desc: '24 PORT CISCO SWITCH WS-C2960X-24PS-POE PORT CATALYST', qty: 1, unit: 'EA', price: 491, amount: 491 }
         ],
         total: 491
+    },
+    /* Electronic POs requested on Target ZNA Creditors Aug 2026 (IT/25 DP Sep 2026) */
+    {
+        poNumber: 'DP 597/2022',
+        date: '2026-09-01',
+        deliveryDate: '2026-09-01',
+        reqNo: 'IT/25 DP',
+        supplierName: 'RINFOTECK INVESTMENTS',
+        supplierAddress: 'IT DIR creditors — Target ZNA Creditors Aug 2026',
+        supplierPhone: '',
+        contact: 'Dir of Procurement',
+        contactPhone: '0242-790016',
+        deliverTo: 'IT DIR',
+        paymentTerms: 'Creditors Target Aug 2026 — DAF released',
+        currency: 'ZiG',
+        gl: '2200600002',
+        lines: [
+            {
+                item: '01',
+                desc: 'ELECTRONIC PO — CREDITORS TARGET AUG 2026 (RINFOTECK)',
+                qty: 1,
+                unit: 'LOT',
+                price: 27192.70,
+                amount: 27192.70
+            }
+        ],
+        total: 27192.70
+    },
+    {
+        poNumber: 'DP 596/2022',
+        date: '2026-09-01',
+        deliveryDate: '2026-09-01',
+        reqNo: 'IT/25 DP',
+        supplierName: 'PHILIPORT',
+        supplierAddress: 'IT DIR creditors — Target ZNA Creditors Aug 2026',
+        supplierPhone: '',
+        contact: 'Dir of Procurement',
+        contactPhone: '0242-790016',
+        deliverTo: 'IT DIR',
+        paymentTerms: 'Creditors Target Aug 2026 — DAF released',
+        currency: 'ZiG',
+        gl: '2200600002',
+        lines: [
+            {
+                item: '01',
+                desc: 'ELECTRONIC PO — CREDITORS TARGET AUG 2026 (PHILIPORT)',
+                qty: 1,
+                unit: 'LOT',
+                price: 40855.75,
+                amount: 40855.75
+            }
+        ],
+        total: 40855.75
+    },
+    {
+        poNumber: '4204004041',
+        date: '2026-09-01',
+        deliveryDate: '2026-09-01',
+        reqNo: 'IT/25 DP',
+        supplierName: 'LATERTECH INVESTMENTS (PVT)',
+        supplierAddress: 'IT DIR creditors — Target ZNA Creditors Aug 2026',
+        supplierPhone: '',
+        contact: 'Dir of Procurement',
+        contactPhone: '0242-790016',
+        deliverTo: 'IT DIR',
+        paymentTerms: 'Creditors Target Aug 2026 — DAF released',
+        currency: 'ZiG',
+        gl: '2200600002',
+        lines: [
+            {
+                item: '01',
+                desc: 'ELECTRONIC PO — CREDITORS TARGET AUG 2026 (LATERTECH)',
+                qty: 1,
+                unit: 'LOT',
+                price: 400000.00,
+                amount: 400000.00
+            }
+        ],
+        total: 400000.00
+    },
+    {
+        poNumber: '4504113275',
+        date: '2026-09-01',
+        deliveryDate: '2026-09-01',
+        reqNo: 'IT/25 DP',
+        supplierName: 'RANARES ENTERPRISES',
+        supplierAddress: 'IT DIR creditors — Target ZNA Creditors Aug 2026',
+        supplierPhone: '',
+        contact: 'Dir of Procurement',
+        contactPhone: '0242-790016',
+        deliverTo: 'IT DIR',
+        paymentTerms: 'Creditors Target Aug 2026 — DAF released',
+        currency: 'ZiG',
+        gl: '2200600002',
+        lines: [
+            {
+                item: '01',
+                desc: 'ELECTRONIC PO — CREDITORS TARGET AUG 2026 (RANARES)',
+                qty: 1,
+                unit: 'LOT',
+                price: 86618.09,
+                amount: 86618.09
+            }
+        ],
+        total: 86618.09
+    },
+    {
+        poNumber: '4504116440',
+        date: '2026-09-01',
+        deliveryDate: '2026-09-01',
+        reqNo: 'IT/25 DP',
+        supplierName: 'GAD TECH INVESTMENTS',
+        supplierAddress: 'IT DIR creditors — Target ZNA Creditors Aug 2026',
+        supplierPhone: '',
+        contact: 'Dir of Procurement',
+        contactPhone: '0242-790016',
+        deliverTo: 'IT DIR',
+        paymentTerms: 'Creditors Target Aug 2026 — DAF released',
+        currency: 'ZiG',
+        gl: '2200600002',
+        lines: [
+            {
+                item: '01',
+                desc: 'ELECTRONIC PO — CREDITORS TARGET AUG 2026 (GADTECH)',
+                qty: 1,
+                unit: 'LOT',
+                price: 2448.00,
+                amount: 2448.00
+            }
+        ],
+        total: 2448.00
     }
 ];
 

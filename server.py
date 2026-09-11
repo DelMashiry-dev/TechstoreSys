@@ -81,6 +81,7 @@ EXTENDED_STATE_KEYS = (
     "undeliveredOrders",
     "supplierDebts",
     "supplierDebtSeedRev",
+    "creditorsTargetAug2026",
     "workshopReceiptCerts",
     "dpProcurements",
     "costComparativeSchedules",

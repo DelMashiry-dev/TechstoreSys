@@ -193,6 +193,7 @@ function createDefaultState() {
         undeliveredOrders: createDefaultUndelivered(),
         supplierDebts: [],
         supplierDebtSeedRev: 0,
+        creditorsTargetAug2026: null,
         workshopReceiptCerts: [],
         dpProcurementSeedRev: 0,
         dpProcurements: createDefaultDpProcurements(),
@@ -292,6 +293,9 @@ function loadState() {
             undeliveredOrders: Array.isArray(parsed.undeliveredOrders) ? parsed.undeliveredOrders : [],
             supplierDebts: Array.isArray(parsed.supplierDebts) ? parsed.supplierDebts : [],
             supplierDebtSeedRev: Number(parsed.supplierDebtSeedRev) || 0,
+            creditorsTargetAug2026: (parsed.creditorsTargetAug2026 && typeof parsed.creditorsTargetAug2026 === 'object')
+                ? parsed.creditorsTargetAug2026
+                : null,
             workshopReceiptCerts: Array.isArray(parsed.workshopReceiptCerts) ? parsed.workshopReceiptCerts : [],
             dpProcurementSeedRev: Number(parsed.dpProcurementSeedRev) || 0,
             dpProcurements: Array.isArray(parsed.dpProcurements) ? parsed.dpProcurements : [],
@@ -379,6 +383,9 @@ function mergeState(parsed) {
         undeliveredOrders: Array.isArray(parsed.undeliveredOrders) ? parsed.undeliveredOrders : [],
         supplierDebts: Array.isArray(parsed.supplierDebts) ? parsed.supplierDebts : [],
         supplierDebtSeedRev: Number(parsed.supplierDebtSeedRev) || 0,
+        creditorsTargetAug2026: (parsed.creditorsTargetAug2026 && typeof parsed.creditorsTargetAug2026 === 'object')
+            ? parsed.creditorsTargetAug2026
+            : null,
         workshopReceiptCerts: Array.isArray(parsed.workshopReceiptCerts) ? parsed.workshopReceiptCerts : [],
         dpProcurementSeedRev: Number(parsed.dpProcurementSeedRev) || 0,
         dpProcurements: Array.isArray(parsed.dpProcurements) ? parsed.dpProcurements : [],
