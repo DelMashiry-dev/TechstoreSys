@@ -51,9 +51,23 @@
         </div>
         <p class="spec-search-duty-hint" id="laptopCompareDutyHint" hidden></p>
         <div class="module-actions ict-compare-actions">
-            <button type="button" class="btn btn-primary" id="laptopCompareRankBtn">Rank catalog &amp; pick winner</button>
-            <button type="button" class="btn btn-secondary" id="laptopCompareMarketBtn">Add live market listings</button>
+            <button type="button" class="btn btn-primary" id="laptopCompareSearchOnlineBtn" title="Search the web for this equipment type before comparing">Search online listings</button>
+            <button type="button" class="btn btn-secondary" id="laptopCompareRankBtn">Rank local catalog</button>
+            <button type="button" class="btn btn-ghost" id="laptopCompareMarketBtn" title="Append more web listings into the current comparison">Add more market listings</button>
             <button type="button" class="btn btn-secondary" id="laptopComparePrintBtn">Print comparison</button>
+        </div>
+        <div class="laptop-compare-market-panel" id="laptopCompareMarketPanel" hidden>
+            <div class="section-heading section-heading-compact">
+                <h3 id="laptopCompareMarketHeading">Online listings</h3>
+                <button type="button" class="btn btn-ghost btn-sm" id="laptopCompareClearMarketBtn">Clear listings</button>
+            </div>
+            <p class="laptop-compare-pick-hint" id="laptopCompareMarketHint">
+                Tick two or more listings, then compare — or use the dropdown picks below.
+            </p>
+            <div id="laptopCompareMarketGrid" class="market-catalog-grid laptop-compare-market-grid"></div>
+            <div class="module-actions ict-compare-actions">
+                <button type="button" class="btn btn-primary" id="laptopCompareMarketCompareBtn">Compare checked listings</button>
+            </div>
         </div>
         <div class="laptop-compare-pick-panel" id="laptopComparePickPanel">
             <div class="section-heading section-heading-compact">

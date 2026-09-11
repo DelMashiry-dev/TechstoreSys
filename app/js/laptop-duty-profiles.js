@@ -187,7 +187,10 @@ function dutyProfileDeviceHint(profile, category) {
         return 'Tablets and 2-in-1 slates (iPad, Surface, rugged tablet) — not rack servers.';
     }
     if (type === 'printer') {
-        return 'Printers and MFPs (LaserJet, office inkjet) — not PCs.';
+        return 'Printers and MFPs (LaserJet, office inkjet, A4/A3) — not PCs or laptops.';
+    }
+    if (type === 'network') {
+        return 'Switches, routers, firewalls, and access points — not PCs.';
     }
     return profile.deviceHint || '';
 }
@@ -226,7 +229,15 @@ function dutyProfileWebQuery(profile, category) {
             default: 'business tablet iPad Surface Pro rugged tablet'
         },
         printer: {
-            default: 'office printer MFP LaserJet inkjet'
+            'typing-pool': 'high volume office LaserJet MFP A4 duplex printer typing pool',
+            'secretariat': 'office LaserJet MFP wireless duplex printer secretariat',
+            'pay-run': 'secure office LaserJet printer confidential print',
+            default: 'office printer MFP LaserJet inkjet duplex A4'
+        },
+        network: {
+            'server-room': 'enterprise network switch router firewall Catalyst Aruba FortiGate',
+            'secure-comms': 'enterprise firewall VPN switch access point',
+            default: 'enterprise network switch router firewall access point'
         }
     };
     if (type !== 'laptop') {

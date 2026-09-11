@@ -151,7 +151,9 @@ const laptopCompareState = {
     minRam: 'any',
     minStorage: 'any',
     winner: null,
-    pickMode: false
+    pickMode: false,
+    marketCandidates: [],
+    marketSelected: new Set()
 };
 
 const LAPTOP_COMPARE_PICK_IDS = ['laptopComparePickA', 'laptopComparePickB', 'laptopComparePickC'];
@@ -734,8 +736,187 @@ function updateLaptopCompareDutyHint() {
         hint.hidden = true;
         return;
     }
+    const cat = getLaptopCompareCategory();
+    const deviceHint = typeof dutyProfileDeviceHint === 'function'
+        ? dutyProfileDeviceHint(profile, cat)
+        : (profile.deviceHint || '');
     hint.hidden = false;
-    hint.textContent = `${profile.groupLabel}: ${profile.summary} ${profile.deviceHint || ''}`.trim();
+    hint.textContent = `${profile.groupLabel}: ${profile.summary} ${deviceHint}`.trim();
+}
+
+function buildLaptopCompareOnlineQuery() {
+    const criteria = readLaptopCompareCriteria();
+    const meta = getLaptopCompareCategoryMeta();
+    const profile = typeof getLaptopDutyProfile === 'function'
+        ? getLaptopDutyProfile(criteria.dutyProfile)
+        : null;
+    const brand = criteria.brand && criteria.brand !== 'Any' ? criteria.brand : '';
+    const dutyQuery = typeof dutyProfileWebQuery === 'function' && profile
+        ? dutyProfileWebQuery(profile, meta.productType)
+        : `${meta.singular} ${meta.label}`;
+    return [brand, dutyQuery].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+}
+
+function renderLaptopCompareMarketGrid() {
+    const panel = document.getElementById('laptopCompareMarketPanel');
+    const grid = document.getElementById('laptopCompareMarketGrid');
+    const heading = document.getElementById('laptopCompareMarketHeading');
+    const meta = getLaptopCompareCategoryMeta();
+    if (!panel || !grid) return;
+
+    const rows = laptopCompareState.marketCandidates || [];
+    panel.hidden = !rows.length;
+    if (heading) heading.textContent = `Online ${meta.label} listings (${rows.length})`;
+    if (!rows.length) {
+        grid.innerHTML = '';
+        return;
+    }
+
+    grid.innerHTML = rows.map((row, idx) => {
+        const checked = laptopCompareState.marketSelected.has(row.id) ? ' checked' : '';
+        const img = typeof marketCardImageHtml === 'function'
+            ? marketCardImageHtml(row, laptopCmpEsc)
+            : (row.imageUrl
+                ? `<img src="${laptopCmpEsc(row.imageUrl)}" alt="" class="market-card-img" loading="lazy" referrerpolicy="no-referrer">`
+                : `<div class="market-card-img market-card-img-placeholder" aria-hidden="true">${laptopCmpEsc((row.title || '?').slice(0, 1))}</div>`);
+        const price = row.priceDisplay || row.priceText
+            ? `<p class="market-card-price">${laptopCmpEsc(row.priceDisplay || row.priceText)}</p>`
+            : '<p class="market-card-price">Price on request</p>';
+        const src = row.source === 'manufacturer' ? 'Official' : (row.source === 'local' ? 'Local' : 'Web');
+        const link = row.url
+            ? `<a href="${laptopCmpEsc(row.url)}" target="_blank" rel="noopener noreferrer" class="market-card-link">View listing ↗</a>`
+            : '';
+        return `
+            <article class="market-card laptop-compare-market-card" data-market-cand="${idx}">
+                <label class="laptop-compare-market-check">
+                    <input type="checkbox" data-market-cand-check="${laptopCmpEsc(row.id)}"${checked}>
+                    Select
+                </label>
+                <div class="market-card-media">${img}</div>
+                <div class="market-card-body">
+                    <div class="market-card-badges"><span class="market-badge market-badge-web">${laptopCmpEsc(src)}</span></div>
+                    <h4 class="market-card-title">${laptopCmpEsc(row.title || 'Unnamed')}</h4>
+                    ${row.subtitle ? `<p class="market-card-series">${laptopCmpEsc(row.subtitle)}</p>` : ''}
+                    ${price}
+                    ${row.snippet ? `<p class="market-card-snippet">${laptopCmpEsc(row.snippet)}</p>` : ''}
+                    <div class="market-card-actions">${link}</div>
+                </div>
+            </article>`;
+    }).join('');
+
+    grid.querySelectorAll('[data-market-cand-check]').forEach((box) => {
+        box.addEventListener('change', () => {
+            const id = box.getAttribute('data-market-cand-check');
+            if (!id) return;
+            if (box.checked) laptopCompareState.marketSelected.add(id);
+            else laptopCompareState.marketSelected.delete(id);
+        });
+    });
+}
+
+function clearLaptopCompareMarketListings() {
+    laptopCompareState.marketCandidates = [];
+    laptopCompareState.marketSelected = new Set();
+    renderLaptopCompareMarketGrid();
+    setLaptopCompareStatus('Cleared online listings.', 'info');
+}
+
+async function searchOnlineIctListings({ force = true } = {}) {
+    const criteria = readLaptopCompareCriteria();
+    const meta = getLaptopCompareCategoryMeta();
+    const profile = typeof getLaptopDutyProfile === 'function'
+        ? getLaptopDutyProfile(criteria.dutyProfile)
+        : null;
+    if (!profile) {
+        setLaptopCompareStatus('Select a duty profile first, then search online.', 'error');
+        return;
+    }
+    if (typeof fetchMarketCatalog !== 'function') {
+        setLaptopCompareStatus('Market catalog unavailable.', 'error');
+        return;
+    }
+
+    const query = buildLaptopCompareOnlineQuery();
+    const btn = document.getElementById('laptopCompareSearchOnlineBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Searching online…'; }
+    setLaptopCompareStatus(`Searching online for ${meta.label}: “${query}”…`, 'info');
+
+    try {
+        const marketCat = ['laptop', 'desktop', 'tablet', 'printer', 'server'].includes(meta.productType)
+            ? meta.productType
+            : (meta.productType === 'network' ? 'network' : 'laptop');
+        const result = await fetchMarketCatalog(query, marketCat === 'network' ? 'laptop' : marketCat, { force });
+        const webItems = (result.items || []).map((row) => {
+            const item = marketRowToCompareItem(row);
+            if (!item.id) item.id = `web-${(item.title || Math.random()).toString().toLowerCase().replace(/\W+/g, '-').slice(0, 48)}`;
+            if (item.product) item.product.category = meta.productType;
+            else {
+                item.product = {
+                    category: meta.productType,
+                    brand: '',
+                    model: item.title || '',
+                    specs: []
+                };
+            }
+            return item;
+        });
+
+        laptopCompareState.dutyKey = criteria.dutyProfile;
+        laptopCompareState.category = getLaptopCompareCategory();
+        laptopCompareState.marketCandidates = webItems;
+        laptopCompareState.marketSelected = new Set(webItems.slice(0, Math.min(3, webItems.length)).map((r) => r.id));
+        renderLaptopCompareMarketGrid();
+
+        setLaptopCompareStatus(
+            webItems.length
+                ? `Found ${webItems.length} online ${meta.singular} listing(s). Tick 2+ then Compare checked listings.`
+                : `No online ${meta.singular} listings found — try another duty/brand or Force with Add more market listings.`,
+            webItems.length ? 'ok' : 'warn'
+        );
+    } catch (err) {
+        setLaptopCompareStatus(err.message || 'Online search failed.', 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Search online listings'; }
+    }
+}
+
+async function compareCheckedMarketListings() {
+    const selected = (laptopCompareState.marketCandidates || [])
+        .filter((row) => laptopCompareState.marketSelected.has(row.id));
+    if (selected.length < 2) {
+        setLaptopCompareStatus('Tick at least two online listings to compare.', 'error');
+        return;
+    }
+
+    const criteria = readLaptopCompareCriteria();
+    const meta = getLaptopCompareCategoryMeta();
+    laptopCompareState.dutyKey = criteria.dutyProfile || laptopCompareState.dutyKey;
+    laptopCompareState.category = getLaptopCompareCategory();
+    laptopCompareState.brand = criteria.brand;
+    laptopCompareState.pickMode = true;
+    laptopCompareState.items = selected.map((row) => ({
+        ...row,
+        catalogScore: row.catalogScore || 70,
+        catalogReasons: [...(row.catalogReasons || []), 'Selected from online listings']
+    }));
+    setLaptopCompareAiAdvice('', { hidden: true });
+    renderLaptopCompareResults();
+
+    const btn = document.getElementById('laptopCompareMarketCompareBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Comparing…'; }
+    try {
+        if (laptopCompareWantWeb()) {
+            await enrichLaptopCompareItemsFromWeb(laptopCompareState.items, { force: false });
+            renderLaptopCompareResults();
+        }
+        setLaptopCompareStatus(
+            `Comparing ${selected.length} online ${meta.singular}(s): ${selected.map((r) => r.title).join(' · ')}.`,
+            'ok'
+        );
+        if (laptopCompareWantAi()) await askLaptopCompareAiRecommendation();
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Compare checked listings'; }
+    }
 }
 
 function readLaptopCompareCriteria() {
@@ -1649,14 +1830,25 @@ function initLaptopCompareModule() {
         laptopCompareState.items = [];
         laptopCompareState.scored = [];
         laptopCompareState.winner = null;
+        laptopCompareState.marketCandidates = [];
+        laptopCompareState.marketSelected = new Set();
         setLaptopCompareAiAdvice('', { hidden: true });
         syncLaptopCompareCategoryUi();
+        updateLaptopCompareDutyHint();
+        renderLaptopCompareMarketGrid();
         renderLaptopCompareResults();
         setLaptopCompareStatus(`Equipment type set to ${getLaptopCompareCategoryMeta().label}.`, 'info');
     });
     document.getElementById('laptopCompareDuty')?.addEventListener('change', updateLaptopCompareDutyHint);
+    document.getElementById('laptopCompareSearchOnlineBtn')?.addEventListener('click', () => {
+        searchOnlineIctListings({ force: true });
+    });
     document.getElementById('laptopCompareRankBtn')?.addEventListener('click', rankLaptopsFromCatalog);
     document.getElementById('laptopCompareMarketBtn')?.addEventListener('click', addLiveMarketListings);
+    document.getElementById('laptopCompareClearMarketBtn')?.addEventListener('click', clearLaptopCompareMarketListings);
+    document.getElementById('laptopCompareMarketCompareBtn')?.addEventListener('click', () => {
+        compareCheckedMarketListings();
+    });
     document.getElementById('laptopComparePrintBtn')?.addEventListener('click', printLaptopCompareComparison);
     document.getElementById('laptopCompareSendWinnerBtn')?.addEventListener('click', sendLaptopCompareWinnerToSpecEval);
     document.getElementById('laptopComparePickedBtn')?.addEventListener('click', () => {
@@ -1675,6 +1867,8 @@ function initLaptopCompareModule() {
 window.initLaptopCompareModule = initLaptopCompareModule;
 window.rankLaptopsFromCatalog = rankLaptopsFromCatalog;
 window.comparePickedLaptops = comparePickedLaptops;
+window.searchOnlineIctListings = searchOnlineIctListings;
+window.compareCheckedMarketListings = compareCheckedMarketListings;
 window.fillLaptopComparePickSelects = fillLaptopComparePickSelects;
 window.enrichCurrentLaptopCompareFromWeb = enrichCurrentLaptopCompareFromWeb;
 window.askLaptopCompareAiRecommendation = askLaptopCompareAiRecommendation;

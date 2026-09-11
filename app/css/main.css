@@ -22865,6 +22865,34 @@ body.table-focus-open {
 .laptop-compare-picks .form-col {
     min-width: 0;
 }
+.laptop-compare-market-panel {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(29, 78, 216, 0.28);
+}
+.laptop-compare-market-grid {
+    margin: 10px 0 12px;
+    max-height: 420px;
+    overflow: auto;
+}
+.laptop-compare-market-card {
+    position: relative;
+}
+.laptop-compare-market-card .laptop-compare-market-check {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #1d2939;
+}
 .laptop-compare-source-opts {
     margin-top: 8px;
     gap: 8px 16px;
